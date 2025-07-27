@@ -1,119 +1,113 @@
-
 <!DOCTYPE html>
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <title>Buchungssystem</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.38.3/dist/umd/supabase.min.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>hasco – Hospitality System Consulting</title>
   <style>
-    body { font-family: sans-serif; padding: 20px; max-width: 600px; margin: auto; }
-    input, select, textarea, button { width: 100%; padding: 8px; margin-bottom: 10px; }
-    label { font-weight: bold; }
-    .success { color: green; }
-    .error { color: red; }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #f8f9fb;
+      color: #1a1a1a;
+    }
+    header {
+      background-color: #003e6b;
+      color: white;
+      padding: 3rem 1.5rem;
+      text-align: center;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 2.5rem;
+    }
+    header p {
+      margin-top: 1rem;
+      font-size: 1.2rem;
+    }
+    section {
+      max-width: 900px;
+      margin: 2rem auto;
+      padding: 0 1.5rem;
+    }
+    h2 {
+      color: #003e6b;
+      margin-top: 2rem;
+    }
+    .module {
+      background: white;
+      border-left: 4px solid #0057a0;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+    }
+    .kontaktbox {
+      background: #e9f1f7;
+      padding: 1rem;
+      margin-top: 2rem;
+      border-left: 4px solid #003e6b;
+    }
+    footer {
+      text-align: center;
+      font-size: 0.9rem;
+      color: #888;
+      margin: 4rem 0 2rem;
+    }
   </style>
 </head>
 <body>
+  <header>
+    <h1>hasco</h1>
+    <p>Smart. Modular. Implementiert.<br>Hospitality System Consulting & Operations</p>
+  </header>
 
-  <h2>Buchungsformular</h2>
+  <section>
+    <h2>Unsere Leistungen</h2>
 
-  <label for="hotel">Hotel</label>
-  <select id="hotel" required>
-    <option value="">-- Bitte wählen --</option>
-    <option value="Tante Alma - Sonnen">Tante Alma - Sonnen</option>
-    <option value="MASEVEN - Frankfurt">MASEVEN - Frankfurt</option>
-    <option value="MASEVEN - Trudering">MASEVEN - Trudering</option>
-    <option value="MASEVEN - Stuttgart">MASEVEN - Stuttgart</option>
-    <option value="MASEVEN - Dornach">MASEVEN - Dornach</option>
-    <option value="Fidelity - Struck">Fidelity - Struck</option>
-    <option value="Fidelity - Grüner Baum">Fidelity - Grüner Baum</option>
-    <option value="Fidelity - Robenstein">Fidelity - Robenstein</option>
-  </select>
+    <div class="module">
+      <strong>Channelmanager-Setup</strong><br>
+      Auswahl & Einrichtung inkl. IBE, Ratemapping, OTA-Anbindung (z. B. HNS, SiteMinder, DIRS21)
+    </div>
 
-  <label for="checkin">Anreise</label>
-  <input type="date" id="checkin">
+    <div class="module">
+      <strong>PMS Setup & Go-Live</strong><br>
+      Stammdaten, Ratenlogik, GDS-Anbindung, Testbetrieb & Live-Schaltung
+    </div>
 
-  <label for="checkout">Abreise</label>
-  <input type="date" id="checkout">
+    <div class="module">
+      <strong>Multi-System Management</strong><br>
+      Verknüpfung von RMS, CRM, Guest-Messaging & Türsystemen über APIs (z. B. Duetto, Straiv, Salto)
+    </div>
 
-  <label for="firstName">Vorname</label>
-  <input type="text" id="firstName">
+    <div class="module">
+      <strong>Schulung & SOP</strong><br>
+      Systemtraining für Ihr Team + betriebsfertige SOPs (z. B. Ratepflege, OTA-Handling, No-Show)
+    </div>
 
-  <label for="lastName">Nachname</label>
-  <input type="text" id="lastName">
+    <div class="module">
+      <strong>Custom API Integration</strong><br>
+      Individuelle Schnittstellenentwicklung für PMS, CRM, Webtools und Reporting-Systeme
+    </div>
 
-  <label for="email">E-Mail</label>
-  <input type="email" id="email">
+    <h2>So läuft ein Projekt mit hasco</h2>
+    <ol>
+      <li>Unverbindliches Erstgespräch</li>
+      <li>Systemanalyse & Aufwandsschätzung</li>
+      <li>Konzept & Projektplan</li>
+      <li>Technische Umsetzung & Abstimmung mit Drittanbietern</li>
+      <li>Training & Go-Live</li>
+      <li>Optional: Support & Weiterentwicklung</li>
+    </ol>
 
-  <label for="phone">Telefon</label>
-  <input type="text" id="phone">
+    <div class="kontaktbox">
+      <h2>Kontakt</h2>
+      <p>📞 +49 151 65207285<br>
+         ✉️ <a href="mailto:info@hasco-hospitality.demo">info@hasco-hospitality.demo</a></p>
+    </div>
+  </section>
 
-  <label for="notes">Gastwünsche / Kommentare</label>
-  <textarea id="notes" rows="4"></textarea>
-
-  <button onclick="submitBooking()">Buchung speichern</button>
-
-  <p id="status"></p>
-
-  <script>
-    const { createClient } = supabase;
-
-    const supabaseClient = createClient(
-      'https://tqivbegnjwschwgrkqfm.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRxaXZiZWduandzY2h3Z3JrcWZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgzNDUxMTUsImV4cCI6MjA2MzkyMTExNX0.WidRDEm8ATqtXW8QcUs_biK_gYdZebpnPyw0PWQ1qKw'
-    );
-
-    function isValidEmail(email) {
-      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-    }
-
-    async function submitBooking() {
-      const hotel = document.getElementById("hotel").value;
-      const checkIn = document.getElementById("checkin").value;
-      const checkOut = document.getElementById("checkout").value;
-      const firstName = document.getElementById("firstName").value.trim();
-      const lastName = document.getElementById("lastName").value.trim();
-      const email = document.getElementById("email").value.trim();
-      const phone = document.getElementById("phone").value.trim();
-      const notes = document.getElementById("notes").value.trim();
-      const status = document.getElementById("status");
-
-      // Validierung
-      if (!hotel || !checkIn || !checkOut || !firstName || !lastName || !email) {
-        status.textContent = "Bitte fülle alle Pflichtfelder aus.";
-        status.className = "error";
-        return;
-      }
-
-      if (!isValidEmail(email)) {
-        status.textContent = "Bitte gib eine gültige E-Mail-Adresse ein.";
-        status.className = "error";
-        return;
-      }
-
-      const booking = {
-        hotel,
-        check_in: checkIn,
-        check_out: checkOut,
-        guest_first_name: firstName,
-        guest_last_name: lastName,
-        email,
-        phone,
-        notes
-      };
-
-      const { data, error } = await supabaseClient.from("bookings").insert([booking]);
-
-      if (error) {
-        console.error(error);
-        status.textContent = "❌ Fehler beim Speichern.";
-        status.className = "error";
-      } else {
-        status.textContent = "✅ Buchung erfolgreich gespeichert!";
-        status.className = "success";
-        document.querySelector("form")?.reset?.();  // optionales Zurücksetzen
-      }
-    }
-  </script>
+  <footer>
+    &copy; 2025 hasco Hospitality Consulting – Johannes Kämpf
+  </footer>
 </body>
 </html>
