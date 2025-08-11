@@ -1,37 +1,131 @@
 <!doctype html>
 <html lang="de">
 <head>
-  <meta charset="utf-8">
-  <title>hasco – Reservierung</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="./src/styles.css">
+  <meta charset="utf-8" />
+  <title>res-tool</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="./src/styles.css" />
 </head>
 <body>
-  <header class="shell app-header">
+  <header class="appbar shell">
     <div class="brand">
-      <div class="logo">h</div>
-      <h1>hasco</h1>
+      <img src="./assets/logo.png" alt="Blue & Red Water Hospitality" class="logo" />
+      <h1>res‑tool</h1>
     </div>
     <nav class="topnav">
-      <a href="#/step1" id="nav-step1">1. Reise</a>
-      <a href="#/step2" id="nav-step2">2. Kategorien</a>
-      <a href="#/step3" id="nav-step3">3. Abschluss</a>
-      <a class="link-ghost" href="reservierungen.html">Reservierungen</a>
+      <button class="navbtn" data-modal="new">Neue Reservierung</button>
+      <button class="navbtn" data-modal="list">Reservierungen</button>
+      <button class="navbtn" data-modal="avail">Verfügbarkeit</button>
+      <button class="navbtn" data-modal="settings">Einstellungen</button>
+      <button class="navbtn" data-modal="report">Reporting</button>
+      <button class="navbtn" data-modal="map">Hausskizze</button>
     </nav>
   </header>
 
-  <div class="progress">
-    <div class="progress-track">
-      <div class="progress-thumb" id="progressThumb" style="width: 33%"></div>
-    </div>
-    <div class="progress-labels shell">
-      <span id="s1" class="active">Reise</span>
-      <span id="s2">Kategorien</span>
-      <span id="s3">Abschluss</span>
-    </div>
-  </div>
+  <main class="shell">
+    <section class="grid-tiles">
+      <button class="tile" data-modal="new">
+        <span>Neue Reservierung</span>
+        <small>Buchungs‑Wizard</small>
+      </button>
+      <button class="tile" data-modal="list">
+        <span>Reservierungen</span>
+        <small>einsehen · ändern · stornieren</small>
+      </button>
+      <button class="tile" data-modal="avail">
+        <span>Verfügbarkeit</span>
+        <small>Belegung je Tag & Hotel</small>
+      </button>
+      <button class="tile" data-modal="settings">
+        <span>Einstellungen</span>
+        <small>Stammdaten & Optionen</small>
+      </button>
+      <button class="tile" data-modal="report">
+        <span>Reporting</span>
+        <small>Kennzahlen & Export</small>
+      </button>
+      <button class="tile" data-modal="map">
+        <span>Hausskizze</span>
+        <small>Etagen/Rooms (später)</small>
+      </button>
+    </section>
+  </main>
 
-  <main id="app" class="shell"></main>
+  <!-- Modals -->
+  <div id="modal-overlay" class="overlay" hidden></div>
+
+  <!-- Neue Reservierung -->
+  <dialog id="modal-new" class="modal">
+    <header class="modal-head">
+      <h3>Neue Reservierung</h3>
+      <button class="iconbtn close" data-close>✕</button>
+    </header>
+    <div id="wizard" class="wizard"></div>
+  </dialog>
+
+  <!-- Reservierungen (Liste) -->
+  <dialog id="modal-list" class="modal large">
+    <header class="modal-head">
+      <h3>Reservierungen</h3>
+      <button class="iconbtn close" data-close>✕</button>
+    </header>
+    <div class="toolbar">
+      <input id="search" placeholder="Gastname suchen…" />
+    </div>
+    <div id="list"></div>
+    <div class="pager">
+      <button id="prev">Zurück</button>
+      <span id="pageinfo"></span>
+      <button id="next">Weiter</button>
+    </div>
+  </dialog>
+
+  <!-- Verfügbarkeit -->
+  <dialog id="modal-avail" class="modal large">
+    <header class="modal-head">
+      <h3>Verfügbarkeit</h3>
+      <button class="iconbtn close" data-close>✕</button>
+    </header>
+    <div class="toolbar">
+      <input type="date" id="avail-from" />
+      <input type="date" id="avail-to" />
+      <button id="avail-refresh" class="primary">Aktualisieren</button>
+    </div>
+    <div id="avail-table"></div>
+  </dialog>
+
+  <!-- Einstellungen -->
+  <dialog id="modal-settings" class="modal">
+    <header class="modal-head">
+      <h3>Einstellungen</h3>
+      <button class="iconbtn close" data-close>✕</button>
+    </header>
+    <div class="card">
+      <p class="muted">Platzhalter: Stammdaten, Rollen, Benachrichtigungen.</p>
+    </div>
+  </dialog>
+
+  <!-- Reporting -->
+  <dialog id="modal-report" class="modal">
+    <header class="modal-head">
+      <h3>Reporting</h3>
+      <button class="iconbtn close" data-close>✕</button>
+    </header>
+    <div class="card">
+      <p class="muted">Platzhalter: ADR, RN, Umsatz, Export.</p>
+    </div>
+  </dialog>
+
+  <!-- Hausskizze -->
+  <dialog id="modal-map" class="modal large">
+    <header class="modal-head">
+      <h3>Hausskizze</h3>
+      <button class="iconbtn close" data-close>✕</button>
+    </header>
+    <div class="card">
+      <p class="muted">Platzhalter: Zonen/Etagen/Belegung (später mit SVG).</p>
+    </div>
+  </dialog>
 
   <div id="toast" class="toast" aria-live="polite"></div>
 
