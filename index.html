@@ -12,57 +12,108 @@
     <div class="brand">
       <!-- Transparentes Logo unter ./assets/logo.png ablegen -->
       <img src="./assets/logo.png" alt="Blue & Red Water Hospitality" class="logo" onerror="this.remove()">
-      <h1>res‑tool</h1>
+      <h1 class="headline">res‑tool</h1>
     </div>
-    <nav class="iconbar">
-      <button class="iconbtn" data-open="newRes" title="Neue Reservierung">🞤</button>
-      <button class="iconbtn" data-open="reservations" title="Reservierungen">📄</button>
-      <button class="iconbtn" data-open="availability" title="Verfügbarkeit">📊</button>
-      <button class="iconbtn" data-open="reporting" title="Reporting">📈</button>
-      <button class="iconbtn" data-open="house" title="Hausskizze">🏢</button>
-      <button class="iconbtn" data-open="settings" title="Einstellungen">⚙️</button>
+    <nav class="iconbar" aria-label="Hauptaktionen">
+      <button class="iconbtn" data-open="newRes" title="Neue Reservierung" aria-label="Neue Reservierung">
+        <!-- Plus-SVG -->
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </button>
+      <button class="iconbtn" data-open="reservations" title="Reservierungen" aria-label="Reservierungen">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M6 5h12v14H6zM9 9h6M9 13h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </button>
+      <button class="iconbtn" data-open="availability" title="Verfügbarkeit" aria-label="Verfügbarkeit">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M4 19h16M6 16l3-4 3 3 6-8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </button>
+      <button class="iconbtn" data-open="reporting" title="Reporting" aria-label="Reporting">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M6 20V10M12 20V6M18 20v-8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </button>
+      <button class="iconbtn" data-open="house" title="Hausskizze" aria-label="Hausskizze">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M3 10l9-7 9 7v9H3v-9zM9 22V12h6v10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </button>
+      <button class="iconbtn" data-open="settings" title="Einstellungen" aria-label="Einstellungen">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M12 15a3 3 0 100-6 3 3 0 000 6z" stroke="currentColor" stroke-width="2"/>
+          <path d="M19.4 15a1 1 0 00.2 1.1l.1.1a8 8 0 01-1.7 2.9l-.1.1a1 1 0 01-1.2.1l-1-.5a1 1 0 00-1.1.1 8.2 8.2 0 01-2.8 1.1 1 1 0 01-1-.3l-.7-.8a1 1 0 00-1.1-.2 8.2 8.2 0 01-3-.9 1 1 0 01-.5-1.1l.2-1.1a1 1 0 00-.4-1 8.3 8.3 0 01-1.2-2.8 1 1 0 01.3-1l.8-.7a1 1 0 00.2-1.1 8.2 8.2 0 01-.9-3 1 1 0 011.1-.6l1.1.2a1 1 0 001-.4 8.3 8.3 0 012.8-1.2 1 1 0 011 .3l.7.8a1 1 0 001.1.2 8.2 8.2 0 013-.9 1 1 0 011 .5l.5 1a1 1 0 001.1.5 8 8 0 012.9 1.7 1 1 0 01.1 1.2l-.5 1a1 1 0 00.1 1.1 8.2 8.2 0 01.9 3z" stroke="currentColor" stroke-width="2"/>
+        </svg>
+      </button>
     </nav>
   </header>
 
-  <!-- Schnellzugriff / Tiles -->
-  <main class="shell mainpad">
-    <section class="grid-tiles">
-      <button class="tile" data-open="newRes"><span>Neue Reservierung</span><small>Buchungs‑Wizard</small></button>
-      <button class="tile" data-open="reservations"><span>Reservierungen</span><small>einsehen · ändern · stornieren</small></button>
-      <button class="tile" data-open="availability"><span>Verfügbarkeit</span><small>Belegung je Hotel/Tag</small></button>
-      <button class="tile" data-open="reporting"><span>Reporting</span><small>ADR · RN · Umsatz</small></button>
-      <button class="tile" data-open="house"><span>Hausskizze</span><small>Etagen/Rooms (später)</small></button>
-      <button class="tile" data-open="settings"><span>Einstellungen</span><small>Stammdaten & Rechte</small></button>
+  <!-- Intro / Hero -->
+  <section class="shell mainpad">
+    <div class="card alt" style="padding:24px">
+      <h2 class="headline">Willkommen im res‑tool</h2>
+      <p class="muted" style="margin-top:6px">Zentrales Reservierungssystem für Blue & Red Water Hospitality</p>
+    </div>
+  </section>
+
+  <!-- Hauptmodule als Tiles -->
+  <main class="shell">
+    <section class="grid-tiles" aria-label="Module">
+      <button class="tile" data-open="newRes">
+        <span class="headline">Neue Reservierung</span>
+        <small>Wizard mit Hotel/Datum → Rate → Gastdaten</small>
+      </button>
+      <button class="tile" data-open="reservations">
+        <span class="headline">Reservierungen</span>
+        <small>einsehen · ändern · stornieren</small>
+      </button>
+      <button class="tile" data-open="availability">
+        <span class="headline">Verfügbarkeit</span>
+        <small>Matrix: Hotel × Tag (Belegt/Total · %)</small>
+      </button>
+      <button class="tile" data-open="reporting">
+        <span class="headline">Reporting</span>
+        <small>ADR · Room Nights · Umsatz</small>
+      </button>
+      <button class="tile" data-open="house">
+        <span class="headline">Hausskizze</span>
+        <small>Etagen/Rooms (Plan, später live)</small>
+      </button>
+      <button class="tile" data-open="settings">
+        <span class="headline">Einstellungen</span>
+        <small>Stammdaten · Rechte · API</small>
+      </button>
     </section>
   </main>
 
   <!-- Toast -->
   <div id="toast" class="toast" aria-live="polite"></div>
 
-  <!-- Modal-Overlay (ein einziges, wiederverwendet) -->
+  <!-- Overlay für Modals -->
   <div id="overlay" class="overlay" hidden></div>
 
-  <!-- Neue Reservierung -->
+  <!-- Modals (IDs/Struktur bleiben kompatibel zu deiner app.js) -->
   <section id="modal-newRes" class="modal" aria-hidden="true" role="dialog" aria-modal="true">
     <div class="dialog">
       <header class="dialog-head">
-        <h3>Neue Reservierung</h3>
+        <h3 class="headline">Neue Reservierung</h3>
         <button class="close" data-close aria-label="Schließen">✕</button>
       </header>
       <div id="newResContent" class="dialog-body"></div>
     </div>
   </section>
 
-  <!-- Reservierungen -->
   <section id="modal-reservations" class="modal" aria-hidden="true" role="dialog" aria-modal="true">
     <div class="dialog wide">
       <header class="dialog-head">
-        <h3>Reservierungen</h3>
+        <h3 class="headline">Reservierungen</h3>
         <button class="close" data-close aria-label="Schließen">✕</button>
       </header>
       <div class="dialog-body">
         <div class="toolbar">
-          <input id="resSearch" placeholder="Gastname suchen…" />
+          <input id="resSearch" placeholder="Gastname suchen…">
         </div>
         <div id="resList"></div>
         <div class="pager">
@@ -74,11 +125,10 @@
     </div>
   </section>
 
-  <!-- Verfügbarkeit (Matrix) -->
   <section id="modal-availability" class="modal" aria-hidden="true" role="dialog" aria-modal="true">
     <div class="dialog xwide">
       <header class="dialog-head">
-        <h3>Verfügbarkeit</h3>
+        <h3 class="headline">Verfügbarkeit</h3>
         <button class="close" data-close aria-label="Schließen">✕</button>
       </header>
       <div class="dialog-body">
@@ -87,17 +137,15 @@
           <label>Tage <input type="number" id="availDays" min="1" max="31" value="14"></label>
           <button class="primary" id="availGenerate">Aktualisieren</button>
         </div>
-        <!-- Matrix: sticky Kopf + sticky erste Spalte, horizontales/vertikales Scrollen -->
         <div id="availMatrix" class="matrix" aria-describedby="availHelp"></div>
         <p id="availHelp" class="muted" style="margin-top:8px">Tipp: Shift+Mausrad = horizontal scrollen.</p>
       </div>
     </div>
   </section>
 
-  <!-- Weitere Modals (Platzhalter) -->
-  <section id="modal-reporting" class="modal" aria-hidden="true"><div class="dialog"><header class="dialog-head"><h3>Reporting</h3><button class="close" data-close>✕</button></header><div class="dialog-body"><p class="muted">KPIs via OHIP/HNS – folgt.</p></div></div></section>
-  <section id="modal-house" class="modal" aria-hidden="true"><div class="dialog"><header class="dialog-head"><h3>Hausskizze</h3><button class="close" data-close>✕</button></header><div class="dialog-body"><p class="muted">SVG‑Plan/Belegung – folgt.</p></div></div></section>
-  <section id="modal-settings" class="modal" aria-hidden="true"><div class="dialog"><header class="dialog-head"><h3>Einstellungen</h3><button class="close" data-close>✕</button></header><div class="dialog-body"><p class="muted">Branding · Nutzer · API Keys – folgt.</p></div></div></section>
+  <section id="modal-reporting" class="modal" aria-hidden="true"><div class="dialog"><header class="dialog-head"><h3 class="headline">Reporting</h3><button class="close" data-close>✕</button></header><div class="dialog-body"><p class="muted">KPIs via OHIP/HNS – folgt.</p></div></div></section>
+  <section id="modal-house" class="modal" aria-hidden="true"><div class="dialog"><header class="dialog-head"><h3 class="headline">Hausskizze</h3><button class="close" data-close>✕</button></header><div class="dialog-body"><p class="muted">SVG‑Plan/Belegung – folgt.</p></div></div></section>
+  <section id="modal-settings" class="modal" aria-hidden="true"><div class="dialog"><header class="dialog-head"><h3 class="headline">Einstellungen</h3><button class="close" data-close>✕</button></header><div class="dialog-body"><p class="muted">Branding · Nutzer · API Keys – folgt.</p></div></div></section>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script type="module" src="./src/app.js"></script>
