@@ -7,19 +7,34 @@
   <link rel="stylesheet" href="./src/styles.css">
 </head>
 <body>
-  <header class="shell">
-    <h1>hasco</h1>
-    <nav>
+  <header class="shell app-header">
+    <div class="brand">
+      <div class="logo">h</div>
+      <h1>hasco</h1>
+    </div>
+    <nav class="topnav">
       <a href="#/step1" id="nav-step1">1. Reise</a>
       <a href="#/step2" id="nav-step2">2. Kategorien</a>
       <a href="#/step3" id="nav-step3">3. Abschluss</a>
-      <a href="reservierungen.html">Reservierungen</a>
+      <a class="link-ghost" href="reservierungen.html">Reservierungen</a>
     </nav>
   </header>
 
+  <div class="progress">
+    <div class="progress-track">
+      <div class="progress-thumb" id="progressThumb" style="width: 33%"></div>
+    </div>
+    <div class="progress-labels shell">
+      <span id="s1" class="active">Reise</span>
+      <span id="s2">Kategorien</span>
+      <span id="s3">Abschluss</span>
+    </div>
+  </div>
+
   <main id="app" class="shell"></main>
 
-  <!-- Supabase SDK (CDN) -->
+  <div id="toast" class="toast" aria-live="polite"></div>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script type="module" src="./src/app.js"></script>
 </body>
