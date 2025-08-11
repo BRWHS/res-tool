@@ -2,109 +2,136 @@
 <html lang="de">
 <head>
   <meta charset="utf-8" />
-  <title>res‑tool – Zentrales Reservierungssystem</title>
+  <title>res‑tool – Blue & Red Water Hospitality</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="./src/styles.css" />
 </head>
 <body>
+  <!-- Neon grid / subtle CRT -->
+  <div class="bg-grid"></div>
+  <div class="crt"></div>
+
   <!-- Topbar -->
   <header class="topbar shell">
     <div class="brand">
-      <!-- Transparentes Logo unter ./assets/logo.png ablegen -->
       <img src="./assets/logo.png" alt="Blue & Red Water Hospitality" class="logo" onerror="this.remove()">
       <h1 class="headline">res‑tool</h1>
     </div>
     <nav class="iconbar" aria-label="Hauptaktionen">
       <button class="iconbtn" data-open="newRes" title="Neue Reservierung" aria-label="Neue Reservierung">
-        <!-- Plus-SVG -->
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-        </svg>
+        <span class="ico">+</span><span class="btnlabel">Neu</span>
       </button>
       <button class="iconbtn" data-open="reservations" title="Reservierungen" aria-label="Reservierungen">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path d="M6 5h12v14H6zM9 9h6M9 13h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-        </svg>
+        <span class="ico">▦</span><span class="btnlabel">Reservierungen</span>
       </button>
       <button class="iconbtn" data-open="availability" title="Verfügbarkeit" aria-label="Verfügbarkeit">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path d="M4 19h16M6 16l3-4 3 3 6-8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-        </svg>
+        <span class="ico">▤</span><span class="btnlabel">Verfügbarkeit</span>
       </button>
       <button class="iconbtn" data-open="reporting" title="Reporting" aria-label="Reporting">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path d="M6 20V10M12 20V6M18 20v-8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-        </svg>
+        <span class="ico">⥁</span><span class="btnlabel">Reporting</span>
       </button>
       <button class="iconbtn" data-open="house" title="Hausskizze" aria-label="Hausskizze">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path d="M3 10l9-7 9 7v9H3v-9zM9 22V12h6v10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-        </svg>
+        <span class="ico">⌂</span><span class="btnlabel">Hausskizze</span>
       </button>
       <button class="iconbtn" data-open="settings" title="Einstellungen" aria-label="Einstellungen">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path d="M12 15a3 3 0 100-6 3 3 0 000 6z" stroke="currentColor" stroke-width="2"/>
-          <path d="M19.4 15a1 1 0 00.2 1.1l.1.1a8 8 0 01-1.7 2.9l-.1.1a1 1 0 01-1.2.1l-1-.5a1 1 0 00-1.1.1 8.2 8.2 0 01-2.8 1.1 1 1 0 01-1-.3l-.7-.8a1 1 0 00-1.1-.2 8.2 8.2 0 01-3-.9 1 1 0 01-.5-1.1l.2-1.1a1 1 0 00-.4-1 8.3 8.3 0 01-1.2-2.8 1 1 0 01.3-1l.8-.7a1 1 0 00.2-1.1 8.2 8.2 0 01-.9-3 1 1 0 011.1-.6l1.1.2a1 1 0 001-.4 8.3 8.3 0 012.8-1.2 1 1 0 011 .3l.7.8a1 1 0 001.1.2 8.2 8.2 0 013-.9 1 1 0 011 .5l.5 1a1 1 0 001.1.5 8 8 0 012.9 1.7 1 1 0 01.1 1.2l-.5 1a1 1 0 00.1 1.1 8.2 8.2 0 01.9 3z" stroke="currentColor" stroke-width="2"/>
-        </svg>
+        <span class="ico">⚙</span><span class="btnlabel">Settings</span>
       </button>
     </nav>
   </header>
 
-  <!-- Intro / Hero -->
-  <section class="shell mainpad">
-    <div class="card alt" style="padding:24px">
-      <h2 class="headline">Willkommen im res‑tool</h2>
-      <p class="muted" style="margin-top:6px">Zentrales Reservierungssystem für Blue & Red Water Hospitality</p>
-    </div>
-  </section>
+  <!-- DASHBOARD -->
+  <main class="shell mainpad">
+    <section class="dash">
+      <div class="dash-left">
+        <!-- KPIs -->
+        <div class="kpi-grid">
+          <div class="kpi">
+            <div class="kpi-label">Buchungen heute</div>
+            <div class="kpi-value" id="kpi-today">—</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-label">Ø Preis (Demo)</div>
+            <div class="kpi-value" id="kpi-adr">— €</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-label">Auslastung Woche (Demo)</div>
+            <div class="kpi-value" id="kpi-occ">—%</div>
+          </div>
+        </div>
 
-  <!-- Hauptmodule als Tiles -->
-  <main class="shell">
-    <section class="grid-tiles" aria-label="Module">
-      <button class="tile" data-open="newRes">
-        <span class="headline">Neue Reservierung</span>
-        <small>Wizard mit Hotel/Datum → Rate → Gastdaten</small>
-      </button>
-      <button class="tile" data-open="reservations">
-        <span class="headline">Reservierungen</span>
-        <small>einsehen · ändern · stornieren</small>
-      </button>
-      <button class="tile" data-open="availability">
-        <span class="headline">Verfügbarkeit</span>
-        <small>Matrix: Hotel × Tag (Belegt/Total · %)</small>
-      </button>
-      <button class="tile" data-open="reporting">
-        <span class="headline">Reporting</span>
-        <small>ADR · Room Nights · Umsatz</small>
-      </button>
-      <button class="tile" data-open="house">
-        <span class="headline">Hausskizze</span>
-        <small>Etagen/Rooms (Plan, später live)</small>
-      </button>
-      <button class="tile" data-open="settings">
-        <span class="headline">Einstellungen</span>
-        <small>Stammdaten · Rechte · API</small>
-      </button>
+        <!-- Quick actions -->
+        <div class="quick-grid">
+          <button class="quick" data-open="newRes">Neue Reservierung</button>
+          <button class="quick" data-open="reservations">Reservierungen</button>
+          <button class="quick" data-open="availability">Verfügbarkeit</button>
+          <button class="quick" data-open="reporting">Reporting</button>
+        </div>
+
+        <!-- Weekly mini-availability (heatmap) -->
+        <div class="card alt">
+          <div class="card-head">
+            <h2 class="headline">Verfügbarkeit · Aktuelle Woche</h2>
+            <div class="card-tools">
+              <button class="chip" id="mini-prev">◀</button>
+              <button class="chip" id="mini-next">▶</button>
+            </div>
+          </div>
+          <div id="mini-availability" class="mini-av"></div>
+          <p class="muted micro">Legende: hell = niedrig, kräftig = hoch ausgelastet · Werte Demo bis Live‑Quelle steht.</p>
+        </div>
+      </div>
+
+      <aside class="dash-right">
+        <!-- Clock / Status -->
+        <div class="card console">
+          <div class="console-head">
+            <span class="lamp"></span>
+            <span class="headline">Systemstatus</span>
+          </div>
+          <div class="console-body">
+            <div class="status-row"><span>Uhrzeit</span><strong id="clock">—:—:—</strong></div>
+            <div class="status-row"><span>Datum</span><strong id="date">—</strong></div>
+            <div class="status-row"><span>Zeitzone</span><strong id="tz">Europe/Berlin</strong></div>
+            <div class="status-row"><span>Supabase</span><strong id="sb-status">verbunden</strong></div>
+          </div>
+        </div>
+
+        <!-- Shortcuts -->
+        <div class="card">
+          <h2 class="headline">Schnellzugriff</h2>
+          <ul class="shortcuts">
+            <li><button class="linklike" data-open="newRes">+ neue Reservierung</button></li>
+            <li><button class="linklike" data-open="reservations">Letzte Reservierungen</button></li>
+            <li><button class="linklike" data-open="availability">Wöchentliche Verfügbarkeit</button></li>
+          </ul>
+        </div>
+      </aside>
     </section>
   </main>
 
   <!-- Toast -->
   <div id="toast" class="toast" aria-live="polite"></div>
 
-  <!-- Overlay für Modals -->
+  <!-- Overlay -->
   <div id="overlay" class="overlay" hidden></div>
 
-  <!-- Modals (IDs/Struktur bleiben kompatibel zu deiner app.js) -->
+  <!-- MODALS -->
+  <!-- Neue Reservierung -->
   <section id="modal-newRes" class="modal" aria-hidden="true" role="dialog" aria-modal="true">
     <div class="dialog">
       <header class="dialog-head">
         <h3 class="headline">Neue Reservierung</h3>
         <button class="close" data-close aria-label="Schließen">✕</button>
       </header>
-      <div id="newResContent" class="dialog-body"></div>
+      <div class="dialog-body">
+        <!-- Stepper -->
+        <div class="stepper"><div class="bar"><span id="stepper-thumb"></span></div><div class="labels"><em>Reise</em><em>Kategorie/Rate</em><em>Gast & Abschluss</em></div></div>
+        <div id="newResContent"></div>
+      </div>
     </div>
   </section>
 
+  <!-- Reservierungen -->
   <section id="modal-reservations" class="modal" aria-hidden="true" role="dialog" aria-modal="true">
     <div class="dialog wide">
       <header class="dialog-head">
@@ -115,7 +142,21 @@
         <div class="toolbar">
           <input id="resSearch" placeholder="Gastname suchen…">
         </div>
-        <div id="resList"></div>
+        <div class="tablewrap">
+          <table class="table" id="resTable">
+            <thead>
+              <tr>
+                <th data-sort="guest">Gast</th>
+                <th data-sort="arrival">Anreise</th>
+                <th data-sort="departure">Abreise</th>
+                <th data-sort="hotel">Hotel</th>
+                <th data-sort="rate">Rate</th>
+                <th>Aktionen</th>
+              </tr>
+            </thead>
+            <tbody id="resTbody"></tbody>
+          </table>
+        </div>
         <div class="pager">
           <button id="resPrev">Zurück</button>
           <span id="resPageinfo"></span>
@@ -125,6 +166,7 @@
     </div>
   </section>
 
+  <!-- Verfügbarkeit -->
   <section id="modal-availability" class="modal" aria-hidden="true" role="dialog" aria-modal="true">
     <div class="dialog xwide">
       <header class="dialog-head">
@@ -137,15 +179,24 @@
           <label>Tage <input type="number" id="availDays" min="1" max="31" value="14"></label>
           <button class="primary" id="availGenerate">Aktualisieren</button>
         </div>
-        <div id="availMatrix" class="matrix" aria-describedby="availHelp"></div>
-        <p id="availHelp" class="muted" style="margin-top:8px">Tipp: Shift+Mausrad = horizontal scrollen.</p>
+        <div class="matrixwrap">
+          <div id="availMatrix" class="matrix" aria-describedby="availHelp"></div>
+          <div class="minimap" id="matrixMini"></div>
+        </div>
+        <p id="availHelp" class="muted micro">Tipp: Shift+Mausrad = horizontal scrollen · Hover = Zeile/Spalte highlight</p>
       </div>
     </div>
   </section>
 
+  <!-- Platzhalter -->
   <section id="modal-reporting" class="modal" aria-hidden="true"><div class="dialog"><header class="dialog-head"><h3 class="headline">Reporting</h3><button class="close" data-close>✕</button></header><div class="dialog-body"><p class="muted">KPIs via OHIP/HNS – folgt.</p></div></div></section>
   <section id="modal-house" class="modal" aria-hidden="true"><div class="dialog"><header class="dialog-head"><h3 class="headline">Hausskizze</h3><button class="close" data-close>✕</button></header><div class="dialog-body"><p class="muted">SVG‑Plan/Belegung – folgt.</p></div></div></section>
   <section id="modal-settings" class="modal" aria-hidden="true"><div class="dialog"><header class="dialog-head"><h3 class="headline">Einstellungen</h3><button class="close" data-close>✕</button></header><div class="dialog-body"><p class="muted">Branding · Nutzer · API Keys – folgt.</p></div></div></section>
+
+  <footer class="statusbar shell">
+    <span>© Blue & Red Water Hospitality</span>
+    <span class="muted">Res‑Tool • Demo UI</span>
+  </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script type="module" src="./src/app.js"></script>
