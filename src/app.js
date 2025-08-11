@@ -1,8 +1,8 @@
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
 
 // === SUPABASE (ersetzen) ===
-const SUPABASE_URL = "https://YOUR-PROJECT.supabase.co"
-const SUPABASE_ANON_KEY = "YOUR-ANON-KEY"
+const SUPABASE_URL = "https://kytuiodojfcaggkvizto.supabase.co"
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt5dHVpb2RvamZjYWdna3ZpenRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ4MzA0NjgsImV4cCI6MjA3MDQwNjQ2OH0.YobQZnCQ7LihWtewynoCJ6ZTjqetkGwh82Nd2mmmhLU"
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
 const $  = (q)=>document.querySelector(q)
@@ -255,3 +255,4 @@ function renderAvailability(){
   `
   $('#availTable').innerHTML = table
 }
+
