@@ -1,1 +1,26 @@
-nein
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <title>hasco – Reservierung</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="./src/styles.css">
+</head>
+<body>
+  <header class="shell">
+    <h1>hasco</h1>
+    <nav>
+      <a href="#/step1" id="nav-step1">1. Reise</a>
+      <a href="#/step2" id="nav-step2">2. Kategorien</a>
+      <a href="#/step3" id="nav-step3">3. Abschluss</a>
+      <a href="reservierungen.html">Reservierungen</a>
+    </nav>
+  </header>
+
+  <main id="app" class="shell"></main>
+
+  <!-- Supabase SDK (CDN) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script type="module" src="./src/app.js"></script>
+</body>
+</html>

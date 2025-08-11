@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <title>hasco – Reservierungen</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="./src/styles.css">
+</head>
+<body>
+  <header class="shell">
+    <h1>hasco</h1>
+    <nav>
+      <a href="index.html">Buchung</a>
+      <span>Reservierungsübersicht</span>
+    </nav>
+  </header>
+
+  <main class="shell">
+    <h2>Reservierungen</h2>
+    <div class="toolbar">
+      <input id="search" placeholder="Gastname suchen…" />
+    </div>
+    <div id="list"></div>
+    <div class="pager">
+      <button id="prev">Zurück</button>
+      <span id="pageinfo"></span>
+      <button id="next">Weiter</button>
+    </div>
+  </main>
+
+  <script>
+    const pageSize = 50;
+    const rows = Array.from({length: 123}, (_,i)=>({
+      hotel_name: i%2? "MASEVEN Stuttgart" : "MASEVEN München",
+      guest_last_name: "Testgast " + (i+1),
+      arrival: "2025-09-0" + ((i%9)+1),
+      departure: "2025-09-1" + ((i%9)+1),
+      category: i%3? "Standard" : "Deluxe",
+      rate_name: i%2? "Flex exkl. F" : "Flex inkl. F",
+      rate_price: i%2? 89 : 109,
+      notes: "-"
+    }));
+    let page = 1;
+
+    function render() {
+      const q = document.getElementById('search').value?.toLowerCase() ?? "";
+      const filtered = rows.filter(r => r.guest_last_name.toLowerCase().includes(q));
+      const total = filtered.length;
+      const start = (page-1)*pageSize;
+      const pageRows = filtered.slice(start, start+pageSize);
+
+      const list = document.getElementById('list');
+      list.innerHTML = `
+        <div class="grid head">
+          <div>Gastname</div><div>Anreise</div><div>Abreise</div><div>Kategorie</div><div>Rate</div><div>Preis</div><div>Notes</div>
+        </div>
+        ${pageRows.map(r=>`
+          <details class="row">
+            <summary class="grid">
+              <div>${r.guest_last_name}</div>
+              <div>${r.arrival}</div>
+              <div>${r.departure}</div>
+              <div>${r.category}</div>
+              <div>${r.rate_name}</div>
+              <div>${r.rate_price} €</div>
+              <div>${r.notes}</div>
+            </summary>
+            <div class="card">
+              <div><strong>Hotel:</strong> ${r.hotel_name}</div>
+              <div><strong>...</strong> Weitere Felder folgen</div>
+              <div class="actions">
+                <button>Reservierung anpassen</button>
+                <button disabled>Reservierung stornieren (später)</button>
+              </div>
+            </div>
+          </details>
+        `).join("")}
+      `;
+      document.getElementById('pageinfo').textContent = `Seite ${page} von ${Math.ceil(total/pageSize)} (${total} Einträge)`;
+    }
+    document.getElementById('search').addEventListener('input', ()=>{ page=1; render(); });
+    document.getElementById('prev').addEventListener('click', ()=>{ if(page>1){page--; render();} });
+    document.getElementById('next').addEventListener('click', ()=>{ page++; render(); });
+    render();
+  </script>
+</body>
+</html>
