@@ -1,154 +1,130 @@
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
 
-// === SUPABASE (deine echten Werte eintragen) ===
-const SUPABASE_URL = "https://kytuiodojfcaggkvizto.supabase.co"
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt5dHVpb2RvamZjYWdna3ZpenRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ4MzA0NjgsImV4cCI6MjA3MDQwNjQ2OH0.YobQZnCQ7LihWtewynoCJ6ZTjqetkGwh82Nd2mmmhLU"
+// === SUPABASE (ersetzen) ===
+const SUPABASE_URL = "https://YOUR-PROJECT.supabase.co"
+const SUPABASE_ANON_KEY = "YOUR-ANON-KEY"
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
-const hotels = [
-  "MASEVEN München Dornach","MASEVEN München Trudering","MASEVEN Frankfurt","MASEVEN Stuttgart",
-  "Fidelity Robenstein","Fidelity Struck","Fidelity Doerr","Fidelity Gr. Baum",
-  "Fidelity Landskron","Fidelity Pürgl","Fidelity Seppl","Tante Alma Bonn"
-]
-
-const $ = s=>document.querySelector(s)
-const $$ = s=>document.querySelectorAll(s)
+const $  = (q)=>document.querySelector(q)
+const $$ = (q)=>document.querySelectorAll(q)
 const toast = $('#toast')
 
-// ===== Modals =====
-const overlay = $('#modal-overlay')
-const modals = {
-  new:   $('#modal-new'),
-  list:  $('#modal-list'),
-  avail: $('#modal-avail'),
-  settings: $('#modal-settings'),
-  report: $('#modal-report'),
-  map: $('#modal-map'),
-}
-function openModal(key){
-  overlay.hidden = false
-  modals[key].showModal()
-}
-function closeAll(){
-  overlay.hidden = true
-  Object.values(modals).forEach(m=>m.open && m.close())
-}
-overlay.addEventListener('click', closeAll)
-$$('[data-close]').forEach(b=> b.addEventListener('click', closeAll))
-$$('[data-modal]').forEach(b=> b.addEventListener('click', ()=>openModal(b.dataset.modal)))
-
-function showToast(msg, ms=2200){
-  toast.textContent = msg
-  toast.classList.add('show')
-  setTimeout(()=> toast.classList.remove('show'), ms)
-}
-
-// ===== Neue Reservierung (Wizard im Modal) =====
-const wizard = $('#wizard')
-const state = {
-  hotel:null, arrival:null, departure:null,
-  category:null, rate:null,
-  guest:{ first_name:'', last_name:'', email:'' }
-}
-const categories = ["Standard","Deluxe","Apartment"]
-const rates = [
-  {id:'FLEX_EX', name:'Flex exklusive Frühstück', price:89},
-  {id:'FLEX_IN', name:'Flex inklusive Frühstück', price:109},
+// ===== HOTELS =====
+const HOTELS = [
+  "MASEVEN München Dornach",
+  "MASEVEN München Trudering",
+  "MASEVEN Frankfurt",
+  "MASEVEN Stuttgart",
+  "Fidelity Robenstein",
+  "Fidelity Struck",
+  "Fidelity Doerr",
+  "Fidelity Gr. Baum",
+  "Fidelity Landskron",
+  "Fidelity Pürgl",
+  "Fidelity Seppl",
+  "Tante Alma Bonn",
+  "Tante Alma Köln",
+  "Tante Alma Erfurt",
+  "Tante Alma Mannheim",
+  "Tante Alma Mülheim",
+  "Tante Alma Sonnen",
+  "Delta by Marriot Offenbach",
+  "Villa Viva Hamburg",
 ]
 
-function viewStep1(){
-  wizard.innerHTML = `
-    <div class="grid cols-3 card">
+// ===== STATE =====
+const state = {
+  hotel: null, arrival: null, departure: null,
+  category: null, rate: null,
+  guest: { first_name:'', last_name:'', email:'' },
+}
+const persist = ()=>localStorage.setItem('res-tool', JSON.stringify(state))
+const load = ()=>{ try{ Object.assign(state, JSON.parse(localStorage.getItem('res-tool')||'{}')) }catch{} }
+load()
+
+// ===== UI HOOKS =====
+function showToast(msg, ms=2400){ toast.textContent=msg; toast.classList.add('show'); setTimeout(()=>toast.classList.remove('show'), ms) }
+
+function openModal(name){
+  document.getElementById(`modal-${name}`).setAttribute('aria-hidden','false')
+  if(name==='newRes') renderNewReservation()
+  if(name==='reservations') mountReservations()
+  if(name==='availability') mountAvailability()
+}
+function closeModal(el){ el.closest('.modal').setAttribute('aria-hidden','true') }
+
+$$('[data-open]').forEach(b=> b.addEventListener('click', e=> openModal(e.currentTarget.dataset.open)))
+$$('[data-close]').forEach(b=> b.addEventListener('click', e=> closeModal(e.currentTarget)))
+
+// ===== NEW RESERVATION =====
+const dummyRates = [
+  { id:'FLEX_EX', name:'Flex exklusive Frühstück', price:89, desc:'Test rate' },
+  { id:'FLEX_IN', name:'Flex inklusive Frühstück', price:109, desc:'Test rate' },
+]
+function validDates(a, d){ if(!a||!d) return false; const A=new Date(a), D=new Date(d); return !isNaN(A)&&!isNaN(D)&&D>A }
+
+function renderNewReservation(){
+  const root = $('#newResContent')
+  root.innerHTML = `
+    <div class="grid cols-3">
       <label>Hotel
-        <select id="hotel">
+        <select id="nrHotel">
           <option value="">Bitte wählen…</option>
-          ${hotels.map(h=>`<option ${state.hotel===h?'selected':''}>${h}</option>`).join('')}
+          ${HOTELS.map(h=>`<option ${state.hotel===h?'selected':''}>${h}</option>`).join('')}
         </select>
       </label>
-      <label>Anreise <input id="arrival" type="date" value="${state.arrival||''}"/></label>
-      <label>Abreise <input id="departure" type="date" value="${state.departure||''}"/></label>
+      <label>Anreise <input type="date" id="nrArr" value="${state.arrival||''}"></label>
+      <label>Abreise <input type="date" id="nrDep" value="${state.departure||''}"></label>
     </div>
-    <div class="toolbar">
-      <button class="primary" id="to2" ${state.hotel&&state.arrival&&state.departure?'':'disabled'}>Weiter</button>
-    </div>
-  `
-  $('#hotel').addEventListener('change',e=>{state.hotel=e.target.value; viewStep1()})
-  $('#arrival').addEventListener('change',e=>{state.arrival=e.target.value; viewStep1()})
-  $('#departure').addEventListener('change',e=>{state.departure=e.target.value; viewStep1()})
-  $('#to2').addEventListener('click', viewStep2)
-}
-
-function viewStep2(){
-  wizard.innerHTML = `
-    <div class="grid" style="grid-template-columns:1fr 1fr;gap:16px">
-      ${categories.map(c=>`
-        <div class="card">
+    <div class="card" style="margin-top:12px">
+      <div class="grid" style="grid-template-columns:1fr 1fr; gap:12px">
+        ${dummyRates.map(r=>`
           <div class="kachel">
-            <div><h3 style="margin:.2rem 0">${c}</h3><span class="muted">${state.arrival||'?'} – ${state.departure||'?'}</span></div>
-            <div class="badge">${state.hotel||''}</div>
-          </div>
-          <details ${state.category===c?'open':''}>
-            <summary>Diese Kategorie wählen</summary>
-            <div class="grid rate">
-              ${rates.map(r=>`
-                <div class="card" style="display:grid;grid-template-columns:2fr 1fr auto;gap:10px;align-items:center">
-                  <div><strong>${r.name}</strong></div>
-                  <div><strong>${r.price} €</strong></div>
-                  <div><button class="primary pick" data-cat="${c}" data-rate="${r.id}">Auswählen</button></div>
-                </div>`).join('')}
+            <div>
+              <strong>${r.name}</strong><br>
+              <span class="muted">${r.desc}</span>
             </div>
-          </details>
-        </div>`).join('')}
-    </div>
-    <div class="toolbar">
-      <button id="back1">Zurück</button>
-      <button class="primary" id="to3" ${state.rate?'':'disabled'}>Weiter</button>
-    </div>
-  `
-  $$('.pick').forEach(btn=>btn.addEventListener('click',e=>{
-    state.category = e.target.dataset.cat
-    state.rate = e.target.dataset.rate
-    showToast('Kategorie & Rate gesetzt')
-    viewStep2()
-  }))
-  $('#back1').addEventListener('click', viewStep1)
-  $('#to3').addEventListener('click', viewStep3)
-}
-
-function viewStep3(){
-  const rate = rates.find(r=>r.id===state.rate)
-  wizard.innerHTML = `
-    <div class="card">
-      <div><strong>Hotel:</strong> ${state.hotel||'-'}</div>
-      <div><strong>Zeitraum:</strong> ${state.arrival||'?'} – ${state.departure||'?'}</div>
-      <div><strong>Kategorie:</strong> ${state.category||'-'}</div>
-      <div><strong>Rate:</strong> ${rate? rate.name+' ('+rate.price+' €)' : '-'}</div>
-      <hr/>
-      <div class="grid cols-3">
-        <label>Vorname <input id="fn" value="${state.guest.first_name||''}" autocomplete="given-name"></label>
-        <label>Nachname <input id="ln" value="${state.guest.last_name||''}" autocomplete="family-name"></label>
-        <label>E-Mail <input id="em" value="${state.guest.email||''}" type="email" autocomplete="email"></label>
+            <div><strong>${r.price} €</strong><br><button class="primary chooseRate" data-rate="${r.id}" style="margin-top:6px">Wählen</button></div>
+          </div>
+        `).join('')}
       </div>
     </div>
+
+    <hr>
+    <div class="grid cols-3">
+      <label>Vorname <input id="nrFn" value="${state.guest.first_name||''}" autocomplete="given-name"></label>
+      <label>Nachname <input id="nrLn" value="${state.guest.last_name||''}" autocomplete="family-name"></label>
+      <label>E-Mail <input id="nrEm" value="${state.guest.email||''}" type="email" autocomplete="email"></label>
+    </div>
     <div class="toolbar">
-      <button id="back2">Zurück</button>
-      <button class="primary" id="submit" ${rate?'':'disabled'}>Reservierung abschicken</button>
+      <button class="primary" id="nrSubmit" disabled>Reservierung abschicken</button>
     </div>
   `
-  $('#fn').addEventListener('input',e=>state.guest.first_name=e.target.value)
-  $('#ln').addEventListener('input',e=>state.guest.last_name=e.target.value)
-  $('#em').addEventListener('input',e=>state.guest.email=e.target.value)
-  $('#back2').addEventListener('click', viewStep2)
-  $('#submit').addEventListener('click', submitReservation)
+  // bindings
+  $('#nrHotel').addEventListener('change', e=>{ state.hotel=e.target.value; persist(); updateSubmitState() })
+  $('#nrArr').addEventListener('change', e=>{ state.arrival=e.target.value; persist(); updateSubmitState() })
+  $('#nrDep').addEventListener('change', e=>{ state.departure=e.target.value; persist(); updateSubmitState() })
+  $('#nrFn').addEventListener('input', e=>{ state.guest.first_name=e.target.value; persist(); updateSubmitState() })
+  $('#nrLn').addEventListener('input', e=>{ state.guest.last_name=e.target.value; persist(); updateSubmitState() })
+  $('#nrEm').addEventListener('input', e=>{ state.guest.email=e.target.value; persist(); updateSubmitState() })
+  $$('.chooseRate').forEach(b=> b.addEventListener('click', e=>{ state.rate=e.currentTarget.dataset.rate; persist(); showToast('Rate gesetzt'); updateSubmitState() }))
+  $('#nrSubmit').addEventListener('click', submitReservation)
+
+  function updateSubmitState(){
+    const ready = state.hotel && validDates(state.arrival,state.departure) && state.rate && state.guest.last_name
+    $('#nrSubmit').disabled = !ready
+  }
+  updateSubmitState()
 }
 
 async function submitReservation(){
-  const btn = $('#submit'); btn.disabled = true; btn.textContent='Wird gespeichert…'
+  const btn = $('#nrSubmit')
+  btn.disabled = true; btn.textContent = 'Wird gespeichert…'
   const payload = {
     hotel_id: state.hotel,
     arrival: state.arrival,
     departure: state.departure,
-    category_id: state.category,
+    category_id: null,
     rate_code: state.rate,
     guest_first_name: state.guest.first_name,
     guest_last_name: state.guest.last_name,
@@ -158,31 +134,41 @@ async function submitReservation(){
   try{
     const { data, error } = await supabase.from('reservations').insert(payload).select().single()
     if(error) throw error
-    showToast('Gespeichert – ID '+data.id)
-    closeAll()
-    // optional: direkt Liste öffnen
-    openModal('list'); renderList()
+    showToast('Reservierung gespeichert – ID ' + data.id)
+    // Reset rate, sonst alles gemerkt
+    state.rate=null; persist();
+    // Optional: Modal schließen
+    closeModal($('#modal-newRes').querySelector('[data-close]'))
   }catch(e){
     console.error(e); showToast('Fehler: '+e.message, 4000)
-    btn.disabled=false; btn.textContent='Reservierung abschicken'
+  }finally{
+    btn.textContent='Reservierung abschicken'
+    btn.disabled=false
   }
 }
 
-// ===== Reservierungen (Liste) =====
-const pageSize = 50
-let page = 1, query = ""
-async function fetchPage(){
-  const from = (page-1)*pageSize, to = from+pageSize-1
-  const { count } = await supabase.from('reservations').select('*',{count:'exact',head:true})
-  let sel = supabase.from('reservations')
-    .select('id,hotel_id,arrival,departure,category_id,rate_code,guest_first_name,guest_last_name,guest_email,created_at')
-    .order('created_at',{ascending:false}).range(from,to)
-  if(query) sel = sel.ilike('guest_last_name', `%${query}%`)
-  const { data, error } = await sel
-  if(error){ throw error }
-  return { data: data||[], count: count||0 }
+// ===== RESERVATIONS LIST =====
+let resPage=1, resPageSize=50, resQuery=''
+function mountReservations(){
+  $('#resSearch').value = resQuery
+  $('#resSearch').oninput = (e)=>{ resQuery=e.target.value.trim(); resPage=1; renderReservations() }
+  $('#resPrev').onclick = ()=>{ if(resPage>1){resPage--; renderReservations()} }
+  $('#resNext').onclick = ()=>{ resPage++; renderReservations() }
+  renderReservations()
 }
-function renderRows(rows){
+async function fetchReservations(){
+  const from=(resPage-1)*resPageSize, to=from+resPageSize-1
+  const { count } = await supabase.from('reservations').select('*',{count:'exact', head:true})
+  let q = supabase.from('reservations')
+    .select('id,hotel_id,arrival,departure,guest_last_name,guest_first_name,guest_email,rate_code,created_at')
+    .order('created_at',{ascending:false})
+    .range(from,to)
+  if(resQuery) q = q.ilike('guest_last_name', `%${resQuery}%`)
+  const { data, error } = await q
+  if(error) throw error
+  return { rows: data||[], count: count||0 }
+}
+function renderReservationRows(rows){
   return rows.map(r=>`
     <details class="row">
       <summary class="grid head" style="grid-template-columns:1.4fr 1fr 1fr 1fr 1fr">
@@ -196,63 +182,76 @@ function renderRows(rows){
         <div><strong>Email:</strong> ${r.guest_email||'-'}</div>
         <div><strong>Erstellt:</strong> ${new Date(r.created_at).toLocaleString()}</div>
         <div class="toolbar" style="margin-top:8px">
-          <button class="iconbtn" disabled>Ändern (später)</button>
-          <button class="iconbtn" disabled>Stornieren (später)</button>
+          <button disabled>Ändern (später)</button>
+          <button disabled>Stornieren (später)</button>
         </div>
       </div>
-    </details>`).join('')
+    </details>
+  `).join('')
 }
-async function renderList(){
+async function renderReservations(){
+  const list = $('#resList')
+  list.innerHTML = `<div class="card">Lade…</div>`
   try{
-    const { data, count } = await fetchPage()
-    $('#list').innerHTML = `
+    const { rows, count } = await fetchReservations()
+    list.innerHTML = `
       <div class="grid head" style="grid-template-columns:1.4fr 1fr 1fr 1fr 1fr">
         <div>Gastname</div><div>Anreise</div><div>Abreise</div><div>Hotel</div><div>Rate</div>
       </div>
-      ${renderRows(data)}`
-    const totalPages = Math.max(1, Math.ceil((count||0)/pageSize))
-    $('#pageinfo').textContent = `Seite ${page} von ${totalPages} (${count||0})`
-    $('#prev').disabled = page<=1
-    $('#next').disabled = page>=totalPages
+      ${renderReservationRows(rows)}
+    `
+    const totalPages = Math.max(1, Math.ceil(count/resPageSize))
+    $('#resPageinfo').textContent = `Seite ${resPage} von ${totalPages} (${count} Einträge)`
+    $('#resPrev').disabled = resPage<=1
+    $('#resNext').disabled = resPage>=totalPages
   }catch(e){
-    console.error(e)
-    $('#list').innerHTML = `<div class="card">Fehler: ${e.message}</div>`
+    console.error(e); list.innerHTML = `<div class="card">Fehler: ${e.message}</div>`
   }
 }
-$('#search')?.addEventListener('input',e=>{ query=e.target.value.trim(); page=1; renderList() })
-$('#prev')?.addEventListener('click',()=>{ if(page>1){ page--; renderList() }})
-$('#next')?.addEventListener('click',()=>{ page++; renderList() })
 
-// ===== Verfügbarkeit (Dummy bis Datenquelle steht) =====
-const stockByHotel = {
-  "MASEVEN München Dornach":319,"MASEVEN München Trudering":289,"MASEVEN Frankfurt":220,"MASEVEN Stuttgart":180,
-  "Fidelity Robenstein":140,"Fidelity Struck":110,"Fidelity Doerr":95,"Fidelity Gr. Baum":160,
-  "Fidelity Landskron":120,"Fidelity Pürgl":80,"Fidelity Seppl":100,"Tante Alma Bonn":150
+// ===== AVAILABILITY =====
+function mountAvailability(){
+  // Hotels befüllen
+  const sel = $('#availHotel')
+  sel.innerHTML = HOTELS.map(h=>`<option>${h}</option>`).join('')
+  // Standard Start: heute
+  const today = new Date(); const iso = today.toISOString().slice(0,10)
+  $('#availStart').value = iso
+  $('#availGenerate').onclick = renderAvailability
+  renderAvailability()
 }
-function renderAvailability(fromISO, toISO){
-  // Platzhalter: generiert pseudo-Belegung, bis echte Quelle (HNS/Opera) angeschlossen ist
-  const from = new Date(fromISO), to = new Date(toISO)
-  if(!(fromISO&&toISO) || isNaN(from)||isNaN(to) || to<from){ $('#avail-table').innerHTML='<div class="card">Bitte gültigen Zeitraum wählen.</div>'; return }
-  const days = []
-  for(let d=new Date(from); d<=to; d.setDate(d.getDate()+1)) days.push(new Date(d))
-  let html = `<div class="card" style="overflow:auto"><table style="width:100%;border-collapse:collapse">
-    <thead><tr><th style="text-align:left;padding:8px">Hotel</th>${days.map(d=>`<th style="padding:8px;text-align:right">${d.toLocaleDateString()}</th>`).join('')}</tr></thead><tbody>`
-  for(const h of hotels){
-    html += `<tr><td style="padding:8px">${h}</td>`
-    for(const d of days){
-      const stock = stockByHotel[h]||100
-      const booked = Math.floor((stock* (0.35 + 0.5*Math.abs(Math.sin(d.getTime()/8.64e7 + h.length))))) // pseudo
-      const pct = Math.round((booked/stock)*100)
-      html += `<td style="padding:8px;text-align:right">${booked} / ${stock} <span class="muted">(${pct}%)</span></td>`
-    }
-    html += `</tr>`
+function renderAvailability(){
+  const start = new Date($('#availStart').value)
+  const days = Math.min(Math.max(parseInt($('#availDays').value||'14',10),1),30)
+  const hotel = $('#availHotel').value
+  // Demo-Daten (später via HNS/OPERA): total fix, occupied pseudo
+  const total = 319
+  const rows = []
+  for(let i=0;i<days;i++){
+    const d = new Date(start); d.setDate(d.getDate()+i)
+    const occ = Math.floor((80 + Math.sin(i/2)*20 + (i*3)%15))  // pseudo
+    const booked = Math.min(Math.max(occ,0), total)
+    const pct = Math.round((booked/total)*100)
+    rows.push({ date:d.toISOString().slice(0,10), booked, total, pct })
   }
-  html += `</tbody></table></div>`
-  $('#avail-table').innerHTML = html
+  const table = `
+    <div class="table">
+      <table>
+        <thead><tr><th>Hotel</th><th>Datum</th><th>Belegt</th><th>Zimmer gesamt</th><th>Auslastung</th></tr></thead>
+        <tbody>
+          ${rows.map(r=>{
+            const cls = r.pct<60?'ok': r.pct<85?'warn':'bad'
+            return `<tr>
+              <td>${hotel}</td>
+              <td>${r.date}</td>
+              <td>${r.booked}</td>
+              <td>${r.total}</td>
+              <td><span class="pill ${cls}">${r.pct}%</span></td>
+            </tr>`
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+  `
+  $('#availTable').innerHTML = table
 }
-$('#avail-refresh')?.addEventListener('click', ()=>{
-  renderAvailability($('#avail-from').value, $('#avail-to').value)
-})
-
-// Defaults
-viewStep1()
