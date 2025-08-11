@@ -142,6 +142,12 @@ button.primary:disabled{ opacity:.6; cursor:not-allowed; box-shadow:none }
 .toolbar{ display:flex; flex-wrap:wrap; gap: 12px; margin: 10px 0 16px }
 .pager{ display:flex; align-items:center; gap: 12px; margin: 12px 0 }
 
+/* Headline-Fix: Überschriften in deinem Cyan */
+h1, h2, h3, h4, h5, h6,
+.headline {
+  color: var(--text);   /* #00FFFF – aus Tokens */
+}
+
 /* ---- Grid Helpers ---- */
 .grid{ display:grid; gap: var(--gap) }
 .cols-3{ grid-template-columns: 1.6fr 1fr 1fr }
@@ -243,3 +249,4 @@ button.primary:disabled{ opacity:.6; cursor:not-allowed; box-shadow:none }
   .cols-3{ grid-template-columns: 1fr }
   .iconbar{ gap: 6px }
 }
+
