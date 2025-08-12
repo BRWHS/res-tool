@@ -11,13 +11,13 @@
   <link rel="stylesheet" href="/src/styles.css" />
 </head>
 <body>
-  <header class="topbar">
-    <div class="brand">
+  <header class="topbar" role="banner">
+    <div class="brand" aria-label="res-tool brand">
       <div class="logo" aria-hidden="true"></div>
       <h1 class="mono"><span>res</span>-tool<span class="cursor">_</span></h1>
     </div>
 
-    <nav class="toolbar">
+    <nav class="toolbar" aria-label="Aktionen">
       <div class="toolbar-left">
         <button class="btn primary" id="btnNew">Neue Reservierung</button>
         <button class="btn ghost"   id="btnAvail">Verfügbarkeit</button>
@@ -26,19 +26,14 @@
         <button class="btn ghost"   id="btnSketch">Hotelskizze</button>
       </div>
 
-      <div class="toolbar-right">
-        <a class="btn sm" href="https://noteforms.com/forms/hotel-booking-tracker-c83eba" target="_blank" rel="noopener">Buchungs-Tracker</a>
-        <a class="btn sm" href="https://noteforms.com/forms/hotel-call-tracking-form-hw2hqj" target="_blank" rel="noopener">Telefon-Tracker</a>
-      </div>
-
-      <div class="mono status-clock">
-        <div id="statusChips" style="display:flex; gap:8px;">
+      <div class="toolbar-right mono">
+        <div id="statusChips">
           <span class="pill" id="chipSb"  title="Supabase">SB</span>
           <span class="pill" id="chipHns" title="HotelNetSolutions">HNS</span>
         </div>
-        <div class="muted" id="clockWrap">
+        <div class="clock">
           <span id="clockLocal">--:--:--</span>
-          <span style="opacity:.6">/</span>
+          <span class="sep">/</span>
           <span id="clockServer">srv --:--:--</span>
         </div>
       </div>
@@ -47,11 +42,11 @@
 
   <main class="container" aria-live="polite">
     <!-- KPIs -->
-    <section class="grid hero">
+    <section class="grid hero" aria-label="Dashboard Übersicht">
       <article class="card scanlines">
         <div class="content">
           <h3 class="mono">KPI — Heute</h3>
-          <div class="kpis big">
+          <div class="kpis big" id="kpisToday">
             <div class="kpi"><div class="value" id="tBookings">—</div><div class="label">Buchungen</div></div>
             <div class="kpi"><div class="value" id="tRevenue">— €</div><div class="label">Umsatz</div></div>
             <div class="kpi"><div class="value" id="tADR">— €</div><div class="label">ADR</div></div>
@@ -60,11 +55,10 @@
           </div>
         </div>
       </article>
-
       <article class="card scanlines">
         <div class="content">
           <h3 class="mono">KPI — Letzte 7 Tage</h3>
-          <div class="kpis big">
+          <div class="kpis big" id="kpis7">
             <div class="kpi"><div class="value" id="wBookings">—</div><div class="label">Buchungen</div></div>
             <div class="kpi"><div class="value" id="wRevenue">— €</div><div class="label">Umsatz</div></div>
             <div class="kpi"><div class="value" id="wADR">— €</div><div class="label">ADR</div></div>
@@ -76,7 +70,7 @@
     </section>
 
     <!-- Reservierungen -->
-    <section style="margin-top:16px;">
+    <section style="margin-top:16px;" aria-label="Reservierungen">
       <article class="card scanlines">
         <div class="content">
           <div class="table-tools">
@@ -87,8 +81,14 @@
             <table class="resv">
               <thead>
                 <tr>
-                  <th>Gastname</th><th>Anreise</th><th>Abreise</th><th>Hotel</th>
-                  <th>Kategorie</th><th>Rate</th><th>Preis</th><th>Notizen</th>
+                  <th>Gastname</th>
+                  <th>Anreise</th>
+                  <th>Abreise</th>
+                  <th>Hotel</th>
+                  <th>Kategorie</th>
+                  <th>Rate</th>
+                  <th>Preis</th>
+                  <th>Notizen</th>
                 </tr>
               </thead>
               <tbody id="resvBody"></tbody>
@@ -104,11 +104,17 @@
     </section>
   </main>
 
-  <!-- Backdrop (jetzt unter dem Modal) -->
-  <div class="modal-backdrop" id="backdrop"></div>
+  <!-- Floating right sidebar for trackers -->
+  <aside class="quick-links" aria-label="Tracker Shortcuts">
+    <a class="btn sm" href="https://noteforms.com/forms/hotel-booking-tracker-c83eba" target="_blank" rel="noopener">Buchungs-Tracker</a>
+    <a class="btn sm" href="https://noteforms.com/forms/hotel-call-tracking-form-hw2hqj" target="_blank" rel="noopener">Telefon-Tracker</a>
+  </aside>
+
+  <!-- Backdrop (non-blurred, sharp background) -->
+  <div class="modal-backdrop" id="backdrop" aria-hidden="true"></div>
 
   <!-- Modals -->
-  <section class="modal" id="modalNew" role="dialog" aria-labelledby="newTitle">
+  <section class="modal" id="modalNew" role="dialog" aria-labelledby="newTitle" aria-modal="true">
     <header>
       <h3 id="newTitle" class="mono">Neue Reservierung</h3>
       <button class="btn" data-close>Schließen</button>
@@ -138,7 +144,7 @@
     </div>
   </section>
 
-  <section class="modal" id="modalAvail" role="dialog" aria-labelledby="availTitle">
+  <section class="modal" id="modalAvail" role="dialog" aria-labelledby="availTitle" aria-modal="true">
     <header>
       <h3 id="availTitle" class="mono">Verfügbarkeit (14 Tage)</h3>
       <button class="btn" data-close>Schließen</button>
@@ -151,7 +157,7 @@
     </div>
   </section>
 
-  <section class="modal" id="modalReporting" role="dialog" aria-labelledby="repTitle">
+  <section class="modal" id="modalReporting" role="dialog" aria-labelledby="repTitle" aria-modal="true">
     <header>
       <h3 id="repTitle" class="mono">Reporting</h3>
       <button class="btn" data-close>Schließen</button>
@@ -171,7 +177,7 @@
     </div>
   </section>
 
-  <section class="modal" id="modalSettings" role="dialog" aria-labelledby="setTitle">
+  <section class="modal" id="modalSettings" role="dialog" aria-labelledby="setTitle" aria-modal="true">
     <header>
       <h3 id="setTitle" class="mono">Einstellungen</h3>
       <button class="btn" data-close>Schließen</button>
@@ -189,7 +195,7 @@
     </div>
   </section>
 
-  <section class="modal" id="modalSketch" role="dialog" aria-labelledby="sketchTitle">
+  <section class="modal" id="modalSketch" role="dialog" aria-labelledby="sketchTitle" aria-modal="true">
     <header>
       <h3 id="sketchTitle" class="mono">Hotelskizze</h3>
       <button class="btn" data-close>Schließen</button>
