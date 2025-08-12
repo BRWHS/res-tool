@@ -6,18 +6,18 @@
   <title>res‑tool — Hotel Tech Dashboard</title>
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <!-- IMPORTANT: styles.css liegt in /src -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/src/styles.css" />
 </head>
 <body>
   <header class="topbar" role="banner">
     <div class="brand" aria-label="res‑tool brand">
       <div class="logo" aria-hidden="true"></div>
-      <h1><span>res</span>‑tool</h1>
+      <h1 class="mono"><span>res</span>‑tool<span class="cursor">_</span></h1>
     </div>
     <nav class="toolbar" aria-label="Aktionen">
-      <button class="btn" id="btnStatus">Systemstatus</button>
+      <button class="btn ghost" id="btnStatus">Systemstatus</button>
+      <button class="btn ghost" id="btnAvail">Verfügbarkeit</button>
       <button class="btn primary" id="btnNew">Neue Reservierung</button>
     </nav>
   </header>
@@ -25,52 +25,38 @@
   <main class="container" id="app" aria-live="polite">
     <!-- DASHBOARD -->
     <section class="grid hero" aria-label="Dashboard Übersicht">
-      <article class="card">
+      <article class="card scanlines">
         <div class="content">
-          <h3>KPIs</h3>
-          <div class="kpis" id="kpis">
-            <div class="kpi"><div class="value" id="kpiToday">—</div><div class="label">Buchungen heute</div></div>
-            <div class="kpi"><div class="value" id="kpi7">—</div><div class="label">Buchungen letzte 7 Tage</div></div>
-            <div class="kpi"><div class="value" id="kpiOcc">—%</div><div class="label">Ø Auslastung (7 Tage Vorschau)</div></div>
+          <h3 class="mono">KPI — Heute</h3>
+          <div class="kpis big" id="kpisToday">
+            <div class="kpi"><div class="value" id="tBookings">—</div><div class="label">Buchungen</div></div>
+            <div class="kpi"><div class="value" id="tRevenue">— €</div><div class="label">Umsatz</div></div>
+            <div class="kpi"><div class="value" id="tADR">— €</div><div class="label">ADR</div></div>
+            <div class="kpi"><div class="value" id="tOcc">—%</div><div class="label">Ø Auslastung</div></div>
+            <div class="kpi"><div class="value" id="tHotels">—</div><div class="label">Häuser mit Buchungen</div></div>
           </div>
         </div>
       </article>
-      <article class="card">
+      <article class="card scanlines">
         <div class="content">
-          <h3>Wöchentliche Verfügbarkeitsvorschau</h3>
-          <div class="mini-availability" id="miniAvail" aria-label="7‑Tage Verfügbarkeit"></div>
-          <div class="grid" style="grid-template-columns:repeat(7,1fr);gap:6px;margin-top:6px;" id="miniDays"></div>
-        </div>
-      </article>
-    </section>
-
-    <!-- AVAILABILITY MATRIX -->
-    <section style="margin-top:16px;" aria-label="Haupt-Verfügbarkeitsmatrix">
-      <article class="card">
-        <div class="content">
-          <h3>Verfügbarkeitsmatrix</h3>
-          <div class="matrix" id="matrixWrap">
-            <table class="matrix" id="matrixTable" aria-describedby="matrixHelp">
-              <thead>
-                <tr>
-                  <th class="sticky">Hotel</th>
-                  <!-- dates injected here -->
-                </tr>
-              </thead>
-              <tbody id="matrixBody"></tbody>
-            </table>
+          <h3 class="mono">KPI — Letzte 7 Tage</h3>
+          <div class="kpis big" id="kpis7">
+            <div class="kpi"><div class="value" id="wBookings">—</div><div class="label">Buchungen</div></div>
+            <div class="kpi"><div class="value" id="wRevenue">— €</div><div class="label">Umsatz</div></div>
+            <div class="kpi"><div class="value" id="wADR">— €</div><div class="label">ADR</div></div>
+            <div class="kpi"><div class="value" id="wOcc">—%</div><div class="label">Ø Auslastung</div></div>
+            <div class="kpi"><div class="value" id="wHotels">—</div><div class="label">Häuser mit Buchungen</div></div>
           </div>
-          <p id="matrixHelp" class="muted" style="margin-top:8px;">Legende: <span class="pill lvl-0">OK</span> <span class="pill lvl-1">Überbuchung +1</span> <span class="pill lvl-2">Überbuchung ≥2</span></p>
         </div>
       </article>
     </section>
 
     <!-- RESERVATIONS LIST -->
     <section style="margin-top:16px;" aria-label="Reservierungen">
-      <article class="card">
+      <article class="card scanlines">
         <div class="content">
           <div class="table-tools">
-            <h3 style="margin:0">Reservierungen</h3>
+            <h3 class="mono" style="margin:0">Reservierungen</h3>
             <div class="search"><input id="searchInput" class="input" placeholder="Nach Gastname suchen…" autocomplete="off" /></div>
           </div>
           <div class="table-wrap">
@@ -106,7 +92,7 @@
   <!-- System Status Modal -->
   <section class="modal" id="statusModal" aria-modal="true" role="dialog" aria-labelledby="statusTitle">
     <header>
-      <h3 id="statusTitle">Systemstatus</h3>
+      <h3 id="statusTitle" class="mono">Systemstatus</h3>
       <button class="btn" data-close>Schließen</button>
     </header>
     <div class="body">
@@ -120,10 +106,31 @@
     </div>
   </section>
 
+  <!-- Availability Modal (Popup) -->
+  <section class="modal" id="availabilityModal" aria-modal="true" role="dialog" aria-labelledby="availTitle">
+    <header>
+      <h3 id="availTitle" class="mono">Verfügbarkeitsmatrix</h3>
+      <button class="btn" data-close>Schließen</button>
+    </header>
+    <div class="body">
+      <div class="matrix" id="matrixWrap">
+        <table class="matrix" id="matrixTable" aria-describedby="matrixHelp">
+          <thead>
+            <tr>
+              <th class="sticky">Hotel</th>
+            </tr>
+          </thead>
+          <tbody id="matrixBody"></tbody>
+        </table>
+      </div>
+      <p id="matrixHelp" class="muted" style="margin-top:8px;">Legende: <span class="pill lvl-0">OK</span> <span class="pill lvl-1">Überbuchung +1</span> <span class="pill lvl-2">Überbuchung ≥2</span></p>
+    </div>
+  </section>
+
   <!-- New Reservation Wizard Modal -->
   <section class="modal" id="wizardModal" aria-modal="true" role="dialog" aria-labelledby="wizardTitle">
     <header>
-      <h3 id="wizardTitle">Neue Reservierung</h3>
+      <h3 id="wizardTitle" class="mono">Neue Reservierung</h3>
       <button class="btn" data-close>Abbrechen</button>
     </header>
     <div class="body wizard">
@@ -142,14 +149,10 @@
 
   <!-- Supabase JS -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.5/dist/umd/supabase.js" integrity="sha384-E1zvYhRbs4d7Dzp3svuG9aGxNmiuTT5z+6j2mO/6hM7eJ0/hHY7Vh6o9Z1Oe+RrV" crossorigin="anonymous"></script>
-
-  <!-- Env injection (Vercel env füllt das) -->
   <script>
-    window.SB_URL = window.SB_URL || "";   // z.B. https://xyzcompany.supabase.co
-    window.SB_ANON_KEY = window.SB_ANON_KEY || ""; // anon key
+    window.SB_URL = "https://kytuiodojfcaggkvizto.supabase.co";
+    window.SB_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt5dHVpb2RvamZjYWdna3ZpenRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ4MzA0NjgsImV4cCI6MjA3MDQwNjQ2OH0.YobQZnCQ7LihWtewynoCJ6ZTjqetkGwh82Nd2mmmhLU";
   </script>
-
-  <!-- IMPORTANT: app.js liegt in /src -->
   <script src="/src/app.js"></script>
 </body>
 </html>
