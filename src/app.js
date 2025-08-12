@@ -1,6 +1,6 @@
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
 
-// === SUPABASE (deine echten Werte eintragen) ===
+// === SUPABASE ===
 const SUPABASE_URL = "https://kytuiodojfcaggkvizto.supabase.co"
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt5dHVpb2RvamZjYWdna3ZpenRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ4MzA0NjgsImV4cCI6MjA3MDQwNjQ2OH0.YobQZnCQ7LihWtewynoCJ6ZTjqetkGwh82Nd2mmmhLU"
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
@@ -17,7 +17,7 @@ const HOTELS = [
   "Tante Alma Mannheim","Tante Alma Mülheim","Tante Alma Sonnen","Delta by Marriot Offenbach","Villa Viva Hamburg"
 ]
 
-/* ===== Overlay & Modal handling ===== */
+/* ===== Modal handling ===== */
 const overlay = $('#overlay')
 function openModal(name){
   overlay.hidden = false
@@ -33,36 +33,50 @@ function closeAll(){
 $$('[data-open]').forEach(b => b.addEventListener('click', e => openModal(e.currentTarget.dataset.open)))
 $$('[data-close]').forEach(b => b.addEventListener('click', closeAll))
 
-/* ===== Toast ===== */
-function showToast(msg, ms=2400){ toast.textContent = msg; toast.classList.add('show'); setTimeout(()=>toast.classList.remove('show'), ms) }
-
-/* ===== Clock / Status ===== */
+/* ===== Clock / Header ===== */
 function updateClock(){
   const now = new Date()
-  $('#clock').textContent = now.toLocaleTimeString('de-DE', { hour12:false })
-  $('#date').textContent  = now.toLocaleDateString('de-DE', { weekday:'short', day:'2-digit', month:'2-digit', year:'numeric' })
+  const dateStr = now.toLocaleDateString('de-DE', { weekday:'short', day:'2-digit', month:'2-digit', year:'numeric' })
+  const timeStr = now.toLocaleTimeString('de-DE', { hour12:false })
+  $('#date').textContent = dateStr
+  $('#clock').textContent = timeStr
+  $('#date2').textContent = dateStr
+  $('#clock2').textContent = timeStr
 }
 setInterval(updateClock, 1000); updateClock()
 
-/* ===== Dashboard KPIs (einfach / Demo + live count) ===== */
+/* ===== Toast ===== */
+function showToast(msg, ms=2400){ toast.textContent = msg; toast.classList.add('show'); setTimeout(()=>toast.classList.remove('show'), ms) }
+
+/* ===== KPIs ===== */
 async function refreshKpis(){
+  const todayISO = new Date().toISOString().slice(0,10)
+  const weekStart = new Date(); weekStart.setDate(weekStart.getDate()-6)
+  const weekISO = weekStart.toISOString().slice(0,10)
+
   try{
-    const todayISO = new Date().toISOString().slice(0,10)
     const { count:todayCount } = await supabase.from('reservations')
       .select('id', { count:'exact', head:true })
       .gte('created_at', todayISO)
     $('#kpi-today').textContent = todayCount ?? 0
   }catch{ $('#kpi-today').textContent = '—' }
 
-  // Demo-ADR & Occ (bis echte Datenquelle steht)
-  const adr = 104 + Math.floor(Math.random()*16)
-  const occ = 62 + Math.floor(Math.random()*18)
+  try{
+    const { count:weekCount } = await supabase.from('reservations')
+      .select('id', { count:'exact', head:true })
+      .gte('created_at', weekISO)
+    $('#kpi-week').textContent = weekCount ?? 0
+  }catch{ $('#kpi-week').textContent = '—' }
+
+  // Demo-ADR & Occ (Platzhalter bis echte Quelle)
+  const adr = 105 + Math.floor(Math.random()*14)
+  const occ = 60 + Math.floor(Math.random()*20)
   $('#kpi-adr').textContent = adr + ' €'
   $('#kpi-occ').textContent = occ + '%'
 }
 refreshKpis(); setInterval(refreshKpis, 30_000)
 
-/* ===== Mini Availability (Woche) ===== */
+/* ===== Weekly mini-availability (3 Level inkl. Überbuchung) ===== */
 let miniWeekOffset = 0
 $('#mini-prev')?.addEventListener('click', ()=>{ miniWeekOffset -= 7; renderMiniAvailability() })
 $('#mini-next')?.addEventListener('click', ()=>{ miniWeekOffset += 7; renderMiniAvailability() })
@@ -70,17 +84,23 @@ $('#mini-next')?.addEventListener('click', ()=>{ miniWeekOffset += 7; renderMini
 function fmt(d){ return d.toISOString().slice(0,10) }
 function datesFrom(start, n){ return Array.from({length:n}, (_,i)=>{ const x = new Date(start); x.setDate(x.getDate()+i); return x }) }
 
+function levelFor(pct){
+  if (pct >= 100) return 'over'   // Überbuchung
+  if (pct >= 80)  return 'tight'  // angespannt
+  return 'normal'                 // normal
+}
+
 function renderMiniAvailability(){
   const base = new Date(); base.setDate(base.getDate()+miniWeekOffset)
   const days = datesFrom(base, 7).map(fmt)
-  // Demo-Belegung (bis Live-Daten)
   const rows = HOTELS.slice(0,8).map(h=>{
-    const total = 200 + (h.length % 80)
+    const total = 180 + (h.length % 140)
     const cells = days.map((d,i)=>{
-      const booked = Math.floor(total * (0.35 + 0.45*Math.abs(Math.sin(i/1.8 + h.length/9))))
-      const pct = Math.round(booked/total*100)
-      const lvl = pct<50?1 : pct<70?2 : pct<85?3 : 4
-      return { d, booked, total, pct, lvl }
+      // zulassen, dass wir gelegentlich über 100% gehen (Demo)
+      const overBoost = (i%6===0) ? 1.08 : 1.0
+      const booked = Math.floor(Math.min(total*1.15, total * (0.45 + 0.55*Math.abs(Math.sin(i/1.7 + h.length/11))) * overBoost))
+      const pct = Math.round((booked/total)*100)
+      return { d, booked, total, pct, lvl: levelFor(pct) }
     })
     return { h, cells }
   })
@@ -90,7 +110,9 @@ function renderMiniAvailability(){
       <tbody>
         ${rows.map(r=>`<tr>
           <td>${r.h}</td>
-          ${r.cells.map(c=>`<td><span class="mini-cell mini-level-${c.lvl}">${c.booked}/${c.total} <small>(${c.pct}%)</small></span></td>`).join('')}
+          ${r.cells.map(c=>`<td>
+            <span class="mini-cell mini-lvl-${c.lvl}">${c.booked}/${c.total} <small>(${c.pct}%)</small></span>
+          </td>`).join('')}
         </tr>`).join('')}
       </tbody>
     </table>`
@@ -98,19 +120,14 @@ function renderMiniAvailability(){
 }
 renderMiniAvailability()
 
-/* ===== New Reservation – retro stepper wizard ===== */
+/* ===== New Reservation – Wizard ===== */
 const dummyRates = [
   { id:'FLEX_EX', name:'Flex exklusive Frühstück', price:89 },
   { id:'FLEX_IN', name:'Flex inklusive Frühstück', price:109 },
 ]
-const state = {
-  hotel:null, arrival:null, departure:null,
-  rate:null,
-  guest:{ first_name:'', last_name:'', email:'' }
-}
+const state = { hotel:null, arrival:null, departure:null, rate:null, guest:{ first_name:'', last_name:'', email:'' } }
 function setStep(n){ $('#stepper-thumb').style.width = (n*33) + '%' }
-
-function validDates(a, d){ if(!a || !d) return false; const A = new Date(a), D = new Date(d); return !isNaN(A) && !isNaN(D) && D > A }
+function validDates(a,d){ if(!a||!d) return false; const A=new Date(a), D=new Date(d); return !isNaN(A)&&!isNaN(D)&&D>A }
 
 function step1(){
   setStep(1)
@@ -141,13 +158,12 @@ function step2(){
             <div><strong>${r.name}</strong><br><span class="muted">Demo‑Rate</span></div>
             <div><strong>${r.price} €</strong><br><button class="primary pick" data-rate="${r.id}" style="margin-top:6px">Wählen</button></div>
           </div>
-        </div>
-      `).join('')}
+        </div>`).join('')}
     </div>
     <div class="toolbar"><button id="back1">Zurück</button><button class="primary" id="to3" disabled>Weiter</button></div>`
-  $$('.pick').forEach(b=> b.onclick = e=>{ state.rate=e.currentTarget.dataset.rate; showToast('Rate gesetzt'); $('#to3').disabled=false })
+  $$('.pick').forEach(b=> b.onclick = e=>{ state.rate=e.currentTarget.dataset.rate; $('#to3').disabled=false })
   $('#back1').onclick = step1
-  $('#to3').onclick   = step3
+  $('#to3').onclick = step3
 }
 function step3(){
   setStep(3)
@@ -155,11 +171,11 @@ function step3(){
   $('#newResContent').innerHTML = `
     <div class="card">
       <div class="grid cols-3">
-        <label>Vorname <input id="nrFn" value="${state.guest.first_name||''}" autocomplete="given-name"></label>
-        <label>Nachname <input id="nrLn" value="${state.guest.last_name||''}" autocomplete="family-name"></label>
+        <label>Vorname <input id="nrFn" value="${state.guest.first_name||''}"></label>
+        <label>Nachname <input id="nrLn" value="${state.guest.last_name||''}"></label>
         <label>E‑Mail <input id="nrEm" value="${state.guest.email||''}" type="email"></label>
       </div>
-      <hr class="muted" style="border:0;border-top:1px dashed #22304a;margin:12px 0">
+      <hr style="border:0;border-top:1px dashed #22304a;margin:12px 0">
       <div class="grid" style="grid-template-columns:2fr 1fr">
         <div>
           <div><strong>Hotel:</strong> ${state.hotel||'-'}</div>
@@ -184,14 +200,9 @@ function openNewRes(){ openModal('newRes'); step1() }
 async function submitReservation(){
   const btn = $('#submit'); btn.disabled = true; btn.textContent = 'Speichere…'
   const payload = {
-    hotel_id: state.hotel,
-    arrival: state.arrival,
-    departure: state.departure,
-    category_id: null,
-    rate_code: state.rate,
-    guest_first_name: state.guest.first_name,
-    guest_last_name: state.guest.last_name,
-    guest_email: state.guest.email,
+    hotel_id: state.hotel, arrival: state.arrival, departure: state.departure,
+    category_id: null, rate_code: state.rate,
+    guest_first_name: state.guest.first_name, guest_last_name: state.guest.last_name, guest_email: state.guest.email,
     created_at: new Date().toISOString()
   }
   try{
@@ -211,9 +222,8 @@ function mountReservations(){
   $('#resSearch').oninput = e=>{ resQuery=e.target.value.trim(); resPage=1; renderReservations() }
   $('#resPrev').onclick = ()=>{ if(resPage>1){resPage--; renderReservations()} }
   $('#resNext').onclick = ()=>{ resPage++; renderReservations() }
-  // sortierbare Köpfe
   $$('#resTable thead th[data-sort]').forEach(th=>{
-    th.onclick = ()=>{ const k = th.dataset.sort; sortKey = k; sortDir = (sortDir==='asc'?'desc':'asc'); renderReservations() }
+    th.onclick = ()=>{ sortKey = th.dataset.sort; sortDir = (sortDir==='asc'?'desc':'asc'); renderReservations() }
   })
   renderReservations()
 }
@@ -221,11 +231,8 @@ async function fetchReservations(){
   const from=(resPage-1)*resPageSize, to=from+resPageSize-1
   const { count } = await supabase.from('reservations').select('id',{count:'exact',head:true})
   let q = supabase.from('reservations').select('id,hotel_id,arrival,departure,guest_last_name,guest_first_name,guest_email,rate_code,created_at')
-  // Suche
   if(resQuery) q = q.ilike('guest_last_name', `%${resQuery}%`)
-  // Sort
-  const asc = (sortDir==='asc')
-  q = q.order(sortKey, { ascending: asc }).range(from,to)
+  q = q.order(sortKey, { ascending: (sortDir==='asc') }).range(from,to)
   const { data, error } = await q
   if(error) throw error
   return { rows:data||[], count:count||0 }
@@ -237,7 +244,7 @@ function renderReservationsRow(r){
     <td>${r.departure||'-'}</td>
     <td>${r.hotel_id||'-'}</td>
     <td>${r.rate_code||'-'}</td>
-    <td><button class="chip" disabled>Ändern</button> <button class="chip" disabled>Stornieren</button></td>
+    <td><span class="pill tight">Ändern</span> <span class="pill over">Stornieren</span></td>
   </tr>`
 }
 async function renderReservations(){
@@ -254,7 +261,7 @@ async function renderReservations(){
   }
 }
 
-/* ===== Availability – nicer matrix (hover hi‑lite + minimap stub) ===== */
+/* ===== Availability – 3 Level + Überbuchung ===== */
 function openAvailability(){ openModal('availability'); mountAvailability() }
 function mountAvailability(){
   const today = new Date()
@@ -262,50 +269,12 @@ function mountAvailability(){
   $('#availGenerate').onclick = renderAvailabilityMatrix
   renderAvailabilityMatrix()
 }
+function levelForPct(p){ return (p>=100)?'over' : (p>=80)?'tight' : 'normal' }
+
 function renderAvailabilityMatrix(){
   const start = new Date($('#availStart').value || new Date())
   const days  = Math.max(1, Math.min(31, parseInt($('#availDays').value||'14',10)))
   const dates = Array.from({length:days}, (_,i)=>{ const d=new Date(start); d.setDate(d.getDate()+i); return d.toISOString().slice(0,10) })
 
   const totals = {
-    "MASEVEN München Dornach":319,"MASEVEN München Trudering":289,"MASEVEN Frankfurt":220,"MASEVEN Stuttgart":180,
-    "Fidelity Robenstein":140,"Fidelity Struck":110,"Fidelity Doerr":95,"Fidelity Gr. Baum":160,"Fidelity Landskron":120,
-    "Fidelity Pürgl":80,"Fidelity Seppl":100,"Tante Alma Bonn":130,"Tante Alma Köln":120,"Tante Alma Erfurt":115,
-    "Tante Alma Mannheim":140,"Tante Alma Mülheim":110,"Tante Alma Sonnen":90,"Delta by Marriot Offenbach":200,"Villa Viva Hamburg":180
-  }
-
-  const rows = HOTELS.map(h=>{
-    const total = totals[h]||100
-    const cells = dates.map((d,i)=>{
-      const booked = Math.floor(total * (0.35 + 0.45*Math.abs(Math.sin(i/2 + h.length/9))))
-      const pct = Math.round(booked/total*100)
-      const cls = pct<60?'ok': pct<85?'warn':'bad'
-      return { d, booked, total, pct, cls }
-    })
-    return { h, cells }
-  })
-
-  const thead = `<thead><tr><th>Hotel</th>${dates.map(d=>`<th>${d}</th>`).join('')}</tr></thead>`
-  const tbody = `<tbody>${rows.map(r=>`
-    <tr>
-      <td>${r.h}</td>
-      ${r.cells.map(c=>`<td data-date="${c.d}" data-hotel="${r.h}">
-        ${c.booked} / ${c.total} <span class="pct ${c.cls}">(${c.pct}%)</span>
-      </td>`).join('')}
-    </tr>`).join('')}</tbody>`
-  $('#availMatrix').innerHTML = `<table class="matrix-table">${thead}${tbody}</table>`
-
-  // Hover highlight row/column
-  const mat = $('#availMatrix')
-  mat.onmousemove = e=>{
-    const cell = e.target.closest('td,th'); if(!cell) return
-    const row = cell.parentElement
-    $$('#availMatrix tr').forEach(tr=> tr.classList.remove('hover'))
-    row.classList.add('hover')
-  }
-}
-
-/* ===== Quick tiles ===== */
-$$('.quick[data-open="newRes"], .tile[data-open="newRes"]').forEach(el=> el.onclick = openNewRes)
-$$('.quick[data-open="reservations"], .tile[data-open="reservations"]').forEach(el=> el.onclick = openReservations)
-$$('.quick[data-open="availability"], .tile[data-open="availability"]').forEach(el=> el.onclick = openAvailability)
+   
