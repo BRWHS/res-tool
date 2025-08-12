@@ -92,8 +92,12 @@
     <section style="margin-top:16px;" aria-label="Reservierungen">
       <article class="card scanlines">
         <div class="content">
-          <div class="table-tools">
+          <div class="card-head">
             <h3 class="mono" style="margin:0">Reservierungen</h3>
+            <span></span>
+          </div>
+
+          <div class="table-tools">
             <div class="row wrap">
               <input id="searchInput" class="input" placeholder="Gastname…" />
               <select id="filterHotel" class="input theme-select" style="width:220px;"></select>
@@ -115,10 +119,10 @@
               <thead>
                 <tr>
                   <th>Res.-Nr.</th>
+                  <th>Hotel</th>
                   <th>Gastname</th>
                   <th>Anreise</th>
                   <th>Abreise</th>
-                  <th>Hotel</th>
                   <th>Kategorie</th>
                   <th>Rate</th>
                   <th>Preis</th>
@@ -192,7 +196,7 @@
         </div>
       </div>
 
-      <!-- STEP 4 (Summary + Gast + Zahlung) -->
+      <!-- STEP 4 -->
       <div class="wpage hidden" id="w4">
         <aside class="summary box" id="summaryFinal"></aside>
 
@@ -221,7 +225,6 @@
         <div class="cc-wrap">
           <div class="cc-visual">
             <div class="cc-chip"></div>
-            <div class="cc-brand" id="ccBrandLive">CARD</div>
             <div class="cc-num"  id="ccNumLive">•••• •••• •••• ••••</div>
             <div class="cc-holder" id="ccHolderLive">NAME</div>
             <div class="cc-exp"    id="ccExpLive">MM/YY</div>
@@ -229,7 +232,6 @@
           <div class="cc-form">
             <div class="grid2">
               <label>Karteninhaber <input id="ccHolder" class="input" /></label>
-              <label>Brand <input id="ccBrand" class="input" placeholder="Visa/Mastercard" /></label>
               <label>Kartennummer <input id="ccNumber" class="input" placeholder="•••• •••• •••• 1234" /></label>
               <label>Ablauf (MM/JJ) <input id="ccExpiry" class="input" placeholder="12/27" /></label>
             </div>
@@ -242,7 +244,7 @@
       </div>
 
       <div class="wizard-actions">
-        <button class="btn ghost" id="btnPrev">Zurück</button>
+        <button class="btn ghost hidden" id="btnPrev">Zurück</button>
         <div style="flex:1"></div>
         <button class="btn" id="btnNext" disabled>Weiter</button>
         <button class="btn primary hidden" id="btnCreate">Reservierung abschicken</button>
@@ -290,7 +292,6 @@
       <div class="tabpage hidden" id="tabPay">
         <div class="grid2">
           <label>Karteninhaber <input id="eCcHolder" class="input"/></label>
-          <label>Brand <input id="eCcBrand" class="input"/></label>
           <label>Last4 <input id="eCcLast4" class="input"/></label>
           <label>Exp. Monat <input id="eCcExpM" type="number" min="1" max="12" class="input"/></label>
           <label>Exp. Jahr <input id="eCcExpY" type="number" min="24" max="40" class="input"/></label>
@@ -367,6 +368,33 @@
         </table>
       </div>
     </div>
+  </section>
+
+  <!-- Einstellungen -->
+  <section class="modal" id="modalSettings" role="dialog" aria-labelledby="setTitle" aria-modal="true">
+    <header>
+      <h3 id="setTitle" class="mono">Einstellungen</h3>
+      <button class="btn" data-close>Schließen</button>
+    </header>
+    <div class="body">
+      <div class="grid2">
+        <label>Sprache
+          <select id="setLang" class="input theme-select"><option value="de">Deutsch</option><option value="en">English</option></select>
+        </label>
+        <label>Farbton (Hue)
+          <input id="setHue" type="range" min="160" max="200" value="180" />
+        </label>
+      </div>
+    </div>
+  </section>
+
+  <!-- Hotelskizze -->
+  <section class="modal" id="modalSketch" role="dialog" aria-labelledby="sketchTitle" aria-modal="true">
+    <header>
+      <h3 id="sketchTitle" class="mono">Hotelskizze</h3>
+      <button class="btn" data-close>Schließen</button>
+    </header>
+    <div class="body"><div class="hotel-grid" id="sketchGrid"></div></div>
   </section>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.5/dist/umd/supabase.js" crossorigin="anonymous"></script>
