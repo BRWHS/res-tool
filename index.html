@@ -41,10 +41,10 @@
     </nav>
   </header>
 
-  <!-- Mini-Charts -->
+  <!-- Mini-Charts (YoY OTA) -->
   <aside class="analytics-dock" aria-label="Mini-Charts">
     <div class="dock-head">
-      <span class="mono">7-Tage</span>
+      <span class="mono">YoY · OTA · 7T</span>
       <button class="btn sm" id="dockToggle" title="Ein-/Ausblenden">–</button>
     </div>
     <div id="miniAnalyticsDock" class="dock-list"></div>
@@ -97,10 +97,9 @@
             <div class="row wrap">
               <input id="searchInput" class="input" placeholder="Gastname…" />
               <select id="filterHotel" class="input theme-select" style="width:220px;"></select>
-              <select id="filterStatus" class="input theme-select" style="width:190px;">
-                <option value="confirmed">Status: Confirmed (Zukunft)</option>
+              <select id="filterStatus" class="input theme-select" style="width:170px;">
+                <option value="active">Status: Active (Zukunft)</option>
                 <option value="done">Status: Done (Vergangenheit)</option>
-                <option value="pending">Status: Pending</option>
                 <option value="canceled">Status: Canceled</option>
                 <option value="all">Status: Alle</option>
               </select>
@@ -139,7 +138,7 @@
     </section>
   </main>
 
-  <!-- Tracker -->
+  <!-- Quick links -->
   <aside class="quick-links" aria-label="Tracker Shortcuts">
     <a class="btn sm" href="https://noteforms.com/forms/hotel-booking-tracker-c83eba" target="_blank" rel="noopener">Buchungs-Tracker</a>
     <a class="btn sm" href="https://noteforms.com/forms/hotel-call-tracking-form-hw2hqj" target="_blank" rel="noopener">Telefon-Tracker</a>
@@ -156,18 +155,19 @@
     </header>
     <div class="body">
       <div class="wizard-steps">
-        <button class="wstep active" data-step="1">1. Hotel</button>
-        <button class="wstep" data-step="2">2. Kategorie</button>
-        <button class="wstep" data-step="3">3. Rate & Übersicht</button>
-        <button class="wstep" data-step="4">4. Gast & Zahlung</button>
+        <div class="wstep active" data-step="1"><span>1</span><b>Hotel & Daten</b></div>
+        <div class="wstep" data-step="2"><span>2</span><b>Kategorie</b></div>
+        <div class="wstep" data-step="3"><span>3</span><b>Rate</b></div>
+        <div class="wstep" data-step="4"><span>4</span><b>Gast & Zahlung</b></div>
       </div>
 
       <!-- STEP 1 -->
       <div class="wpage" id="w1">
-        <label>Hotel
-          <select id="newHotel" class="input theme-select"></select>
-        </label>
         <div class="grid2">
+          <label>Hotel
+            <select id="newHotel" class="input theme-select"></select>
+          </label>
+          <div></div>
           <label>Anreise <input id="newArr" type="date" class="input"/></label>
           <label>Abreise <input id="newDep" type="date" class="input"/></label>
           <label>Erwachsene <input id="newAdults" type="number" min="1" value="1" class="input"/></label>
@@ -182,21 +182,20 @@
         </label>
       </div>
 
-      <!-- STEP 3 (Rate + Summary rechts) -->
+      <!-- STEP 3 -->
       <div class="wpage hidden" id="w3">
-        <div class="side-wrap">
-          <div class="side-main">
-            <label>Rate
-              <select id="newRate" class="input theme-select"></select>
-            </label>
-            <label>Preis <input id="newPrice" type="number" step="1" value="89" class="input"/></label>
-          </div>
-          <aside class="side-summary" id="summarySide"></aside>
+        <div class="grid2">
+          <label>Rate
+            <select id="newRate" class="input theme-select"></select>
+          </label>
+          <label>Preis <input id="newPrice" type="number" step="1" value="89" class="input"/></label>
         </div>
       </div>
 
-      <!-- STEP 4 -->
+      <!-- STEP 4 (Summary + Gast + Zahlung) -->
       <div class="wpage hidden" id="w4">
+        <aside class="summary box" id="summaryFinal"></aside>
+
         <h4 class="mono section">Gastdaten</h4>
         <div class="grid2">
           <label>Vorname <input id="newFname" class="input" placeholder="Max"/></label>
@@ -218,13 +217,22 @@
           </div>
         </details>
 
-        <h4 class="mono section">Kreditkarte (Platzhalter)</h4>
-        <div class="cc-card">
-          <div class="grid2">
-            <label>Karteninhaber <input id="ccHolder" class="input" /></label>
-            <label>Brand <input id="ccBrand" class="input" placeholder="Visa/Mastercard" /></label>
-            <label>Kartennummer <input id="ccNumber" class="input" placeholder="•••• •••• •••• 1234" /></label>
-            <label>Ablauf (MM/JJ) <input id="ccExpiry" class="input" placeholder="12/27" /></label>
+        <h4 class="mono section">Kreditkarte</h4>
+        <div class="cc-wrap">
+          <div class="cc-visual">
+            <div class="cc-chip"></div>
+            <div class="cc-brand" id="ccBrandLive">CARD</div>
+            <div class="cc-num"  id="ccNumLive">•••• •••• •••• ••••</div>
+            <div class="cc-holder" id="ccHolderLive">NAME</div>
+            <div class="cc-exp"    id="ccExpLive">MM/YY</div>
+          </div>
+          <div class="cc-form">
+            <div class="grid2">
+              <label>Karteninhaber <input id="ccHolder" class="input" /></label>
+              <label>Brand <input id="ccBrand" class="input" placeholder="Visa/Mastercard" /></label>
+              <label>Kartennummer <input id="ccNumber" class="input" placeholder="•••• •••• •••• 1234" /></label>
+              <label>Ablauf (MM/JJ) <input id="ccExpiry" class="input" placeholder="12/27" /></label>
+            </div>
           </div>
         </div>
 
@@ -262,8 +270,7 @@
           <label>Res.-Nr. <input id="eResNo" class="input" disabled/></label>
           <label>Status
             <select id="eStatus" class="input theme-select">
-              <option>confirmed</option>
-              <option>pending</option>
+              <option>active</option>
               <option>done</option>
               <option>canceled</option>
             </select>
@@ -360,32 +367,6 @@
         </table>
       </div>
     </div>
-  </section>
-
-  <!-- Einstellungen & Skizze -->
-  <section class="modal" id="modalSettings" role="dialog" aria-labelledby="setTitle" aria-modal="true">
-    <header>
-      <h3 id="setTitle" class="mono">Einstellungen</h3>
-      <button class="btn" data-close>Schließen</button>
-    </header>
-    <div class="body">
-      <div class="grid2">
-        <label>Sprache
-          <select id="setLang" class="input theme-select"><option value="de">Deutsch</option><option value="en">English</option></select>
-        </label>
-        <label>Farbton (Hue)
-          <input id="setHue" type="range" min="160" max="200" value="180" />
-        </label>
-      </div>
-    </div>
-  </section>
-
-  <section class="modal" id="modalSketch" role="dialog" aria-labelledby="sketchTitle" aria-modal="true">
-    <header>
-      <h3 id="sketchTitle" class="mono">Hotelskizze</h3>
-      <button class="btn" data-close>Schließen</button>
-    </header>
-    <div class="body"><div class="hotel-grid" id="sketchGrid"></div></div>
   </section>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.5/dist/umd/supabase.js" crossorigin="anonymous"></script>
