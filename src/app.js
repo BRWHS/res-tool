@@ -29,13 +29,11 @@ const HOTEL_BY_CODE = Object.fromEntries(HOTELS.map(h=>[h.code,h]));
 const PREFIXES = ['MASEVEN','Fidelity','Tante Alma','Delta by Marriot','Villa Viva'];
 const shortName = (full) => {
   if (!full) return '—';
-  for (const p of PREFIXES) {
-    if (full.startsWith(p+' ')) return full.slice(p.length+1);
-  }
+  for (const p of PREFIXES) if (full.startsWith(p+' ')) return full.slice(p.length+1);
   return full;
 };
 
-/***** Dummy Kategorien/Raten je Hotel (später HNS) *****/
+/***** Dummy Kategorien/Raten *****/
 const HOTEL_CATEGORIES = { default: ['Standard','Superior','Suite'] };
 const HOTEL_RATES = { default: [ {name:'Flex exkl. Frühstück', price:89}, {name:'Flex inkl. Frühstück', price:109} ] };
 
@@ -53,14 +51,10 @@ function el(tag,attrs={},...kids){ const e=document.createElement(tag); Object.e
 function setChip(node, ok){ node.classList.remove('lvl-2','lvl-1','lvl-0'); node.classList.add(ok?'lvl-0':'lvl-1'); }
 function download(filename, mime, content){ const blob = new Blob([content], {type:mime}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=filename; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href), 1000); }
 
-/***** Header clocks *****/
+/***** Clock + Status *****/
 function startClocks(){
-  function tickLocal(){
-    const d = new Date();
-    q('#clockLocal').textContent = d.toLocaleTimeString('de-DE');
-    q('#dateLocal').textContent  = d.toLocaleDateString('de-DE');
-  }
-  tickLocal(); setInterval(tickLocal, 1000);
+  const tick = ()=>{ const d = new Date(); q('#clockLocal').textContent = d.toLocaleTimeString('de-DE'); q('#dateLocal').textContent = d.toLocaleDateString('de-DE'); };
+  tick(); setInterval(tick, 1000);
 }
 async function refreshStatus(){
   const a = await supabase.from('reservations').select('id',{head:true,count:'exact'});
@@ -69,7 +63,7 @@ async function refreshStatus(){
   setChip(q('#chipHns'), false);
 }
 
-/***** Mini-Analytics (klein, hübsch, ohne Doppel-Namen) *****/
+/***** Mini-Analytics — kompakter Look, Kurzname *****/
 function buildMiniAnalytics(){
   const list = q('#miniAnalyticsDock'); list.innerHTML='';
   HOTELS.forEach(h=>{
@@ -81,7 +75,7 @@ function buildMiniAnalytics(){
       return `${i===0?'M':'L'}${x.toFixed(1)},${y.toFixed(1)}`;
     }).join(' ');
     const yoyUp = Math.random() > 0.5;
-    const item = el('div',{class:'dock-item'},
+    const item = el('div',{class:'dock-item',title:h.name},
       el('span',{class:'dock-badge'}, h.group),
       el('div',{class:'dock-name'}, shortName(h.name)),
       (()=>{
@@ -103,14 +97,14 @@ function closeModal(id){ q('#'+id).style.display='none'; backdrop.style.display=
 qa('[data-close]').forEach(b=>b.addEventListener('click',()=>closeModal(b.closest('.modal').id)));
 window.addEventListener('keydown',(e)=>{ if(e.key==='Escape'){ qa('.modal').forEach(m=>m.style.display='none'); backdrop.style.display='none'; document.body.classList.remove('modal-open'); }});
 
-/***** KPI FILTERS *****/
+/***** KPI Filter füllen *****/
 function fillHotelFilter(selectEl){
   selectEl.innerHTML = '';
   selectEl.append(el('option',{value:'all'},'Gesamt'));
   HOTELS.forEach(h=> selectEl.append(el('option',{value:h.code}, h.name)));
 }
 
-/***** KPI — Heute *****/
+/***** KPI Heute & Nächste7 (wie gehabt) *****/
 async function loadKpisToday(){
   const code = q('#kpiFilterToday').value;
   const hotel = code!=='all' ? HOTEL_BY_CODE[code] : null;
@@ -151,8 +145,6 @@ async function loadKpisToday(){
   q('#tADR').textContent      = euro(adr);
   q('#tOcc').textContent      = pct(tOcc);
 }
-
-/***** KPI — Nächste 7 Tage *****/
 async function loadKpisNext(){
   const code = q('#kpiFilterNext').value;
   const hotel = code!=='all' ? HOTEL_BY_CODE[code] : null;
@@ -192,7 +184,7 @@ async function loadKpisNext(){
   q('#nOcc').textContent      = pct(nOcc);
 }
 
-/***** RES LIST (Status-Filter; 'confirmed' zeigt nur Zukunft, 'done' Vergangenheit) *****/
+/***** Reservierungsliste (+ Statuslogik) *****/
 let page=1, pageSize=50, search='', fHotel='all', fResNo='', fFrom=null, fTo=null, fStatus='confirmed';
 
 function fillFilters(){
@@ -220,16 +212,15 @@ async function loadReservations(){
   if (fStatus==='confirmed'){
     query = query.eq('status','confirmed').gte('arrival', todayStr);
   } else if (fStatus==='done'){
-    query = query.lte('arrival', todayStr).neq('status','canceled'); // „fertig“, keine Stornos
+    query = query.lte('arrival', todayStr).neq('status','canceled');
   } else if (fStatus==='pending' || fStatus==='canceled'){
     query = query.eq('status', fStatus);
-  } // 'all' = keine Statusbedingung
+  }
 
   const { data, count, error } = await query;
   if (error){ q('#pageInfo').textContent='Fehler'; console.warn(error); return; }
 
   (data || []).forEach(row => {
-    // Render-Status: wenn confirmed aber in Vergangenheit, als „done“ zeigen
     let rStatus = (row.status||'confirmed').toLowerCase();
     if (rStatus==='confirmed' && row.arrival && isoDate(new Date(row.arrival)) <= todayStr) rStatus = 'done';
     const dotCls = rStatus==='canceled'?'dot-canceled':(rStatus==='pending'?'dot-pending':(rStatus==='done'?'dot-done':'dot-confirmed'));
@@ -268,7 +259,7 @@ q('#btnRefresh').addEventListener('click', ()=> loadReservations());
 q('#prevPage').addEventListener('click', ()=>{ page = Math.max(1, page-1); loadReservations(); });
 q('#nextPage').addEventListener('click', ()=>{ page = page+1; loadReservations(); });
 
-/***** EDIT RESERVATION *****/
+/***** Edit *****/
 async function openEdit(id){
   const { data, error } = await supabase.from('reservations').select('*').eq('id', id).maybeSingle();
   if (error || !data) return alert('Konnte Reservierung nicht laden.');
@@ -333,7 +324,7 @@ qa('.tab').forEach(btn=>{
   });
 });
 
-/***** NEW RESERVATION — Wizard (mit Summary in Schritt 3) *****/
+/***** Wizard — Validierung pro Schritt *****/
 function wizardSet(step){
   qa('.wstep').forEach(b=>b.classList.toggle('active', b.dataset.step==step));
   qa('.wpage').forEach(p=>p.classList.add('hidden'));
@@ -341,11 +332,35 @@ function wizardSet(step){
   q('#btnPrev').disabled = step==='1';
   q('#btnNext').classList.toggle('hidden', step==='4');
   q('#btnCreate').classList.toggle('hidden', step!=='4');
+  validateStep(step); // setzt Button-Enable
   if (step==='3') updateSummary('#summarySide');
 }
+function validateStep(step){
+  let ok=false;
+  if (step==='1'){
+    ok = !!q('#newHotel').value && !!q('#newArr').value && !!q('#newDep').value;
+  } else if (step==='2'){
+    ok = !!q('#newCat').value;
+  } else if (step==='3'){
+    ok = !!q('#newRate').value && Number(q('#newPrice').value||0) > 0;
+  } else {
+    ok = true;
+  }
+  q('#btnNext').disabled = !ok && step!=='4';
+  return ok;
+}
 q('#btnPrev').addEventListener('click', ()=>{ const cur = Number(qa('.wstep.active')[0].dataset.step); wizardSet(String(Math.max(1,cur-1))); });
-q('#btnNext').addEventListener('click', ()=>{ const cur = Number(qa('.wstep.active')[0].dataset.step); wizardSet(String(Math.min(4,cur+1))); });
+q('#btnNext').addEventListener('click', ()=>{
+  const cur = String(qa('.wstep.active')[0].dataset.step);
+  if (!validateStep(cur)){ q('#newInfo').textContent='Bitte Pflichtfelder ausfüllen.'; return; }
+  const next = String(Math.min(4, Number(cur)+1));
+  wizardSet(next);
+});
+['newHotel','newArr','newDep','newAdults','newChildren'].forEach(id=> q('#'+id).addEventListener('input', ()=>validateStep('1')));
+['newCat'].forEach(id=> q('#'+id).addEventListener('change', ()=>validateStep('2')));
+['newRate','newPrice'].forEach(id=> q('#'+id).addEventListener('input', ()=>validateStep('3')));
 
+/* Step 1 → Auswahl füllen */
 function fillHotelSelect(){
   const sel=q('#newHotel'); sel.innerHTML='';
   sel.append(el('option',{value:''},'Bitte wählen'));
@@ -353,28 +368,14 @@ function fillHotelSelect(){
   sel.addEventListener('change', ()=>{
     const cats = HOTEL_CATEGORIES['default'];
     const rates= HOTEL_RATES['default'];
-    q('#newCat').innerHTML = cats.map(c=>`<option>${c}</option>`).join('');
+    q('#newCat').innerHTML = cats.map(c=>`<option value="${c}">${c}</option>`).join('');
     q('#newRate').innerHTML = rates.map(r=>`<option value="${r.name}" data-price="${r.price}">${r.name} (${EUR.format(r.price)})</option>`).join('');
-    q('#newPrice').value = rates[0].price; updateSummary('#summarySide');
+    q('#newPrice').value = rates[0].price; updateSummary('#summarySide'); validateStep('1');
   });
 }
-q('#newRate').addEventListener('change',e=>{ const price=e.target.selectedOptions[0]?.dataset.price; if(price) q('#newPrice').value=price; updateSummary('#summarySide'); });
-['newArr','newDep','newAdults','newChildren','newCat','newPrice','newFname','newLname','newEmail','newPhone','newStreet','newZip','newCity','newCompany','newVat','newCompanyZip','newAddress','newNotes'].forEach(id=>{
-  document.addEventListener('input', (ev)=>{ if(ev.target?.id===id) updateSummary('#summarySide'); });
-});
+q('#newRate').addEventListener('change',e=>{ const price=e.target.selectedOptions[0]?.dataset.price; if(price) q('#newPrice').value=price; updateSummary('#summarySide'); validateStep('3'); });
 
-function genResNo(){ return 'R' + Date.now().toString(36).toUpperCase(); }
-function parseCc(){
-  const num = (q('#ccNumber').value || '').replace(/\D/g,'');
-  const last4 = num.slice(-4) || null;
-  const brand = q('#ccBrand').value || null;
-  const holder= q('#ccHolder').value || null;
-  const exp   = q('#ccExpiry').value || ''; // "MM/YY"
-  const m = exp.match(/^(\d{1,2})\s*\/\s*(\d{2})$/);
-  const exp_m = m ? Number(m[1]) : null;
-  const exp_y = m ? Number(m[2]) : null;
-  return { last4, brand, holder, exp_m, exp_y };
-}
+/* Summary Inhalte */
 function linesSummary(){
   const code=q('#newHotel').value; const h=HOTEL_BY_CODE[code];
   const adults = Number(q('#newAdults').value||1), children = Number(q('#newChildren').value||0);
@@ -393,16 +394,30 @@ function updateSummary(selector='#summarySide'){
   box.innerHTML = `<h4 class="mono">Zusammenfassung</h4>${rows}`;
 }
 
+/* Reservierung anlegen */
+function parseCc(){
+  const num = (q('#ccNumber').value || '').replace(/\D/g,'');
+  const last4 = num.slice(-4) || null;
+  const brand = q('#ccBrand').value || null;
+  const holder= q('#ccHolder').value || null;
+  const exp   = q('#ccExpiry').value || '';
+  const m = exp.match(/^(\d{1,2})\s*\/\s*(\d{2})$/);
+  const exp_m = m ? Number(m[1]) : null;
+  const exp_y = m ? Number(m[2]) : null;
+  return { last4, brand, holder, exp_m, exp_y };
+}
+function genResNo(){ return 'R' + Date.now().toString(36).toUpperCase(); }
 async function createReservation(){
-  const code=q('#newHotel').value; const h=HOTEL_BY_CODE[code];
-  if (!h) return alert('Bitte Hotel wählen.');
-  if (!q('#newLname').value.trim()) return alert('Nachname ist Pflicht.');
+  // letzte Validierung
+  if (!validateStep('3')){ q('#newInfo').textContent='Bitte erst Rate/Preis wählen.'; return; }
+  if (!q('#newLname').value.trim()){ q('#newInfo').textContent='Nachname ist Pflicht.'; wizardSet('4'); return; }
 
+  const code=q('#newHotel').value; const h=HOTEL_BY_CODE[code];
   const adults = Number(q('#newAdults').value||1);
   const children = Number(q('#newChildren').value||0);
   const guestsTotal = adults + children;
-
   const cc = parseCc();
+
   const payload = {
     reservation_number: genResNo(),
     status: 'confirmed',
@@ -441,7 +456,7 @@ async function createReservation(){
   if (!error){ await loadKpisToday(); await loadKpisNext(); await loadReservations(); setTimeout(()=>closeModal('modalNew'), 700); }
 }
 
-/***** Availability (kompakt + Zeitraum) *****/
+/***** Availability *****/
 function datesFrom(startDate, days){
   const ds=[]; const base = startDate? new Date(startDate) : soD(new Date());
   base.setHours(0,0,0,0);
@@ -480,7 +495,7 @@ async function buildMatrix(){
 }
 q('#availRun').addEventListener('click', buildMatrix);
 
-/***** Reporting + Filter + Export *****/
+/***** Reporting *****/
 function setDefaultReportRange(){
   const to=soD(new Date()); const from=soD(new Date(Date.now()-29*86400000));
   q('#repFrom').value=isoDate(from); q('#repTo').value=isoDate(to);
@@ -492,6 +507,7 @@ function fillRepHotel(){
 }
 async function runReport(){
   const from=q('#repFrom').value, to=q('#repTo').value, code=q('#repHotel').value;
+  if (!from || !to){ return; }
   let query = supabase.from('reservations').select('hotel_name,rate_price,created_at,channel')
     .gte('created_at', new Date(from).toISOString())
     .lte('created_at', new Date(new Date(to).getTime()+86399999).toISOString());
@@ -535,7 +551,7 @@ q('#repXls').addEventListener('click', ()=>{
   download('report.xls','application/vnd.ms-excel', toXLS(rows,'Report'));
 });
 
-/***** Hotelskizze *****/
+/***** Skizze *****/
 function buildSketch(){
   const wrap = q('#sketchGrid'); if(!wrap) return; wrap.innerHTML = '';
   HOTELS.forEach(h=>{
@@ -547,7 +563,7 @@ function buildSketch(){
   });
 }
 
-/***** EVENTS *****/
+/***** EVENTS & INIT *****/
 q('#btnAvail').addEventListener('click', async ()=>{
   q('#availFrom').value = isoDate(new Date());
   q('#availDays').value = '14';
@@ -558,11 +574,16 @@ q('#btnReporting').addEventListener('click', async ()=>{
   setDefaultReportRange(); fillRepHotel(); await runReport(); openModal('modalReporting');
 });
 q('#btnSettings').addEventListener('click', ()=> openModal('modalSettings'));
-q('#btnNew').addEventListener('click', ()=>{ fillHotelSelect(); wizardSet('1'); q('#newInfo').textContent=''; openModal('modalNew'); });
+q('#btnNew').addEventListener('click', ()=>{
+  fillHotelSelect(); wizardSet('1'); q('#newInfo').textContent='';
+  // Inputs reset
+  ['newArr','newDep','newAdults','newChildren','newCat','newRate','newPrice','newFname','newLname','newEmail','newPhone','newStreet','newZip','newCity','newCompany','newVat','newCompanyZip','newAddress','newNotes','ccHolder','ccBrand','ccNumber','ccExpiry'].forEach(id=>{ const n=q('#'+id); if(n){ n.value=''; } });
+  q('#newAdults').value=1; q('#newChildren').value=0; q('#btnNext').disabled=true;
+  openModal('modalNew');
+});
 q('#btnCreate').addEventListener('click', createReservation);
 q('#btnSketch').addEventListener('click', ()=>{ buildSketch(); openModal('modalSketch'); });
 
-/***** INIT *****/
 (async function init(){
   startClocks();
   await refreshStatus(); setInterval(refreshStatus, 30000);
@@ -574,11 +595,9 @@ q('#btnSketch').addEventListener('click', ()=>{ buildSketch(); openModal('modalS
   q('#kpiFilterToday').addEventListener('change', loadKpisToday);
   q('#kpiFilterNext').addEventListener('change', loadKpisNext);
 
-  // Reservierungsliste Filter
   fillFilters();
-  q('#filterStatus').value = 'confirmed'; // default
+  q('#filterStatus').value = 'confirmed';
 
-  // KPIs + Liste initial
   await loadKpisToday();
   await loadKpisNext();
   await loadReservations();
