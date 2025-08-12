@@ -262,4 +262,23 @@ q('#setHue').addEventListener('input', applySettings);
   await loadKpis();
   await loadReservations();
   loadSettings();
-})();
+
+// Buttons öffnen die jeweiligen Modals
+q('#btnAvail').addEventListener('click', async ()=>{ await buildMatrix(); openModal('modalAvail'); });
+q('#btnReporting').addEventListener('click', async ()=>{ setDefaultReportRange(); await runReport(); openModal('modalReporting'); });
+q('#btnSettings').addEventListener('click', ()=> openModal('modalSettings'));
+q('#btnNew').addEventListener('click', ()=>{ fillHotelSelect(); q('#newInfo').textContent=''; openModal('modalNew'); });
+
+// Hotelskizze
+function buildSketch(){
+  const wrap = q('#sketchGrid'); wrap.innerHTML = '';
+  HOTELS.forEach(h=>{
+    const card = el('div', { class:'hotel-card' },
+      el('div', { class:'muted' }, h.group),
+      el('div', { class:'strong' }, h.name),
+      el('div', { class:'code' }, h.code)
+    );
+    wrap.append(card);
+  });
+}
+q('#btnSketch').addEventListener('click', ()=>{ buildSketch(); openModal('modalSketch'); });
