@@ -2,13 +2,18 @@
 <html lang="de">
 <head>
   <meta charset="utf-8" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>res-tool — Dashboard</title>
 
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;600;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/src/styles.css" />
+
+  <!-- Styles mit Cache-Buster -->
+  <link rel="stylesheet" href="/src/styles.css?v=3" />
 </head>
 <body>
   <header class="topbar" role="banner">
@@ -52,7 +57,7 @@
       <article class="card scanlines">
         <div class="content">
           <h3 class="mono">KPI — Heute</h3>
-          <div class="kpis big" id="kpisToday">
+          <div class="kpis big">
             <div class="kpi"><div class="value" id="tBookings">—</div><div class="label">Buchungen</div></div>
             <div class="kpi"><div class="value" id="tRevenue">— €</div><div class="label">Umsatz</div></div>
             <div class="kpi"><div class="value" id="tADR">— €</div><div class="label">ADR</div></div>
@@ -63,7 +68,7 @@
       <article class="card scanlines">
         <div class="content">
           <h3 class="mono">KPI — Letzte 7 Tage</h3>
-          <div class="kpis big" id="kpis7">
+          <div class="kpis big">
             <div class="kpi"><div class="value" id="wBookings">—</div><div class="label">Buchungen</div></div>
             <div class="kpi"><div class="value" id="wRevenue">— €</div><div class="label">Umsatz</div></div>
             <div class="kpi"><div class="value" id="wADR">— €</div><div class="label">ADR</div></div>
@@ -85,14 +90,8 @@
             <table class="resv">
               <thead>
                 <tr>
-                  <th>Gastname</th>
-                  <th>Anreise</th>
-                  <th>Abreise</th>
-                  <th>Hotel</th>
-                  <th>Kategorie</th>
-                  <th>Rate</th>
-                  <th>Preis</th>
-                  <th>Notizen</th>
+                  <th>Gastname</th><th>Anreise</th><th>Abreise</th><th>Hotel</th>
+                  <th>Kategorie</th><th>Rate</th><th>Preis</th><th>Notizen</th>
                 </tr>
               </thead>
               <tbody id="resvBody"></tbody>
@@ -108,16 +107,15 @@
     </section>
   </main>
 
-  <!-- Right floating quick links -->
+  <!-- Rechte, schwebende Tracker-Buttons (klein) -->
   <aside class="quick-links" aria-label="Tracker Shortcuts">
     <a class="btn sm" href="https://noteforms.com/forms/hotel-booking-tracker-c83eba" target="_blank" rel="noopener">Buchungs-Tracker</a>
     <a class="btn sm" href="https://noteforms.com/forms/hotel-call-tracking-form-hw2hqj" target="_blank" rel="noopener">Telefon-Tracker</a>
   </aside>
 
-  <!-- Backdrop -->
+  <!-- Backdrop + Modals (fix & zentriert) -->
   <div class="modal-backdrop" id="backdrop" aria-hidden="true"></div>
 
-  <!-- Modals (jetzt fix & zentriert) -->
   <section class="modal" id="modalNew" role="dialog" aria-labelledby="newTitle" aria-modal="true">
     <header>
       <h3 id="newTitle" class="mono">Neue Reservierung</h3>
@@ -141,9 +139,7 @@
         <label>Preis <input id="newPrice" type="number" step="1" value="89" class="input"/></label>
         <label>Gast Nachname <input id="newLname" type="text" placeholder="Mustermann" class="input"/></label>
       </div>
-      <div class="right">
-        <button class="btn" id="btnCreate">Anlegen</button>
-      </div>
+      <div class="right"><button class="btn" id="btnCreate">Anlegen</button></div>
       <p class="muted" id="newInfo" style="margin-top:6px;"></p>
     </div>
   </section>
@@ -204,12 +200,11 @@
       <h3 id="sketchTitle" class="mono">Hotelskizze</h3>
       <button class="btn" data-close>Schließen</button>
     </header>
-    <div class="body">
-      <div class="hotel-grid" id="sketchGrid"></div>
-    </div>
+    <div class="body"><div class="hotel-grid" id="sketchGrid"></div></div>
   </section>
 
+  <!-- Supabase UMD + App JS (mit Cache-Buster) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.5/dist/umd/supabase.js" crossorigin="anonymous"></script>
-  <script src="/src/app.js"></script>
+  <script src="/src/app.js?v=3"></script>
 </body>
 </html>
