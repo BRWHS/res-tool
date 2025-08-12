@@ -1,359 +1,106 @@
-/***** CONFIG — Supabase *****/
-const SB_URL = "https://kytuiodojfcaggkvizto.supabase.co";
-const SB_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt5dHVpb2RvamZjYWdna3ZpenRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ4MzA0NjgsImV4cCI6MjA3MDQwNjQ2OH0.YobQZnCQ7LihWtewynoCJ6ZTjqetkGwh82Nd2mmmhLU";
-const supabase = window.supabase.createClient(SB_URL, SB_ANON_KEY);
-
-/***** HOTEL MAP *****/
-const HOTELS = [
-  { group:'MASEVEN',  name:'MASEVEN München Dornach',   code:'MA7-M-DOR' },
-  { group:'MASEVEN',  name:'MASEVEN München Trudering', code:'MA7-M-TRU' },
-  { group:'MASEVEN',  name:'MASEVEN Frankfurt',         code:'MA7-FRA' },
-  { group:'MASEVEN',  name:'MASEVEN Stuttgart',         code:'MA7-STR' },
-  { group:'Fidelity', name:'Fidelity Robenstein',       code:'FID-ROB' },
-  { group:'Fidelity', name:'Fidelity Struck',           code:'FID-STR' },
-  { group:'Fidelity', name:'Fidelity Doerr',            code:'FID-DOE' },
-  { group:'Fidelity', name:'Fidelity Gr. Baum',         code:'FID-GRB' },
-  { group:'Fidelity', name:'Fidelity Landskron',        code:'FID-LAN' },
-  { group:'Fidelity', name:'Fidelity Pürgl',            code:'FID-PUE' },
-  { group:'Fidelity', name:'Fidelity Seppl',            code:'FID-SEP' },
-  { group:'Tante Alma', name:'Tante Alma Bonn',         code:'TAL-BON' },
-  { group:'Tante Alma', name:'Tante Alma Köln',         code:'TAL-KOE' },
-  { group:'Tante Alma', name:'Tante Alma Erfurt',       code:'TAL-ERF' },
-  { group:'Tante Alma', name:'Tante Alma Mannheim',     code:'TAL-MAN' },
-  { group:'Tante Alma', name:'Tante Alma Mülheim',      code:'TAL-MUE' },
-  { group:'Tante Alma', name:'Tante Alma Sonnen',       code:'TAL-SON' },
-  { group:'Delta by Marriot', name:'Delta by Marriot Offenbach', code:'DBM-OF' },
-  { group:'Villa Viva', name:'Villa Viva Hamburg',      code:'VV-HH' },
-];
-const HOTEL_BY_CODE = Object.fromEntries(HOTELS.map(h=>[h.code, h]));
-
-/***** HELPERS *****/
-const D2 = new Intl.DateTimeFormat('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'});
-const Dm = new Intl.DateTimeFormat('de-DE',{day:'2-digit',month:'2-digit'});
-const EUR = new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'});
-const euro = v=>v==null?'— €':EUR.format(v);
-const pct  = v=>v==null?'—%':`${v}%`;
-const soD = d=>{const x=new Date(d); x.setHours(0,0,0,0); return x;};
-const q = s=>document.querySelector(s);
-const qa = s=>Array.from(document.querySelectorAll(s));
-function el(tag,attrs={},...kids){ const e=document.createElement(tag); Object.entries(attrs).forEach(([k,v])=>k==='class'?e.className=v:k==='html'?e.innerHTML=v:e.setAttribute(k,v)); kids.forEach(k=>e.append(k)); return e; }
-function setChip(node, ok){ node.classList.remove('lvl-2','lvl-1','lvl-0'); node.classList.add(ok?'lvl-0':'lvl-1'); }
-
-/***** MODALS — fixed centered *****/
-const backdrop = q('#backdrop');
-function openModal(id){ document.body.classList.add('modal-open'); backdrop.style.display='flex'; q('#'+id).style.display='block'; }
-function closeModal(id){ q('#'+id).style.display='none'; backdrop.style.display='none'; document.body.classList.remove('modal-open'); }
-qa('[data-close]').forEach(b=>b.addEventListener('click',()=>closeModal(b.closest('.modal').id)));
-window.addEventListener('keydown', (e)=>{ if (e.key==='Escape') { qa('.modal').forEach(m=>m.style.display='none'); backdrop.style.display='none'; document.body.classList.remove('modal-open'); }});
-
-/***** CLOCK + STATUS *****/
-function startClocks(){
-  setInterval(()=>{ q('#clockLocal').textContent = new Date().toLocaleTimeString('de-DE'); }, 1000);
-  async function tickSrv(){
-    try{
-      const { data } = await supabase.rpc('get_server_time');
-      if (data){
-        const t = new Date(data.now);
-        q('#clockServer').textContent = `srv ${t.toLocaleTimeString('de-DE')} (${data.tz})`;
-        return;
-      }
-    }catch(e){}
-    q('#clockServer').textContent = `srv ${new Date().toLocaleTimeString('de-DE')}`;
-  }
-  tickSrv(); setInterval(tickSrv, 15000);
+:root{
+  --bg:#0b0f14;--panel:#0f1520;--panel-2:#121a26;--text:#d9faff;--muted:#9adce6;
+  --accent:#00ffff;--accent-2:#7efcf8;--ok:#35e08a;--warn:#ffd166;--danger:#ff4d6d;
+  --shadow:0 10px 30px rgba(0,255,255,.08);--radius:16px
 }
-async function refreshStatus(){
-  const a = await supabase.from('reservations').select('id',{head:true,count:'exact'});
-  const b = await supabase.from('availability').select('date',{head:true,count:'exact'});
-  setChip(q('#chipSb'), !a.error && !b.error);
-  setChip(q('#chipHns'), false); // Placeholder bis HNS live
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial;background:
+  radial-gradient(1200px 600px at 10% -10%, rgba(0,255,255,.06), transparent),
+  radial-gradient(1000px 800px at 90% 10%, rgba(0,255,255,.04), transparent),
+  var(--bg);color:var(--text);letter-spacing:.2px}
+body.modal-open{overflow:hidden}
+
+.mono{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;letter-spacing:.3px}
+.brand h1{font-size:18px;margin:0;font-weight:800;letter-spacing:.6px}
+.brand h1 span{color:var(--accent);text-shadow:0 0 12px rgba(0,255,255,.5)}
+.cursor{animation:blink 1.2s steps(2,jump-none) infinite}
+@keyframes blink{50%{opacity:0}}
+
+.topbar{position:sticky;top:0;z-index:30;display:grid;grid-template-columns:auto 1fr;
+  gap:16px;align-items:center;padding:14px 20px;background:rgba(10,14,20,.7);
+  border-bottom:1px solid rgba(0,255,255,.15)}
+.brand{display:flex;align-items:center;gap:12px}
+.brand .logo{width:34px;height:34px;border-radius:50%;
+  background:conic-gradient(from 180deg, rgba(0,255,255,.9), rgba(0,255,255,.25));
+  box-shadow:0 0 25px rgba(0,255,255,.35), inset 0 0 20px rgba(0,255,255,.2)}
+
+.toolbar{display:flex;align-items:center;gap:12px}
+.toolbar-left{display:flex;gap:10px;flex-wrap:wrap}
+.toolbar-right{margin-left:auto;display:flex;gap:12px;align-items:center}
+#statusChips{display:flex;gap:8px}.clock{display:flex;gap:8px;align-items:center}
+.clock .sep{opacity:.6}
+
+.filterbar{display:flex;align-items:center;gap:10px;margin:14px 0 6px}
+.input.sm{padding:6px 10px;font-size:12px;height:34px}
+
+.btn{background:linear-gradient(180deg,rgba(0,255,255,.18),rgba(0,255,255,.06));
+  color:var(--text);border:1px solid rgba(0,255,255,.25);padding:10px 14px;border-radius:12px;
+  font-weight:700;cursor:pointer;box-shadow:var(--shadow);transition:.12s ease transform,.2s ease box-shadow,.15s border-color;
+  text-decoration:none;display:inline-flex;align-items:center;justify-content:center}
+.btn:hover{transform:translateY(-1px);border-color:rgba(0,255,255,.5)}
+.btn.primary{background:linear-gradient(180deg,rgba(0,255,255,.35),rgba(0,255,255,.12))}
+.btn.ghost{background:linear-gradient(180deg,rgba(0,255,255,.08),rgba(0,255,255,.03))}
+.btn.sm{padding:6px 10px;font-size:12px;border-radius:10px;font-weight:700}
+
+.scanlines{position:relative}
+.scanlines::after{content:"";pointer-events:none;position:absolute;inset:0;
+  background:repeating-linear-gradient(180deg, rgba(0,0,0,.08) 0, rgba(0,0,0,.08) 1px, transparent 2px, transparent 4px);
+  opacity:.25;border-radius:var(--radius)}
+
+.container{max-width:1300px;margin:22px auto;padding:0 16px 40px}
+
+.card{background:linear-gradient(180deg,var(--panel),var(--panel-2));
+  border:1px solid rgba(0,255,255,.15);border-radius:var(--radius);box-shadow:var(--shadow);overflow:clip}
+.card h3{margin:0 0 10px;font-size:16px;color:var(--accent-2);letter-spacing:.4px}
+.card .content{padding:16px}
+
+.hero{display:grid;gap:16px;grid-template-columns:1fr 1fr}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.kpis.big .kpi .value{font-size:28px;font-weight:800;line-height:1.2}
+.kpi{padding:16px;border:1px solid rgba(0,255,255,.15);border-radius:14px;background:rgba(0,255,255,.03)}
+.kpi .label{font-size:12px;color:var(--muted)}
+
+.table-tools{display:flex;gap:10px;justify-content:space-between;align-items:center;margin-bottom:10px}
+.search{flex:1}
+.input{width:100%;background:rgba(0,255,255,.06);border:1px solid rgba(0,255,255,.18);
+  border-radius:12px;padding:10px 12px;color:var(--text)}
+table.resv{width:100%;border-collapse:collapse}
+.resv th,.resv td{border-bottom:1px dashed rgba(0,255,255,.12);padding:10px 8px;font-size:13px}
+.resv th{color:var(--muted);font-weight:600;text-align:left}
+.row{cursor:pointer}.row:hover{background:rgba(0,255,255,.04)}
+.pagination{display:flex;gap:8px;align-items:center;justify-content:flex-end;margin-top:10px}
+
+/* Matrix */
+.matrix{width:100%;overflow:auto}
+table.matrix{width:100%;border-collapse:collapse}
+.matrix th,.matrix td{border-bottom:1px dashed rgba(0,255,255,.12);padding:10px 8px;text-align:center;font-size:13px}
+.matrix th.sticky{position:sticky;left:0;background:var(--panel-2);text-align:left;z-index:1}
+.matrix td.sticky{position:sticky;left:0;background:var(--panel);text-align:left}
+.pill{display:inline-block;padding:6px 10px;border-radius:999px;border:1px solid rgba(0,255,255,.25);background:rgba(0,255,255,.06);font-weight:700;font-size:12px}
+.lvl-0{box-shadow:inset 0 0 0 2px rgba(53,224,138,.25)}
+.lvl-1{box-shadow:inset 0 0 0 2px rgba(255,209,102,.35)}
+.lvl-2{box-shadow:inset 0 0 0 2px rgba(255,77,109,.45)}
+
+/* Modals: fix & zentriert, immer bedienbar */
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,8,10,.35);display:none;align-items:center;justify-content:center;z-index:40}
+.modal{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:min(1000px,95vw);max-height:90vh;overflow:auto;background:var(--panel);border:1px solid rgba(0,255,255,.2);border-radius:18px;box-shadow:var(--shadow);display:none;z-index:60}
+.modal header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid rgba(0,255,255,.18)}
+.modal .body{padding:16px}
+
+/* Hotelskizze */
+.hotel-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+.hotel-card{padding:12px;border:1px solid rgba(0,255,255,.18);border-radius:12px;background:rgba(0,255,255,.04)}
+.hotel-card .code{font-family:"JetBrains Mono",monospace;color:var(--accent-2);font-weight:700}
+
+/* rechte Quick-Links */
+.quick-links{position:fixed;right:16px;top:92px;display:flex;flex-direction:column;gap:8px;z-index:70}
+.quick-links .btn.sm{min-width:0}
+
+/* Responsive */
+@media (max-width:1100px){
+  .kpis{grid-template-columns:1fr 1fr}
+  .hero{grid-template-columns:1fr}
+  .toolbar{flex-wrap:wrap}
+  .quick-links{right:10px;top:auto;bottom:16px;flex-direction:row}
 }
-
-/***** KPI FILTER (Gesamt + alle Hotels) *****/
-function buildKpiFilter(){
-  const sel = q('#kpiFilter'); sel.innerHTML = '';
-  const optAll = el('option',{value:'all'},'Gesamt');
-  sel.append(optAll);
-  HOTELS.forEach(h=>{
-    const opt = el('option',{value:h.code, 'data-name': `${h.group} · ${h.name}`}, `${h.group} · ${h.name}`);
-    sel.append(opt);
-  });
-  sel.value = 'all';
-  sel.addEventListener('change', ()=> loadKpis());
-}
-
-/***** KPI LOAD (mit Hotel-Filter) *****/
-async function loadKpis(){
-  const sel = q('#kpiFilter');
-  const pickedCode = sel ? sel.value : 'all';
-  const pickedHotel = pickedCode !== 'all' ? HOTEL_BY_CODE[pickedCode] : null;
-  const hotelNameForRes = pickedHotel ? `${pickedHotel.group} · ${pickedHotel.name}` : null;
-
-  const todayStart = soD(new Date());
-  const weekStart  = soD(new Date(Date.now() - 6*86400000));
-  const nowISO     = new Date().toISOString();
-  const tStr = todayStart.toISOString().slice(0,10);
-  const wStr = weekStart.toISOString().slice(0,10);
-
-  async function aggReservations(fromIso, toIso){
-    let qy = supabase.from('reservations')
-      .select('rate_price, hotel_name, created_at, arrival')
-      .gte('created_at', fromIso).lte('created_at', toIso);
-    if (hotelNameForRes) qy = qy.eq('hotel_name', hotelNameForRes);
-
-    let { data, error } = await qy;
-    if (error) { console.warn('agg by created_at failed → fallback', error); }
-
-    if (error || (data && data.length===0)) {
-      let q2 = supabase.from('reservations')
-        .select('rate_price, hotel_name, arrival')
-        .gte('arrival', fromIso.slice(0,10))
-        .lte('arrival', toIso.slice(0,10));
-      if (hotelNameForRes) q2 = q2.eq('hotel_name', hotelNameForRes);
-      const { data: d2, error: e2 } = await q2;
-      if (!e2) data = d2;
-    }
-
-    const rows = Array.isArray(data) ? data : [];
-    const bookings = rows.length;
-    const revenue  = rows.reduce((s,r)=> s + Number(r.rate_price||0), 0);
-    const adr      = bookings ? Math.round((revenue/bookings)*100)/100 : null;
-    return { bookings, revenue, adr };
-  }
-
-  async function occ(fromDate, toDate){
-    if (pickedHotel){
-      const { data, error } = await supabase
-        .from('availability')
-        .select('capacity, booked')
-        .eq('hotel_code', pickedHotel.code)
-        .gte('date', fromDate).lte('date', toDate);
-      if (error || !data?.length) return null;
-      const avg = data.reduce((s,r)=> s + Math.min(100, Math.round((Number(r.booked||0)/Math.max(1,Number(r.capacity||0)))*100)), 0) / data.length;
-      return Math.round(avg);
-    } else {
-      // Gesamt
-      try{
-        const { data, error } = await supabase.rpc('availability_day_occupancy', { from_date: fromDate, to_date: toDate });
-        if (!error && data?.length){
-          const avg = data.reduce((s,r)=>s+Number(r.avg_occupancy||0),0)/data.length;
-          return Math.round(avg);
-        }
-      }catch(e){}
-      const { data, error } = await supabase.from('availability').select('capacity, booked').gte('date', fromDate).lte('date', toDate);
-      if (error || !data?.length) return null;
-      const avg = data.reduce((s,r)=> s + Math.min(100, Math.round((Number(r.booked||0)/Math.max(1,Number(r.capacity||0)))*100)), 0) / data.length;
-      return Math.round(avg);
-    }
-  }
-
-  const t = await aggReservations(todayStart.toISOString(), nowISO);
-  const w = await aggReservations(weekStart.toISOString(),  nowISO);
-  const tOcc = await occ(tStr, tStr);
-  const wOcc = await occ(wStr, tStr);
-
-  q('#tBookings').textContent = t.bookings;
-  q('#tRevenue').textContent  = euro(t.revenue);
-  q('#tADR').textContent      = euro(t.adr);
-  q('#tOcc').textContent      = pct(tOcc);
-
-  q('#wBookings').textContent = w.bookings;
-  q('#wRevenue').textContent  = euro(w.revenue);
-  q('#wADR').textContent      = euro(w.adr);
-  q('#wOcc').textContent      = pct(wOcc);
-}
-
-/***** RESERVATION LIST *****/
-let page=1, pageSize=50, search='';
-async function loadReservations(){
-  const body = q('#resvBody'); body.innerHTML = '';
-  const from = (page-1)*pageSize, to = from + pageSize - 1;
-
-  let query = supabase.from('reservations')
-    .select('guest_last_name, arrival, departure, hotel_name, category, rate_name, rate_price, notes', { count:'exact' })
-    .order('arrival', { ascending: true })
-    .range(from, to);
-
-  if (search) query = query.ilike('guest_last_name', `%${search}%`);
-
-  const { data, count, error } = await query;
-  if (error){ console.warn('reservations list error', error); q('#pageInfo').textContent='Fehler'; return; }
-
-  (data || []).forEach(row => {
-    const tr = el('tr', { class: 'row' },
-      el('td', {}, row.guest_last_name || '—'),
-      el('td', {}, row.arrival ? D2.format(new Date(row.arrival)) : '—'),
-      el('td', {}, row.departure ? D2.format(new Date(row.departure)) : '—'),
-      el('td', {}, row.hotel_name || '—'),
-      el('td', {}, row.category || '—'),
-      el('td', {}, row.rate_name || '—'),
-      el('td', {}, row.rate_price != null ? (EUR.format(row.rate_price)) : '—'),
-      el('td', {}, row.notes || '—')
-    );
-    body.append(tr);
-  });
-
-  const totalPages = Math.max(1, Math.ceil((count || 0)/pageSize));
-  q('#pageInfo').textContent = `Seite ${page} / ${totalPages}`;
-}
-
-q('#searchInput').addEventListener('input', (e)=>{ search = e.target.value.trim(); page = 1; loadReservations(); });
-q('#prevPage').addEventListener('click', ()=>{ page = Math.max(1, page-1); loadReservations(); });
-q('#nextPage').addEventListener('click', ()=>{ page = page+1; loadReservations(); });
-
-/***** AVAILABILITY POPUP *****/
-function datesAhead(n=14){ return [...Array(n)].map((_,i)=>soD(new Date(Date.now()+ i*86400000))); }
-
-async function buildMatrix(){
-  const ds = datesAhead(14);
-  const head = q('#matrixTable thead tr');
-  head.querySelectorAll('th:not(.sticky)').forEach(n=>n.remove());
-  ds.forEach(d => head.append(el('th', {}, Dm.format(d))));
-
-  const body = q('#matrixBody'); body.innerHTML = '';
-
-  const from = ds[0].toISOString().slice(0,10);
-  const to = ds[ds.length-1].toISOString().slice(0,10);
-
-  for (const h of HOTELS) {
-    const tr = el('tr');
-    tr.append(el('td', { class:'sticky' }, `${h.group} · ${h.name}`));
-
-    const { data } = await supabase
-      .from('availability')
-      .select('date, capacity, booked')
-      .eq('hotel_code', h.code)
-      .gte('date', from)
-      .lte('date', to)
-      .order('date', { ascending: true });
-
-    const byDate = {};
-    (data||[]).forEach(r => byDate[r.date] = r);
-
-    ds.forEach(d => {
-      const key = d.toISOString().slice(0,10);
-      const capacity = byDate[key]?.capacity ?? 100;
-      const booked = byDate[key]?.booked ?? Math.floor(Math.random()*120);
-      const delta = booked - capacity;
-      const lvl = delta <= 0 ? 0 : delta === 1 ? 1 : 2;
-      const cell = el('td');
-      cell.append(el('span', { class:`pill lvl-${lvl}` }, `${Math.min(100, Math.round((booked/capacity)*100))}%`));
-      tr.append(cell);
-    });
-
-    body.append(tr);
-  }
-}
-
-/***** REPORTING *****/
-function setDefaultReportRange(){
-  const to = soD(new Date());
-  const from = soD(new Date(Date.now()-29*86400000));
-  q('#repFrom').value = from.toISOString().slice(0,10);
-  q('#repTo').value   = to.toISOString().slice(0,10);
-}
-async function runReport(){
-  const from = q('#repFrom').value, to = q('#repTo').value;
-  const fromISO = new Date(from).toISOString();
-  const toISO   = new Date(new Date(to).getTime()+86399999).toISOString();
-
-  const { data, error } = await supabase
-    .from('reservations')
-    .select('hotel_name, rate_price, created_at')
-    .gte('created_at', fromISO)
-    .lte('created_at', toISO);
-
-  const body = q('#repBody'); body.innerHTML = '';
-  if (error){ body.append(el('tr',{},el('td',{colspan:'4'},'Fehler beim Laden'))); return; }
-
-  const byHotel = new Map();
-  (data||[]).forEach(r=>{
-    const key = r.hotel_name || '—';
-    const row = byHotel.get(key) || { bookings:0, revenue:0 };
-    row.bookings++; row.revenue += Number(r.rate_price||0);
-    byHotel.set(key,row);
-  });
-
-  [...byHotel.entries()].sort((a,b)=>b[1].revenue-a[1].revenue).forEach(([hotel,vals])=>{
-    const adr = vals.bookings ? vals.revenue/vals.bookings : null;
-    body.append(el('tr',{},
-      el('td',{},hotel),
-      el('td',{},String(vals.bookings)),
-      el('td',{},EUR.format(vals.revenue)),
-      el('td',{},adr!=null?EUR.format(adr):'—')
-    ));
-  });
-}
-
-/***** NEW RESERVATION *****/
-function fillHotelSelect(){
-  const sel=q('#newHotel'); sel.innerHTML='';
-  sel.append(el('option',{value:''},'Bitte wählen'));
-  HOTELS.forEach(h=>sel.append(el('option',{value:h.code},`${h.group} · ${h.name}`)));
-}
-q('#newRate').addEventListener('change',e=>{
-  const price = e.target.selectedOptions[0].dataset.price; q('#newPrice').value = price;
-});
-async function createReservation(){
-  const code=q('#newHotel').value; const h=HOTEL_BY_CODE[code];
-  if (!h) return alert('Bitte Hotel wählen.');
-  const payload = {
-    hotel_name: `${h.group} · ${h.name}`,
-    arrival: q('#newArr').value || null,
-    departure: q('#newDep').value || null,
-    guests: Number(q('#newGuests').value||1),
-    category: q('#newCat').value,
-    rate_name: q('#newRate').value,
-    rate_price: Number(q('#newPrice').value||0),
-    guest_last_name: q('#newLname').value || null,
-    notes: 'ui-insert'
-  };
-  let { error } = await supabase.from('reservations').insert(payload);
-  if (error && (error.message||'').toLowerCase().includes('hotel_id')) {
-    const probe = await supabase.from('reservations').select('hotel_id').eq('hotel_name',payload.hotel_name).limit(1).maybeSingle();
-    const sampleHotelId = probe.data?.hotel_id ?? (window.crypto?.randomUUID?.() || 1);
-    const res2 = await supabase.from('reservations').insert({ ...payload, hotel_id: sampleHotelId });
-    error = res2.error || null;
-  }
-  if (error){ q('#newInfo').textContent = 'Fehler: ' + error.message; return; }
-  q('#newInfo').textContent = 'Reservierung gespeichert.';
-  await loadKpis(); await loadReservations();
-  setTimeout(()=>closeModal('modalNew'), 600);
-}
-
-/***** HOTELS SKETCH *****/
-function buildSketch(){
-  const wrap = q('#sketchGrid'); wrap.innerHTML = '';
-  HOTELS.forEach(h=>{
-    wrap.append(el('div',{class:'hotel-card'},
-      el('div',{class:'muted'}, h.group),
-      el('div',{}, h.name),
-      el('div',{class:'code'}, h.code)
-    ));
-  });
-}
-
-/***** EVENTS *****/
-q('#btnAvail').addEventListener('click', async ()=>{ await buildMatrix(); openModal('modalAvail'); });
-q('#btnReporting').addEventListener('click', async ()=>{ setDefaultReportRange(); await runReport(); openModal('modalReporting'); });
-q('#btnSettings').addEventListener('click', ()=> openModal('modalSettings'));
-q('#btnNew').addEventListener('click', ()=>{ fillHotelSelect(); q('#newInfo').textContent=''; openModal('modalNew'); });
-q('#btnCreate').addEventListener('click', createReservation);
-q('#btnSketch').addEventListener('click', ()=>{ buildSketch(); openModal('modalSketch'); });
-
-q('#repRun').addEventListener('click', runReport);
-
-/***** INIT *****/
-(async function init(){
-  // KPI Filter initialisieren
-  buildKpiFilter();
-
-  // Uhren + Status
-  startClocks();
-  await refreshStatus();
-  setInterval(refreshStatus, 30000);
-
-  // Daten laden
-  await loadKpis();
-  await loadReservations();
-})();
