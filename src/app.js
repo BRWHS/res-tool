@@ -56,17 +56,15 @@ async function refreshStatus(){
   setChip(q('#chipHns'), false);
 }
 
-/***** Auto-Roll: Vergangenheit → done (departure < heute ODER arrival < heute wenn keine departure) *****/
+/***** Auto-Roll: Vergangenheit → done *****/
 async function autoRollPastToDone(){
   const today = isoDate(soD(new Date()));
-  // Pass 1: alles mit departure < heute (nicht canceled) -> done
   await supabase.from('reservations')
     .update({ status:'done' })
     .lt('departure', today)
     .neq('status','canceled')
     .or('status.eq.active,status.eq.confirmed,status.is.null');
 
-  // Pass 2: ohne departure, aber arrival < heute (nicht canceled) -> done
   await supabase.from('reservations')
     .update({ status:'done' })
     .is('departure', null)
@@ -108,7 +106,7 @@ async function buildMiniAnalytics(){
     const c = mCur.get(h.code)||0, p = mPrv.get(h.code)||0;
     const up = p===0 ? c>0 : c>p;
 
-    // Sparkline (kompakt)
+    // kompakte Sparkline
     const pts = Array.from({length:7}, ()=> Math.max(0, Math.round((c/7) + (Math.random()*2-1))));
     const max = Math.max(1, ...pts), min = Math.min(...pts);
     const path = pts.map((v,i)=>{
@@ -119,7 +117,7 @@ async function buildMiniAnalytics(){
 
     const item = el('div',{class:'dock-item',title:`${h.name} · YoY ${p?Math.round(((c-p)/p)*100):'∞'}%`},
       el('span',{class:'dock-badge'}, h.group),
-      el('div',{class:'dock-name'}, shortName(h.name)),
+      el('div',{class:'dock-name'}, shortName(h.name)),               // <-- Name sichtbar
       (()=>{
         const svg = el('svg',{class:'spark',viewBox:'0 0 78 22',xmlns:'http://www.w3.org/2000/svg'});
         svg.append(el('path',{d:path, fill:'none', stroke: up?'#35e08a':'#ff4d6d','stroke-width':'2'}));
@@ -146,7 +144,11 @@ function fillHotelFilter(selectEl){
   HOTELS.forEach(h=> selectEl.append(el('option',{value:h.code}, h.name)));
 }
 
-/***** KPI Berechnung *****/
+/***** KPI — Heute (nach deiner Definition) *****
+ * Buchungen: created_at = heute
+ * Umsatz/ADR: arrival = heute
+ * Auslastung: availability(date=today)
+ ***********************************************/
 async function loadKpisToday(){
   const code = q('#kpiFilterToday').value;
   const hotel = code!=='all' ? HOTEL_BY_CODE[code] : null;
@@ -154,20 +156,22 @@ async function loadKpisToday(){
   const nowISO = new Date().toISOString();
   const tDate = isoDate(todayStart);
 
-  let q1 = supabase.from('reservations').select('rate_price,hotel_name,created_at,arrival')
+  // Buchungen, die heute eingegangen sind
+  let qNew = supabase.from('reservations').select('id,hotel_name,created_at')
     .gte('created_at', todayStart.toISOString()).lte('created_at', nowISO);
-  if (hotel) q1 = q1.eq('hotel_name', hotel.name);
-  let { data, error } = await q1;
-  if (error || !data?.length){
-    let q2 = supabase.from('reservations').select('rate_price,hotel_name,arrival').eq('arrival', tDate);
-    if (hotel) q2 = q2.eq('hotel_name', hotel.name);
-    const r2 = await q2; if (!r2.error) data = r2.data;
-  }
-  const rows = data || [];
-  const bookings = rows.length;
-  const revenue  = rows.reduce((s,r)=> s + Number(r.rate_price||0), 0);
-  const adr      = bookings ? Math.round((revenue/bookings)*100)/100 : null;
+  if (hotel) qNew = qNew.eq('hotel_name', hotel.name);
+  const bNew = await qNew;
+  const bookings = (!bNew.error && bNew.data) ? bNew.data.length : 0;
 
+  // Umsatz/ADR aus Bestandsbuchungen mit Anreise heute
+  let qRev = supabase.from('reservations').select('rate_price,hotel_name').eq('arrival', tDate).neq('status','canceled');
+  if (hotel) qRev = qRev.eq('hotel_name', hotel.name);
+  const rRev = await qRev;
+  const rows = (!rRev.error && rRev.data) ? rRev.data : [];
+  const revenue  = rows.reduce((s,r)=> s + Number(r.rate_price||0), 0);
+  const adr      = rows.length ? Math.round((revenue/rows.length)*100)/100 : null;
+
+  // Auslastung heute
   let tOcc = null;
   if (hotel){
     const r = await supabase.from('availability').select('capacity,booked').eq('hotel_code', hotel.code).eq('date', tDate);
@@ -187,6 +191,8 @@ async function loadKpisToday(){
   q('#tADR').textContent      = euro(adr);
   q('#tOcc').textContent      = pct(tOcc);
 }
+
+/***** KPI — Nächste 7 Tage (ohne „Buchungen“) *****/
 async function loadKpisNext(){
   const code = q('#kpiFilterNext').value;
   const hotel = code!=='all' ? HOTEL_BY_CODE[code] : null;
@@ -195,13 +201,13 @@ async function loadKpisNext(){
   const end   = new Date(today); end.setDate(end.getDate()+7);
 
   let q1 = supabase.from('reservations').select('rate_price,hotel_name,arrival')
-    .gte('arrival', isoDate(start)).lte('arrival', isoDate(end));
+    .gte('arrival', isoDate(start)).lte('arrival', isoDate(end))
+    .neq('status','canceled');
   if (hotel) q1 = q1.eq('hotel_name', hotel.name);
   const { data, error } = await q1;
   const rows = (!error && Array.isArray(data)) ? data : [];
-  const bookings = rows.length;
   const revenue  = rows.reduce((s,r)=> s + Number(r.rate_price||0), 0);
-  const adr      = bookings ? Math.round((revenue/bookings)*100)/100 : null;
+  const adr      = rows.length ? Math.round((revenue/rows.length)*100)/100 : null;
 
   let nOcc = null;
   if (hotel){
@@ -220,7 +226,6 @@ async function loadKpisNext(){
     }
   }
 
-  q('#nBookings').textContent = bookings;
   q('#nRevenue').textContent  = euro(revenue);
   q('#nADR').textContent      = euro(adr);
   q('#nOcc').textContent      = pct(nOcc);
@@ -239,7 +244,6 @@ function uiStatus(row){
   const todayStr = isoDate(soD(new Date()));
   let s = (row.status||'active').toLowerCase();
   if (s==='confirmed') s = 'active';
-  // done, wenn departure < heute oder (keine departure und arrival < heute)
   const arr = row.arrival ? isoDate(new Date(row.arrival)) : null;
   const dep = row.departure ? isoDate(new Date(row.departure)) : null;
   if (s!=='canceled' && ((dep && dep < todayStr) || (!dep && arr && arr < todayStr))) s = 'done';
@@ -265,7 +269,6 @@ async function loadReservations(){
   if (fStatus==='active'){
     query = query.gte('arrival', todayStr).neq('status','canceled').or('status.eq.active,status.eq.confirmed,status.is.null');
   } else if (fStatus==='done'){
-    // done = departure < heute oder (keine departure und arrival < heute)
     query = query.neq('status','canceled').lt('arrival', todayStr);
   } else if (fStatus==='canceled'){
     query = query.eq('status','canceled');
@@ -314,25 +317,47 @@ q('#prevPage').addEventListener('click', ()=>{ page = Math.max(1, page-1); loadR
 q('#nextPage').addEventListener('click', ()=>{ page = page+1; loadReservations(); });
 
 /***** Edit *****/
+function fillEditCategoryAndRate(hotelCode, currentCat, currentRate){
+  // Kategorien
+  const cats = HOTEL_CATEGORIES['default'];
+  const catSel = q('#eCat'); catSel.innerHTML = cats.map(c=>`<option value="${c}">${c}</option>`).join('');
+  if (currentCat && cats.includes(currentCat)) catSel.value = currentCat;
+
+  // Raten
+  const rates = HOTEL_RATES['default'];
+  const rateSel = q('#eRate'); rateSel.innerHTML = rates.map(r=>`<option value="${r.name}" data-price="${r.price}">${r.name} (${EUR.format(r.price)})</option>`).join('');
+  if (currentRate && rates.some(r=>r.name===currentRate)) rateSel.value = currentRate;
+
+  rateSel.onchange = ()=> {
+    const p = rateSel.selectedOptions[0]?.dataset.price;
+    if (p) q('#ePrice').value = p;
+  };
+}
+
 async function openEdit(id){
   const { data, error } = await supabase.from('reservations').select('*').eq('id', id).maybeSingle();
   if (error || !data) return alert('Konnte Reservierung nicht laden.');
+
+  // Grunddaten
   q('#eResNo').value = data.reservation_number || '';
   q('#eStatus').value = uiStatus(data);
   q('#eHotel').value = shortName(data.hotel_name) || '';
   q('#eLname').value = data.guest_last_name || '';
   q('#eArr').value = data.arrival ? isoDate(new Date(data.arrival)) : '';
   q('#eDep').value = data.departure ? isoDate(new Date(data.departure)) : '';
-  q('#eCat').value = data.category || '';
-  q('#eRate').value = data.rate_name || '';
-  q('#ePrice').value = data.rate_price || 0;
+
+  // Kategorie/Rate als Dropdown + Preis sync
+  fillEditCategoryAndRate(data.hotel_code, data.category, data.rate_name);
+  q('#ePrice').value = data.rate_price || (HOTEL_RATES.default[0].price);
   q('#eNotes').value = data.notes || '';
 
+  // Zahlung
   q('#eCcHolder').value = data.cc_holder || '';
   q('#eCcLast4').value  = data.cc_last4  || '';
   q('#eCcExpM').value   = data.cc_exp_month || '';
   q('#eCcExpY').value   = data.cc_exp_year  || '';
 
+  // Handlers
   q('#btnSaveEdit').onclick = async ()=>{
     let status = q('#eStatus').value;
     const arr = q('#eArr').value || null;
@@ -340,10 +365,14 @@ async function openEdit(id){
     const todayStr = isoDate(soD(new Date()));
     if (status==='active' && ((dep && dep < todayStr) || (!dep && arr && arr < todayStr))) status='done';
     const payload = {
-      status, guest_last_name: q('#eLname').value,
-      arrival: arr, departure: dep,
-      category: q('#eCat').value, rate_name: q('#eRate').value,
-      rate_price: Number(q('#ePrice').value||0), notes: q('#eNotes').value
+      status,
+      guest_last_name: q('#eLname').value,
+      arrival: arr,
+      departure: dep,
+      category: q('#eCat').value,
+      rate_name: q('#eRate').value,
+      rate_price: Number(q('#ePrice').value||0),
+      notes: q('#eNotes').value
     };
     const { error } = await supabase.from('reservations').update(payload).eq('id', id);
     q('#editInfo').textContent = error ? ('Fehler: '+error.message) : 'Gespeichert.'; await loadReservations();
@@ -365,6 +394,7 @@ async function openEdit(id){
     q('#editInfo').textContent = error ? ('Fehler: '+error.message) : 'Reservierung storniert.'; await loadReservations();
   };
 
+  // Tabs
   qa('.tab').forEach(b=>b.classList.remove('active')); q('.tab[data-tab="tabDet"]').classList.add('active');
   qa('.tabpage').forEach(p=>p.classList.add('hidden')); q('#tabDet').classList.remove('hidden');
   openModal('modalEdit');
@@ -611,7 +641,7 @@ q('#repXls').addEventListener('click', ()=>{
   download('report.xls','application/vnd.ms-excel', toXLS(rows,'Report'));
 });
 
-/***** Skizze + Settings *****/
+/***** Skizze + Settings + Actions *****/
 function buildSketch(){
   const wrap = q('#sketchGrid'); if(!wrap) return; wrap.innerHTML = '';
   HOTELS.forEach(h=>{
