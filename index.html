@@ -41,6 +41,12 @@
   </header>
 
   <main class="container" aria-live="polite">
+    <!-- KPI Filter -->
+    <section class="filterbar" aria-label="KPI Filter">
+      <label class="mono" for="kpiFilter">KPI Ansicht:</label>
+      <select id="kpiFilter" class="input sm"></select>
+    </section>
+
     <!-- KPIs -->
     <section class="grid hero" aria-label="Dashboard Übersicht">
       <article class="card scanlines">
@@ -51,7 +57,6 @@
             <div class="kpi"><div class="value" id="tRevenue">— €</div><div class="label">Umsatz</div></div>
             <div class="kpi"><div class="value" id="tADR">— €</div><div class="label">ADR</div></div>
             <div class="kpi"><div class="value" id="tOcc">—%</div><div class="label">Ø Auslastung</div></div>
-            <div class="kpi"><div class="value" id="tHotels">—</div><div class="label">Häuser mit Buchungen</div></div>
           </div>
         </div>
       </article>
@@ -63,7 +68,6 @@
             <div class="kpi"><div class="value" id="wRevenue">— €</div><div class="label">Umsatz</div></div>
             <div class="kpi"><div class="value" id="wADR">— €</div><div class="label">ADR</div></div>
             <div class="kpi"><div class="value" id="wOcc">—%</div><div class="label">Ø Auslastung</div></div>
-            <div class="kpi"><div class="value" id="wHotels">—</div><div class="label">Häuser mit Buchungen</div></div>
           </div>
         </div>
       </article>
@@ -104,16 +108,16 @@
     </section>
   </main>
 
-  <!-- Floating right sidebar for trackers -->
+  <!-- Right floating quick links -->
   <aside class="quick-links" aria-label="Tracker Shortcuts">
     <a class="btn sm" href="https://noteforms.com/forms/hotel-booking-tracker-c83eba" target="_blank" rel="noopener">Buchungs-Tracker</a>
     <a class="btn sm" href="https://noteforms.com/forms/hotel-call-tracking-form-hw2hqj" target="_blank" rel="noopener">Telefon-Tracker</a>
   </aside>
 
-  <!-- Backdrop (non-blurred, sharp background) -->
+  <!-- Backdrop -->
   <div class="modal-backdrop" id="backdrop" aria-hidden="true"></div>
 
-  <!-- Modals -->
+  <!-- Modals (jetzt fix & zentriert) -->
   <section class="modal" id="modalNew" role="dialog" aria-labelledby="newTitle" aria-modal="true">
     <header>
       <h3 id="newTitle" class="mono">Neue Reservierung</h3>
