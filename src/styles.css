@@ -24,6 +24,7 @@ body {
   color: var(--text);
   letter-spacing: 0.2px;
 }
+body.modal-open { overflow: hidden; }
 
 /* Nerdy vibe */
 .mono { font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: 0.3px; }
@@ -54,6 +55,10 @@ body {
 #statusChips { display:flex; gap:8px; }
 .clock { display:flex; align-items:center; gap:8px; }
 .clock .sep { opacity:.6; }
+
+/* Filterbar */
+.filterbar { display:flex; align-items:center; gap:10px; margin: 14px 0 6px; }
+.input.sm { padding: 6px 10px; font-size: 12px; height: 34px; }
 
 /* Buttons */
 .btn {
@@ -92,7 +97,7 @@ body {
 
 /* Dashboard hero */
 .hero { display:grid; gap: 16px; grid-template-columns: 1fr 1fr; }
-.kpis { display:grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+.kpis { display:grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
 .kpis.big .kpi .value { font-size: 28px; font-weight: 800; line-height: 1.2; }
 .kpi { padding: 16px; border: 1px solid rgba(0,255,255,.15); border-radius: 14px; background: rgba(0,255,255,0.03); }
 .kpi .label { font-size: 12px; color: var(--muted); }
@@ -122,15 +127,17 @@ table.matrix { width: 100%; border-collapse: collapse; }
 .lvl-1 { box-shadow: inset 0 0 0 2px rgba(255,209,102,0.35); }
 .lvl-2 { box-shadow: inset 0 0 0 2px rgba(255,77,109,0.45); }
 
-/* Modals */
+/* Modals — fixed centered, always usable */
 .modal-backdrop {
   position: fixed; inset: 0;
-  background: rgba(0, 8, 10, 0.35); /* sharp background (no blur) */
+  background: rgba(0, 8, 10, 0.35);
   display:none; align-items:center; justify-content:center;
   z-index: 40;
 }
 .modal {
+  position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
   width: min(1000px, 95vw);
+  max-height: 90vh; overflow: auto;
   background: var(--panel);
   border:1px solid rgba(0,255,255,0.2);
   border-radius: 18px;
@@ -141,19 +148,12 @@ table.matrix { width: 100%; border-collapse: collapse; }
 .modal header { display:flex; align-items:center; justify-content:space-between; padding: 14px 16px; border-bottom:1px solid rgba(0,255,255,0.18); }
 .modal .body { padding: 16px; }
 
-/* Helpers */
-.muted { color: var(--muted); }
-.hidden { display:none !important; }
-.grid2 { display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap:12px; }
-.row.wrap { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
-.right { display:flex; justify-content:flex-end; }
-
 /* Hotelskizze */
 .hotel-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(240px,1fr)); gap:12px; }
 .hotel-card { padding:12px; border:1px solid rgba(0,255,255,0.18); border-radius:12px; background: rgba(0,255,255,0.04); }
 .hotel-card .code { font-family:"JetBrains Mono", monospace; color: var(--accent-2); font-weight:700; }
 
-/* Floating quick links on the right */
+/* Floating quick links (right) */
 .quick-links {
   position: fixed;
   right: 16px; top: 92px;
