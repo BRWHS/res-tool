@@ -52,7 +52,7 @@ body.modal-open{overflow:hidden}
 .btn.danger{border-color:rgba(255,77,109,.45);box-shadow:0 6px 18px rgba(255,77,109,.15)}
 .btn.danger:hover{border-color:rgba(255,77,109,.8)}
 
-/* inputs & selects (dark) */
+/* inputs & selects */
 .input{
   width:100%;background:rgba(0,255,255,.06);border:1px solid rgba(0,255,255,.18);
   border-radius:12px;padding:10px 12px;color:var(--text);appearance:none;outline:none
@@ -78,7 +78,7 @@ select::-ms-expand{display:none}
 .kpi .label{font-size:12px;color:var(--muted)}
 
 /* Tables */
-.table-tools{display:flex;gap:10px;justify-content:space-between;align-items:flex-end;margin-bottom:10px}
+.table-tools{display:flex;gap:10px;justify-content:flex-start;align-items:center;margin:8px 0 10px}
 .row.wrap{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .table-wrap{overflow:auto}
 .table-wrap, .dock-list, .matrix, .modal{scrollbar-color: rgba(0,255,255,.5) var(--panel-2)}
@@ -96,25 +96,26 @@ table.resv{width:100%;border-collapse:collapse}
 .box{padding:12px;border:1px solid rgba(0,255,255,.18);border-radius:12px;background:rgba(0,255,255,.04);margin-top:8px}
 .section{margin:10px 0 6px}
 
-/* Wizard – Stepper & Actions */
+/* Wizard */
 .wizard-steps{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
 .wstep{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid rgba(0,255,255,.15);border-radius:12px;background:rgba(0,255,255,.04);user-select:none}
 .wstep span{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:999px;background:rgba(0,255,255,.1);border:1px solid rgba(0,255,255,.25);font-weight:800}
 .wstep.active{background:linear-gradient(180deg,rgba(0,255,255,.15),rgba(0,255,255,.05));border-color:rgba(0,255,255,.4)}
 .wizard-actions{display:flex;gap:8px;align-items:center;margin-top:10px}
 
-/* Summary */
+/* Summary smaller */
+.summary{font-size:12px}
 .summary h4{margin:0 0 6px;color:var(--accent-2)}
-.summary .line{display:flex;justify-content:space-between;gap:8px;font-size:12px;border-bottom:1px dashed rgba(0,255,255,.12);padding:6px 0}
+.summary .line{display:flex;justify-content:space-between;gap:8px;font-size:12px;border-bottom:1px dashed rgba(0,255,255,.12);padding:4px 0}
 
 /* Mini-Analytics */
 .analytics-dock{position:fixed;left:16px;top:92px;width:200px;z-index:20;display:flex;flex-direction:column;gap:8px}
 .dock-head{display:flex;align-items:center;justify-content:space-between;color:var(--muted)}
-.dock-list{border:1px solid rgba(0,255,255,.15);border-radius:12px;background:linear-gradient(180deg,var(--panel),var(--panel-2));max-height:320px;overflow:auto}
+.dock-list{border:1px solid rgba(0,255,255,.15);border-radius:12px;background:linear-gradient(180deg,var(--panel),var(--panel-2));max-height:520px;overflow:auto}
 .dock-item{display:grid;grid-template-columns:auto 1fr auto auto;align-items:center;gap:6px;padding:6px 8px;border-bottom:1px dashed rgba(0,255,255,.12)}
 .dock-item:last-child{border-bottom:0}
 .dock-badge{font-size:10px;opacity:.85;border:1px solid rgba(0,255,255,.2);border-radius:6px;padding:2px 6px}
-.dock-name{min-width:0;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dock-name{min-width:0;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text);font-weight:600}
 .dock-arrow{font-weight:800}
 .dock-arrow.up{color:var(--ok)} .dock-arrow.down{color:var(--danger)}
 .spark{width:78px;height:22px}
@@ -147,7 +148,6 @@ table.matrix{width:100%;border-collapse:collapse}
 }
 .cc-visual::after{content:"";position:absolute;inset:-40% -40% auto auto;transform:rotate(25deg);height:220%;width:60%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.06),transparent)}
 .cc-chip{width:42px;height:30px;border-radius:6px;background:linear-gradient(180deg,#e0e0e0,#9aa0a6);margin-bottom:16px}
-.cc-brand{position:absolute;top:16px;right:16px;font-weight:800;letter-spacing:.6px;color:var(--accent-2)}
 .cc-num{font:700 20px "JetBrains Mono",monospace;letter-spacing:2px;margin-top:8px}
 .cc-holder{position:absolute;left:18px;bottom:18px;font-weight:700}
 .cc-exp{position:absolute;right:18px;bottom:18px;font-weight:700}
