@@ -7,9 +7,7 @@
 
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet">
-
-  <!-- dein bestehendes CSS -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;600;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/src/styles.css" />
 </head>
 <body>
@@ -18,18 +16,36 @@
       <div class="logo" aria-hidden="true"></div>
       <h1 class="mono"><span>res</span>-tool<span class="cursor">_</span></h1>
     </div>
+
     <nav class="toolbar">
-      <button class="btn ghost" id="btnStatus">Systemstatus</button>
-      <button class="btn ghost" id="btnAvail">Verfügbarkeit</button>
       <button class="btn primary" id="btnNew">Neue Reservierung</button>
+      <button class="btn ghost"   id="btnAvail">Verfügbarkeit</button>
+      <button class="btn ghost"   id="btnReporting">Reporting</button>
+      <button class="btn ghost"   id="btnSettings">Einstellungen</button>
+
+      <a class="btn" href="https://noteforms.com/forms/hotel-booking-tracker-c83eba" target="_blank" rel="noopener">Buchungs-Tracker</a>
+      <a class="btn" href="https://noteforms.com/forms/hotel-call-tracking-form-hw2hqj" target="_blank" rel="noopener">Telefon-Tracker</a>
     </nav>
+
+    <div class="mono" style="display:flex; align-items:center; gap:14px;">
+      <div id="statusChips" style="display:flex; gap:8px;">
+        <span class="pill" id="chipSb"    title="Supabase">SB</span>
+        <span class="pill" id="chipHns"   title="HotelNetSolutions">HNS</span>
+      </div>
+      <div class="muted" id="clockWrap">
+        <span id="clockLocal">--:--:--</span>
+        <span style="opacity:.6">/</span>
+        <span id="clockServer">srv --:--:--</span>
+      </div>
+    </div>
   </header>
 
   <main class="container" aria-live="polite">
+    <!-- KPI-Stripes -->
     <section class="grid hero">
       <article class="card scanlines">
         <div class="content">
-          <h3 class="mono">KPI – Heute</h3>
+          <h3 class="mono">KPI — Heute</h3>
           <div class="kpis big">
             <div class="kpi"><div class="value" id="tBookings">—</div><div class="label">Buchungen</div></div>
             <div class="kpi"><div class="value" id="tRevenue">— €</div><div class="label">Umsatz</div></div>
@@ -39,9 +55,10 @@
           </div>
         </div>
       </article>
+
       <article class="card scanlines">
         <div class="content">
-          <h3 class="mono">KPI – Letzte 7 Tage</h3>
+          <h3 class="mono">KPI — Letzte 7 Tage</h3>
           <div class="kpis big">
             <div class="kpi"><div class="value" id="wBookings">—</div><div class="label">Buchungen</div></div>
             <div class="kpi"><div class="value" id="wRevenue">— €</div><div class="label">Umsatz</div></div>
@@ -53,6 +70,7 @@
       </article>
     </section>
 
+    <!-- Reservierungen -->
     <section style="margin-top:16px;">
       <article class="card scanlines">
         <div class="content">
@@ -63,10 +81,10 @@
           <div class="table-wrap">
             <table class="resv">
               <thead>
-                <tr>
-                  <th>Gastname</th><th>Anreise</th><th>Abreise</th><th>Hotel</th>
-                  <th>Kategorie</th><th>Rate</th><th>Preis</th><th>Notizen</th>
-                </tr>
+              <tr>
+                <th>Gastname</th><th>Anreise</th><th>Abreise</th><th>Hotel</th>
+                <th>Kategorie</th><th>Rate</th><th>Preis</th><th>Notizen</th>
+              </tr>
               </thead>
               <tbody id="resvBody"></tbody>
             </table>
@@ -84,43 +102,104 @@
   <!-- Backdrop -->
   <div class="modal-backdrop" id="backdrop"></div>
 
-  <!-- Status Modal -->
-  <section class="modal" id="statusModal" role="dialog" aria-labelledby="statusTitle">
+  <!-- Neue Reservierung -->
+  <section class="modal" id="modalNew" role="dialog" aria-labelledby="newTitle">
     <header>
-      <h3 id="statusTitle" class="mono">Systemstatus</h3>
+      <h3 id="newTitle" class="mono">Neue Reservierung</h3>
       <button class="btn" data-close>Schließen</button>
     </header>
     <div class="body">
-      <div class="status-grid">
-        <div class="status-item"><span>App</span><span class="dot" id="dotApp"></span></div>
-        <div class="status-item"><span>Supabase</span><span class="dot" id="dotSb"></span></div>
-        <div class="status-item"><span>HotelNetSolutions</span><span class="dot" id="dotHns"></span></div>
-        <div class="status-item"><span>E-Mail</span><span class="dot" id="dotMail"></span></div>
+      <div style="display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap:12px;">
+        <label>Hotel
+          <select id="newHotel" class="input"></select>
+        </label>
+        <label>Gäste
+          <input id="newGuests" type="number" min="1" value="1" class="input"/>
+        </label>
+        <label>Anreise
+          <input id="newArr" type="date" class="input"/>
+        </label>
+        <label>Abreise
+          <input id="newDep" type="date" class="input"/>
+        </label>
+        <label>Kategorie
+          <select id="newCat" class="input"><option>Standard</option><option>Superior</option><option>Suite</option></select>
+        </label>
+        <label>Rate
+          <select id="newRate" class="input">
+            <option value="Flex exkl. Frühstück" data-price="89">Flex exkl. Frühstück</option>
+            <option value="Flex inkl. Frühstück" data-price="109">Flex inkl. Frühstück</option>
+          </select>
+        </label>
+        <label>Preis
+          <input id="newPrice" type="number" step="1" value="89" class="input"/>
+        </label>
+        <label>Gast Nachname
+          <input id="newLname" type="text" placeholder="Mustermann" class="input"/>
+        </label>
       </div>
-      <p class="muted" style="margin-top:10px">HNS ist aktuell Platzhalter.</p>
+      <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:12px;">
+        <button class="btn" id="btnCreate">Anlegen</button>
+      </div>
+      <p class="muted" id="newInfo" style="margin-top:6px;"></p>
     </div>
   </section>
 
-  <!-- Availability Modal -->
-  <section class="modal" id="availabilityModal" role="dialog" aria-labelledby="availTitle">
+  <!-- Verfügbarkeit -->
+  <section class="modal" id="modalAvail" role="dialog" aria-labelledby="availTitle">
     <header>
-      <h3 id="availTitle" class="mono">Verfügbarkeitsmatrix</h3>
+      <h3 id="availTitle" class="mono">Verfügbarkeit (14 Tage)</h3>
       <button class="btn" data-close>Schließen</button>
     </header>
     <div class="body">
       <div class="matrix">
-        <table class="matrix" id="matrixTable">
-          <thead><tr><th class="sticky">Hotel</th></tr></thead>
-          <tbody id="matrixBody"></tbody>
-        </table>
+        <table class="matrix" id="matrixTable"><thead><tr><th class="sticky">Hotel</th></tr></thead><tbody id="matrixBody"></tbody></table>
       </div>
       <p class="muted" style="margin-top:8px;">Legende: <span class="pill lvl-0">OK</span> <span class="pill lvl-1">+1</span> <span class="pill lvl-2">≥2</span></p>
     </div>
   </section>
 
-  <!-- Supabase UMD -->
+  <!-- Reporting -->
+  <section class="modal" id="modalReporting" role="dialog" aria-labelledby="repTitle">
+    <header>
+      <h3 id="repTitle" class="mono">Reporting</h3>
+      <button class="btn" data-close>Schließen</button>
+    </header>
+    <div class="body">
+      <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px;">
+        <label>Von <input id="repFrom" type="date" class="input"></label>
+        <label>Bis <input id="repTo" type="date" class="input"></label>
+        <button class="btn" id="repRun">Aktualisieren</button>
+      </div>
+      <div class="table-wrap">
+        <table class="resv">
+          <thead><tr><th>Hotel</th><th>Buchungen</th><th>Umsatz</th><th>ADR</th></tr></thead>
+          <tbody id="repBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Einstellungen -->
+  <section class="modal" id="modalSettings" role="dialog" aria-labelledby="setTitle">
+    <header>
+      <h3 id="setTitle" class="mono">Einstellungen</h3>
+      <button class="btn" data-close>Schließen</button>
+    </header>
+    <div class="body">
+      <div style="display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap:12px;">
+        <label>Sprache
+          <select id="setLang" class="input"><option value="de">Deutsch</option><option value="en">English</option></select>
+        </label>
+        <label>Farbton (Hue)
+          <input id="setHue" type="range" min="160" max="200" value="180" />
+        </label>
+      </div>
+      <p class="muted" style="margin-top:8px;">Einstellungen werden lokal gespeichert.</p>
+    </div>
+  </section>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.5/dist/umd/supabase.js" crossorigin="anonymous"></script>
-  <!-- deine neue App-Logik -->
   <script src="/src/app.js"></script>
 </body>
 </html>
