@@ -3,7 +3,7 @@ const SB_URL = "https://kytuiodojfcaggkvizto.supabase.co";
 const SB_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt5dHVpb2RvamZjYWdna3ZpenRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ4MzA0NjgsImV4cCI6MjA3MDQwNjQ2OH0.YobQZnCQ7LihWtewynoCJ6ZTjqetkGwh82Nd2mmmhLU";
 const supabase = window.supabase.createClient(SB_URL, SB_ANON_KEY);
 
-/***** Hotels (einfacher Anzeigename = name) *****/
+/***** Hotels *****/
 const HOTELS = [
   { group:'MASEVEN',  name:'MASEVEN München Dornach',   code:'MA7-M-DOR' },
   { group:'MASEVEN',  name:'MASEVEN München Trudering', code:'MA7-M-TRU' },
@@ -26,15 +26,16 @@ const HOTELS = [
   { group:'Villa Viva', name:'Villa Viva Hamburg',      code:'VV-HH' },
 ];
 const HOTEL_BY_CODE = Object.fromEntries(HOTELS.map(h=>[h.code,h]));
-const DEDUP_PREFIXES = ['MASEVEN','Fidelity','Tante Alma','Delta by Marriot','Villa Viva'];
-function cleanHotelDisplayName(s){
-  if (!s) return '—';
-  const parts = s.split(' · ');
-  if (parts.length===2 && DEDUP_PREFIXES.includes(parts[0])) return parts[1];
-  return s;
-}
+const PREFIXES = ['MASEVEN','Fidelity','Tante Alma','Delta by Marriot','Villa Viva'];
+const shortName = (full) => {
+  if (!full) return '—';
+  for (const p of PREFIXES) {
+    if (full.startsWith(p+' ')) return full.slice(p.length+1);
+  }
+  return full;
+};
 
-/***** Dummy Kategorien/Raten je Hotel (später aus HNS) *****/
+/***** Dummy Kategorien/Raten je Hotel (später HNS) *****/
 const HOTEL_CATEGORIES = { default: ['Standard','Superior','Suite'] };
 const HOTEL_RATES = { default: [ {name:'Flex exkl. Frühstück', price:89}, {name:'Flex inkl. Frühstück', price:109} ] };
 
@@ -52,7 +53,7 @@ function el(tag,attrs={},...kids){ const e=document.createElement(tag); Object.e
 function setChip(node, ok){ node.classList.remove('lvl-2','lvl-1','lvl-0'); node.classList.add(ok?'lvl-0':'lvl-1'); }
 function download(filename, mime, content){ const blob = new Blob([content], {type:mime}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=filename; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href), 1000); }
 
-/***** Header clocks (nur lokal) *****/
+/***** Header clocks *****/
 function startClocks(){
   function tickLocal(){
     const d = new Date();
@@ -68,7 +69,7 @@ async function refreshStatus(){
   setChip(q('#chipHns'), false);
 }
 
-/***** Mini-Analytics (klein, ohne Doppel-Namen) *****/
+/***** Mini-Analytics (klein, hübsch, ohne Doppel-Namen) *****/
 function buildMiniAnalytics(){
   const list = q('#miniAnalyticsDock'); list.innerHTML='';
   HOTELS.forEach(h=>{
@@ -82,7 +83,7 @@ function buildMiniAnalytics(){
     const yoyUp = Math.random() > 0.5;
     const item = el('div',{class:'dock-item'},
       el('span',{class:'dock-badge'}, h.group),
-      el('div',{class:'dock-name'}, h.name),
+      el('div',{class:'dock-name'}, shortName(h.name)),
       (()=>{
         const svg = el('svg',{class:'spark',viewBox:'0 0 70 22',xmlns:'http://www.w3.org/2000/svg'});
         svg.append(el('path',{d:path, fill:'none', stroke: yoyUp?'#35e08a':'#ff4d6d','stroke-width':'2'}));
@@ -151,7 +152,7 @@ async function loadKpisToday(){
   q('#tOcc').textContent      = pct(tOcc);
 }
 
-/***** KPI — Nächste 7 Tage (ab morgen) *****/
+/***** KPI — Nächste 7 Tage *****/
 async function loadKpisNext(){
   const code = q('#kpiFilterNext').value;
   const hotel = code!=='all' ? HOTEL_BY_CODE[code] : null;
@@ -191,7 +192,7 @@ async function loadKpisNext(){
   q('#nOcc').textContent      = pct(nOcc);
 }
 
-/***** RES LIST (Filter inkl. Status, default confirmed) *****/
+/***** RES LIST (Status-Filter; 'confirmed' zeigt nur Zukunft, 'done' Vergangenheit) *****/
 let page=1, pageSize=50, search='', fHotel='all', fResNo='', fFrom=null, fTo=null, fStatus='confirmed';
 
 function fillFilters(){
@@ -203,6 +204,8 @@ function fillFilters(){
 async function loadReservations(){
   const body = q('#resvBody'); body.innerHTML = '';
   const from = (page-1)*pageSize, to = from + pageSize - 1;
+  const todayStr = isoDate(soD(new Date()));
+
   let query = supabase.from('reservations')
     .select('id,reservation_number,guest_last_name,arrival,departure,hotel_name,category,rate_name,rate_price,status', { count:'exact' })
     .order('arrival', { ascending: true })
@@ -213,27 +216,37 @@ async function loadReservations(){
   if (fHotel!=='all'){ const h = HOTEL_BY_CODE[fHotel]; if (h) query = query.eq('hotel_name', h.name); }
   if (fFrom)   query = query.gte('arrival', fFrom);
   if (fTo)     query = query.lte('arrival', fTo);
-  if (fStatus!=='all') query = query.eq('status', fStatus);
+
+  if (fStatus==='confirmed'){
+    query = query.eq('status','confirmed').gte('arrival', todayStr);
+  } else if (fStatus==='done'){
+    query = query.lte('arrival', todayStr).neq('status','canceled'); // „fertig“, keine Stornos
+  } else if (fStatus==='pending' || fStatus==='canceled'){
+    query = query.eq('status', fStatus);
+  } // 'all' = keine Statusbedingung
 
   const { data, count, error } = await query;
   if (error){ q('#pageInfo').textContent='Fehler'; console.warn(error); return; }
 
   (data || []).forEach(row => {
-    const status = (row.status||'confirmed').toLowerCase();
-    const dotCls = status==='canceled'?'dot-canceled':(status==='pending'?'dot-pending':'dot-confirmed');
+    // Render-Status: wenn confirmed aber in Vergangenheit, als „done“ zeigen
+    let rStatus = (row.status||'confirmed').toLowerCase();
+    if (rStatus==='confirmed' && row.arrival && isoDate(new Date(row.arrival)) <= todayStr) rStatus = 'done';
+    const dotCls = rStatus==='canceled'?'dot-canceled':(rStatus==='pending'?'dot-pending':(rStatus==='done'?'dot-done':'dot-confirmed'));
+
     const tr = el('tr', { class: 'row', 'data-id': row.id },
       el('td', {}, row.reservation_number || '—'),
       el('td', {}, row.guest_last_name || '—'),
       el('td', {}, row.arrival ? D2.format(new Date(row.arrival)) : '—'),
       el('td', {}, row.departure ? D2.format(new Date(row.departure)) : '—'),
-      el('td', {}, cleanHotelDisplayName(row.hotel_name) || '—'),
+      el('td', {}, shortName(row.hotel_name) || '—'),
       el('td', {}, row.category || '—'),
       el('td', {}, row.rate_name || '—'),
       el('td', {}, row.rate_price != null ? EUR.format(row.rate_price) : '—'),
       (()=>{
         const td = el('td',{class:'status'});
         td.append(el('span',{class:`status-dot ${dotCls}`}));
-        td.append(document.createTextNode(status));
+        td.append(document.createTextNode(rStatus));
         return td;
       })()
     );
@@ -255,13 +268,13 @@ q('#btnRefresh').addEventListener('click', ()=> loadReservations());
 q('#prevPage').addEventListener('click', ()=>{ page = Math.max(1, page-1); loadReservations(); });
 q('#nextPage').addEventListener('click', ()=>{ page = page+1; loadReservations(); });
 
-/***** EDIT RESERVATION (unchanged from last, keeps notes & payment) *****/
+/***** EDIT RESERVATION *****/
 async function openEdit(id){
   const { data, error } = await supabase.from('reservations').select('*').eq('id', id).maybeSingle();
   if (error || !data) return alert('Konnte Reservierung nicht laden.');
   q('#eResNo').value = data.reservation_number || '';
   q('#eStatus').value = data.status || 'confirmed';
-  q('#eHotel').value = cleanHotelDisplayName(data.hotel_name) || '';
+  q('#eHotel').value = shortName(data.hotel_name) || '';
   q('#eLname').value = data.guest_last_name || '';
   q('#eArr').value = data.arrival ? isoDate(new Date(data.arrival)) : '';
   q('#eDep').value = data.departure ? isoDate(new Date(data.departure)) : '';
@@ -320,7 +333,7 @@ qa('.tab').forEach(btn=>{
   });
 });
 
-/***** NEW RESERVATION — Wizard (mit Summary + neuen Feldern) *****/
+/***** NEW RESERVATION — Wizard (mit Summary in Schritt 3) *****/
 function wizardSet(step){
   qa('.wstep').forEach(b=>b.classList.toggle('active', b.dataset.step==step));
   qa('.wpage').forEach(p=>p.classList.add('hidden'));
@@ -328,7 +341,7 @@ function wizardSet(step){
   q('#btnPrev').disabled = step==='1';
   q('#btnNext').classList.toggle('hidden', step==='4');
   q('#btnCreate').classList.toggle('hidden', step!=='4');
-  if (step==='4') updateSummary();
+  if (step==='3') updateSummary('#summarySide');
 }
 q('#btnPrev').addEventListener('click', ()=>{ const cur = Number(qa('.wstep.active')[0].dataset.step); wizardSet(String(Math.max(1,cur-1))); });
 q('#btnNext').addEventListener('click', ()=>{ const cur = Number(qa('.wstep.active')[0].dataset.step); wizardSet(String(Math.min(4,cur+1))); });
@@ -342,12 +355,12 @@ function fillHotelSelect(){
     const rates= HOTEL_RATES['default'];
     q('#newCat').innerHTML = cats.map(c=>`<option>${c}</option>`).join('');
     q('#newRate').innerHTML = rates.map(r=>`<option value="${r.name}" data-price="${r.price}">${r.name} (${EUR.format(r.price)})</option>`).join('');
-    q('#newPrice').value = rates[0].price; updateSummary();
+    q('#newPrice').value = rates[0].price; updateSummary('#summarySide');
   });
 }
-q('#newRate').addEventListener('change',e=>{ const price=e.target.selectedOptions[0]?.dataset.price; if(price) q('#newPrice').value=price; updateSummary(); });
-['newArr','newDep','newGuests','newCat','newPrice','newFname','newLname','newEmail','newPhone','newStreet','newZip','newCity','newCompany','newVat','newCompanyZip','newAddress','newNotes'].forEach(id=>{
-  document.addEventListener('input', (ev)=>{ if(ev.target?.id===id) updateSummary(); });
+q('#newRate').addEventListener('change',e=>{ const price=e.target.selectedOptions[0]?.dataset.price; if(price) q('#newPrice').value=price; updateSummary('#summarySide'); });
+['newArr','newDep','newAdults','newChildren','newCat','newPrice','newFname','newLname','newEmail','newPhone','newStreet','newZip','newCity','newCompany','newVat','newCompanyZip','newAddress','newNotes'].forEach(id=>{
+  document.addEventListener('input', (ev)=>{ if(ev.target?.id===id) updateSummary('#summarySide'); });
 });
 
 function genResNo(){ return 'R' + Date.now().toString(36).toUpperCase(); }
@@ -362,29 +375,32 @@ function parseCc(){
   const exp_y = m ? Number(m[2]) : null;
   return { last4, brand, holder, exp_m, exp_y };
 }
-function updateSummary(){
+function linesSummary(){
   const code=q('#newHotel').value; const h=HOTEL_BY_CODE[code];
-  const lines = [
+  const adults = Number(q('#newAdults').value||1), children = Number(q('#newChildren').value||0);
+  return [
     ['Hotel', h?.name || '—'],
     ['Zeitraum', (q('#newArr').value||'—') + ' → ' + (q('#newDep').value||'—')],
-    ['Gäste', q('#newGuests').value||'—'],
+    ['Belegung', `${adults} Erw. / ${children} Kind.`],
     ['Kategorie', q('#newCat').value||'—'],
     ['Rate', q('#newRate').value||'—'],
-    ['Preis', q('#newPrice').value?EUR.format(q('#newPrice').value):'—'],
-    ['Gast', ((q('#newFname').value||'')+' '+(q('#newLname').value||'')).trim() || '—'],
-    ['Kontakt', (q('#newEmail').value||'') + (q('#newPhone').value? ' / '+q('#newPhone').value :'')],
-    ['Adresse', [q('#newStreet').value,q('#newZip').value,q('#newCity').value].filter(Boolean).join(', ') || '—'],
-    ['Firma', [q('#newCompany').value,q('#newVat').value].filter(Boolean).join(' · ') || '—'],
-    ['Firmenadresse', [q('#newCompanyZip').value,q('#newAddress').value].filter(Boolean).join(' ') || '—'],
-    ['Notizen', q('#newNotes').value||'—']
+    ['Preis', q('#newPrice').value?EUR.format(q('#newPrice').value):'—']
   ];
-  q('#summaryBox').innerHTML = '<table class="resv">'+lines.map(([k,v])=>`<tr><th style="color:var(--muted);font-weight:600;text-align:left;padding-right:8px;">${k}</th><td>${v}</td></tr>`).join('')+'</table>';
+}
+function updateSummary(selector='#summarySide'){
+  const box = q(selector); if (!box) return;
+  const rows = linesSummary().map(([k,v])=>`<div class="line"><span>${k}</span><span>${v}</span></div>`).join('');
+  box.innerHTML = `<h4 class="mono">Zusammenfassung</h4>${rows}`;
 }
 
 async function createReservation(){
   const code=q('#newHotel').value; const h=HOTEL_BY_CODE[code];
   if (!h) return alert('Bitte Hotel wählen.');
   if (!q('#newLname').value.trim()) return alert('Nachname ist Pflicht.');
+
+  const adults = Number(q('#newAdults').value||1);
+  const children = Number(q('#newChildren').value||0);
+  const guestsTotal = adults + children;
 
   const cc = parseCc();
   const payload = {
@@ -394,7 +410,9 @@ async function createReservation(){
     hotel_code: code,
     arrival: q('#newArr').value || null,
     departure: q('#newDep').value || null,
-    guests: Number(q('#newGuests').value||1),
+    guests: guestsTotal,
+    guests_adults: adults,
+    guests_children: children,
     category: q('#newCat').value || null,
     rate_name: q('#newRate').value || null,
     rate_price: Number(q('#newPrice').value||0),
@@ -423,7 +441,7 @@ async function createReservation(){
   if (!error){ await loadKpisToday(); await loadKpisNext(); await loadReservations(); setTimeout(()=>closeModal('modalNew'), 700); }
 }
 
-/***** Availability mit Zeitraum + Farblegende *****/
+/***** Availability (kompakt + Zeitraum) *****/
 function datesFrom(startDate, days){
   const ds=[]; const base = startDate? new Date(startDate) : soD(new Date());
   base.setHours(0,0,0,0);
@@ -431,7 +449,6 @@ function datesFrom(startDate, days){
   return ds;
 }
 function occClass(p){ if (p>=90) return 'occ-r'; if (p>=65) return 'occ-o'; return 'occ-g'; }
-
 async function buildMatrix(){
   const fromVal = q('#availFrom').value || isoDate(new Date());
   const days = Number(q('#availDays').value||14);
@@ -444,8 +461,7 @@ async function buildMatrix(){
   const from = isoDate(ds[0]), to = isoDate(ds.at(-1));
 
   for (const h of HOTELS){
-    const tr=el('tr');
-    tr.append(el('td',{class:'sticky'}, h.name));
+    const tr=el('tr'); tr.append(el('td',{class:'sticky'}, h.name));
     const { data } = await supabase.from('availability')
       .select('date,capacity,booked')
       .eq('hotel_code', h.code)
@@ -464,13 +480,62 @@ async function buildMatrix(){
 }
 q('#availRun').addEventListener('click', buildMatrix);
 
-/***** Reporting (wie gehabt) *****/
+/***** Reporting + Filter + Export *****/
 function setDefaultReportRange(){
   const to=soD(new Date()); const from=soD(new Date(Date.now()-29*86400000));
   q('#repFrom').value=isoDate(from); q('#repTo').value=isoDate(to);
 }
+function fillRepHotel(){
+  const sel=q('#repHotel'); sel.innerHTML='';
+  sel.append(el('option',{value:'all'},'Alle Hotels'));
+  HOTELS.forEach(h=> sel.append(el('option',{value:h.code},h.name)));
+}
+async function runReport(){
+  const from=q('#repFrom').value, to=q('#repTo').value, code=q('#repHotel').value;
+  let query = supabase.from('reservations').select('hotel_name,rate_price,created_at,channel')
+    .gte('created_at', new Date(from).toISOString())
+    .lte('created_at', new Date(new Date(to).getTime()+86399999).toISOString());
+  if (code!=='all'){ const h=HOTEL_BY_CODE[code]; if (h) query = query.eq('hotel_name', h.name); }
+  const { data, error } = await query;
+  const body=q('#repBody'); body.innerHTML='';
+  if (error){ body.append(el('tr',{}, el('td',{colspan:'5'}, 'Fehler beim Laden'))); return; }
+  const byHotel=new Map();
+  (data||[]).forEach(r=>{
+    const k=r.hotel_name||'—';
+    const o=byHotel.get(k)||{bookings:0,revenue:0,ota:0};
+    o.bookings++; o.revenue+=Number(r.rate_price||0); if ((r.channel||'').toLowerCase()==='ota') o.ota++;
+    byHotel.set(k,o);
+  });
+  [...byHotel.entries()].sort((a,b)=>b[1].revenue-a[1].revenue).forEach(([hotel,o])=>{
+    const adr=o.bookings?o.revenue/o.bookings:null;
+    const otaShare = o.bookings? Math.round(o.ota/o.bookings*100):0;
+    body.append(el('tr',{}, el('td',{},hotel), el('td',{},String(o.bookings)), el('td',{},EUR.format(o.revenue)), el('td',{}, adr!=null?EUR.format(adr):'—'), el('td',{}, otaShare+'%')));
+  });
+}
+function toCSV(rows){ return rows.map(r=>r.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(',')).join('\n'); }
+function toXLS(rows, sheetName='Sheet1'){
+  const header=`<?xml version="1.0"?>
+  <Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+    xmlns:o="urn:schemas-microsoft-com:office:office"
+    xmlns:x="urn:schemas-microsoft-com:office:excel"
+    xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+    <Worksheet ss:Name="${sheetName}"><Table>`;
+  const rowsXml = rows.map(r=>`<Row>`+r.map(c=>`<Cell><Data ss:Type="String">${String(c??'').replace(/&/g,'&amp;').replace(/</g,'&lt;')}</Data></Cell>`).join('')+`</Row>`).join('');
+  return header+rowsXml+`</Table></Worksheet></Workbook>`;
+}
+q('#repRun').addEventListener('click', runReport);
+q('#repCsv').addEventListener('click', ()=>{
+  const tbody = qa('#repBody tr'); const rows = [['Hotel','Buchungen','Umsatz','ADR','OTA-Anteil']];
+  tbody.forEach(tr=> rows.push([...tr.children].map(td=>td.textContent)));
+  download('report.csv','text/csv;charset=utf-8', toCSV(rows));
+});
+q('#repXls').addEventListener('click', ()=>{
+  const tbody = qa('#repBody tr'); const rows = [['Hotel','Buchungen','Umsatz','ADR','OTA-Anteil']];
+  tbody.forEach(tr=> rows.push([...tr.children].map(td=>td.textContent)));
+  download('report.xls','application/vnd.ms-excel', toXLS(rows,'Report'));
+});
 
-/***** Hotelskizze (simple) *****/
+/***** Hotelskizze *****/
 function buildSketch(){
   const wrap = q('#sketchGrid'); if(!wrap) return; wrap.innerHTML = '';
   HOTELS.forEach(h=>{
@@ -489,7 +554,9 @@ q('#btnAvail').addEventListener('click', async ()=>{
   await buildMatrix();
   openModal('modalAvail');
 });
-q('#btnReporting').addEventListener('click', async ()=>{ setDefaultReportRange(); openModal('modalReporting'); });
+q('#btnReporting').addEventListener('click', async ()=>{
+  setDefaultReportRange(); fillRepHotel(); await runReport(); openModal('modalReporting');
+});
 q('#btnSettings').addEventListener('click', ()=> openModal('modalSettings'));
 q('#btnNew').addEventListener('click', ()=>{ fillHotelSelect(); wizardSet('1'); q('#newInfo').textContent=''; openModal('modalNew'); });
 q('#btnCreate').addEventListener('click', createReservation);
@@ -510,7 +577,6 @@ q('#btnSketch').addEventListener('click', ()=>{ buildSketch(); openModal('modalS
   // Reservierungsliste Filter
   fillFilters();
   q('#filterStatus').value = 'confirmed'; // default
-  // Pager & Suche handlers sind oben
 
   // KPIs + Liste initial
   await loadKpisToday();
