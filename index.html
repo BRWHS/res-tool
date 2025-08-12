@@ -7,7 +7,8 @@
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./styles.css" />
+  <!-- IMPORTANT: styles.css liegt in /src -->
+  <link rel="stylesheet" href="/src/styles.css" />
 </head>
 <body>
   <header class="topbar" role="banner">
@@ -142,12 +143,13 @@
   <!-- Supabase JS -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.5/dist/umd/supabase.js" integrity="sha384-E1zvYhRbs4d7Dzp3svuG9aGxNmiuTT5z+6j2mO/6hM7eJ0/hHY7Vh6o9Z1Oe+RrV" crossorigin="anonymous"></script>
 
-  <!-- Env injection (use Vercel project env to fill these at runtime/build) -->
+  <!-- Env injection (Vercel env füllt das) -->
   <script>
-    window.SB_URL = window.SB_URL || "";   // e.g. https://xyzcompany.supabase.co
-    window.SB_ANON_KEY = window.SB_ANON_KEY || ""; // public anon key
+    window.SB_URL = window.SB_URL || "";   // z.B. https://xyzcompany.supabase.co
+    window.SB_ANON_KEY = window.SB_ANON_KEY || ""; // anon key
   </script>
 
-  <script src="./app.js"></script>
+  <!-- IMPORTANT: app.js liegt in /src -->
+  <script src="/src/app.js"></script>
 </body>
 </html>
