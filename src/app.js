@@ -1,13 +1,17 @@
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
 
-// === SUPABASE ===
+/* ===== SUPABASE (deine echten Werte eintragen) ===== */
 const SUPABASE_URL = "https://kytuiodojfcaggkvizto.supabase.co"
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt5dHVpb2RvamZjYWdna3ZpenRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ4MzA0NjgsImV4cCI6MjA3MDQwNjQ2OH0.YobQZnCQ7LihWtewynoCJ6ZTjqetkGwh82Nd2mmmhLU"
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
+/* ===== Helpers ===== */
 const $  = q => document.querySelector(q)
 const $$ = q => document.querySelectorAll(q)
 const toast = $('#toast')
+function showToast(msg, ms=2400){ toast.textContent = msg; toast.classList.add('show'); setTimeout(()=>toast.classList.remove('show'), ms) }
+const fmtISO = d => new Date(d).toISOString().slice(0,10)
+const datesFrom = (start, n)=> Array.from({length:n}, (_,i)=>{ const x=new Date(start); x.setDate(x.getDate()+i); return x })
 
 /* ===== Hotels ===== */
 const HOTELS = [
@@ -17,74 +21,67 @@ const HOTELS = [
   "Tante Alma Mannheim","Tante Alma Mülheim","Tante Alma Sonnen","Delta by Marriot Offenbach","Villa Viva Hamburg"
 ]
 
-/* ===== Modal handling ===== */
+/* ===== Clock ===== */
+function tick(){
+  const now=new Date()
+  const dateStr = now.toLocaleDateString('de-DE',{weekday:'short',day:'2-digit',month:'2-digit',year:'numeric'})
+  const timeStr = now.toLocaleTimeString('de-DE',{hour12:false})
+  $('#date').textContent = dateStr; $('#clock').textContent = timeStr
+  $('#date2').textContent = dateStr; $('#clock2').textContent = timeStr
+}
+setInterval(tick, 1000); tick()
+
+/* ===== Overlay & Modals ===== */
 const overlay = $('#overlay')
 function openModal(name){
-  overlay.hidden = false
+  overlay.hidden=false
   document.getElementById(`modal-${name}`).setAttribute('aria-hidden','false')
-  const onEsc = (e)=>{ if(e.key === 'Escape') closeAll() }
+  const onEsc = e=>{ if(e.key==='Escape') closeAll() }
   document.addEventListener('keydown', onEsc, { once:true })
   overlay.onclick = closeAll
 }
 function closeAll(){
-  overlay.hidden = true
-  $$('.modal[aria-hidden="false"]').forEach(m => m.setAttribute('aria-hidden','true'))
+  overlay.hidden=true
+  $$('.modal[aria-hidden="false"]').forEach(m=> m.setAttribute('aria-hidden','true'))
 }
-$$('[data-open]').forEach(b => b.addEventListener('click', e => openModal(e.currentTarget.dataset.open)))
-$$('[data-close]').forEach(b => b.addEventListener('click', closeAll))
-
-/* ===== Clock / Header ===== */
-function updateClock(){
-  const now = new Date()
-  const dateStr = now.toLocaleDateString('de-DE', { weekday:'short', day:'2-digit', month:'2-digit', year:'numeric' })
-  const timeStr = now.toLocaleTimeString('de-DE', { hour12:false })
-  $('#date').textContent = dateStr
-  $('#clock').textContent = timeStr
-  $('#date2').textContent = dateStr
-  $('#clock2').textContent = timeStr
-}
-setInterval(updateClock, 1000); updateClock()
-
-/* ===== Toast ===== */
-function showToast(msg, ms=2400){ toast.textContent = msg; toast.classList.add('show'); setTimeout(()=>toast.classList.remove('show'), ms) }
+$$('[data-open]').forEach(b=> b.addEventListener('click', e=> openModal(e.currentTarget.dataset.open)))
+$$('[data-close]').forEach(b=> b.addEventListener('click', closeAll))
 
 /* ===== KPIs ===== */
 async function refreshKpis(){
-  const todayISO = new Date().toISOString().slice(0,10)
-  const weekStart = new Date(); weekStart.setDate(weekStart.getDate()-6)
-  const weekISO = weekStart.toISOString().slice(0,10)
+  const now = new Date()
+  const todayISO = fmtISO(now)
+  const weekStart = new Date(now); weekStart.setDate(weekStart.getDate()-6)
+  const weekISO = fmtISO(weekStart)
 
   try{
-    const { count:todayCount } = await supabase.from('reservations')
-      .select('id', { count:'exact', head:true })
+    const { count: todayCount } = await supabase
+      .from('reservations').select('id',{count:'exact',head:true})
       .gte('created_at', todayISO)
     $('#kpi-today').textContent = todayCount ?? 0
   }catch{ $('#kpi-today').textContent = '—' }
 
   try{
-    const { count:weekCount } = await supabase.from('reservations')
-      .select('id', { count:'exact', head:true })
+    const { count: weekCount } = await supabase
+      .from('reservations').select('id',{count:'exact',head:true})
       .gte('created_at', weekISO)
     $('#kpi-week').textContent = weekCount ?? 0
   }catch{ $('#kpi-week').textContent = '—' }
 
-  // Demo-ADR & Occ (Platzhalter bis echte Quelle)
+  // Demo-Werte bis echte Quelle steht:
   const adr = 105 + Math.floor(Math.random()*14)
   const occ = 60 + Math.floor(Math.random()*20)
   $('#kpi-adr').textContent = adr + ' €'
   $('#kpi-occ').textContent = occ + '%'
 }
-refreshKpis(); setInterval(refreshKpis, 30_000)
+refreshKpis(); setInterval(refreshKpis, 30000)
 
-/* ===== Weekly mini-availability (3 Level inkl. Überbuchung) ===== */
+/* ===== Mini Availability – 3 Level inkl. Überbuchung ===== */
 let miniWeekOffset = 0
 $('#mini-prev')?.addEventListener('click', ()=>{ miniWeekOffset -= 7; renderMiniAvailability() })
 $('#mini-next')?.addEventListener('click', ()=>{ miniWeekOffset += 7; renderMiniAvailability() })
 
-function fmt(d){ return d.toISOString().slice(0,10) }
-function datesFrom(start, n){ return Array.from({length:n}, (_,i)=>{ const x = new Date(start); x.setDate(x.getDate()+i); return x }) }
-
-function levelFor(pct){
+function levelForPct(pct){
   if (pct >= 100) return 'over'   // Überbuchung
   if (pct >= 80)  return 'tight'  // angespannt
   return 'normal'                 // normal
@@ -92,27 +89,25 @@ function levelFor(pct){
 
 function renderMiniAvailability(){
   const base = new Date(); base.setDate(base.getDate()+miniWeekOffset)
-  const days = datesFrom(base, 7).map(fmt)
+  const days = datesFrom(base,7).map(fmtISO)
   const rows = HOTELS.slice(0,8).map(h=>{
     const total = 180 + (h.length % 140)
     const cells = days.map((d,i)=>{
-      // zulassen, dass wir gelegentlich über 100% gehen (Demo)
-      const overBoost = (i%6===0) ? 1.08 : 1.0
-      const booked = Math.floor(Math.min(total*1.15, total * (0.45 + 0.55*Math.abs(Math.sin(i/1.7 + h.length/11))) * overBoost))
-      const pct = Math.round((booked/total)*100)
-      return { d, booked, total, pct, lvl: levelFor(pct) }
+      const overBoost = (i%6===0)? 1.10 : 1.0 // gelegentlich leicht über 100%
+      const booked = Math.floor(Math.min(total*1.2, total * (0.45 + 0.55*Math.abs(Math.sin(i/1.7 + h.length/11))) * overBoost))
+      const pct = Math.round(booked/total*100)
+      const lvl = levelForPct(pct)
+      return { d, booked, total, pct, lvl }
     })
     return { h, cells }
   })
   const table = `
     <table>
       <thead><tr><th>Hotel</th>${days.map(d=>`<th>${d}</th>`).join('')}</tr></thead>
-      <tbody>
-        ${rows.map(r=>`<tr>
+      <tbody>${rows.map(r=>`
+        <tr>
           <td>${r.h}</td>
-          ${r.cells.map(c=>`<td>
-            <span class="mini-cell mini-lvl-${c.lvl}">${c.booked}/${c.total} <small>(${c.pct}%)</small></span>
-          </td>`).join('')}
+          ${r.cells.map(c=>`<td><span class="mini-cell mini-lvl-${c.lvl}">${c.booked}/${c.total} <small>(${c.pct}%)</small></span></td>`).join('')}
         </tr>`).join('')}
       </tbody>
     </table>`
@@ -196,7 +191,7 @@ function step3(){
 }
 function openNewRes(){ openModal('newRes'); step1() }
 
-/* === Supabase Insert === */
+/* ===== Supabase Insert ===== */
 async function submitReservation(){
   const btn = $('#submit'); btn.disabled = true; btn.textContent = 'Speichere…'
   const payload = {
@@ -265,7 +260,7 @@ async function renderReservations(){
 function openAvailability(){ openModal('availability'); mountAvailability() }
 function mountAvailability(){
   const today = new Date()
-  $('#availStart').value = today.toISOString().slice(0,10)
+  $('#availStart').value = fmtISO(today)
   $('#availGenerate').onclick = renderAvailabilityMatrix
   renderAvailabilityMatrix()
 }
@@ -274,7 +269,48 @@ function levelForPct(p){ return (p>=100)?'over' : (p>=80)?'tight' : 'normal' }
 function renderAvailabilityMatrix(){
   const start = new Date($('#availStart').value || new Date())
   const days  = Math.max(1, Math.min(31, parseInt($('#availDays').value||'14',10)))
-  const dates = Array.from({length:days}, (_,i)=>{ const d=new Date(start); d.setDate(d.getDate()+i); return d.toISOString().slice(0,10) })
+  const dates = Array.from({length:days}, (_,i)=>{ const d=new Date(start); d.setDate(d.getDate()+i); return fmtISO(d) })
 
   const totals = {
-   
+    "MASEVEN München Dornach":319,"MASEVEN München Trudering":289,"MASEVEN Frankfurt":220,"MASEVEN Stuttgart":180,
+    "Fidelity Robenstein":140,"Fidelity Struck":110,"Fidelity Doerr":95,"Fidelity Gr. Baum":160,"Fidelity Landskron":120,
+    "Fidelity Pürgl":80,"Fidelity Seppl":100,"Tante Alma Bonn":130,"Tante Alma Köln":120,"Tante Alma Erfurt":115,
+    "Tante Alma Mannheim":140,"Tante Alma Mülheim":110,"Tante Alma Sonnen":90,"Delta by Marriot Offenbach":200,"Villa Viva Hamburg":180
+  }
+
+  const rows = HOTELS.map(h=>{
+    const total = totals[h]||100
+    const cells = dates.map((d,i)=>{
+      const overBoost = (i%7===0)? 1.12 : 1.0
+      const booked = Math.floor(Math.min(total*1.25, total * (0.35 + 0.55*Math.abs(Math.sin(i/2 + h.length/9))) * overBoost))
+      const pct = Math.round(booked/total*100)
+      const lvl = levelForPct(pct)
+      return { d, booked, total, pct, lvl }
+    })
+    return { h, cells }
+  })
+
+  const thead = `<thead><tr><th>Hotel</th>${dates.map(d=>`<th>${d}</th>`).join('')}</tr></thead>`
+  const tbody = `<tbody>${rows.map(r=>`
+    <tr>
+      <td>${r.h}</td>
+      ${r.cells.map(c=>`<td class="lvl-${c.lvl}">
+        ${c.booked} / ${c.total} <span class="pct">(${c.pct}%)</span>${c.pct>=100?'<span class="overmark">OVER</span>':''}
+      </td>`).join('')}
+    </tr>`).join('')}</tbody>`
+  $('#availMatrix').innerHTML = `<table class="matrix-table">${thead}${tbody}</table>`
+
+  // Hover highlight row
+  const mat = $('#availMatrix')
+  mat.onmousemove = e=>{
+    const cell = e.target.closest('td,th'); if(!cell) return
+    const row = cell.parentElement
+    $$('#availMatrix tr').forEach(tr=> tr.classList.remove('hover'))
+    row.classList.add('hover')
+  }
+}
+
+/* ===== Bind tiles ===== */
+$$('.tile[data-open="newRes"]').forEach(el=> el.onclick = openNewRes)
+$$('.tile[data-open="reservations"]').forEach(el=> el.onclick = openReservations)
+$$('.tile[data-open="availability"]').forEach(el=> el.onclick = openAvailability)
