@@ -41,7 +41,7 @@
     </nav>
   </header>
 
-  <!-- kompakte Mini-Charts (links, klein) -->
+  <!-- Mini-Charts -->
   <aside class="analytics-dock" aria-label="Mini-Charts">
     <div class="dock-head">
       <span class="mono">7-Tage</span>
@@ -97,8 +97,8 @@
             <div class="row wrap">
               <input id="searchInput" class="input" placeholder="Gastname…" />
               <select id="filterHotel" class="input theme-select" style="width:220px;"></select>
-              <select id="filterStatus" class="input theme-select" style="width:170px;">
-                <option value="confirmed">Status: Confirmed (nur Zukunft)</option>
+              <select id="filterStatus" class="input theme-select" style="width:190px;">
+                <option value="confirmed">Status: Confirmed (Zukunft)</option>
                 <option value="done">Status: Done (Vergangenheit)</option>
                 <option value="pending">Status: Pending</option>
                 <option value="canceled">Status: Canceled</option>
@@ -236,7 +236,7 @@
       <div class="wizard-actions">
         <button class="btn ghost" id="btnPrev">Zurück</button>
         <div style="flex:1"></div>
-        <button class="btn" id="btnNext">Weiter</button>
+        <button class="btn" id="btnNext" disabled>Weiter</button>
         <button class="btn primary hidden" id="btnCreate">Reservierung abschicken</button>
       </div>
 
@@ -362,6 +362,7 @@
     </div>
   </section>
 
+  <!-- Einstellungen & Skizze -->
   <section class="modal" id="modalSettings" role="dialog" aria-labelledby="setTitle" aria-modal="true">
     <header>
       <h3 id="setTitle" class="mono">Einstellungen</h3>
