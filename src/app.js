@@ -310,7 +310,7 @@ async function loadReservations(){
 
     const tr = el('tr', { class: 'row', 'data-id': row.id },
       el('td', {}, row.reservation_number || '—'),
-      el('td', {}, (formatHotelName(HOTELS.find(h=>h.code===(formatHotelName(HOTELS.find(h=>h.code===row.hotel_code)) || row.hotel_name))) || (formatHotelName(HOTELS.find(h=>h.code===row.hotel_code)) || row.hotel_name)) || row.hotel_code || '—'),
+      el('td', {}, (formatHotelName(HOTELS.find(h=>h.code===safeHotelName(row.hotel_code, row.hotel_name))) || safeHotelName(row.hotel_code, row.hotel_name)) || row.hotel_code || '—'),
       el('td', {}, guest),
       el('td', {}, row.arrival ? D2.format(new Date(row.arrival)) : '—'),
       el('td', {}, row.departure ? D2.format(new Date(row.departure)) : '—'),
@@ -721,3 +721,9 @@ q('#btnCreate').addEventListener('click', createReservation);
   await loadKpisNext();
   await loadReservations();
 })();
+
+
+function safeHotelName(hotel_code, hotel_name) {
+  const obj = HOTELS.find(h => h.code === hotel_code);
+  return obj ? formatHotelName(obj) : (hotel_name || hotel_code || '—');
+}
