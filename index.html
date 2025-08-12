@@ -3,32 +3,34 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>res‑tool — Hotel Tech Dashboard</title>
+  <title>res-tool — Dashboard</title>
+
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet">
+
+  <!-- dein bestehendes CSS -->
   <link rel="stylesheet" href="/src/styles.css" />
 </head>
 <body>
-  <header class="topbar" role="banner">
-    <div class="brand" aria-label="res‑tool brand">
+  <header class="topbar">
+    <div class="brand">
       <div class="logo" aria-hidden="true"></div>
-      <h1 class="mono"><span>res</span>‑tool<span class="cursor">_</span></h1>
+      <h1 class="mono"><span>res</span>-tool<span class="cursor">_</span></h1>
     </div>
-    <nav class="toolbar" aria-label="Aktionen">
+    <nav class="toolbar">
       <button class="btn ghost" id="btnStatus">Systemstatus</button>
       <button class="btn ghost" id="btnAvail">Verfügbarkeit</button>
       <button class="btn primary" id="btnNew">Neue Reservierung</button>
     </nav>
   </header>
 
-  <main class="container" id="app" aria-live="polite">
-    <!-- DASHBOARD -->
-    <section class="grid hero" aria-label="Dashboard Übersicht">
+  <main class="container" aria-live="polite">
+    <section class="grid hero">
       <article class="card scanlines">
         <div class="content">
-          <h3 class="mono">KPI — Heute</h3>
-          <div class="kpis big" id="kpisToday">
+          <h3 class="mono">KPI – Heute</h3>
+          <div class="kpis big">
             <div class="kpi"><div class="value" id="tBookings">—</div><div class="label">Buchungen</div></div>
             <div class="kpi"><div class="value" id="tRevenue">— €</div><div class="label">Umsatz</div></div>
             <div class="kpi"><div class="value" id="tADR">— €</div><div class="label">ADR</div></div>
@@ -39,8 +41,8 @@
       </article>
       <article class="card scanlines">
         <div class="content">
-          <h3 class="mono">KPI — Letzte 7 Tage</h3>
-          <div class="kpis big" id="kpis7">
+          <h3 class="mono">KPI – Letzte 7 Tage</h3>
+          <div class="kpis big">
             <div class="kpi"><div class="value" id="wBookings">—</div><div class="label">Buchungen</div></div>
             <div class="kpi"><div class="value" id="wRevenue">— €</div><div class="label">Umsatz</div></div>
             <div class="kpi"><div class="value" id="wADR">— €</div><div class="label">ADR</div></div>
@@ -51,8 +53,7 @@
       </article>
     </section>
 
-    <!-- RESERVATIONS LIST -->
-    <section style="margin-top:16px;" aria-label="Reservierungen">
+    <section style="margin-top:16px;">
       <article class="card scanlines">
         <div class="content">
           <div class="table-tools">
@@ -60,17 +61,11 @@
             <div class="search"><input id="searchInput" class="input" placeholder="Nach Gastname suchen…" autocomplete="off" /></div>
           </div>
           <div class="table-wrap">
-            <table class="resv" id="resvTable">
+            <table class="resv">
               <thead>
                 <tr>
-                  <th>Gastname</th>
-                  <th>Anreise</th>
-                  <th>Abreise</th>
-                  <th>Hotel</th>
-                  <th>Kategorie</th>
-                  <th>Rate</th>
-                  <th>Preis</th>
-                  <th>Notizen</th>
+                  <th>Gastname</th><th>Anreise</th><th>Abreise</th><th>Hotel</th>
+                  <th>Kategorie</th><th>Rate</th><th>Preis</th><th>Notizen</th>
                 </tr>
               </thead>
               <tbody id="resvBody"></tbody>
@@ -86,11 +81,11 @@
     </section>
   </main>
 
-  <!-- MODALS -->
+  <!-- Backdrop -->
   <div class="modal-backdrop" id="backdrop"></div>
 
-  <!-- System Status Modal -->
-  <section class="modal" id="statusModal" aria-modal="true" role="dialog" aria-labelledby="statusTitle">
+  <!-- Status Modal -->
+  <section class="modal" id="statusModal" role="dialog" aria-labelledby="statusTitle">
     <header>
       <h3 id="statusTitle" class="mono">Systemstatus</h3>
       <button class="btn" data-close>Schließen</button>
@@ -100,59 +95,32 @@
         <div class="status-item"><span>App</span><span class="dot" id="dotApp"></span></div>
         <div class="status-item"><span>Supabase</span><span class="dot" id="dotSb"></span></div>
         <div class="status-item"><span>HotelNetSolutions</span><span class="dot" id="dotHns"></span></div>
-        <div class="status-item"><span>E‑Mail</span><span class="dot" id="dotMail"></span></div>
+        <div class="status-item"><span>E-Mail</span><span class="dot" id="dotMail"></span></div>
       </div>
-      <p class="muted" style="margin-top:10px">HNS ist aktuell ein Platzhalter – Anbindung folgt.</p>
+      <p class="muted" style="margin-top:10px">HNS ist aktuell Platzhalter.</p>
     </div>
   </section>
 
-  <!-- Availability Modal (Popup) -->
-  <section class="modal" id="availabilityModal" aria-modal="true" role="dialog" aria-labelledby="availTitle">
+  <!-- Availability Modal -->
+  <section class="modal" id="availabilityModal" role="dialog" aria-labelledby="availTitle">
     <header>
       <h3 id="availTitle" class="mono">Verfügbarkeitsmatrix</h3>
       <button class="btn" data-close>Schließen</button>
     </header>
     <div class="body">
-      <div class="matrix" id="matrixWrap">
-        <table class="matrix" id="matrixTable" aria-describedby="matrixHelp">
-          <thead>
-            <tr>
-              <th class="sticky">Hotel</th>
-            </tr>
-          </thead>
+      <div class="matrix">
+        <table class="matrix" id="matrixTable">
+          <thead><tr><th class="sticky">Hotel</th></tr></thead>
           <tbody id="matrixBody"></tbody>
         </table>
       </div>
-      <p id="matrixHelp" class="muted" style="margin-top:8px;">Legende: <span class="pill lvl-0">OK</span> <span class="pill lvl-1">Überbuchung +1</span> <span class="pill lvl-2">Überbuchung ≥2</span></p>
+      <p class="muted" style="margin-top:8px;">Legende: <span class="pill lvl-0">OK</span> <span class="pill lvl-1">+1</span> <span class="pill lvl-2">≥2</span></p>
     </div>
   </section>
 
-  <!-- New Reservation Wizard Modal -->
-  <section class="modal" id="wizardModal" aria-modal="true" role="dialog" aria-labelledby="wizardTitle">
-    <header>
-      <h3 id="wizardTitle" class="mono">Neue Reservierung</h3>
-      <button class="btn" data-close>Abbrechen</button>
-    </header>
-    <div class="body wizard">
-      <div class="wizard-steps">
-        <div class="step" data-step="1">1 · Hotel & Daten</div>
-        <div class="step" data-step="2">2 · Kategorie & Rate</div>
-        <div class="step" data-step="3">3 · Bestätigen</div>
-      </div>
-      <div id="wizardView"></div>
-      <div style="display:flex; gap:8px; justify-content:flex-end; margin-top: 8px;">
-        <button class="btn" id="wizPrev">Zurück</button>
-        <button class="btn primary" id="wizNext">Weiter</button>
-      </div>
-    </div>
-  </section>
-
-  <!-- Supabase JS -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.5/dist/umd/supabase.js" integrity="sha384-E1zvYhRbs4d7Dzp3svuG9aGxNmiuTT5z+6j2mO/6hM7eJ0/hHY7Vh6o9Z1Oe+RrV" crossorigin="anonymous"></script>
-  <script>
-    window.SB_URL = "https://kytuiodojfcaggkvizto.supabase.co";
-    window.SB_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt5dHVpb2RvamZjYWdna3ZpenRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ4MzA0NjgsImV4cCI6MjA3MDQwNjQ2OH0.YobQZnCQ7LihWtewynoCJ6ZTjqetkGwh82Nd2mmmhLU";
-  </script>
+  <!-- Supabase UMD -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.5/dist/umd/supabase.js" crossorigin="anonymous"></script>
+  <!-- deine neue App-Logik -->
   <script src="/src/app.js"></script>
 </body>
 </html>
