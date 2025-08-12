@@ -53,7 +53,6 @@
   <main class="container" aria-live="polite">
     <!-- KPIs -->
     <section class="grid hero" aria-label="Dashboard Übersicht">
-      <!-- KPI HEUTE -->
       <article class="card scanlines">
         <div class="content">
           <div class="card-head">
@@ -71,7 +70,6 @@
         </div>
       </article>
 
-      <!-- KPI NÄCHSTE 7 TAGE -->
       <article class="card scanlines">
         <div class="content">
           <div class="card-head">
@@ -100,10 +98,11 @@
               <input id="searchInput" class="input" placeholder="Gastname…" />
               <select id="filterHotel" class="input theme-select" style="width:220px;"></select>
               <select id="filterStatus" class="input theme-select" style="width:170px;">
-                <option value="confirmed">Status: Confirmed</option>
-                <option value="all">Status: Alle</option>
+                <option value="confirmed">Status: Confirmed (nur Zukunft)</option>
+                <option value="done">Status: Done (Vergangenheit)</option>
                 <option value="pending">Status: Pending</option>
                 <option value="canceled">Status: Canceled</option>
+                <option value="all">Status: Alle</option>
               </select>
               <input id="filterResNo" class="input" placeholder="Res.-Nr." style="width:150px;" />
               <input id="filterFrom" type="date" class="input" style="width:170px;" />
@@ -159,35 +158,41 @@
       <div class="wizard-steps">
         <button class="wstep active" data-step="1">1. Hotel</button>
         <button class="wstep" data-step="2">2. Kategorie</button>
-        <button class="wstep" data-step="3">3. Rate</button>
+        <button class="wstep" data-step="3">3. Rate & Übersicht</button>
         <button class="wstep" data-step="4">4. Gast & Zahlung</button>
       </div>
 
       <!-- STEP 1 -->
       <div class="wpage" id="w1">
         <label>Hotel
-          <select id="newHotel" class="input"></select>
+          <select id="newHotel" class="input theme-select"></select>
         </label>
         <div class="grid2">
           <label>Anreise <input id="newArr" type="date" class="input"/></label>
           <label>Abreise <input id="newDep" type="date" class="input"/></label>
-          <label>Gäste  <input id="newGuests" type="number" min="1" value="1" class="input"/></label>
+          <label>Erwachsene <input id="newAdults" type="number" min="1" value="1" class="input"/></label>
+          <label>Kinder <input id="newChildren" type="number" min="0" value="0" class="input"/></label>
         </div>
       </div>
 
       <!-- STEP 2 -->
       <div class="wpage hidden" id="w2">
         <label>Kategorie
-          <select id="newCat" class="input"></select>
+          <select id="newCat" class="input theme-select"></select>
         </label>
       </div>
 
-      <!-- STEP 3 -->
+      <!-- STEP 3 (Rate + Summary rechts) -->
       <div class="wpage hidden" id="w3">
-        <label>Rate
-          <select id="newRate" class="input"></select>
-        </label>
-        <label>Preis <input id="newPrice" type="number" step="1" value="89" class="input"/></label>
+        <div class="side-wrap">
+          <div class="side-main">
+            <label>Rate
+              <select id="newRate" class="input theme-select"></select>
+            </label>
+            <label>Preis <input id="newPrice" type="number" step="1" value="89" class="input"/></label>
+          </div>
+          <aside class="side-summary" id="summarySide"></aside>
+        </div>
       </div>
 
       <!-- STEP 4 -->
@@ -221,17 +226,11 @@
             <label>Kartennummer <input id="ccNumber" class="input" placeholder="•••• •••• •••• 1234" /></label>
             <label>Ablauf (MM/JJ) <input id="ccExpiry" class="input" placeholder="12/27" /></label>
           </div>
-          <p class="muted" style="margin-top:6px;">Es wird nur <b>Last4</b>, Brand & Ablauf als Demo gespeichert.</p>
         </div>
 
         <label class="section mono">Notizen
           <textarea id="newNotes" class="input" rows="3" placeholder="Besonderheiten, Wünsche …"></textarea>
         </label>
-
-        <details class="box">
-          <summary class="mono">Zusammenfassung</summary>
-          <div id="summaryBox" class="summary"></div>
-        </details>
       </div>
 
       <div class="wizard-actions">
@@ -262,9 +261,10 @@
         <div class="grid2">
           <label>Res.-Nr. <input id="eResNo" class="input" disabled/></label>
           <label>Status
-            <select id="eStatus" class="input">
+            <select id="eStatus" class="input theme-select">
               <option>confirmed</option>
               <option>pending</option>
+              <option>done</option>
               <option>canceled</option>
             </select>
           </label>
@@ -288,7 +288,6 @@
           <label>Exp. Monat <input id="eCcExpM" type="number" min="1" max="12" class="input"/></label>
           <label>Exp. Jahr <input id="eCcExpY" type="number" min="24" max="40" class="input"/></label>
         </div>
-        <p class="muted">Hinweis: Es werden keine vollständigen Kartennummern gespeichert.</p>
         <div class="right"><button class="btn" id="btnSavePay">Speichern</button></div>
       </div>
 
@@ -328,12 +327,15 @@
         </div>
       </div>
       <div class="matrix compact">
-        <table class="matrix" id="matrixTable"><thead><tr><th class="sticky">Hotel</th></tr></thead><tbody id="matrixBody"></tbody></table>
+        <table class="matrix" id="matrixTable">
+          <thead><tr><th class="sticky">Hotel</th></tr></thead>
+          <tbody id="matrixBody"></tbody>
+        </table>
       </div>
     </div>
   </section>
 
-  <!-- Reporting, Settings, Sketch -->
+  <!-- Reporting -->
   <section class="modal" id="modalReporting" role="dialog" aria-labelledby="repTitle" aria-modal="true">
     <header>
       <h3 id="repTitle" class="mono">Reporting</h3>
@@ -343,7 +345,13 @@
       <div class="row wrap">
         <label>Von <input id="repFrom" type="date" class="input"></label>
         <label>Bis <input id="repTo" type="date" class="input"></label>
+        <label>Hotel
+          <select id="repHotel" class="input theme-select" style="width:260px;"></select>
+        </label>
         <button class="btn" id="repRun">Aktualisieren</button>
+        <div style="flex:1"></div>
+        <button class="btn ghost" id="repCsv">Export CSV</button>
+        <button class="btn ghost" id="repXls">Export Excel</button>
       </div>
       <div class="table-wrap">
         <table class="resv">
@@ -362,7 +370,7 @@
     <div class="body">
       <div class="grid2">
         <label>Sprache
-          <select id="setLang" class="input"><option value="de">Deutsch</option><option value="en">English</option></select>
+          <select id="setLang" class="input theme-select"><option value="de">Deutsch</option><option value="en">English</option></select>
         </label>
         <label>Farbton (Hue)
           <input id="setHue" type="range" min="160" max="200" value="180" />
