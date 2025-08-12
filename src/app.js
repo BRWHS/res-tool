@@ -489,26 +489,25 @@ function parseCc(){
   return { last4, holder, exp_m, exp_y };
 }
 function genResNo(){ return 'R' + Date.now().toString(36).toUpperCase(); }
+
 async function createReservation(){
   if (!validateStep('4')){ q('#newInfo').textContent='Bitte Pflichtfelder ausfüllen.'; return; }
-  const code=q('#newHotel').value;
-  const hDim = SB_HOTEL_BY_CODE[code];
-  if (!hDim){ q('#newInfo').textContent='Unbekanntes Hotel (Dimension fehlt). Bitte Seed prüfen.'; return; }
+  const code = q('#newHotel').value;
+  const hUI  = HOTELS.find(h=>h.code===code);
 
-  const adults = Number(q('#newAdults').value||1);
+  const adults   = Number(q('#newAdults').value||1);
   const children = Number(q('#newChildren').value||0);
-  const guestsTotal = adults + children;
+  const guests   = adults + children;
   const cc = parseCc();
 
   const payload = {
     reservation_number: genResNo(),
     status: 'active',
-    hotel_id: hDim.id,               // << entscheidend
-    hotel_code: code,
-    hotel_name: hDim.name,           // für UI
+    hotel_code: code,                       // <- FK über TEXT
+    hotel_name: hUI?.name || code,          // Anzeigezweck
     arrival: q('#newArr').value || null,
     departure: q('#newDep').value || null,
-    guests: guestsTotal,
+    guests,
     guests_adults: adults,
     guests_children: children,
     category: q('#newCat').value || null,
