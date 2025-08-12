@@ -2,9 +2,6 @@
 <html lang="de">
 <head>
   <meta charset="utf-8" />
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-  <meta http-equiv="Pragma" content="no-cache" />
-  <meta http-equiv="Expires" content="0" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>res-tool — Dashboard</title>
 
@@ -12,8 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;600;800&display=swap" rel="stylesheet">
 
-  <!-- Styles mit Cache-Buster -->
-  <link rel="stylesheet" href="/src/styles.css?v=3" />
+  <link rel="stylesheet" href="/src/styles.css" />
 </head>
 <body>
   <header class="topbar" role="banner">
@@ -46,17 +42,18 @@
   </header>
 
   <main class="container" aria-live="polite">
-    <!-- KPI Filter -->
-    <section class="filterbar" aria-label="KPI Filter">
-      <label class="mono" for="kpiFilter">KPI Ansicht:</label>
-      <select id="kpiFilter" class="input sm"></select>
-    </section>
-
     <!-- KPIs -->
     <section class="grid hero" aria-label="Dashboard Übersicht">
+      <!-- KPI HEUTE -->
       <article class="card scanlines">
         <div class="content">
-          <h3 class="mono">KPI — Heute</h3>
+          <div class="card-head">
+            <h3 class="mono">KPI — Heute</h3>
+            <div class="select-wrap">
+              <label class="sr-only" for="kpiFilterToday">Hotelfilter heute</label>
+              <select id="kpiFilterToday" class="input sm theme-select"></select>
+            </div>
+          </div>
           <div class="kpis big">
             <div class="kpi"><div class="value" id="tBookings">—</div><div class="label">Buchungen</div></div>
             <div class="kpi"><div class="value" id="tRevenue">— €</div><div class="label">Umsatz</div></div>
@@ -65,14 +62,22 @@
           </div>
         </div>
       </article>
+
+      <!-- KPI NÄCHSTE 7 TAGE -->
       <article class="card scanlines">
         <div class="content">
-          <h3 class="mono">KPI — Letzte 7 Tage</h3>
+          <div class="card-head">
+            <h3 class="mono">KPI — Nächste 7 Tage</h3>
+            <div class="select-wrap">
+              <label class="sr-only" for="kpiFilterNext">Hotelfilter nächste 7 Tage</label>
+              <select id="kpiFilterNext" class="input sm theme-select"></select>
+            </div>
+          </div>
           <div class="kpis big">
-            <div class="kpi"><div class="value" id="wBookings">—</div><div class="label">Buchungen</div></div>
-            <div class="kpi"><div class="value" id="wRevenue">— €</div><div class="label">Umsatz</div></div>
-            <div class="kpi"><div class="value" id="wADR">— €</div><div class="label">ADR</div></div>
-            <div class="kpi"><div class="value" id="wOcc">—%</div><div class="label">Ø Auslastung</div></div>
+            <div class="kpi"><div class="value" id="nBookings">—</div><div class="label">Buchungen</div></div>
+            <div class="kpi"><div class="value" id="nRevenue">— €</div><div class="label">Umsatz</div></div>
+            <div class="kpi"><div class="value" id="nADR">— €</div><div class="label">ADR</div></div>
+            <div class="kpi"><div class="value" id="nOcc">—%</div><div class="label">Ø Auslastung</div></div>
           </div>
         </div>
       </article>
@@ -107,15 +112,16 @@
     </section>
   </main>
 
-  <!-- Rechte, schwebende Tracker-Buttons (klein) -->
+  <!-- Rechts: Tracker-Buttons -->
   <aside class="quick-links" aria-label="Tracker Shortcuts">
     <a class="btn sm" href="https://noteforms.com/forms/hotel-booking-tracker-c83eba" target="_blank" rel="noopener">Buchungs-Tracker</a>
     <a class="btn sm" href="https://noteforms.com/forms/hotel-call-tracking-form-hw2hqj" target="_blank" rel="noopener">Telefon-Tracker</a>
   </aside>
 
-  <!-- Backdrop + Modals (fix & zentriert) -->
+  <!-- Backdrop + Modals -->
   <div class="modal-backdrop" id="backdrop" aria-hidden="true"></div>
 
+  <!-- Modals (unverändert, funktionieren mittig) -->
   <section class="modal" id="modalNew" role="dialog" aria-labelledby="newTitle" aria-modal="true">
     <header>
       <h3 id="newTitle" class="mono">Neue Reservierung</h3>
@@ -203,8 +209,7 @@
     <div class="body"><div class="hotel-grid" id="sketchGrid"></div></div>
   </section>
 
-  <!-- Supabase UMD + App JS (mit Cache-Buster) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.5/dist/umd/supabase.js" crossorigin="anonymous"></script>
-  <script src="/src/app.js?v=3"></script>
+  <script src="/src/app.js"></script>
 </body>
 </html>
