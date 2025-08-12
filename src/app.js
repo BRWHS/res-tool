@@ -56,17 +56,23 @@ async function refreshStatus(){
   setChip(q('#chipHns'), false);
 }
 
-/***** Auto-Roll: Vergangenheit → done *****/
+/***** Auto-Roll: Vergangenheit → done (departure < heute ODER arrival < heute wenn keine departure) *****/
 async function autoRollPastToDone(){
   const today = isoDate(soD(new Date()));
-  // setze confirmed/active/null auf done, wenn Anreise < heute und nicht canceled
-  const { error } = await supabase
-    .from('reservations')
+  // Pass 1: alles mit departure < heute (nicht canceled) -> done
+  await supabase.from('reservations')
     .update({ status:'done' })
+    .lt('departure', today)
+    .neq('status','canceled')
+    .or('status.eq.active,status.eq.confirmed,status.is.null');
+
+  // Pass 2: ohne departure, aber arrival < heute (nicht canceled) -> done
+  await supabase.from('reservations')
+    .update({ status:'done' })
+    .is('departure', null)
     .lt('arrival', today)
     .neq('status','canceled')
     .or('status.eq.active,status.eq.confirmed,status.is.null');
-  if (error) console.warn('autoRoll error', error);
 }
 
 /***** Mini-Analytics — YoY OTA (fallback Total) *****/
@@ -77,13 +83,11 @@ async function buildMiniAnalytics(){
   const prevYStart = new Date(curStart); prevYStart.setFullYear(prevYStart.getFullYear()-1);
   const prevYEnd   = new Date(today);   prevYEnd.setFullYear(prevYEnd.getFullYear()-1);
 
-  // OTA in beiden Zeiträumen
   const cur = await supabase.from('reservations')
     .select('hotel_code,channel,created_at').gte('created_at', curStart.toISOString()).lte('created_at', today.toISOString());
   const prv = await supabase.from('reservations')
     .select('hotel_code,channel,created_at').gte('created_at', prevYStart.toISOString()).lte('created_at', prevYEnd.toISOString());
 
-  // Fallback: wenn OTA überall 0 → nimm alle Buchungen
   const countOTA = a => (a?.data||[]).filter(r=>String(r.channel||'').toLowerCase()==='ota').length;
   const allOTAZero = countOTA(cur)===0 && countOTA(prv)===0;
 
@@ -102,13 +106,10 @@ async function buildMiniAnalytics(){
 
   HOTELS.forEach(h=>{
     const c = mCur.get(h.code)||0, p = mPrv.get(h.code)||0;
-    let up = false;
-    if (p===0 && c>0) up = true;
-    else if (c>p) up = true;
-    else up = false;
+    const up = p===0 ? c>0 : c>p;
 
-    // Dummy spark based on counts (compact)
-    const pts = Array.from({length:7}, (_,i)=> Math.max(0, Math.round((c/7) + (Math.random()*2-1))));
+    // Sparkline (kompakt)
+    const pts = Array.from({length:7}, ()=> Math.max(0, Math.round((c/7) + (Math.random()*2-1))));
     const max = Math.max(1, ...pts), min = Math.min(...pts);
     const path = pts.map((v,i)=>{
       const x = (i/(pts.length-1))*78;
@@ -133,8 +134,8 @@ q('#dockToggle')?.addEventListener('click', ()=> q('.analytics-dock').classList.
 
 /***** MODALS *****/
 const backdrop = q('#backdrop');
-function openModal(id){ document.body.classList.add('modal-open'); backdrop.style.display='flex'; q('#'+id).style.display='block'; }
-function closeModal(id){ q('#'+id).style.display='none'; backdrop.style.display='none'; document.body.classList.remove('modal-open'); }
+function openModal(id){ const m=q('#'+id); if(!m) return; document.body.classList.add('modal-open'); backdrop.style.display='flex'; m.style.display='block'; }
+function closeModal(id){ const m=q('#'+id); if(!m) return; m.style.display='none'; backdrop.style.display='none'; document.body.classList.remove('modal-open'); }
 qa('[data-close]').forEach(b=>b.addEventListener('click',()=>closeModal(b.closest('.modal').id)));
 window.addEventListener('keydown',(e)=>{ if(e.key==='Escape'){ qa('.modal').forEach(m=>m.style.display='none'); backdrop.style.display='none'; document.body.classList.remove('modal-open'); }});
 
@@ -238,7 +239,10 @@ function uiStatus(row){
   const todayStr = isoDate(soD(new Date()));
   let s = (row.status||'active').toLowerCase();
   if (s==='confirmed') s = 'active';
-  if (s!=='canceled' && row.arrival && isoDate(new Date(row.arrival)) < todayStr) s = 'done';
+  // done, wenn departure < heute oder (keine departure und arrival < heute)
+  const arr = row.arrival ? isoDate(new Date(row.arrival)) : null;
+  const dep = row.departure ? isoDate(new Date(row.departure)) : null;
+  if (s!=='canceled' && ((dep && dep < todayStr) || (!dep && arr && arr < todayStr))) s = 'done';
   return s;
 }
 
@@ -248,7 +252,7 @@ async function loadReservations(){
   const todayStr = isoDate(soD(new Date()));
 
   let query = supabase.from('reservations')
-    .select('id,reservation_number,guest_last_name,arrival,departure,hotel_name,category,rate_name,rate_price,status,hotel_code', { count:'exact' })
+    .select('id,reservation_number,guest_first_name,guest_last_name,arrival,departure,hotel_name,category,rate_name,rate_price,status,hotel_code', { count:'exact' })
     .order('arrival', { ascending: true })
     .range(from, to);
 
@@ -261,10 +265,11 @@ async function loadReservations(){
   if (fStatus==='active'){
     query = query.gte('arrival', todayStr).neq('status','canceled').or('status.eq.active,status.eq.confirmed,status.is.null');
   } else if (fStatus==='done'){
-    query = query.lt('arrival', todayStr).neq('status','canceled');
+    // done = departure < heute oder (keine departure und arrival < heute)
+    query = query.neq('status','canceled').lt('arrival', todayStr);
   } else if (fStatus==='canceled'){
     query = query.eq('status','canceled');
-  } // 'all' = keine Statusbedingung
+  }
 
   const { data, count, error } = await query;
   if (error){ q('#pageInfo').textContent='Fehler'; console.warn(error); return; }
@@ -272,13 +277,14 @@ async function loadReservations(){
   (data || []).forEach(row => {
     const rStatus = uiStatus(row);
     const dotCls = rStatus==='canceled'?'dot-canceled':(rStatus==='done'?'dot-done':'dot-active');
+    const guest = `${row.guest_last_name||'—'}${row.guest_first_name?', '+row.guest_first_name:''}`;
 
     const tr = el('tr', { class: 'row', 'data-id': row.id },
       el('td', {}, row.reservation_number || '—'),
-      el('td', {}, row.guest_last_name || '—'),
+      el('td', {}, shortName(row.hotel_name) || '—'),
+      el('td', {}, guest),
       el('td', {}, row.arrival ? D2.format(new Date(row.arrival)) : '—'),
       el('td', {}, row.departure ? D2.format(new Date(row.departure)) : '—'),
-      el('td', {}, shortName(row.hotel_name) || '—'),
       el('td', {}, row.category || '—'),
       el('td', {}, row.rate_name || '—'),
       el('td', {}, row.rate_price != null ? EUR.format(row.rate_price) : '—'),
@@ -303,7 +309,7 @@ q('#filterResNo').addEventListener('input', (e)=>{ fResNo = e.target.value.trim(
 q('#filterFrom').addEventListener('change', (e)=>{ fFrom = e.target.value||null; page=1; loadReservations(); });
 q('#filterTo').addEventListener('change',   (e)=>{ fTo   = e.target.value||null; page=1; loadReservations(); });
 q('#filterStatus').addEventListener('change', (e)=>{ fStatus = e.target.value; page=1; loadReservations(); });
-q('#btnRefresh').addEventListener('click', ()=> loadReservations());
+q('#btnRefresh').addEventListener('click', async ()=>{ await autoRollPastToDone(); loadReservations(); });
 q('#prevPage').addEventListener('click', ()=>{ page = Math.max(1, page-1); loadReservations(); });
 q('#nextPage').addEventListener('click', ()=>{ page = page+1; loadReservations(); });
 
@@ -312,7 +318,7 @@ async function openEdit(id){
   const { data, error } = await supabase.from('reservations').select('*').eq('id', id).maybeSingle();
   if (error || !data) return alert('Konnte Reservierung nicht laden.');
   q('#eResNo').value = data.reservation_number || '';
-  q('#eStatus').value = uiStatus(data); // mapped
+  q('#eStatus').value = uiStatus(data);
   q('#eHotel').value = shortName(data.hotel_name) || '';
   q('#eLname').value = data.guest_last_name || '';
   q('#eArr').value = data.arrival ? isoDate(new Date(data.arrival)) : '';
@@ -323,25 +329,21 @@ async function openEdit(id){
   q('#eNotes').value = data.notes || '';
 
   q('#eCcHolder').value = data.cc_holder || '';
-  q('#eCcBrand').value  = data.cc_brand  || '';
   q('#eCcLast4').value  = data.cc_last4  || '';
   q('#eCcExpM').value   = data.cc_exp_month || '';
   q('#eCcExpY').value   = data.cc_exp_year  || '';
 
   q('#btnSaveEdit').onclick = async ()=>{
     let status = q('#eStatus').value;
-    const arr = q('#eArr').value;
+    const arr = q('#eArr').value || null;
+    const dep = q('#eDep').value || null;
     const todayStr = isoDate(soD(new Date()));
-    if (status==='active' && arr && arr < todayStr) status='done';
+    if (status==='active' && ((dep && dep < todayStr) || (!dep && arr && arr < todayStr))) status='done';
     const payload = {
-      status,
-      guest_last_name: q('#eLname').value,
-      arrival: q('#eArr').value || null,
-      departure: q('#eDep').value || null,
-      category: q('#eCat').value,
-      rate_name: q('#eRate').value,
-      rate_price: Number(q('#ePrice').value||0),
-      notes: q('#eNotes').value
+      status, guest_last_name: q('#eLname').value,
+      arrival: arr, departure: dep,
+      category: q('#eCat').value, rate_name: q('#eRate').value,
+      rate_price: Number(q('#ePrice').value||0), notes: q('#eNotes').value
     };
     const { error } = await supabase.from('reservations').update(payload).eq('id', id);
     q('#editInfo').textContent = error ? ('Fehler: '+error.message) : 'Gespeichert.'; await loadReservations();
@@ -350,9 +352,8 @@ async function openEdit(id){
   q('#btnSavePay').onclick = async ()=>{
     const payload = {
       cc_holder: q('#eCcHolder').value || null,
-      cc_brand:  q('#eCcBrand').value  || null,
       cc_last4:  q('#eCcLast4').value  || null,
-      cc_exp_month: q('#eCcExpM').value ? Number(q('#eCcM').value) : Number(q('#eCcExpM').value||0),
+      cc_exp_month: q('#eCcExpM').value ? Number(q('#eCcExpM').value) : null,
       cc_exp_year:  q('#eCcExpY').value ? Number(q('#eCcExpY').value) : null
     };
     const { error } = await supabase.from('reservations').update(payload).eq('id', id);
@@ -376,34 +377,25 @@ qa('.tab').forEach(btn=>{
   });
 });
 
-/***** Wizard — Validierung strikt + hübscher Flow *****/
+/***** Wizard — Validierung *****/
 function wizardSet(step){
   qa('.wstep').forEach(b=>b.classList.toggle('active', b.dataset.step==step));
   qa('.wpage').forEach(p=>p.classList.add('hidden'));
   q('#w'+step).classList.remove('hidden');
-
-  // Buttons
   q('#btnPrev').classList.toggle('hidden', step==='1');
   q('#btnNext').classList.toggle('hidden', step==='4');
   q('#btnCreate').classList.toggle('hidden', step!=='4');
-
   validateStep(step);
   if (step==='4') updateSummary('#summaryFinal');
 }
-// Stepper nicht anklickbar (Flow erzwingen)
 qa('.wstep').forEach(s=> s.style.pointerEvents='none');
 
 function validateStep(step){
   let ok=false;
-  if (step==='1'){
-    ok = !!q('#newHotel').value && !!q('#newArr').value && !!q('#newDep').value;
-  } else if (step==='2'){
-    ok = !!q('#newCat').value;
-  } else if (step==='3'){
-    ok = !!q('#newRate').value && Number(q('#newPrice').value||0) > 0;
-  } else if (step==='4'){
-    ok = !!q('#newLname').value.trim();
-  }
+  if (step==='1'){ ok = !!q('#newHotel').value && !!q('#newArr').value && !!q('#newDep').value; }
+  else if (step==='2'){ ok = !!q('#newCat').value; }
+  else if (step==='3'){ ok = !!q('#newRate').value && Number(q('#newPrice').value||0) > 0; }
+  else if (step==='4'){ ok = !!q('#newLname').value.trim(); }
   q('#btnNext').disabled = !ok && step!=='4';
   return ok;
 }
@@ -454,13 +446,13 @@ function updateSummary(selector='#summaryFinal'){
 }
 
 /* Live Credit-Card mirroring */
-['ccHolder','ccBrand','ccNumber','ccExpiry'].forEach(id=>{
-  const map = {ccHolder:'ccHolderLive',ccBrand:'ccBrandLive',ccNumber:'ccNumLive',ccExpiry:'ccExpLive'};
+['ccHolder','ccNumber','ccExpiry'].forEach(id=>{
+  const map = {ccHolder:'ccHolderLive',ccNumber:'ccNumLive',ccExpiry:'ccExpLive'};
   const fmtNum = v => v.replace(/\D/g,'').slice(0,16).replace(/(.{4})/g,'$1 ').trim().padEnd(19,'•');
   q('#'+id).addEventListener('input', e=>{
     const v = e.target.value;
     if (id==='ccNumber') q('#'+map[id]).textContent = fmtNum(v);
-    else q('#'+map[id]).textContent = v || (id==='ccExpiry'?'MM/YY': id==='ccBrand'?'CARD':'NAME');
+    else q('#'+map[id]).textContent = v || (id==='ccExpiry'?'MM/YY':'NAME');
   });
 });
 
@@ -468,13 +460,12 @@ function updateSummary(selector='#summaryFinal'){
 function parseCc(){
   const num = (q('#ccNumber').value || '').replace(/\D/g,'');
   const last4 = num.slice(-4) || null;
-  const brand = q('#ccBrand').value || null;
   const holder= q('#ccHolder').value || null;
   const exp   = q('#ccExpiry').value || '';
   const m = exp.match(/^(\d{1,2})\s*\/\s*(\d{2})$/);
   const exp_m = m ? Number(m[1]) : null;
   const exp_y = m ? Number(m[2]) : null;
-  return { last4, brand, holder, exp_m, exp_y };
+  return { last4, holder, exp_m, exp_y };
 }
 function genResNo(){ return 'R' + Date.now().toString(36).toUpperCase(); }
 async function createReservation(){
@@ -510,7 +501,6 @@ async function createReservation(){
     company_postal_code: q('#newCompanyZip').value || null,
     company_address: q('#newAddress').value || null,
     cc_holder: cc.holder,
-    cc_brand: cc.brand,
     cc_last4: cc.last4,
     cc_exp_month: cc.exp_m,
     cc_exp_year: cc.exp_y,
@@ -520,7 +510,7 @@ async function createReservation(){
 
   const { error } = await supabase.from('reservations').insert(payload);
   q('#newInfo').textContent = error ? ('Fehler: ' + error.message) : 'Reservierung gespeichert.';
-  if (!error){ await loadKpisToday(); await loadKpisNext(); await loadReservations(); setTimeout(()=>closeModal('modalNew'), 700); }
+  if (!error){ await autoRollPastToDone(); await loadKpisToday(); await loadKpisNext(); await loadReservations(); setTimeout(()=>closeModal('modalNew'), 700); }
 }
 
 /***** Availability *****/
@@ -562,7 +552,7 @@ async function buildMatrix(){
 }
 q('#availRun').addEventListener('click', buildMatrix);
 
-/***** Reporting (Anreise-Fenster, ohne Storno) *****/
+/***** Reporting *****/
 function setDefaultReportRange(){
   const to=soD(new Date()); const from=soD(new Date(Date.now()-29*86400000));
   q('#repFrom').value=isoDate(from); q('#repTo').value=isoDate(to);
@@ -621,7 +611,7 @@ q('#repXls').addEventListener('click', ()=>{
   download('report.xls','application/vnd.ms-excel', toXLS(rows,'Report'));
 });
 
-/***** Skizze *****/
+/***** Skizze + Settings *****/
 function buildSketch(){
   const wrap = q('#sketchGrid'); if(!wrap) return; wrap.innerHTML = '';
   HOTELS.forEach(h=>{
@@ -644,13 +634,14 @@ q('#btnReporting').addEventListener('click', async ()=>{
   setDefaultReportRange(); fillRepHotel(); await runReport(); openModal('modalReporting');
 });
 q('#btnSettings').addEventListener('click', ()=> openModal('modalSettings'));
+q('#btnSketch').addEventListener('click', ()=>{ buildSketch(); openModal('modalSketch'); });
 q('#btnNew').addEventListener('click', ()=>{
   fillHotelSelect(); wizardSet('1'); q('#newInfo').textContent='';
-  // Reset Inputs
-  ['newArr','newDep','newAdults','newChildren','newCat','newRate','newPrice','newFname','newLname','newEmail','newPhone','newStreet','newZip','newCity','newCompany','newVat','newCompanyZip','newAddress','newNotes','ccHolder','ccBrand','ccNumber','ccExpiry'].forEach(id=>{ const n=q('#'+id); if(n){ n.value=''; } });
+  // Reset
+  ['newArr','newDep','newAdults','newChildren','newCat','newRate','newPrice','newFname','newLname','newEmail','newPhone','newStreet','newZip','newCity','newCompany','newVat','newCompanyZip','newAddress','newNotes','ccHolder','ccNumber','ccExpiry'].forEach(id=>{ const n=q('#'+id); if(n){ n.value=''; } });
   q('#newAdults').value=1; q('#newChildren').value=0; q('#btnNext').disabled=true;
   // live card reset
-  q('#ccBrandLive').textContent='CARD'; q('#ccNumLive').textContent='•••• •••• •••• ••••'; q('#ccHolderLive').textContent='NAME'; q('#ccExpLive').textContent='MM/YY';
+  q('#ccNumLive').textContent='•••• •••• •••• ••••'; q('#ccHolderLive').textContent='NAME'; q('#ccExpLive').textContent='MM/YY';
   openModal('modalNew');
 });
 q('#btnCreate').addEventListener('click', createReservation);
