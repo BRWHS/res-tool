@@ -1,5 +1,5 @@
 /* =========================
-   RES-TOOL – Retro Tech Neon (v2)
+   RES-TOOL – Retro Tech Neon (stable)
    ========================= */
 :root{
   --bg:#07090D; --panel:#0D1119; --panel-2:#0F1422; --line:#1C2240;
@@ -9,6 +9,8 @@
   --radius:16px; --radius-sm:12px; --gap:16px;
   --font: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
 }
+
+/* Backdrops */
 .bg-grid{position:fixed;inset:0;z-index:-2;background:
   repeating-linear-gradient(90deg, rgba(0,255,255,.08) 0 1px, transparent 1px 80px),
   repeating-linear-gradient(0deg, rgba(0,255,255,.05) 0 1px, transparent 1px 80px),
@@ -17,7 +19,9 @@
 .crt{pointer-events:none;position:fixed;inset:0;z-index:-1;background:
   repeating-linear-gradient(0deg, rgba(0,0,0,.22) 0 2px, transparent 2px 4px);mix-blend-mode:soft-light;opacity:.25}
 
-*{box-sizing:border-box} html,body{height:100%}
+/* Base */
+*{box-sizing:border-box}
+html,body{height:100%}
 body{margin:0;color:var(--text);font-family:var(--font);font-size:15px}
 .shell{max-width:1280px;margin:0 auto;padding:20px}
 a,button,input,select,textarea{font:inherit}
@@ -33,7 +37,7 @@ h1,h2,h3,h4,h5,h6,.headline{color:var(--text);letter-spacing:.3px}
 .logo{width:32px;height:32px;object-fit:contain;border-radius:8px}
 .brand-meta{opacity:.85}
 
-/* Dashboard layout */
+/* Dashboard */
 .mainpad{padding-top:20px}
 .dash{display:grid;grid-template-columns:2fr 1fr;gap:16px}
 .kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
@@ -77,7 +81,6 @@ h1,h2,h3,h4,h5,h6,.headline{color:var(--text);letter-spacing:.3px}
 .table thead th{background:#0F1422;position:sticky;top:0;z-index:2}
 .table tbody tr:hover{background:#0E1422}
 .pill{display:inline-block;padding:4px 8px;border-radius:999px;border:1px solid #2b2f40}
-.pill.ok{color:var(--ok);border-color:#2B4A3E}
 .pill.tight{color:var(--tight);border-color:#4B3F24}
 .pill.over{color:var(--over);border-color:#5B2A2A}
 
