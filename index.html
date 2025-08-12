@@ -62,10 +62,10 @@
             </div>
           </div>
           <div class="kpis big">
-            <div class="kpi"><div class="value" id="tBookings">—</div><div class="label">Buchungen</div></div>
-            <div class="kpi"><div class="value" id="tRevenue">— €</div><div class="label">Umsatz</div></div>
-            <div class="kpi"><div class="value" id="tADR">— €</div><div class="label">ADR</div></div>
-            <div class="kpi"><div class="value" id="tOcc">—%</div><div class="label">Ø Auslastung</div></div>
+            <div class="kpi"><div class="value" id="tBookings">—</div><div class="label">Buchungen (heute eingegangen)</div></div>
+            <div class="kpi"><div class="value" id="tRevenue">— €</div><div class="label">Umsatz (Anreisen heute)</div></div>
+            <div class="kpi"><div class="value" id="tADR">— €</div><div class="label">ADR (heute)</div></div>
+            <div class="kpi"><div class="value" id="tOcc">—%</div><div class="label">Auslastung (heute)</div></div>
           </div>
         </div>
       </article>
@@ -79,10 +79,10 @@
             </div>
           </div>
           <div class="kpis big">
-            <div class="kpi"><div class="value" id="nBookings">—</div><div class="label">Buchungen</div></div>
-            <div class="kpi"><div class="value" id="nRevenue">— €</div><div class="label">Umsatz</div></div>
-            <div class="kpi"><div class="value" id="nADR">— €</div><div class="label">ADR</div></div>
-            <div class="kpi"><div class="value" id="nOcc">—%</div><div class="label">Ø Auslastung</div></div>
+            <!-- Buchungen entfernt wie gewünscht -->
+            <div class="kpi"><div class="value" id="nRevenue">— €</div><div class="label">Umsatz (Anreisen +1..+7)</div></div>
+            <div class="kpi"><div class="value" id="nADR">— €</div><div class="label">ADR (+1..+7)</div></div>
+            <div class="kpi"><div class="value" id="nOcc">—%</div><div class="label">Ø Auslastung (+1..+7)</div></div>
           </div>
         </div>
       </article>
@@ -151,7 +151,7 @@
   <!-- Backdrop + Modals -->
   <div class="modal-backdrop" id="backdrop" aria-hidden="true"></div>
 
-  <!-- Neue Reservierung: Wizard -->
+  <!-- Neue Reservierung -->
   <section class="modal" id="modalNew" role="dialog" aria-labelledby="newTitle" aria-modal="true">
     <header>
       <h3 id="newTitle" class="mono">Neue Reservierung</h3>
@@ -281,8 +281,12 @@
           <label>Gast Nachname <input id="eLname" class="input"/></label>
           <label>Anreise <input id="eArr" type="date" class="input"/></label>
           <label>Abreise <input id="eDep" type="date" class="input"/></label>
-          <label>Kategorie <input id="eCat" class="input"/></label>
-          <label>Rate <input id="eRate" class="input"/></label>
+          <label>Kategorie
+            <select id="eCat" class="input theme-select"></select>
+          </label>
+          <label>Rate
+            <select id="eRate" class="input theme-select"></select>
+          </label>
           <label>Preis <input id="ePrice" type="number" step="1" class="input"/></label>
           <label>Notizen <input id="eNotes" class="input"/></label>
         </div>
