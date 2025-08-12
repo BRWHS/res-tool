@@ -18,30 +18,35 @@
     </div>
 
     <nav class="toolbar">
-      <button class="btn primary" id="btnNew">Neue Reservierung</button>
-      <button class="btn ghost"   id="btnAvail">Verfügbarkeit</button>
-      <button class="btn ghost"   id="btnReporting">Reporting</button>
-      <button class="btn ghost"   id="btnSettings">Einstellungen</button>
+      <div class="toolbar-left">
+        <button class="btn primary" id="btnNew">Neue Reservierung</button>
+        <button class="btn ghost"   id="btnAvail">Verfügbarkeit</button>
+        <button class="btn ghost"   id="btnReporting">Reporting</button>
+        <button class="btn ghost"   id="btnSettings">Einstellungen</button>
+        <button class="btn ghost"   id="btnSketch">Hotelskizze</button>
+      </div>
 
-      <a class="btn" href="https://noteforms.com/forms/hotel-booking-tracker-c83eba" target="_blank" rel="noopener">Buchungs-Tracker</a>
-      <a class="btn" href="https://noteforms.com/forms/hotel-call-tracking-form-hw2hqj" target="_blank" rel="noopener">Telefon-Tracker</a>
+      <div class="toolbar-right">
+        <a class="btn sm" href="https://noteforms.com/forms/hotel-booking-tracker-c83eba" target="_blank" rel="noopener">Buchungs-Tracker</a>
+        <a class="btn sm" href="https://noteforms.com/forms/hotel-call-tracking-form-hw2hqj" target="_blank" rel="noopener">Telefon-Tracker</a>
+      </div>
+
+      <div class="mono status-clock">
+        <div id="statusChips" style="display:flex; gap:8px;">
+          <span class="pill" id="chipSb"  title="Supabase">SB</span>
+          <span class="pill" id="chipHns" title="HotelNetSolutions">HNS</span>
+        </div>
+        <div class="muted" id="clockWrap">
+          <span id="clockLocal">--:--:--</span>
+          <span style="opacity:.6">/</span>
+          <span id="clockServer">srv --:--:--</span>
+        </div>
+      </div>
     </nav>
-
-    <div class="mono" style="display:flex; align-items:center; gap:14px;">
-      <div id="statusChips" style="display:flex; gap:8px;">
-        <span class="pill" id="chipSb"    title="Supabase">SB</span>
-        <span class="pill" id="chipHns"   title="HotelNetSolutions">HNS</span>
-      </div>
-      <div class="muted" id="clockWrap">
-        <span id="clockLocal">--:--:--</span>
-        <span style="opacity:.6">/</span>
-        <span id="clockServer">srv --:--:--</span>
-      </div>
-    </div>
   </header>
 
   <main class="container" aria-live="polite">
-    <!-- KPI-Stripes -->
+    <!-- KPIs -->
     <section class="grid hero">
       <article class="card scanlines">
         <div class="content">
@@ -81,10 +86,10 @@
           <div class="table-wrap">
             <table class="resv">
               <thead>
-              <tr>
-                <th>Gastname</th><th>Anreise</th><th>Abreise</th><th>Hotel</th>
-                <th>Kategorie</th><th>Rate</th><th>Preis</th><th>Notizen</th>
-              </tr>
+                <tr>
+                  <th>Gastname</th><th>Anreise</th><th>Abreise</th><th>Hotel</th>
+                  <th>Kategorie</th><th>Rate</th><th>Preis</th><th>Notizen</th>
+                </tr>
               </thead>
               <tbody id="resvBody"></tbody>
             </table>
@@ -99,29 +104,21 @@
     </section>
   </main>
 
-  <!-- Backdrop -->
+  <!-- Backdrop (jetzt unter dem Modal) -->
   <div class="modal-backdrop" id="backdrop"></div>
 
-  <!-- Neue Reservierung -->
+  <!-- Modals -->
   <section class="modal" id="modalNew" role="dialog" aria-labelledby="newTitle">
     <header>
       <h3 id="newTitle" class="mono">Neue Reservierung</h3>
       <button class="btn" data-close>Schließen</button>
     </header>
     <div class="body">
-      <div style="display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap:12px;">
-        <label>Hotel
-          <select id="newHotel" class="input"></select>
-        </label>
-        <label>Gäste
-          <input id="newGuests" type="number" min="1" value="1" class="input"/>
-        </label>
-        <label>Anreise
-          <input id="newArr" type="date" class="input"/>
-        </label>
-        <label>Abreise
-          <input id="newDep" type="date" class="input"/>
-        </label>
+      <div class="grid2">
+        <label>Hotel <select id="newHotel" class="input"></select></label>
+        <label>Gäste <input id="newGuests" type="number" min="1" value="1" class="input"/></label>
+        <label>Anreise <input id="newArr" type="date" class="input"/></label>
+        <label>Abreise <input id="newDep" type="date" class="input"/></label>
         <label>Kategorie
           <select id="newCat" class="input"><option>Standard</option><option>Superior</option><option>Suite</option></select>
         </label>
@@ -131,21 +128,16 @@
             <option value="Flex inkl. Frühstück" data-price="109">Flex inkl. Frühstück</option>
           </select>
         </label>
-        <label>Preis
-          <input id="newPrice" type="number" step="1" value="89" class="input"/>
-        </label>
-        <label>Gast Nachname
-          <input id="newLname" type="text" placeholder="Mustermann" class="input"/>
-        </label>
+        <label>Preis <input id="newPrice" type="number" step="1" value="89" class="input"/></label>
+        <label>Gast Nachname <input id="newLname" type="text" placeholder="Mustermann" class="input"/></label>
       </div>
-      <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:12px;">
+      <div class="right">
         <button class="btn" id="btnCreate">Anlegen</button>
       </div>
       <p class="muted" id="newInfo" style="margin-top:6px;"></p>
     </div>
   </section>
 
-  <!-- Verfügbarkeit -->
   <section class="modal" id="modalAvail" role="dialog" aria-labelledby="availTitle">
     <header>
       <h3 id="availTitle" class="mono">Verfügbarkeit (14 Tage)</h3>
@@ -159,14 +151,13 @@
     </div>
   </section>
 
-  <!-- Reporting -->
   <section class="modal" id="modalReporting" role="dialog" aria-labelledby="repTitle">
     <header>
       <h3 id="repTitle" class="mono">Reporting</h3>
       <button class="btn" data-close>Schließen</button>
     </header>
     <div class="body">
-      <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px;">
+      <div class="row wrap">
         <label>Von <input id="repFrom" type="date" class="input"></label>
         <label>Bis <input id="repTo" type="date" class="input"></label>
         <button class="btn" id="repRun">Aktualisieren</button>
@@ -180,14 +171,13 @@
     </div>
   </section>
 
-  <!-- Einstellungen -->
   <section class="modal" id="modalSettings" role="dialog" aria-labelledby="setTitle">
     <header>
       <h3 id="setTitle" class="mono">Einstellungen</h3>
       <button class="btn" data-close>Schließen</button>
     </header>
     <div class="body">
-      <div style="display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap:12px;">
+      <div class="grid2">
         <label>Sprache
           <select id="setLang" class="input"><option value="de">Deutsch</option><option value="en">English</option></select>
         </label>
@@ -196,6 +186,16 @@
         </label>
       </div>
       <p class="muted" style="margin-top:8px;">Einstellungen werden lokal gespeichert.</p>
+    </div>
+  </section>
+
+  <section class="modal" id="modalSketch" role="dialog" aria-labelledby="sketchTitle">
+    <header>
+      <h3 id="sketchTitle" class="mono">Hotelskizze</h3>
+      <button class="btn" data-close>Schließen</button>
+    </header>
+    <div class="body">
+      <div class="hotel-grid" id="sketchGrid"></div>
     </div>
   </section>
 
