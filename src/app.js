@@ -5,28 +5,31 @@ const supabase = window.supabase.createClient(SB_URL, SB_ANON_KEY);
 
 /***** Hotels (UI-Liste) *****/
 const HOTELS = [
-  { group:'MASEVEN',  name:'MASEVEN München Dornach',   code:'MA7-M-DOR' },
-  { group:'MASEVEN',  name:'MASEVEN München Trudering', code:'MA7-M-TRU' },
-  { group:'MASEVEN',  name:'MASEVEN Frankfurt',         code:'MA7-FRA' },
-  { group:'MASEVEN',  name:'MASEVEN Stuttgart',         code:'MA7-STR' },
-  { group:'Fidelity', name:'Fidelity Robenstein',       code:'FID-ROB' },
-  { group:'Fidelity', name:'Fidelity Struck',           code:'FID-STR' },
-  { group:'Fidelity', name:'Fidelity Doerr',            code:'FID-DOE' },
-  { group:'Fidelity', name:'Fidelity Gr. Baum',         code:'FID-GRB' },
-  { group:'Fidelity', name:'Fidelity Landskron',        code:'FID-LAN' },
-  { group:'Fidelity', name:'Fidelity Pürgl',            code:'FID-PUE' },
-  { group:'Fidelity', name:'Fidelity Seppl',            code:'FID-SEP' },
-  { group:'Tante Alma', name:'Tante Alma Bonn',         code:'TAL-BON' },
-  { group:'Tante Alma', name:'Tante Alma Köln',         code:'TAL-KOE' },
-  { group:'Tante Alma', name:'Tante Alma Erfurt',       code:'TAL-ERF' },
-  { group:'Tante Alma', name:'Tante Alma Mannheim',     code:'TAL-MAN' },
-  { group:'Tante Alma', name:'Tante Alma Mülheim',      code:'TAL-MUE' },
-  { group:'Tante Alma', name:'Tante Alma Sonnen',       code:'TAL-SON' },
-  { group:'Delta by Marriot', name:'Delta by Marriot Offenbach', code:'DBM-OF' },
-  { group:'Villa Viva', name:'Villa Viva Hamburg',      code:'VV-HH' },
+  { group: 'MASEVEN', city: 'München Dornach', code: 'MA7-M-DOR' },
+  { group: 'MASEVEN', city: 'München Trudering', code: 'MA7-M-TRU' },
+  { group: 'MASEVEN', city: 'Frankfurt', code: 'MA7-FRA' },
+  { group: 'MASEVEN', city: 'Stuttgart', code: 'MA7-STR' },
+  { group: 'Fidelity', city: 'Robenstein', code: 'FID-ROB' },
+  { group: 'Fidelity', city: 'Struck', code: 'FID-STR' },
+  { group: 'Fidelity', city: 'Doerr', code: 'FID-DOE' },
+  { group: 'Fidelity', city: 'Gr. Baum', code: 'FID-GRB' },
+  { group: 'Fidelity', city: 'Landskron', code: 'FID-LAN' },
+  { group: 'Fidelity', city: 'Pürgl', code: 'FID-PUE' },
+  { group: 'Fidelity', city: 'Seppl', code: 'FID-SEP' },
+  { group: 'Tante Alma', city: 'Bonn', code: 'TAL-BON' },
+  { group: 'Tante Alma', city: 'Köln', code: 'TAL-KOE' },
+  { group: 'Tante Alma', city: 'Erfurt', code: 'TAL-ERF' },
+  { group: 'Tante Alma', city: 'Mannheim', code: 'TAL-MAN' },
+  { group: 'Tante Alma', city: 'Mülheim', code: 'TAL-MUE' },
+  { group: 'Tante Alma', city: 'Sonnen', code: 'TAL-SON' },
+  { group: 'Delta by Marriot', city: 'Offenbach', code: 'DBM-OF' },
+  { group: 'Villa Viva', city: 'Hamburg', code: 'VV-HH' },
 ];
-const PREFIXES = ['MASEVEN','Fidelity','Tante Alma','Delta by Marriot','Villa Viva'];
-const shortName = (full) => { if(!full) return '—'; for(const p of PREFIXES){ if(full.startsWith(p+' ')) return full.slice(p.length+1); } return full; };
+function formatHotelName(h) {
+  if (!h) return '—';
+  return `${h.group} - ${h.city}`;
+}
+
 
 /* Alias-Keyword für Filter-Fallback per hotel_name */
 const HOTEL_KEYWORD = {
@@ -123,7 +126,7 @@ async function buildMiniAnalytics(){
 
     const item = el('div',{class:'dock-item',title:`${h.name} · YoY ${p?Math.round(((c-p)/p)*100):'∞'}%`},
       el('span',{class:'dock-badge'}, h.group),
-      el('div',{class:'dock-name'}, shortName(h.name)),
+      el('div',{class:'dock-name'}, (formatHotelName(HOTELS.find(h=>h.code===h.name)) || h.name)),
       (()=>{
         const svg = el('svg',{class:'spark',viewBox:`0 0 ${SPARK_W} ${SPARK_H}`,xmlns:'http://www.w3.org/2000/svg'});
         svg.append(el('path',{d:path, fill:'none', stroke: up?'#35e08a':'#ff4d6d','stroke-width':'2'}));
@@ -147,7 +150,7 @@ window.addEventListener('keydown',(e)=>{ if(e.key==='Escape'){ qa('.modal').forE
 function fillHotelFilter(selectEl){
   selectEl.innerHTML = '';
   selectEl.append(el('option',{value:'all'},'Gesamt'));
-  HOTELS.forEach(h=> selectEl.append(el('option',{value:h.code}, h.name)));
+  HOTELS.forEach(h=> formatHotelName(h))));
 }
 
 /***** KPI — Heute *****/
@@ -232,7 +235,7 @@ let page=1, pageSize=50, search='', fHotel='all', fResNo='', fFrom=null, fTo=nul
 function fillFilters(){
   const sel = q('#filterHotel'); sel.innerHTML='';
   sel.append(el('option',{value:'all'},'Alle Hotels'));
-  HOTELS.forEach(h=> sel.append(el('option',{value:h.code}, h.name)));
+  HOTELS.forEach(h=> formatHotelName(h))));
 }
 
 function uiStatus(row){
@@ -285,7 +288,7 @@ async function loadReservations(){
     const r1 = await qCode;
 
     // zusätzlich per Name-Alias (ilike)
-    const needle = HOTEL_KEYWORD[fHotel] || shortName(HOTELS.find(h=>h.code===fHotel)?.name || '');
+    const needle = HOTEL_KEYWORD[fHotel] || (formatHotelName(HOTELS.find(h=>h.code===HOTELS.find(h=>h.code===fHotel)) || HOTELS.find(h=>h.code===fHotel)?.name || '');
     let qName = supabase.from('reservations').select(selectCols).order('arrival',{ascending:true}).range(from,to);
     qName = applyFilters(qName.ilike('hotel_name', `%${needle}%`));
     const r2 = await qName;
@@ -307,7 +310,7 @@ async function loadReservations(){
 
     const tr = el('tr', { class: 'row', 'data-id': row.id },
       el('td', {}, row.reservation_number || '—'),
-      el('td', {}, shortName(row.hotel_name) || row.hotel_code || '—'),
+      el('td', {}, (formatHotelName(HOTELS.find(h=>h.code===(formatHotelName(HOTELS.find(h=>h.code===row.hotel_code)) || row.hotel_name))) || (formatHotelName(HOTELS.find(h=>h.code===row.hotel_code)) || row.hotel_name)) || row.hotel_code || '—'),
       el('td', {}, guest),
       el('td', {}, row.arrival ? D2.format(new Date(row.arrival)) : '—'),
       el('td', {}, row.departure ? D2.format(new Date(row.departure)) : '—'),
@@ -359,7 +362,7 @@ async function openEdit(id){
   if (error || !data) return alert('Konnte Reservierung nicht laden.');
 
   q('#eResNo').value = data.reservation_number || '';
-  q('#eHotel').value = shortName(data.hotel_name) || '';
+  q('#eHotel').value = (formatHotelName(HOTELS.find(h=>h.code===data.hotel_name)) || data.hotel_name) || '';
   q('#eLname').value = data.guest_last_name || '';
   q('#eArr').value = data.arrival ? isoDate(new Date(data.arrival)) : '';
   q('#eDep').value = data.departure ? isoDate(new Date(data.departure)) : '';
@@ -464,7 +467,7 @@ q('#btnNext').addEventListener('click', ()=>{
 function fillHotelSelect(){
   const sel=q('#newHotel'); sel.innerHTML='';
   sel.append(el('option',{value:''},'Bitte wählen'));
-  HOTELS.forEach(h=>sel.append(el('option',{value:h.code},h.name)));
+  HOTELS.forEach(h=> formatHotelName(h))));
   sel.addEventListener('change', ()=>{
     const cats = HOTEL_CATEGORIES['default'];
     const rates= HOTEL_RATES['default'];
@@ -616,7 +619,7 @@ function setDefaultReportRange(){
 function fillRepHotel(){
   const sel=q('#repHotel'); sel.innerHTML='';
   sel.append(el('option',{value:'all'},'Alle Hotels'));
-  HOTELS.forEach(h=> sel.append(el('option',{value:h.code},h.name)));
+  HOTELS.forEach(h=> formatHotelName(h))));
 }
 async function runReport(){
   const from=q('#repFrom').value, to=q('#repTo').value, code=q('#repHotel').value;
