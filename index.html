@@ -36,20 +36,18 @@
           <span id="dateLocal">--.--.----</span>
           <span class="sep">·</span>
           <span id="clockLocal">--:--:--</span>
-          <span class="sep">/</span>
-          <span id="clockServer">srv --:--:--</span>
         </div>
       </div>
     </nav>
   </header>
 
-  <!-- LEFT: Mini-Analytics (dummy per Haus, nicht im Header) -->
-  <aside class="left-analytics" aria-label="7-Tage Buchungsverlauf">
-    <div class="la-head">
-      <div class="mono">Mini-Charts (7 Tage)</div>
-      <div class="muted">YoY OTA <span class="pill">↑/↓</span></div>
+  <!-- kompakte Mini-Charts (links, klein) -->
+  <aside class="analytics-dock" aria-label="Mini-Charts">
+    <div class="dock-head">
+      <span class="mono">7-Tage</span>
+      <button class="btn sm" id="dockToggle" title="Ein-/Ausblenden">–</button>
     </div>
-    <div id="miniAnalyticsList" class="la-list"></div>
+    <div id="miniAnalyticsDock" class="dock-list"></div>
   </aside>
 
   <main class="container" aria-live="polite">
@@ -101,6 +99,12 @@
             <div class="row wrap">
               <input id="searchInput" class="input" placeholder="Gastname…" />
               <select id="filterHotel" class="input theme-select" style="width:220px;"></select>
+              <select id="filterStatus" class="input theme-select" style="width:170px;">
+                <option value="confirmed">Status: Confirmed</option>
+                <option value="all">Status: Alle</option>
+                <option value="pending">Status: Pending</option>
+                <option value="canceled">Status: Canceled</option>
+              </select>
               <input id="filterResNo" class="input" placeholder="Res.-Nr." style="width:150px;" />
               <input id="filterFrom" type="date" class="input" style="width:170px;" />
               <input id="filterTo"   type="date" class="input" style="width:170px;" />
@@ -136,7 +140,7 @@
     </section>
   </main>
 
-  <!-- Rechts: Tracker-Buttons -->
+  <!-- Tracker -->
   <aside class="quick-links" aria-label="Tracker Shortcuts">
     <a class="btn sm" href="https://noteforms.com/forms/hotel-booking-tracker-c83eba" target="_blank" rel="noopener">Buchungs-Tracker</a>
     <a class="btn sm" href="https://noteforms.com/forms/hotel-call-tracking-form-hw2hqj" target="_blank" rel="noopener">Telefon-Tracker</a>
@@ -159,6 +163,7 @@
         <button class="wstep" data-step="4">4. Gast & Zahlung</button>
       </div>
 
+      <!-- STEP 1 -->
       <div class="wpage" id="w1">
         <label>Hotel
           <select id="newHotel" class="input"></select>
@@ -170,12 +175,14 @@
         </div>
       </div>
 
+      <!-- STEP 2 -->
       <div class="wpage hidden" id="w2">
         <label>Kategorie
           <select id="newCat" class="input"></select>
         </label>
       </div>
 
+      <!-- STEP 3 -->
       <div class="wpage hidden" id="w3">
         <label>Rate
           <select id="newRate" class="input"></select>
@@ -183,33 +190,47 @@
         <label>Preis <input id="newPrice" type="number" step="1" value="89" class="input"/></label>
       </div>
 
+      <!-- STEP 4 -->
       <div class="wpage hidden" id="w4">
+        <h4 class="mono section">Gastdaten</h4>
         <div class="grid2">
           <label>Vorname <input id="newFname" class="input" placeholder="Max"/></label>
           <label>Nachname* <input id="newLname" class="input" placeholder="Mustermann" required/></label>
           <label>E-Mail <input id="newEmail" class="input" placeholder="max@example.com"/></label>
           <label>Telefon <input id="newPhone" class="input" placeholder="+49 ..."/></label>
+          <label>Straße <input id="newStreet" class="input" placeholder="Musterstraße 1"/></label>
+          <label>PLZ <input id="newZip" class="input" placeholder="80331"/></label>
+          <label>Ort <input id="newCity" class="input" placeholder="München"/></label>
         </div>
 
         <details class="box">
-          <summary class="mono">Firmenanschrift (optional)</summary>
+          <summary class="mono">Firma (optional)</summary>
           <div class="grid2">
             <label>Firma <input id="newCompany" class="input" /></label>
             <label>USt-ID <input id="newVat" class="input" /></label>
-            <label>Rechnungs-E-Mail <input id="newInvEmail" class="input" /></label>
-            <label>Adresse <input id="newAddress" class="input" /></label>
+            <label>PLZ <input id="newCompanyZip" class="input" /></label>
+            <label>Adresse <input id="newAddress" class="input" placeholder="Straße + Ort" /></label>
           </div>
         </details>
 
-        <details class="box">
-          <summary class="mono">Kreditkarte (Platzhalter)</summary>
+        <h4 class="mono section">Kreditkarte (Platzhalter)</h4>
+        <div class="cc-card">
           <div class="grid2">
             <label>Karteninhaber <input id="ccHolder" class="input" /></label>
-            <label>Kartennummer <input id="ccNumber" class="input" placeholder="**** **** **** 1234" /></label>
-            <label>Ablauf (MM/JJ) <input id="ccExpiry" class="input" placeholder="12/27" /></label>
             <label>Brand <input id="ccBrand" class="input" placeholder="Visa/Mastercard" /></label>
+            <label>Kartennummer <input id="ccNumber" class="input" placeholder="•••• •••• •••• 1234" /></label>
+            <label>Ablauf (MM/JJ) <input id="ccExpiry" class="input" placeholder="12/27" /></label>
           </div>
-          <p class="muted" style="margin-top:6px;">Es wird nur **Last4**, Brand & Ablauf gespeichert.</p>
+          <p class="muted" style="margin-top:6px;">Es wird nur <b>Last4</b>, Brand & Ablauf als Demo gespeichert.</p>
+        </div>
+
+        <label class="section mono">Notizen
+          <textarea id="newNotes" class="input" rows="3" placeholder="Besonderheiten, Wünsche …"></textarea>
+        </label>
+
+        <details class="box">
+          <summary class="mono">Zusammenfassung</summary>
+          <div id="summaryBox" class="summary"></div>
         </details>
       </div>
 
@@ -282,20 +303,37 @@
     </div>
   </section>
 
-  <!-- Verfügbarkeit & Reporting & Settings & Skizze (unverändert) -->
+  <!-- Verfügbarkeit -->
   <section class="modal" id="modalAvail" role="dialog" aria-labelledby="availTitle" aria-modal="true">
     <header>
-      <h3 id="availTitle" class="mono">Verfügbarkeit (14 Tage)</h3>
+      <h3 id="availTitle" class="mono">Verfügbarkeit</h3>
       <button class="btn" data-close>Schließen</button>
     </header>
     <div class="body">
-      <div class="matrix">
+      <div class="row wrap" style="margin-bottom:8px;">
+        <label>Von <input id="availFrom" type="date" class="input" style="width:170px;"></label>
+        <label>Tage
+          <select id="availDays" class="input theme-select" style="width:120px;">
+            <option value="7">7</option>
+            <option value="14" selected>14</option>
+            <option value="30">30</option>
+            <option value="60">60</option>
+          </select>
+        </label>
+        <button class="btn" id="availRun">Aktualisieren</button>
+        <div class="muted" style="margin-left:auto;">Legende:
+          <span class="pill occ-g">≤64%</span>
+          <span class="pill occ-o">65–89%</span>
+          <span class="pill occ-r">≥90%</span>
+        </div>
+      </div>
+      <div class="matrix compact">
         <table class="matrix" id="matrixTable"><thead><tr><th class="sticky">Hotel</th></tr></thead><tbody id="matrixBody"></tbody></table>
       </div>
-      <p class="muted" style="margin-top:8px;">Legende: <span class="pill lvl-0">OK</span> <span class="pill lvl-1">+1</span> <span class="pill lvl-2">≥2</span></p>
     </div>
   </section>
 
+  <!-- Reporting, Settings, Sketch -->
   <section class="modal" id="modalReporting" role="dialog" aria-labelledby="repTitle" aria-modal="true">
     <header>
       <h3 id="repTitle" class="mono">Reporting</h3>
@@ -306,11 +344,6 @@
         <label>Von <input id="repFrom" type="date" class="input"></label>
         <label>Bis <input id="repTo" type="date" class="input"></label>
         <button class="btn" id="repRun">Aktualisieren</button>
-        <div style="flex:1"></div>
-        <button class="btn ghost" id="repCsv">Export CSV</button>
-        <button class="btn ghost" id="repXls">Export Excel</button>
-        <button class="btn ghost" id="kpiCsv">KPI CSV</button>
-        <button class="btn ghost" id="kpiXls">KPI Excel</button>
       </div>
       <div class="table-wrap">
         <table class="resv">
@@ -335,7 +368,6 @@
           <input id="setHue" type="range" min="160" max="200" value="180" />
         </label>
       </div>
-      <p class="muted" style="margin-top:8px;">Einstellungen werden lokal gespeichert.</p>
     </div>
   </section>
 
