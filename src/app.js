@@ -334,15 +334,23 @@ function fillEditDropdowns(hotelCode, curCat, curRate){
 async function openEdit(id){
   const { data, error } = await supabase.from('reservations').select('*').eq('id', id).maybeSingle();
   if (error || !data) return alert('Konnte Reservierung nicht laden.');
+
+  // Felder befüllen
   q('#eResNo').value = data.reservation_number || '';
-  q('#eStatus').value = uiStatus(data);
   q('#eHotel').value = shortName(data.hotel_name) || '';
   q('#eLname').value = data.guest_last_name || '';
   q('#eArr').value = data.arrival ? isoDate(new Date(data.arrival)) : '';
   q('#eDep').value = data.departure ? isoDate(new Date(data.departure)) : '';
 
-  fillEditDropdowns(data.hotel_code, data.category||'', data.rate_name||'');
+  // Status nur anzeigen (nicht editierbar)
+  const currentStatus = uiStatus(data);              // active/done/canceled (auto)
+  const eStatus = q('#eStatus');
+  if (eStatus){
+    eStatus.value = currentStatus;
+    eStatus.disabled = true;                         // 🔒 nicht änderbar
+  }
 
+  fillEditDropdowns(data.hotel_code, data.category||'', data.rate_name||'');
   q('#ePrice').value = data.rate_price || 0;
   q('#eNotes').value = data.notes || '';
   q('#eCcHolder').value = data.cc_holder || '';
@@ -350,42 +358,46 @@ async function openEdit(id){
   q('#eCcExpM').value   = data.cc_exp_month || '';
   q('#eCcExpY').value   = data.cc_exp_year  || '';
 
+  // Info unten links: immer "Erstellt am ..."
+  const createdAtTxt = data.created_at ? `Erstellt am ${D2.format(new Date(data.created_at))}` : '';
+  q('#editInfo').textContent = createdAtTxt;
+
+  // Speichern (ohne Status!)
   q('#btnSaveEdit').onclick = async ()=>{
-    let status = q('#eStatus').value;
-    const arr = q('#eArr').value || null;
-    const dep = q('#eDep').value || null;
-    const todayStr = isoDate(soD(new Date()));
-    if (status==='active' && ((dep && dep < todayStr) || (!dep && arr && arr < todayStr))) status='done';
     const payload = {
-      status,
-      guest_last_name: q('#eLname').value,
-      arrival: arr,
-      departure: dep,
-      category: q('#eCat').value,
-      rate_name: q('#eRate').value,
+      guest_last_name: q('#eLname').value || null,
+      arrival: q('#eArr').value || null,
+      departure: q('#eDep').value || null,
+      category: q('#eCat').value || null,
+      rate_name: q('#eRate').value || null,
       rate_price: Number(q('#ePrice').value||0),
-      notes: q('#eNotes').value
+      notes: q('#eNotes').value || null
     };
     const { error } = await supabase.from('reservations').update(payload).eq('id', id);
-    q('#editInfo').textContent = error ? ('Fehler: '+error.message) : 'Gespeichert.'; await loadReservations();
+    q('#editInfo').textContent = error ? ('Fehler: '+error.message) : createdAtTxt;
+    await autoRollPastToDone(); await loadReservations();
   };
 
+  // Zahlung speichern
   q('#btnSavePay').onclick = async ()=>{
     const payload = {
       cc_holder: q('#eCcHolder').value || null,
       cc_last4:  q('#eCcLast4').value  || null,
-      cc_exp_month: q('#eCcExpM').value ? Number(q('#eCcM').value) : null,
-      cc_exp_year:  q('#eCcExpY').value ? Number(q('#eCcY').value) : null
+      cc_exp_month: q('#eCcExpM').value ? Number(q('#eCcExpM').value) : null,
+      cc_exp_year:  q('#eCcExpY').value ? Number(q('#eCcExpY').value) : null
     };
     const { error } = await supabase.from('reservations').update(payload).eq('id', id);
-    q('#editInfo').textContent = error ? ('Fehler: '+error.message) : 'Zahlung aktualisiert.';
+    q('#editInfo').textContent = error ? ('Fehler: '+error.message) : createdAtTxt;
   };
 
+  // Stornieren (Status darf hier geändert werden)
   q('#btnCancelRes').onclick = async ()=>{
     const { error } = await supabase.from('reservations').update({ status:'canceled', canceled_at: new Date().toISOString() }).eq('id', id);
-    q('#editInfo').textContent = error ? ('Fehler: '+error.message) : 'Reservierung storniert.'; await loadReservations();
+    q('#editInfo').textContent = error ? ('Fehler: '+error.message) : createdAtTxt;
+    await loadReservations();
   };
 
+  // Tabs & Modal öffnen
   qa('.tab').forEach(b=>b.classList.remove('active')); q('.tab[data-tab="tabDet"]').classList.add('active');
   qa('.tabpage').forEach(p=>p.classList.add('hidden')); q('#tabDet').classList.remove('hidden');
   openModal('modalEdit');
