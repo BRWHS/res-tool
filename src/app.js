@@ -1,9 +1,9 @@
-/***** CONFIG *****/
+/***** CONFIG — Supabase *****/
 const SB_URL = "https://kytuiodojfcaggkvizto.supabase.co";
 const SB_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt5dHVpb2RvamZjYWdna3ZpenRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ4MzA0NjgsImV4cCI6MjA3MDQwNjQ2OH0.YobQZnCQ7LihWtewynoCJ6ZTjqetkGwh82Nd2mmmhLU";
 const supabase = window.supabase.createClient(SB_URL, SB_ANON_KEY);
 
-/***** HOTELS *****/
+/***** HOTEL MAP *****/
 const HOTELS = [
   { group:'MASEVEN',  name:'MASEVEN München Dornach',   code:'MA7-M-DOR' },
   { group:'MASEVEN',  name:'MASEVEN München Trudering', code:'MA7-M-TRU' },
@@ -33,24 +33,22 @@ const Dm = new Intl.DateTimeFormat('de-DE',{day:'2-digit',month:'2-digit'});
 const EUR = new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'});
 const euro = v=>v==null?'— €':EUR.format(v);
 const pct  = v=>v==null?'—%':`${v}%`;
-const soD = d=>{const x=new Date(d);x.setHours(0,0,0,0);return x;};
+const soD = d=>{const x=new Date(d); x.setHours(0,0,0,0); return x;};
 const q = s=>document.querySelector(s);
+const qa = s=>Array.from(document.querySelectorAll(s));
 function el(tag,attrs={},...kids){ const e=document.createElement(tag); Object.entries(attrs).forEach(([k,v])=>k==='class'?e.className=v:k==='html'?e.innerHTML=v:e.setAttribute(k,v)); kids.forEach(k=>e.append(k)); return e; }
+function setChip(node, ok){ node.classList.remove('lvl-2','lvl-1','lvl-0'); node.classList.add(ok?'lvl-0':'lvl-1'); }
+
+/***** MODALS (sharp background, no blur) *****/
+const backdrop = q('#backdrop');
+function openModal(id){ backdrop.style.display='flex'; q('#'+id).style.display='block'; }
+function closeModal(id){ q('#'+id).style.display='none'; backdrop.style.display='none'; }
+qa('[data-close]').forEach(b=>b.addEventListener('click',()=>closeModal(b.closest('.modal').id)));
+window.addEventListener('keydown', (e)=>{ if (e.key==='Escape') { qa('.modal').forEach(m=>m.style.display='none'); backdrop.style.display='none'; }});
 
 /***** CLOCK + STATUS *****/
-function setChip(id, ok){ const n=q(id); n.style.boxShadow='none'; n.classList.remove('lvl-2','lvl-1','lvl-0'); n.classList.add(ok?'lvl-0':'lvl-1'); }
-async function refreshStatus(){
-  // SB ping
-  const ping1 = await supabase.from('reservations').select('id',{head:true,count:'exact'});
-  const ping2 = await supabase.from('availability').select('date',{head:true,count:'exact'});
-  setChip('#chipSb', !ping1.error && !ping2.error);
-
-  // HNS Platzhalter
-  setChip('#chipHns', false);
-}
 function startClocks(){
   setInterval(()=>{ q('#clockLocal').textContent = new Date().toLocaleTimeString('de-DE'); }, 1000);
-  // Serverzeit via RPC get_server_time (optional). Fallback = local.
   async function tickSrv(){
     try{
       const { data, error } = await supabase.rpc('get_server_time');
@@ -65,114 +63,196 @@ function startClocks(){
   tickSrv(); setInterval(tickSrv, 15000);
 }
 
-/***** MODAL helpers *****/
-const backdrop = q('#backdrop');
-function openModal(id){ backdrop.style.display='flex'; q('#'+id).style.display='block'; }
-function closeModal(id){ q('#'+id).style.display='none'; backdrop.style.display='none'; }
-document.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',()=>closeModal(b.closest('.modal').id)));
-
-/***** KPI *****/
-async function loadKpis(){
-  const todayStart = soD(new Date()); const weekStart = soD(new Date(Date.now()-6*86400000));
-  const nowISO = new Date().toISOString();
-  async function aggReservations(fromIso,toIso){
-    const { data, error } = await supabase.from('reservations').select('rate_price,hotel_name').gte('created_at',fromIso).lte('created_at',toIso);
-    if (error) return {bookings:0,revenue:0,adr:null,hotels:0};
-    const bookings = data.length;
-    const revenue = data.reduce((s,r)=>s+Number(r.rate_price||0),0);
-    const adr = bookings?Math.round(revenue/bookings*100)/100:null;
-    const hotels = new Set(data.map(r=>r.hotel_name).filter(Boolean)).size;
-    return {bookings,revenue,adr,hotels};
-  }
-  async function occ(fromDate,toDate){
-    try{
-      const { data, error } = await supabase.rpc('availability_day_occupancy',{from_date:fromDate,to_date:toDate});
-      if (!error && data?.length) return Math.round(data.reduce((s,r)=>s+Number(r.avg_occupancy||0),0)/data.length);
-    }catch(e){}
-    const { data, error } = await supabase.from('availability').select('capacity,booked').gte('date',fromDate).lte('date',toDate);
-    if (error || !data?.length) return null;
-    const avg = data.reduce((s,r)=>s+Math.min(100,Math.round((Number(r.booked||0)/Math.max(1,Number(r.capacity||0)))*100)),0)/data.length;
-    return Math.round(avg);
-  }
-  const t = await aggReservations(todayStart.toISOString(), nowISO);
-  const w = await aggReservations(weekStart.toISOString(), nowISO);
-  const tOcc = await occ(todayStart.toISOString().slice(0,10), todayStart.toISOString().slice(0,10));
-  const wOcc = await occ(weekStart.toISOString().slice(0,10), todayStart.toISOString().slice(0,10));
-  q('#tBookings').textContent=t.bookings; q('#tRevenue').textContent=euro(t.revenue); q('#tADR').textContent=euro(t.adr); q('#tOcc').textContent=pct(tOcc); q('#tHotels').textContent=t.hotels;
-  q('#wBookings').textContent=w.bookings; q('#wRevenue').textContent=euro(w.revenue); q('#wADR').textContent=euro(w.adr); q('#wOcc').textContent=pct(wOcc); q('#wHotels').textContent=w.hotels;
+async function refreshStatus(){
+  const a = await supabase.from('reservations').select('id',{head:true,count:'exact'});
+  const b = await supabase.from('availability').select('date',{head:true,count:'exact'});
+  setChip(q('#chipSb'), !a.error && !b.error);
+  setChip(q('#chipHns'), false); // placeholder
 }
 
-/***** RESERVIERUNGSLISTE *****/
+/***** KPI LOAD (robust, with fallbacks) *****/
+async function loadKpis(){
+  const todayStart = soD(new Date());
+  const weekStart  = soD(new Date(Date.now() - 6*86400000));
+  const nowISO     = new Date().toISOString();
+  const tStr = todayStart.toISOString().slice(0,10);
+  const wStr = weekStart.toISOString().slice(0,10);
+
+  async function aggReservations(fromIso, toIso){
+    // prefer created_at; if missing, fallback to arrival date filter
+    let { data, error } = await supabase
+      .from('reservations')
+      .select('rate_price, hotel_name, created_at, arrival')
+      .gte('created_at', fromIso)
+      .lte('created_at', toIso);
+
+    if (error) { console.warn('agg by created_at failed → fallback', error); }
+
+    if (error || (data && data.length===0)) {
+      const { data: d2, error: e2 } = await supabase
+        .from('reservations')
+        .select('rate_price, hotel_name, arrival')
+        .gte('arrival', fromIso.slice(0,10))
+        .lte('arrival', toIso.slice(0,10));
+      if (!e2) data = d2;
+    }
+
+    const rows = Array.isArray(data) ? data : [];
+    const bookings = rows.length;
+    const revenue  = rows.reduce((s,r)=> s + Number(r.rate_price||0), 0);
+    const adr      = bookings ? Math.round((revenue/bookings)*100)/100 : null;
+    const hotels   = new Set(rows.map(r=>r.hotel_name).filter(Boolean)).size;
+    return { bookings, revenue, adr, hotels };
+  }
+
+  async function occ(fromDate, toDate){
+    try{
+      const { data, error } = await supabase.rpc('availability_day_occupancy', { from_date: fromDate, to_date: toDate });
+      if (!error && data?.length){
+        const avg = data.reduce((s,r)=>s+Number(r.avg_occupancy||0),0)/data.length;
+        return Math.round(avg);
+      }
+    }catch(e){}
+    const { data, error } = await supabase
+      .from('availability').select('capacity, booked')
+      .gte('date', fromDate).lte('date', toDate);
+    if (error || !data?.length) return null;
+    const avg = data.reduce((s,r)=> s + Math.min(100, Math.round((Number(r.booked||0)/Math.max(1,Number(r.capacity||0)))*100)), 0) / data.length;
+    return Math.round(avg);
+  }
+
+  const t = await aggReservations(todayStart.toISOString(), nowISO);
+  const w = await aggReservations(weekStart.toISOString(),  nowISO);
+  const tOcc = await occ(tStr, tStr);
+  const wOcc = await occ(wStr, tStr);
+
+  q('#tBookings').textContent = t.bookings;
+  q('#tRevenue').textContent  = euro(t.revenue);
+  q('#tADR').textContent      = euro(t.adr);
+  q('#tOcc').textContent      = pct(tOcc);
+  q('#tHotels').textContent   = t.hotels;
+
+  q('#wBookings').textContent = w.bookings;
+  q('#wRevenue').textContent  = euro(w.revenue);
+  q('#wADR').textContent      = euro(w.adr);
+  q('#wOcc').textContent      = pct(wOcc);
+  q('#wHotels').textContent   = w.hotels;
+}
+
+/***** RESERVATION LIST *****/
 let page=1, pageSize=50, search='';
 async function loadReservations(){
-  const body=q('#resvBody'); body.innerHTML='';
-  const from=(page-1)*pageSize, to=from+pageSize-1;
-  let query = supabase.from('reservations').select('guest_last_name,arrival,departure,hotel_name,category,rate_name,rate_price,notes',{count:'exact'}).order('arrival',{ascending:true}).range(from,to);
+  const body = q('#resvBody'); body.innerHTML = '';
+  const from = (page-1)*pageSize, to = from + pageSize - 1;
+
+  let query = supabase.from('reservations')
+    .select('guest_last_name, arrival, departure, hotel_name, category, rate_name, rate_price, notes', { count:'exact' })
+    .order('arrival', { ascending: true })
+    .range(from, to);
+
   if (search) query = query.ilike('guest_last_name', `%${search}%`);
+
   const { data, count, error } = await query;
-  if (error){ q('#pageInfo').textContent='Fehler'; return; }
-  (data||[]).forEach(r=>{
-    const tr=el('tr',{},
-      el('td',{},r.guest_last_name||'—'),
-      el('td',{},r.arrival?D2.format(new Date(r.arrival)):'—'),
-      el('td',{},r.departure?D2.format(new Date(r.departure)):'—'),
-      el('td',{},r.hotel_name||'—'),
-      el('td',{},r.category||'—'),
-      el('td',{},r.rate_name||'—'),
-      el('td',{},r.rate_price!=null?EUR.format(r.rate_price):'—'),
-      el('td',{},r.notes||'—')
+  if (error){ console.warn('reservations list error', error); q('#pageInfo').textContent='Fehler'; return; }
+
+  (data || []).forEach(row => {
+    const tr = el('tr', { class: 'row' },
+      el('td', {}, row.guest_last_name || '—'),
+      el('td', {}, row.arrival ? D2.format(new Date(row.arrival)) : '—'),
+      el('td', {}, row.departure ? D2.format(new Date(row.departure)) : '—'),
+      el('td', {}, row.hotel_name || '—'),
+      el('td', {}, row.category || '—'),
+      el('td', {}, row.rate_name || '—'),
+      el('td', {}, row.rate_price != null ? (EUR.format(row.rate_price)) : '—'),
+      el('td', {}, row.notes || '—')
     );
     body.append(tr);
   });
-  const total=Math.max(1,Math.ceil((count||0)/pageSize)); q('#pageInfo').textContent=`Seite ${page} / ${total}`;
-}
-q('#searchInput').addEventListener('input',e=>{ search=e.target.value.trim(); page=1; loadReservations(); });
-q('#prevPage').addEventListener('click',()=>{ page=Math.max(1,page-1); loadReservations(); });
-q('#nextPage').addEventListener('click',()=>{ page=page+1; loadReservations(); });
 
-/***** VERFÜGBARKEIT *****/
-function datesAhead(n=14){ return [...Array(n)].map((_,i)=>soD(new Date(Date.now()+i*86400000))); }
+  const totalPages = Math.max(1, Math.ceil((count || 0)/pageSize));
+  q('#pageInfo').textContent = `Seite ${page} / ${totalPages}`;
+}
+
+q('#searchInput').addEventListener('input', (e)=>{ search = e.target.value.trim(); page = 1; loadReservations(); });
+q('#prevPage').addEventListener('click', ()=>{ page = Math.max(1, page-1); loadReservations(); });
+q('#nextPage').addEventListener('click', ()=>{ page = page+1; loadReservations(); });
+
+/***** AVAILABILITY POPUP *****/
+function datesAhead(n=14){ return [...Array(n)].map((_,i)=>soD(new Date(Date.now()+ i*86400000))); }
+
 async function buildMatrix(){
-  const head=q('#matrixTable thead tr'); head.querySelectorAll('th:not(.sticky)').forEach(n=>n.remove());
-  const ds=datesAhead(14); ds.forEach(d=>head.append(el('th',{},Dm.format(d))));
-  const body=q('#matrixBody'); body.innerHTML='';
-  const from=ds[0].toISOString().slice(0,10), to=ds[ds.length-1].toISOString().slice(0,10);
-  for (const h of HOTELS){
-    const tr=el('tr'); tr.append(el('td',{class:'sticky'},`${h.group} · ${h.name}`));
-    const { data } = await supabase.from('availability').select('date,capacity,booked').eq('hotel_code',h.code).gte('date',from).lte('date',to).order('date',{ascending:true});
-    const map={}; (data||[]).forEach(r=>map[r.date]=r);
-    ds.forEach(d=>{
-      const k=d.toISOString().slice(0,10), cap=map[k]?.capacity??100, b=map[k]?.booked??Math.floor(Math.random()*120);
-      const lvl=b-cap<=0?0:(b-cap===1?1:2);
-      tr.append(el('td',{},el('span',{class:`pill lvl-${lvl}`},`${Math.min(100,Math.round((b/cap)*100))}%`)));
+  const ds = datesAhead(14);
+  const head = q('#matrixTable thead tr');
+  head.querySelectorAll('th:not(.sticky)').forEach(n=>n.remove());
+  ds.forEach(d => head.append(el('th', {}, Dm.format(d))));
+
+  const body = q('#matrixBody'); body.innerHTML = '';
+
+  const from = ds[0].toISOString().slice(0,10);
+  const to = ds[ds.length-1].toISOString().slice(0,10);
+
+  for (const h of HOTELS) {
+    const tr = el('tr');
+    tr.append(el('td', { class:'sticky' }, `${h.group} · ${h.name}`));
+
+    const { data } = await supabase
+      .from('availability')
+      .select('date, capacity, booked')
+      .eq('hotel_code', h.code)
+      .gte('date', from)
+      .lte('date', to)
+      .order('date', { ascending: true });
+
+    const byDate = {};
+    (data||[]).forEach(r => byDate[r.date] = r);
+
+    ds.forEach(d => {
+      const key = d.toISOString().slice(0,10);
+      const capacity = byDate[key]?.capacity ?? 100;
+      const booked = byDate[key]?.booked ?? Math.floor(Math.random()*120);
+      const delta = booked - capacity;
+      const lvl = delta <= 0 ? 0 : delta === 1 ? 1 : 2;
+      const cell = el('td');
+      cell.append(el('span', { class:`pill lvl-${lvl}` }, `${Math.min(100, Math.round((booked/capacity)*100))}%`));
+      tr.append(cell);
     });
+
     body.append(tr);
   }
 }
 
 /***** REPORTING *****/
 function setDefaultReportRange(){
-  const to = soD(new Date()); const from = soD(new Date(Date.now()-29*86400000));
+  const to = soD(new Date());
+  const from = soD(new Date(Date.now()-29*86400000));
   q('#repFrom').value = from.toISOString().slice(0,10);
   q('#repTo').value   = to.toISOString().slice(0,10);
 }
+
 async function runReport(){
   const from = q('#repFrom').value, to = q('#repTo').value;
-  const { data, error } = await supabase.from('reservations')
+  const fromISO = new Date(from).toISOString();
+  const toISO   = new Date(new Date(to).getTime()+86399999).toISOString();
+
+  const { data, error } = await supabase
+    .from('reservations')
     .select('hotel_name, rate_price, created_at')
-    .gte('created_at', new Date(from).toISOString())
-    .lte('created_at', new Date(new Date(to).getTime()+86399999).toISOString());
-  const body = q('#repBody'); body.innerHTML='';
+    .gte('created_at', fromISO)
+    .lte('created_at', toISO);
+
+  const body = q('#repBody'); body.innerHTML = '';
   if (error){ body.append(el('tr',{},el('td',{colspan:'4'},'Fehler beim Laden'))); return; }
+
   const byHotel = new Map();
   (data||[]).forEach(r=>{
     const key = r.hotel_name || '—';
     const row = byHotel.get(key) || { bookings:0, revenue:0 };
-    row.bookings += 1; row.revenue += Number(r.rate_price||0);
+    row.bookings++; row.revenue += Number(r.rate_price||0);
     byHotel.set(key,row);
   });
+
   [...byHotel.entries()].sort((a,b)=>b[1].revenue-a[1].revenue).forEach(([hotel,vals])=>{
-    const adr = vals.bookings?vals.revenue/vals.bookings:null;
+    const adr = vals.bookings ? vals.revenue/vals.bookings : null;
     body.append(el('tr',{},
       el('td',{},hotel),
       el('td',{},String(vals.bookings)),
@@ -182,7 +262,7 @@ async function runReport(){
   });
 }
 
-/***** NEUE RESERVIERUNG *****/
+/***** NEW RESERVATION *****/
 function fillHotelSelect(){
   const sel=q('#newHotel'); sel.innerHTML='';
   sel.append(el('option',{value:''},'Bitte wählen'));
@@ -191,6 +271,7 @@ function fillHotelSelect(){
 q('#newRate').addEventListener('change',e=>{
   const price = e.target.selectedOptions[0].dataset.price; q('#newPrice').value = price;
 });
+
 async function createReservation(){
   const code=q('#newHotel').value; const h=HOTEL_BY_CODE[code];
   if (!h) return alert('Bitte Hotel wählen.');
@@ -206,52 +287,42 @@ async function createReservation(){
     notes: 'ui-insert'
   };
 
-  // robust: wenn hotel_id not null existiert → reuse aus bestehender Reservierung dieses Hotels
-  let tryWithHotelId = false, sampleHotelId = null;
-  // 1) test insert ohne hotel_id
   let { error } = await supabase.from('reservations').insert(payload);
-  if (error){
-    if ((error.message||'').toLowerCase().includes('hotel_id')){
-      tryWithHotelId = true;
-      const probe = await supabase.from('reservations').select('hotel_id').eq('hotel_name',payload.hotel_name).limit(1).maybeSingle();
-      sampleHotelId = probe.data?.hotel_id ?? (window.crypto?.randomUUID?.() || 1);
-    } else {
-      q('#newInfo').textContent = 'Fehler: ' + error.message; return;
-    }
+  if (error && (error.message||'').toLowerCase().includes('hotel_id')) {
+    // Try again with a sample hotel_id if schema requires it
+    const probe = await supabase.from('reservations').select('hotel_id').eq('hotel_name',payload.hotel_name).limit(1).maybeSingle();
+    const sampleHotelId = probe.data?.hotel_id ?? (window.crypto?.randomUUID?.() || 1);
+    const res2 = await supabase.from('reservations').insert({ ...payload, hotel_id: sampleHotelId });
+    error = res2.error || null;
   }
-  if (tryWithHotelId){
-    const { error: e2 } = await supabase.from('reservations').insert({ ...payload, hotel_id: sampleHotelId });
-    if (e2){ q('#newInfo').textContent = 'Fehler: ' + e2.message; return; }
-  }
+  if (error){ q('#newInfo').textContent = 'Fehler: ' + error.message; return; }
 
   q('#newInfo').textContent = 'Reservierung gespeichert.';
   await loadKpis(); await loadReservations();
   setTimeout(()=>closeModal('modalNew'), 600);
 }
 
+/***** HOTELS SKETCH *****/
+function buildSketch(){
+  const wrap = q('#sketchGrid'); wrap.innerHTML = '';
+  HOTELS.forEach(h=>{
+    wrap.append(el('div',{class:'hotel-card'},
+      el('div',{class:'muted'}, h.group),
+      el('div',{}, h.name),
+      el('div',{class:'code'}, h.code)
+    ));
+  });
+}
+
 /***** EVENTS *****/
 q('#btnAvail').addEventListener('click', async ()=>{ await buildMatrix(); openModal('modalAvail'); });
 q('#btnReporting').addEventListener('click', async ()=>{ setDefaultReportRange(); await runReport(); openModal('modalReporting'); });
-q('#repRun').addEventListener('click', runReport);
 q('#btnSettings').addEventListener('click', ()=> openModal('modalSettings'));
 q('#btnNew').addEventListener('click', ()=>{ fillHotelSelect(); q('#newInfo').textContent=''; openModal('modalNew'); });
 q('#btnCreate').addEventListener('click', createReservation);
+q('#btnSketch').addEventListener('click', ()=>{ buildSketch(); openModal('modalSketch'); });
 
-/***** SETTINGS (local) *****/
-function loadSettings(){
-  const s = JSON.parse(localStorage.getItem('resToolSettings') || '{}');
-  if (s.lang) q('#setLang').value = s.lang;
-  if (s.hue)  q('#setHue').value  = s.hue;
-  applySettings();
-}
-function applySettings(){
-  const lang = q('#setLang').value;
-  const hue  = Number(q('#setHue').value||180);
-  document.documentElement.style.filter = `hue-rotate(${hue-180}deg)`;
-  localStorage.setItem('resToolSettings', JSON.stringify({ lang, hue }));
-}
-q('#setLang').addEventListener('change', applySettings);
-q('#setHue').addEventListener('input', applySettings);
+q('#repRun').addEventListener('click', runReport);
 
 /***** INIT *****/
 (async function init(){
@@ -261,24 +332,4 @@ q('#setHue').addEventListener('input', applySettings);
 
   await loadKpis();
   await loadReservations();
-  loadSettings();
-
-// Buttons öffnen die jeweiligen Modals
-q('#btnAvail').addEventListener('click', async ()=>{ await buildMatrix(); openModal('modalAvail'); });
-q('#btnReporting').addEventListener('click', async ()=>{ setDefaultReportRange(); await runReport(); openModal('modalReporting'); });
-q('#btnSettings').addEventListener('click', ()=> openModal('modalSettings'));
-q('#btnNew').addEventListener('click', ()=>{ fillHotelSelect(); q('#newInfo').textContent=''; openModal('modalNew'); });
-
-// Hotelskizze
-function buildSketch(){
-  const wrap = q('#sketchGrid'); wrap.innerHTML = '';
-  HOTELS.forEach(h=>{
-    const card = el('div', { class:'hotel-card' },
-      el('div', { class:'muted' }, h.group),
-      el('div', { class:'strong' }, h.name),
-      el('div', { class:'code' }, h.code)
-    );
-    wrap.append(card);
-  });
-}
-q('#btnSketch').addEventListener('click', ()=>{ buildSketch(); openModal('modalSketch'); });
+})();
