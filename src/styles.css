@@ -108,14 +108,27 @@ table.resv{width:100%;border-collapse:collapse}
 .summary h4{margin:0 0 6px;color:var(--accent-2)}
 .summary .line{display:flex;justify-content:space-between;gap:8px;font-size:12px;border-bottom:1px dashed rgba(0,255,255,.12);padding:4px 0}
 
+/* Tabs (edit modal) */
+.tabs{display:flex;gap:8px;margin-bottom:10px}
+.tab{
+  background:linear-gradient(180deg,rgba(0,255,255,.08),rgba(0,255,255,.03));
+  border:1px solid rgba(0,255,255,.2);
+  color:var(--text); padding:8px 12px; border-radius:999px; cursor:pointer; font-weight:700;
+}
+.tab.active{
+  background:linear-gradient(180deg,rgba(0,255,255,.28),rgba(0,255,255,.12));
+  border-color:rgba(0,255,255,.5);
+}
+.tabpage.hidden{display:none}
+
 /* Mini-Analytics */
-.analytics-dock{position:fixed;left:16px;top:92px;width:200px;z-index:20;display:flex;flex-direction:column;gap:8px}
+.analytics-dock{position:fixed;left:16px;top:92px;width:220px;z-index:20;display:flex;flex-direction:column;gap:8px}
 .dock-head{display:flex;align-items:center;justify-content:space-between;color:var(--muted)}
-.dock-list{border:1px solid rgba(0,255,255,.15);border-radius:12px;background:linear-gradient(180deg,var(--panel),var(--panel-2));max-height:520px;overflow:auto}
+.dock-list{border:1px solid rgba(0,255,255,.15);border-radius:12px;background:linear-gradient(180deg,var(--panel),var(--panel-2));max-height:640px;overflow:auto}
 .dock-item{display:grid;grid-template-columns:auto 1fr auto auto;align-items:center;gap:6px;padding:6px 8px;border-bottom:1px dashed rgba(0,255,255,.12)}
 .dock-item:last-child{border-bottom:0}
 .dock-badge{font-size:10px;opacity:.85;border:1px solid rgba(0,255,255,.2);border-radius:6px;padding:2px 6px}
-.dock-name{min-width:0;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text);font-weight:600}
+.dock-name{min-width:0;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--accent-2);font-weight:700}
 .dock-arrow{font-weight:800}
 .dock-arrow.up{color:var(--ok)} .dock-arrow.down{color:var(--danger)}
 .spark{width:78px;height:22px}
