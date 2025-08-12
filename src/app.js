@@ -1,316 +1,413 @@
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
 
-/* ===== SUPABASE (deine echten Werte eintragen) ===== */
-const SUPABASE_URL = "https://kytuiodojfcaggkvizto.supabase.co"
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt5dHVpb2RvamZjYWdna3ZpenRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ4MzA0NjgsImV4cCI6MjA3MDQwNjQ2OH0.YobQZnCQ7LihWtewynoCJ6ZTjqetkGwh82Nd2mmmhLU"
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+// ======== CONFIG ========
+const SB_URL = window.SB_URL || "";
+const SB_ANON_KEY = window.SB_ANON_KEY || "";
+const supabase = (SB_URL && SB_ANON_KEY) ? window.supabase.createClient(SB_URL, SB_ANON_KEY) : null;
 
-/* ===== Helpers ===== */
-const $  = q => document.querySelector(q)
-const $$ = q => document.querySelectorAll(q)
-const toast = $('#toast')
-function showToast(msg, ms=2400){ toast.textContent = msg; toast.classList.add('show'); setTimeout(()=>toast.classList.remove('show'), ms) }
-const fmtISO = d => new Date(d).toISOString().slice(0,10)
-const datesFrom = (start, n)=> Array.from({length:n}, (_,i)=>{ const x=new Date(start); x.setDate(x.getDate()+i); return x })
-
-/* ===== Hotels ===== */
+// Fixed hotels list
 const HOTELS = [
-  "MASEVEN München Dornach","MASEVEN München Trudering","MASEVEN Frankfurt","MASEVEN Stuttgart",
-  "Fidelity Robenstein","Fidelity Struck","Fidelity Doerr","Fidelity Gr. Baum","Fidelity Landskron",
-  "Fidelity Pürgl","Fidelity Seppl","Tante Alma Bonn","Tante Alma Köln","Tante Alma Erfurt",
-  "Tante Alma Mannheim","Tante Alma Mülheim","Tante Alma Sonnen","Delta by Marriot Offenbach","Villa Viva Hamburg"
-]
+  { group: 'MASEVEN', name: 'MASEVEN Dornach', code: 'MA7-DOR' },
+  { group: 'MASEVEN', name: 'MASEVEN Trudering', code: 'MA7-TRU' },
+  { group: 'MASEVEN', name: 'MASEVEN Messe', code: 'MA7-MES' },
+  { group: 'MASEVEN', name: 'MASEVEN Parkstadt', code: 'MA7-PAR' },
+  { group: 'Fidelity', name: 'Fidelity A', code: 'FID-A' },
+  { group: 'Fidelity', name: 'Fidelity B', code: 'FID-B' },
+  { group: 'Fidelity', name: 'Fidelity C', code: 'FID-C' },
+  { group: 'Fidelity', name: 'Fidelity D', code: 'FID-D' },
+  { group: 'Fidelity', name: 'Fidelity E', code: 'FID-E' },
+  { group: 'Fidelity', name: 'Fidelity F', code: 'FID-F' },
+  { group: 'Fidelity', name: 'Fidelity G', code: 'FID-G' },
+  { group: 'Tante Alma', name: 'Tante Alma I', code: 'TAL-1' },
+  { group: 'Tante Alma', name: 'Tante Alma II', code: 'TAL-2' },
+  { group: 'Tante Alma', name: 'Tante Alma III', code: 'TAL-3' },
+  { group: 'Tante Alma', name: 'Tante Alma IV', code: 'TAL-4' },
+  { group: 'Tante Alma', name: 'Tante Alma V', code: 'TAL-5' },
+  { group: 'Tante Alma', name: 'Tante Alma VI', code: 'TAL-6' },
+  { group: 'Delta by Marriott', name: 'Delta Offenbach', code: 'DBM-OF' },
+  { group: 'Villa Viva', name: 'Villa Viva Hamburg', code: 'VV-HH' },
+];
 
-/* ===== Clock ===== */
-function tick(){
-  const now=new Date()
-  const dateStr = now.toLocaleDateString('de-DE',{weekday:'short',day:'2-digit',month:'2-digit',year:'numeric'})
-  const timeStr = now.toLocaleTimeString('de-DE',{hour12:false})
-  $('#date').textContent = dateStr; $('#clock').textContent = timeStr
-  $('#date2').textContent = dateStr; $('#clock2').textContent = timeStr
-}
-setInterval(tick, 1000); tick()
+const HOTEL_BY_CODE = Object.fromEntries(HOTELS.map(h => [h.code, h]));
 
-/* ===== Overlay & Modals ===== */
-const overlay = $('#overlay')
-function openModal(name){
-  overlay.hidden=false
-  document.getElementById(`modal-${name}`).setAttribute('aria-hidden','false')
-  const onEsc = e=>{ if(e.key==='Escape') closeAll() }
-  document.addEventListener('keydown', onEsc, { once:true })
-  overlay.onclick = closeAll
-}
-function closeAll(){
-  overlay.hidden=true
-  $$('.modal[aria-hidden="false"]').forEach(m=> m.setAttribute('aria-hidden','true'))
-}
-$$('[data-open]').forEach(b=> b.addEventListener('click', e=> openModal(e.currentTarget.dataset.open)))
-$$('[data-close]').forEach(b=> b.addEventListener('click', closeAll))
+// ======== UTIL ========
+const fmt = new Intl.DateTimeFormat('de-DE', { day:'2-digit', month:'2-digit', year:'numeric' });
+const fmtDay = new Intl.DateTimeFormat('de-DE', { weekday:'short' });
+const fmtMd = new Intl.DateTimeFormat('de-DE', { day:'2-digit', month:'2-digit' });
 
-/* ===== KPIs ===== */
-async function refreshKpis(){
-  const now = new Date()
-  const todayISO = fmtISO(now)
-  const weekStart = new Date(now); weekStart.setDate(weekStart.getDate()-6)
-  const weekISO = fmtISO(weekStart)
+function startOfDay(d) { const t = new Date(d); t.setHours(0,0,0,0); return t; }
+function endOfDay(d) { const t = new Date(d); t.setHours(23,59,59,999); return t; }
 
-  try{
-    const { count: todayCount } = await supabase
-      .from('reservations').select('id',{count:'exact',head:true})
-      .gte('created_at', todayISO)
-    $('#kpi-today').textContent = todayCount ?? 0
-  }catch{ $('#kpi-today').textContent = '—' }
-
-  try{
-    const { count: weekCount } = await supabase
-      .from('reservations').select('id',{count:'exact',head:true})
-      .gte('created_at', weekISO)
-    $('#kpi-week').textContent = weekCount ?? 0
-  }catch{ $('#kpi-week').textContent = '—' }
-
-  // Demo-Werte bis echte Quelle steht:
-  const adr = 105 + Math.floor(Math.random()*14)
-  const occ = 60 + Math.floor(Math.random()*20)
-  $('#kpi-adr').textContent = adr + ' €'
-  $('#kpi-occ').textContent = occ + '%'
-}
-refreshKpis(); setInterval(refreshKpis, 30000)
-
-/* ===== Mini Availability – 3 Level inkl. Überbuchung ===== */
-let miniWeekOffset = 0
-$('#mini-prev')?.addEventListener('click', ()=>{ miniWeekOffset -= 7; renderMiniAvailability() })
-$('#mini-next')?.addEventListener('click', ()=>{ miniWeekOffset += 7; renderMiniAvailability() })
-
-function levelForPct(pct){
-  if (pct >= 100) return 'over'   // Überbuchung
-  if (pct >= 80)  return 'tight'  // angespannt
-  return 'normal'                 // normal
+function setDot(el, status) {
+  el.style.background = status === 'ok' ? 'var(--ok)'
+    : status === 'warn' ? 'var(--warn)' : 'var(--danger)';
+  el.style.boxShadow = `0 0 10px ${getComputedStyle(el).backgroundColor}`;
 }
 
-function renderMiniAvailability(){
-  const base = new Date(); base.setDate(base.getDate()+miniWeekOffset)
-  const days = datesFrom(base,7).map(fmtISO)
-  const rows = HOTELS.slice(0,8).map(h=>{
-    const total = 180 + (h.length % 140)
-    const cells = days.map((d,i)=>{
-      const overBoost = (i%6===0)? 1.10 : 1.0 // gelegentlich leicht über 100%
-      const booked = Math.floor(Math.min(total*1.2, total * (0.45 + 0.55*Math.abs(Math.sin(i/1.7 + h.length/11))) * overBoost))
-      const pct = Math.round(booked/total*100)
-      const lvl = levelForPct(pct)
-      return { d, booked, total, pct, lvl }
-    })
-    return { h, cells }
-  })
-  const table = `
-    <table>
-      <thead><tr><th>Hotel</th>${days.map(d=>`<th>${d}</th>`).join('')}</tr></thead>
-      <tbody>${rows.map(r=>`
-        <tr>
-          <td>${r.h}</td>
-          ${r.cells.map(c=>`<td><span class="mini-cell mini-lvl-${c.lvl}">${c.booked}/${c.total} <small>(${c.pct}%)</small></span></td>`).join('')}
-        </tr>`).join('')}
-      </tbody>
-    </table>`
-  $('#mini-availability').innerHTML = table
-}
-renderMiniAvailability()
-
-/* ===== New Reservation – Wizard ===== */
-const dummyRates = [
-  { id:'FLEX_EX', name:'Flex exklusive Frühstück', price:89 },
-  { id:'FLEX_IN', name:'Flex inklusive Frühstück', price:109 },
-]
-const state = { hotel:null, arrival:null, departure:null, rate:null, guest:{ first_name:'', last_name:'', email:'' } }
-function setStep(n){ $('#stepper-thumb').style.width = (n*33) + '%' }
-function validDates(a,d){ if(!a||!d) return false; const A=new Date(a), D=new Date(d); return !isNaN(A)&&!isNaN(D)&&D>A }
-
-function step1(){
-  setStep(1)
-  $('#newResContent').innerHTML = `
-    <div class="card alt">
-      <div class="grid cols-3">
-        <label>Hotel
-          <select id="nrHotel"><option value="">Bitte wählen…</option>${HOTELS.map(h=>`<option ${state.hotel===h?'selected':''}>${h}</option>`).join('')}</select>
-        </label>
-        <label>Anreise <input type="date" id="nrArr" value="${state.arrival||''}"></label>
-        <label>Abreise <input type="date" id="nrDep" value="${state.departure||''}"></label>
-      </div>
-      <div class="toolbar"><button class="primary" id="to2" disabled>Weiter</button></div>
-    </div>`
-  const ready = ()=> $('#to2').disabled = !(state.hotel && validDates(state.arrival,state.departure))
-  $('#nrHotel').onchange = e=>{ state.hotel=e.target.value; ready() }
-  $('#nrArr').onchange   = e=>{ state.arrival=e.target.value; ready() }
-  $('#nrDep').onchange   = e=>{ state.departure=e.target.value; ready() }
-  $('#to2').onclick = step2
-}
-function step2(){
-  setStep(2)
-  $('#newResContent').innerHTML = `
-    <div class="grid" style="grid-template-columns:1fr 1fr;gap:16px">
-      ${dummyRates.map(r=>`
-        <div class="card">
-          <div class="kachel">
-            <div><strong>${r.name}</strong><br><span class="muted">Demo‑Rate</span></div>
-            <div><strong>${r.price} €</strong><br><button class="primary pick" data-rate="${r.id}" style="margin-top:6px">Wählen</button></div>
-          </div>
-        </div>`).join('')}
-    </div>
-    <div class="toolbar"><button id="back1">Zurück</button><button class="primary" id="to3" disabled>Weiter</button></div>`
-  $$('.pick').forEach(b=> b.onclick = e=>{ state.rate=e.currentTarget.dataset.rate; $('#to3').disabled=false })
-  $('#back1').onclick = step1
-  $('#to3').onclick = step3
-}
-function step3(){
-  setStep(3)
-  const rate = dummyRates.find(r=>r.id===state.rate)
-  $('#newResContent').innerHTML = `
-    <div class="card">
-      <div class="grid cols-3">
-        <label>Vorname <input id="nrFn" value="${state.guest.first_name||''}"></label>
-        <label>Nachname <input id="nrLn" value="${state.guest.last_name||''}"></label>
-        <label>E‑Mail <input id="nrEm" value="${state.guest.email||''}" type="email"></label>
-      </div>
-      <hr style="border:0;border-top:1px dashed #22304a;margin:12px 0">
-      <div class="grid" style="grid-template-columns:2fr 1fr">
-        <div>
-          <div><strong>Hotel:</strong> ${state.hotel||'-'}</div>
-          <div><strong>Zeitraum:</strong> ${state.arrival||'?'} → ${state.departure||'?'}</div>
-          <div><strong>Rate:</strong> ${rate? `${rate.name} (${rate.price} €)`:'-'}</div>
-        </div>
-        <div style="align-self:end;justify-self:end">
-          <button class="primary" id="submit" disabled>Reservierung abschicken</button>
-        </div>
-      </div>
-    </div>
-    <div class="toolbar"><button id="back2">Zurück</button></div>`
-  $('#nrFn').oninput = e=> state.guest.first_name = e.target.value
-  $('#nrLn').oninput = e=>{ state.guest.last_name  = e.target.value; $('#submit').disabled = !state.guest.last_name }
-  $('#nrEm').oninput = e=> state.guest.email       = e.target.value
-  $('#back2').onclick = step2
-  $('#submit').onclick = submitReservation
-}
-function openNewRes(){ openModal('newRes'); step1() }
-
-/* ===== Supabase Insert ===== */
-async function submitReservation(){
-  const btn = $('#submit'); btn.disabled = true; btn.textContent = 'Speichere…'
-  const payload = {
-    hotel_id: state.hotel, arrival: state.arrival, departure: state.departure,
-    category_id: null, rate_code: state.rate,
-    guest_first_name: state.guest.first_name, guest_last_name: state.guest.last_name, guest_email: state.guest.email,
-    created_at: new Date().toISOString()
-  }
-  try{
-    const { data, error } = await supabase.from('reservations').insert(payload).select().single()
-    if(error) throw error
-    showToast('Gespeichert – ID '+data.id)
-    closeAll(); openReservations()
-  }catch(e){ console.error(e); showToast('Fehler: '+e.message, 4000) }
-  finally{ btn.disabled=false; btn.textContent='Reservierung abschicken' }
+function el(tag, attrs={}, ...children) {
+  const e = document.createElement(tag);
+  Object.entries(attrs).forEach(([k,v]) => {
+    if (k === 'class') e.className = v; else if (k === 'html') e.innerHTML = v; else e.setAttribute(k,v);
+  });
+  children.forEach(c => e.append(c));
+  return e;
 }
 
-/* ===== Reservations – modern table ===== */
-let resPage=1, resPageSize=25, resQuery='', sortKey='created_at', sortDir='desc'
-function openReservations(){ openModal('reservations'); mountReservations() }
-function mountReservations(){
-  $('#resSearch').value = resQuery
-  $('#resSearch').oninput = e=>{ resQuery=e.target.value.trim(); resPage=1; renderReservations() }
-  $('#resPrev').onclick = ()=>{ if(resPage>1){resPage--; renderReservations()} }
-  $('#resNext').onclick = ()=>{ resPage++; renderReservations() }
-  $$('#resTable thead th[data-sort]').forEach(th=>{
-    th.onclick = ()=>{ sortKey = th.dataset.sort; sortDir = (sortDir==='asc'?'desc':'asc'); renderReservations() }
-  })
-  renderReservations()
-}
-async function fetchReservations(){
-  const from=(resPage-1)*resPageSize, to=from+resPageSize-1
-  const { count } = await supabase.from('reservations').select('id',{count:'exact',head:true})
-  let q = supabase.from('reservations').select('id,hotel_id,arrival,departure,guest_last_name,guest_first_name,guest_email,rate_code,created_at')
-  if(resQuery) q = q.ilike('guest_last_name', `%${resQuery}%`)
-  q = q.order(sortKey, { ascending: (sortDir==='asc') }).range(from,to)
-  const { data, error } = await q
-  if(error) throw error
-  return { rows:data||[], count:count||0 }
-}
-function renderReservationsRow(r){
-  return `<tr>
-    <td>${(r.guest_last_name||'-')} ${(r.guest_first_name||'')}</td>
-    <td>${r.arrival||'-'}</td>
-    <td>${r.departure||'-'}</td>
-    <td>${r.hotel_id||'-'}</td>
-    <td>${r.rate_code||'-'}</td>
-    <td><span class="pill tight">Ändern</span> <span class="pill over">Stornieren</span></td>
-  </tr>`
-}
-async function renderReservations(){
-  const tbody = $('#resTbody'); tbody.innerHTML = `<tr><td colspan="6">Lade…</td></tr>`
-  try{
-    const { rows, count } = await fetchReservations()
-    tbody.innerHTML = rows.map(renderReservationsRow).join('')
-    const pages = Math.max(1, Math.ceil(count/resPageSize))
-    $('#resPageinfo').textContent = `Seite ${resPage} von ${pages} (${count})`
-    $('#resPrev').disabled = resPage<=1
-    $('#resNext').disabled = resPage>=pages
-  }catch(e){
-    console.error(e); tbody.innerHTML = `<tr><td colspan="6">Fehler: ${e.message}</td></tr>`
-  }
-}
+// ======== DASHBOARD (KPIs & Mini Availability) ========
+async function loadKpis() {
+  try {
+    const todayStart = startOfDay(new Date()).toISOString();
+    const nowIso = new Date().toISOString();
+    const weekStart = startOfDay(new Date(Date.now() - 6*86400000)).toISOString();
 
-/* ===== Availability – 3 Level + Überbuchung ===== */
-function openAvailability(){ openModal('availability'); mountAvailability() }
-function mountAvailability(){
-  const today = new Date()
-  $('#availStart').value = fmtISO(today)
-  $('#availGenerate').onclick = renderAvailabilityMatrix
-  renderAvailabilityMatrix()
-}
-function levelForPct(p){ return (p>=100)?'over' : (p>=80)?'tight' : 'normal' }
+    if (!supabase) {
+      document.getElementById('kpiToday').textContent = '0';
+      document.getElementById('kpi7').textContent = '0';
+    } else {
+      const { count: countToday } = await supabase
+        .from('reservations')
+        .select('*', { count: 'exact', head: true })
+        .gte('created_at', todayStart)
+        .lte('created_at', nowIso);
 
-function renderAvailabilityMatrix(){
-  const start = new Date($('#availStart').value || new Date())
-  const days  = Math.max(1, Math.min(31, parseInt($('#availDays').value||'14',10)))
-  const dates = Array.from({length:days}, (_,i)=>{ const d=new Date(start); d.setDate(d.getDate()+i); return fmtISO(d) })
+      const { count: count7 } = await supabase
+        .from('reservations')
+        .select('*', { count: 'exact', head: true })
+        .gte('created_at', weekStart)
+        .lte('created_at', nowIso);
 
-  const totals = {
-    "MASEVEN München Dornach":319,"MASEVEN München Trudering":289,"MASEVEN Frankfurt":220,"MASEVEN Stuttgart":180,
-    "Fidelity Robenstein":140,"Fidelity Struck":110,"Fidelity Doerr":95,"Fidelity Gr. Baum":160,"Fidelity Landskron":120,
-    "Fidelity Pürgl":80,"Fidelity Seppl":100,"Tante Alma Bonn":130,"Tante Alma Köln":120,"Tante Alma Erfurt":115,
-    "Tante Alma Mannheim":140,"Tante Alma Mülheim":110,"Tante Alma Sonnen":90,"Delta by Marriot Offenbach":200,"Villa Viva Hamburg":180
+      document.getElementById('kpiToday').textContent = countToday ?? '0';
+      document.getElementById('kpi7').textContent = count7 ?? '0';
+    }
+  } catch(e) {
+    console.error(e);
   }
 
-  const rows = HOTELS.map(h=>{
-    const total = totals[h]||100
-    const cells = dates.map((d,i)=>{
-      const overBoost = (i%7===0)? 1.12 : 1.0
-      const booked = Math.floor(Math.min(total*1.25, total * (0.35 + 0.55*Math.abs(Math.sin(i/2 + h.length/9))) * overBoost))
-      const pct = Math.round(booked/total*100)
-      const lvl = levelForPct(pct)
-      return { d, booked, total, pct, lvl }
-    })
-    return { h, cells }
-  })
+  // Mini availability from availability table if present, else random
+  const mini = document.getElementById('miniAvail');
+  const miniDays = document.getElementById('miniDays');
+  mini.innerHTML = ''; miniDays.innerHTML = '';
+  const days = [...Array(7)].map((_,i)=> startOfDay(new Date(Date.now()+ i*86400000)));
+  let occSum = 0;
 
-  const thead = `<thead><tr><th>Hotel</th>${dates.map(d=>`<th>${d}</th>`).join('')}</tr></thead>`
-  const tbody = `<tbody>${rows.map(r=>`
-    <tr>
-      <td>${r.h}</td>
-      ${r.cells.map(c=>`<td class="lvl-${c.lvl}">
-        ${c.booked} / ${c.total} <span class="pct">(${c.pct}%)</span>${c.pct>=100?'<span class="overmark">OVER</span>':''}
-      </td>`).join('')}
-    </tr>`).join('')}</tbody>`
-  $('#availMatrix').innerHTML = `<table class="matrix-table">${thead}${tbody}</table>`
+  if (supabase) {
+    try {
+      // Aggregate average occupancy across all hotels per day
+      const from = days[0].toISOString().slice(0,10);
+      const to = days[6].toISOString().slice(0,10);
+      const { data, error } = await supabase.rpc('availability_day_occupancy', { from_date: from, to_date: to });
+      if (!error && Array.isArray(data) && data.length) {
+        const byDate = Object.fromEntries(data.map(r => [r.date, r.avg_occupancy]));
+        days.forEach(d => {
+          const key = d.toISOString().slice(0,10);
+          const level = Math.max(0, Math.min(100, Math.round(byDate[key] ?? 0)));
+          occSum += level;
+          const bar = el('div', {class:'bar'});
+          const fill = el('div', {class:'fill'});
+          fill.style.height = level + '%';
+          const cap = el('div', {class:'cap'});
+          bar.append(fill, cap);
+          mini.append(bar);
+          miniDays.append(el('div', {class:'day'}, fmtDay.format(d)));
+        });
+        document.getElementById('kpiOcc').textContent = Math.round(occSum/7) + '%';
+        return;
+      }
+    } catch (e) {
+      console.warn('mini availability fallback', e);
+    }
+  }
 
-  // Hover highlight row
-  const mat = $('#availMatrix')
-  mat.onmousemove = e=>{
-    const cell = e.target.closest('td,th'); if(!cell) return
-    const row = cell.parentElement
-    $$('#availMatrix tr').forEach(tr=> tr.classList.remove('hover'))
-    row.classList.add('hover')
+  // fallback random
+  days.forEach(d => {
+    const level = Math.floor(Math.random()*101);
+    occSum += level;
+    const bar = el('div', {class:'bar'});
+    const fill = el('div', {class:'fill'});
+    fill.style.height = level + '%';
+    const cap = el('div', {class:'cap'});
+    bar.append(fill, cap);
+    mini.append(bar);
+    miniDays.append(el('div', {class:'day'}, fmtDay.format(d)));
+  });
+  document.getElementById('kpiOcc').textContent = Math.round(occSum/7) + '%';
+}
+
+// ======== AVAILABILITY MATRIX ========
+function generateMatrixDates(days = 14) {
+  return [...Array(days)].map((_,i) => startOfDay(new Date(Date.now()+ i*86400000)));
+}
+
+async function buildMatrix() {
+  const dates = generateMatrixDates(14);
+  const theadRow = document.querySelector('#matrixTable thead tr');
+  theadRow.querySelectorAll('th:not(.sticky)').forEach(th=>th.remove());
+  dates.forEach(d => theadRow.append(el('th', {}, fmtMd.format(d))));
+
+  const body = document.getElementById('matrixBody');
+  body.innerHTML = '';
+
+  if (supabase) {
+    // try to load availability from table
+    const from = dates[0].toISOString().slice(0,10);
+    const to = dates[dates.length-1].toISOString().slice(0,10);
+    for (const hotel of HOTELS) {
+      const tr = el('tr');
+      tr.append(el('td', { class: 'sticky' }, `${hotel.group} · ${hotel.name}`));
+      const { data, error } = await supabase
+        .from('availability')
+        .select('date, capacity, booked')
+        .eq('hotel_code', hotel.code)
+        .gte('date', from)
+        .lte('date', to)
+        .order('date', { ascending: true });
+      const byDate = {};
+      if (!error && Array.isArray(data)) {
+        data.forEach(r => byDate[r.date] = r);
+      }
+      dates.forEach(d => {
+        const key = d.toISOString().slice(0,10);
+        const capacity = byDate[key]?.capacity ?? 100;
+        const booked = byDate[key]?.booked ?? Math.floor(Math.random()*120);
+        const delta = booked - capacity;
+        const lvl = delta <= 0 ? 0 : delta === 1 ? 1 : 2;
+        const cell = el('td');
+        const pill = el('span', { class: `pill lvl-${lvl}` }, `${Math.min(100, Math.round((booked/capacity)*100))}%`);
+        cell.append(pill);
+        tr.append(cell);
+      });
+      body.append(tr);
+    }
+    return;
+  }
+
+  // fallback demo
+  HOTELS.forEach(hotel => {
+    const tr = el('tr');
+    tr.append(el('td', { class: 'sticky' }, `${hotel.group} · ${hotel.name}`));
+    dates.forEach(d => {
+      const capacity = 100;
+      const booked = Math.floor(Math.random()*120);
+      const delta = booked - capacity;
+      const lvl = delta <= 0 ? 0 : delta === 1 ? 1 : 2;
+      const cell = el('td');
+      const pill = el('span', { class: `pill lvl-${lvl}` }, `${Math.min(100, Math.round((booked/capacity)*100))}%`);
+      cell.append(pill);
+      tr.append(cell);
+    });
+    body.append(tr);
+  });
+}
+
+// ======== RESERVATIONS TABLE ========
+let page = 1, pageSize = 50, search = '';
+
+async function loadReservations() {
+  const body = document.getElementById('resvBody');
+  body.innerHTML = '';
+
+  if (!supabase) {
+    for (let i=0;i<10;i++) {
+      const tr = el('tr', { class: 'row' });
+      tr.append(
+        el('td', {}, `Demo Gast ${i+1}`),
+        el('td', {}, fmt.format(new Date())),
+        el('td', {}, fmt.format(new Date(Date.now()+86400000))),
+        el('td', {}, 'MASEVEN Dornach'),
+        el('td', {}, 'Standard'),
+        el('td', {}, 'Flex'),
+        el('td', {}, '89 €'),
+        el('td', {}, '-')
+      );
+      body.append(tr);
+    }
+    document.getElementById('pageInfo').textContent = 'Demoansicht';
+    return;
+  }
+
+  const from = (page-1)*pageSize;
+  const to = from + pageSize - 1;
+
+  let query = supabase.from('reservations')
+    .select('guest_last_name, arrival, departure, hotel_name, category, rate_name, rate_price, notes', { count: 'exact' })
+    .order('arrival', { ascending: true })
+    .range(from, to);
+
+  if (search) query = query.ilike('guest_last_name', `%${search}%`);
+
+  const { data, count, error } = await query;
+  if (error) {
+    console.error(error);
+    body.append(el('tr', {}, el('td', { colspan: 8 }, 'Fehler beim Laden.')));
+    return;
+  }
+
+  (data || []).forEach(row => {
+    const tr = el('tr', { class: 'row', tabindex: 0, title: 'Details anzeigen' });
+    tr.append(
+      el('td', {}, row.guest_last_name || '—'),
+      el('td', {}, row.arrival ? fmt.format(new Date(row.arrival)) : '—'),
+      el('td', {}, row.departure ? fmt.format(new Date(row.departure)) : '—'),
+      el('td', {}, row.hotel_name || '—'),
+      el('td', {}, row.category || '—'),
+      el('td', {}, row.rate_name || '—'),
+      el('td', {}, row.rate_price != null ? (row.rate_price + ' €') : '—'),
+      el('td', {}, row.notes || '—')
+    );
+    body.append(tr);
+  });
+
+  const totalPages = Math.max(1, Math.ceil((count || 0)/pageSize));
+  document.getElementById('pageInfo').textContent = `Seite ${page} / ${totalPages}`;
+}
+
+// ======== WIZARD ========
+const wizardState = {
+  step: 1,
+  data: {
+    hotel_code: '',
+    arrival: '',
+    departure: '',
+    guests: 1,
+    category: '',
+    rate_name: '',
+    rate_price: null,
+    guest_last_name: '',
+    email: ''
+  }
+};
+
+function renderWizard() {
+  document.querySelectorAll('.wizard-steps .step').forEach(s => s.classList.toggle('active', Number(s.dataset.step) === wizardState.step));
+  const v = document.getElementById('wizardView');
+  v.innerHTML = '';
+  if (wizardState.step === 1) {
+    v.append(
+      el('div', { class: 'field' }, el('label', {}, 'Hotel'), (function(){
+        const sel = el('select', { id: 'wizHotel' });
+        sel.append(el('option', { value:'' }, 'Bitte wählen'));
+        HOTELS.forEach(h => sel.append(el('option', { value: h.code }, `${h.group} · ${h.name}`)));
+        return sel;
+      })()),
+      el('div', { class: 'field' }, el('label', {}, 'Anreise'), el('input', { id:'wizArr', type:'date' })),
+      el('div', { class: 'field' }, el('label', {}, 'Abreise'), el('input', { id:'wizDep', type:'date' })),
+      el('div', { class: 'field' }, el('label', {}, 'Gäste'), el('input', { id:'wizGuests', type:'number', min:'1', value:String(wizardState.data.guests) }))
+    );
+  }
+  if (wizardState.step === 2) {
+    v.append(
+      el('div', { class: 'field' }, el('label', {}, 'Zimmerkategorie'), (function(){
+        const sel = el('select', { id: 'wizCat' });
+        ['Standard','Superior','Suite'].forEach(c => sel.append(el('option', { value: c }, c)));
+        return sel;
+      })()),
+      el('div', { class: 'field' }, el('label', {}, 'Rate'), (function(){
+        const sel = el('select', { id: 'wizRate' });
+        [
+          { name: 'Flex exkl. Frühstück', price: 89 },
+          { name: 'Flex inkl. Frühstück', price: 109 },
+        ].forEach(r => sel.append(el('option', { value: r.name, 'data-price': r.price }, `${r.name} — ${r.price} €`)));
+        return sel;
+      })())
+    );
+  }
+  if (wizardState.step === 3) {
+    v.append(
+      el('div', { class: 'field' }, el('label', {}, 'Nachname'), el('input', { id:'wizLname', type:'text', placeholder:'Mustermann' })),
+      el('div', { class: 'field' }, el('label', {}, 'E‑Mail (optional)'), el('input', { id:'wizEmail', type:'email', placeholder:'name@domain.tld' })),
+      el('div', { class: 'field' }, el('label', {}, 'Zusammenfassung'), el('textarea', { id:'wizSummary', rows:'5', readonly:'readonly' }))
+    );
+    document.getElementById('wizSummary').value = JSON.stringify(wizardState.data, null, 2);
   }
 }
 
-/* ===== Bind tiles ===== */
-$$('.tile[data-open="newRes"]').forEach(el=> el.onclick = openNewRes)
-$$('.tile[data-open="reservations"]').forEach(el=> el.onclick = openReservations)
-$$('.tile[data-open="availability"]').forEach(el=> el.onclick = openAvailability)
+async function wizardNext() {
+  if (wizardState.step === 1) {
+    wizardState.data.hotel_code = document.getElementById('wizHotel').value;
+    wizardState.data.arrival = document.getElementById('wizArr').value;
+    wizardState.data.departure = document.getElementById('wizDep').value;
+    wizardState.data.guests = Number(document.getElementById('wizGuests').value || 1);
+    wizardState.step = 2;
+  } else if (wizardState.step === 2) {
+    wizardState.data.category = document.getElementById('wizCat').value;
+    const sel = document.getElementById('wizRate');
+    wizardState.data.rate_name = sel.value;
+    wizardState.data.rate_price = Number(sel.options[sel.selectedIndex].dataset.price);
+    wizardState.step = 3;
+  } else if (wizardState.step === 3) {
+    wizardState.data.guest_last_name = document.getElementById('wizLname').value.trim();
+    wizardState.data.email = document.getElementById('wizEmail').value.trim();
+    if (!supabase) { alert('Supabase ist nicht konfiguriert.'); return; }
+    const hotel = HOTEL_BY_CODE[wizardState.data.hotel_code];
+    const payload = {
+      hotel_name: hotel ? `${hotel.group} · ${hotel.name}` : wizardState.data.hotel_code,
+      arrival: wizardState.data.arrival,
+      departure: wizardState.data.departure,
+      guests: wizardState.data.guests,
+      category: wizardState.data.category,
+      rate_name: wizardState.data.rate_name,
+      rate_price: wizardState.data.rate_price,
+      guest_last_name: wizardState.data.guest_last_name,
+      confirmation_email: wizardState.data.email || null,
+      notes: 'Created via res‑tool wizard',
+    };
+    const { error } = await supabase.from('reservations').insert(payload);
+    if (error) { alert('Fehler beim Speichern: ' + error.message); return; }
+    closeModal('wizardModal');
+    await loadKpis();
+    await loadReservations();
+  }
+  renderWizard();
+}
+
+function wizardPrev() {
+  wizardState.step = Math.max(1, wizardState.step - 1);
+  renderWizard();
+}
+
+// ======== MODALS ========
+const backdrop = document.getElementById('backdrop');
+function openModal(id) {
+  backdrop.style.display = 'flex';
+  const m = document.getElementById(id);
+  m.style.display = 'block';
+  setTimeout(()=> backdrop.classList.add('show'), 0);
+}
+function closeModal(id) {
+  document.getElementById(id).style.display = 'none';
+  backdrop.style.display = 'none';
+}
+
+// ======== EVENTS ========
+document.getElementById('btnStatus').addEventListener('click', () => {
+  setDot(document.getElementById('dotApp'), 'ok');
+  setDot(document.getElementById('dotSb'), supabase ? 'ok' : 'warn');
+  setDot(document.getElementById('dotHns'), 'warn'); // placeholder
+  setDot(document.getElementById('dotMail'), 'ok');
+  openModal('statusModal');
+});
+
+document.getElementById('btnNew').addEventListener('click', () => {
+  wizardState.step = 1; wizardState.data = { guests: 1 };
+  renderWizard();
+  openModal('wizardModal');
+});
+
+document.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', () => closeModal(b.closest('.modal').id)));
+
+document.getElementById('wizNext').addEventListener('click', wizardNext);
+document.getElementById('wizPrev').addEventListener('click', wizardPrev);
+
+document.getElementById('searchInput').addEventListener('input', (e)=>{
+  search = e.target.value.trim();
+  page = 1; loadReservations();
+});
+
+document.getElementById('prevPage').addEventListener('click', ()=>{ page = Math.max(1, page-1); loadReservations(); });
+document.getElementById('nextPage').addEventListener('click', ()=>{ page = page+1; loadReservations(); });
+
+// ======== INIT ========
+(async function init(){
+  await loadKpis();
+  await buildMatrix();
+  await loadReservations();
+})();
