@@ -7,36 +7,18 @@
   <link rel="stylesheet" href="./src/styles.css" />
 </head>
 <body>
-  <!-- Neon grid / subtle CRT -->
   <div class="bg-grid"></div>
   <div class="crt"></div>
 
-  <!-- Topbar -->
+  <!-- Topbar (ohne Icon-Buttons) -->
   <header class="topbar shell">
     <div class="brand">
       <img src="./assets/logo.png" alt="Blue & Red Water Hospitality" class="logo" onerror="this.remove()">
       <h1 class="headline">res‑tool</h1>
     </div>
-    <nav class="iconbar" aria-label="Hauptaktionen">
-      <button class="iconbtn" data-open="newRes" title="Neue Reservierung" aria-label="Neue Reservierung">
-        <span class="ico">+</span><span class="btnlabel">Neu</span>
-      </button>
-      <button class="iconbtn" data-open="reservations" title="Reservierungen" aria-label="Reservierungen">
-        <span class="ico">▦</span><span class="btnlabel">Reservierungen</span>
-      </button>
-      <button class="iconbtn" data-open="availability" title="Verfügbarkeit" aria-label="Verfügbarkeit">
-        <span class="ico">▤</span><span class="btnlabel">Verfügbarkeit</span>
-      </button>
-      <button class="iconbtn" data-open="reporting" title="Reporting" aria-label="Reporting">
-        <span class="ico">⥁</span><span class="btnlabel">Reporting</span>
-      </button>
-      <button class="iconbtn" data-open="house" title="Hausskizze" aria-label="Hausskizze">
-        <span class="ico">⌂</span><span class="btnlabel">Hausskizze</span>
-      </button>
-      <button class="iconbtn" data-open="settings" title="Einstellungen" aria-label="Einstellungen">
-        <span class="ico">⚙</span><span class="btnlabel">Settings</span>
-      </button>
-    </nav>
+    <div class="brand-meta">
+      <span id="date">—</span> · <span id="clock">—:—:—</span> · <span class="muted">Europe/Berlin</span>
+    </div>
   </header>
 
   <!-- DASHBOARD -->
@@ -46,64 +28,67 @@
         <!-- KPIs -->
         <div class="kpi-grid">
           <div class="kpi">
-            <div class="kpi-label">Buchungen heute</div>
+            <div class="kpi-label">Buchungen heute (alle Hotels)</div>
             <div class="kpi-value" id="kpi-today">—</div>
           </div>
           <div class="kpi">
-            <div class="kpi-label">Ø Preis (Demo)</div>
-            <div class="kpi-value" id="kpi-adr">— €</div>
+            <div class="kpi-label">Buchungen letzte 7 Tage</div>
+            <div class="kpi-value" id="kpi-week">—</div>
           </div>
           <div class="kpi">
-            <div class="kpi-label">Auslastung Woche (Demo)</div>
-            <div class="kpi-value" id="kpi-occ">—%</div>
+            <div class="kpi-label">Ø Preis / Auslastung (Demo)</div>
+            <div class="kpi-value"><span id="kpi-adr">— €</span> · <span id="kpi-occ">—%</span></div>
           </div>
         </div>
 
-        <!-- Quick actions -->
-        <div class="quick-grid">
-          <button class="quick" data-open="newRes">Neue Reservierung</button>
-          <button class="quick" data-open="reservations">Reservierungen</button>
-          <button class="quick" data-open="availability">Verfügbarkeit</button>
-          <button class="quick" data-open="reporting">Reporting</button>
-        </div>
-
-        <!-- Weekly mini-availability (heatmap) -->
+        <!-- Weekly mini-availability (heatmap, 3 Level inkl. Überbuchung) -->
         <div class="card alt">
           <div class="card-head">
-            <h2 class="headline">Verfügbarkeit · Aktuelle Woche</h2>
+            <h2 class="headline">Verfügbarkeit · aktuelle Woche</h2>
             <div class="card-tools">
               <button class="chip" id="mini-prev">◀</button>
               <button class="chip" id="mini-next">▶</button>
+              <button class="primary" data-open="availability">vollständige Matrix</button>
             </div>
           </div>
           <div id="mini-availability" class="mini-av"></div>
-          <p class="muted micro">Legende: hell = niedrig, kräftig = hoch ausgelastet · Werte Demo bis Live‑Quelle steht.</p>
+          <p class="muted micro">Level: normal · angespannt · <strong>überbucht</strong>. Daten Demo bis HNS/Opera steht.</p>
         </div>
+
+        <!-- Module Tiles -->
+        <section class="grid-tiles" aria-label="Module">
+          <button class="tile" data-open="newRes">
+            <span class="headline">Neue Reservierung</span>
+            <small>Wizard: Reise → Rate → Gast</small>
+          </button>
+          <button class="tile" data-open="reservations">
+            <span class="headline">Reservierungen</span>
+            <small>einsehen · ändern · stornieren</small>
+          </button>
+          <button class="tile" data-open="availability">
+            <span class="headline">Verfügbarkeit</span>
+            <small>Matrix: Hotel × Tag</small>
+          </button>
+          <button class="tile" data-open="reporting">
+            <span class="headline">Reporting</span>
+            <small>ADR · RN · Umsatz</small>
+          </button>
+        </section>
       </div>
 
       <aside class="dash-right">
-        <!-- Clock / Status -->
+        <!-- Systemstatus -->
         <div class="card console">
           <div class="console-head">
             <span class="lamp"></span>
             <span class="headline">Systemstatus</span>
           </div>
           <div class="console-body">
-            <div class="status-row"><span>Uhrzeit</span><strong id="clock">—:—:—</strong></div>
-            <div class="status-row"><span>Datum</span><strong id="date">—</strong></div>
-            <div class="status-row"><span>Zeitzone</span><strong id="tz">Europe/Berlin</strong></div>
+            <div class="status-row"><span>Uhrzeit</span><strong id="clock2">—:—:—</strong></div>
+            <div class="status-row"><span>Datum</span><strong id="date2">—</strong></div>
             <div class="status-row"><span>Supabase</span><strong id="sb-status">verbunden</strong></div>
+            <div class="status-row"><span>HotelNetSolutions</span><strong id="hns-status" class="muted">getrennt</strong></div>
           </div>
-        </div>
-
-        <!-- Shortcuts -->
-        <div class="card">
-          <h2 class="headline">Schnellzugriff</h2>
-          <ul class="shortcuts">
-            <li><button class="linklike" data-open="newRes">+ neue Reservierung</button></li>
-            <li><button class="linklike" data-open="reservations">Letzte Reservierungen</button></li>
-            <li><button class="linklike" data-open="availability">Wöchentliche Verfügbarkeit</button></li>
-          </ul>
         </div>
       </aside>
     </section>
@@ -115,8 +100,7 @@
   <!-- Overlay -->
   <div id="overlay" class="overlay" hidden></div>
 
-  <!-- MODALS -->
-  <!-- Neue Reservierung -->
+  <!-- MODALS (IDs bleiben kompatibel) -->
   <section id="modal-newRes" class="modal" aria-hidden="true" role="dialog" aria-modal="true">
     <div class="dialog">
       <header class="dialog-head">
@@ -124,14 +108,12 @@
         <button class="close" data-close aria-label="Schließen">✕</button>
       </header>
       <div class="dialog-body">
-        <!-- Stepper -->
-        <div class="stepper"><div class="bar"><span id="stepper-thumb"></span></div><div class="labels"><em>Reise</em><em>Kategorie/Rate</em><em>Gast & Abschluss</em></div></div>
+        <div class="stepper"><div class="bar"><span id="stepper-thumb"></span></div><div class="labels"><em>Reise</em><em>Rate</em><em>Gast</em></div></div>
         <div id="newResContent"></div>
       </div>
     </div>
   </section>
 
-  <!-- Reservierungen -->
   <section id="modal-reservations" class="modal" aria-hidden="true" role="dialog" aria-modal="true">
     <div class="dialog wide">
       <header class="dialog-head">
@@ -166,7 +148,6 @@
     </div>
   </section>
 
-  <!-- Verfügbarkeit -->
   <section id="modal-availability" class="modal" aria-hidden="true" role="dialog" aria-modal="true">
     <div class="dialog xwide">
       <header class="dialog-head">
@@ -181,17 +162,14 @@
         </div>
         <div class="matrixwrap">
           <div id="availMatrix" class="matrix" aria-describedby="availHelp"></div>
-          <div class="minimap" id="matrixMini"></div>
         </div>
-        <p id="availHelp" class="muted micro">Tipp: Shift+Mausrad = horizontal scrollen · Hover = Zeile/Spalte highlight</p>
+        <p id="availHelp" class="muted micro">Hover → Zeile/Spalte highlight · <strong>Überbuchung</strong> wird markiert.</p>
       </div>
     </div>
   </section>
 
   <!-- Platzhalter -->
   <section id="modal-reporting" class="modal" aria-hidden="true"><div class="dialog"><header class="dialog-head"><h3 class="headline">Reporting</h3><button class="close" data-close>✕</button></header><div class="dialog-body"><p class="muted">KPIs via OHIP/HNS – folgt.</p></div></div></section>
-  <section id="modal-house" class="modal" aria-hidden="true"><div class="dialog"><header class="dialog-head"><h3 class="headline">Hausskizze</h3><button class="close" data-close>✕</button></header><div class="dialog-body"><p class="muted">SVG‑Plan/Belegung – folgt.</p></div></div></section>
-  <section id="modal-settings" class="modal" aria-hidden="true"><div class="dialog"><header class="dialog-head"><h3 class="headline">Einstellungen</h3><button class="close" data-close>✕</button></header><div class="dialog-body"><p class="muted">Branding · Nutzer · API Keys – folgt.</p></div></div></section>
 
   <footer class="statusbar shell">
     <span>© Blue & Red Water Hospitality</span>
