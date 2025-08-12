@@ -28,14 +28,13 @@ const HOTELS = [
 const PREFIXES = ['MASEVEN','Fidelity','Tante Alma','Delta by Marriot','Villa Viva'];
 const shortName = (full) => { if(!full) return '—'; for(const p of PREFIXES){ if(full.startsWith(p+' ')) return full.slice(p.length+1); } return full; };
 
-/* Hotels-Dimension aus Supabase (für hotel_id) */
-let SB_HOTEL_BY_CODE = {}; // {code:{id, name}}
-async function loadHotelsDimension(){
-  const { data, error } = await supabase.from('hotels').select('id, code, display_name');
-  if (!error && Array.isArray(data)){
-    data.forEach(h => SB_HOTEL_BY_CODE[h.code] = { id: h.id, name: h.display_name || h.code });
-  }
-}
+/* Alias-Keyword für Filter-Fallback per hotel_name */
+const HOTEL_KEYWORD = {
+  'MA7-M-DOR':'Dornach','MA7-M-TRU':'Trudering','MA7-FRA':'Frankfurt','MA7-STR':'Stuttgart',
+  'FID-ROB':'Robenstein','FID-STR':'Struck','FID-DOE':'Doerr','FID-GRB':'Baum','FID-LAN':'Landskron','FID-PUE':'Pürgl','FID-SEP':'Seppl',
+  'TAL-BON':'Bonn','TAL-KOE':'Köln','TAL-ERF':'Erfurt','TAL-MAN':'Mannheim','TAL-MUE':'Mülheim','TAL-SON':'Sonnen',
+  'DBM-OF':'Offenbach','VV-HH':'Hamburg'
+};
 
 /***** Dummy Kategorien/Raten *****/
 const HOTEL_CATEGORIES = { default: ['Standard','Superior','Suite'] };
@@ -83,7 +82,7 @@ async function autoRollPastToDone(){
 
 /***** Mini-Analytics — YoY OTA (fallback Total) *****/
 async function buildMiniAnalytics(){
-  const list = q('#miniAnalyticsDock'); list.innerHTML='';
+  const list = q('#miniAnalyticsDock'); if (!list) return; list.innerHTML='';
   const today = soD(new Date());
   const curStart = new Date(today); curStart.setDate(curStart.getDate()-6);
   const prevYStart = new Date(curStart); prevYStart.setFullYear(prevYStart.getFullYear()-1);
@@ -102,9 +101,7 @@ async function buildMiniAnalytics(){
     (arr?.data||[]).forEach(r=>{
       const key = r.hotel_code || '—';
       const isOTA = String(r.channel||'').toLowerCase()==='ota';
-      if (allOTAZero || isOTA){
-        m.set(key, (m.get(key)||0)+1);
-      }
+      if (allOTAZero || isOTA){ m.set(key, (m.get(key)||0)+1); }
     });
     return m;
   };
@@ -161,13 +158,11 @@ async function loadKpisToday(){
   const nowISO = new Date().toISOString();
   const tDate = isoDate(todayStart);
 
-  // Buchungen heute (created_at)
   let qb = supabase.from('reservations').select('id,created_at').gte('created_at', todayStart.toISOString()).lte('created_at', nowISO);
   if (hotel) qb = qb.eq('hotel_code', hotel.code);
   const rB = await qb;
   const bookingsToday = (rB.data||[]).length;
 
-  // Umsatz/ADR OTB (arrival = heute)
   let qotb = supabase.from('reservations').select('rate_price,hotel_code').eq('arrival', tDate).neq('status','canceled');
   if (hotel) qotb = qotb.eq('hotel_code', hotel.code);
   const rO = await qotb;
@@ -175,7 +170,6 @@ async function loadKpisToday(){
   const revenue = rows.reduce((s,r)=> s + Number(r.rate_price||0), 0);
   const adr = rows.length ? Math.round((revenue/rows.length)*100)/100 : null;
 
-  // Auslastung heute
   let occ = null;
   if (hotel){
     const r = await supabase.from('availability').select('capacity,booked').eq('hotel_code', hotel.code).eq('date', tDate);
@@ -252,33 +246,61 @@ function uiStatus(row){
 }
 
 async function loadReservations(){
+  await autoRollPastToDone(); // sicherstellen, dass Vergangenheit -> done
+
   const body = q('#resvBody'); body.innerHTML = '';
   const from = (page-1)*pageSize, to = from + pageSize - 1;
   const todayStr = isoDate(soD(new Date()));
 
-  let query = supabase.from('reservations')
-    .select('id,reservation_number,guest_first_name,guest_last_name,arrival,departure,hotel_name,hotel_code,category,rate_name,rate_price,status', { count:'exact' })
-    .order('arrival', { ascending: true })
-    .range(from, to);
+  const applyFilters = (query) => {
+    if (search)  query = query.ilike('guest_last_name', `%${search}%`);
+    if (fResNo)  query = query.ilike('reservation_number', `%${fResNo}%`);
+    if (fFrom)   query = query.gte('arrival', fFrom);
+    if (fTo)     query = query.lte('arrival', fTo);
+    if (fStatus==='active'){
+      query = query.gte('arrival', todayStr).neq('status','canceled').or('status.eq.active,status.eq.confirmed,status.is.null');
+    } else if (fStatus==='done'){
+      query = query.neq('status','canceled').lt('arrival', todayStr);
+    } else if (fStatus==='canceled'){
+      query = query.eq('status','canceled');
+    }
+    return query;
+  };
 
-  if (search)  query = query.ilike('guest_last_name', `%${search}%`);
-  if (fResNo)  query = query.ilike('reservation_number', `%${fResNo}%`);
-  if (fHotel!=='all'){ query = query.eq('hotel_code', fHotel); }
-  if (fFrom)   query = query.gte('arrival', fFrom);
-  if (fTo)     query = query.lte('arrival', fTo);
+  const selectCols = 'id,reservation_number,guest_first_name,guest_last_name,arrival,departure,hotel_name,hotel_code,category,rate_name,rate_price,status,created_at';
 
-  if (fStatus==='active'){
-    query = query.gte('arrival', todayStr).neq('status','canceled').or('status.eq.active,status.eq.confirmed,status.is.null');
-  } else if (fStatus==='done'){
-    query = query.neq('status','canceled').lt('arrival', todayStr);
-  } else if (fStatus==='canceled'){
-    query = query.eq('status','canceled');
+  let data = [], count = 0, error = null;
+
+  if (fHotel === 'all'){
+    let q1 = supabase.from('reservations').select(selectCols, { count:'exact' })
+      .order('arrival', { ascending: true })
+      .range(from, to);
+    q1 = applyFilters(q1);
+    const r = await q1;
+    data = r.data || []; count = r.count || 0; error = r.error || null;
+  } else {
+    // per hotel_code
+    let qCode = supabase.from('reservations').select(selectCols).order('arrival',{ascending:true}).range(from,to);
+    qCode = applyFilters(qCode.eq('hotel_code', fHotel));
+    const r1 = await qCode;
+
+    // zusätzlich per Name-Alias (ilike)
+    const needle = HOTEL_KEYWORD[fHotel] || shortName(HOTELS.find(h=>h.code===fHotel)?.name || '');
+    let qName = supabase.from('reservations').select(selectCols).order('arrival',{ascending:true}).range(from,to);
+    qName = applyFilters(qName.ilike('hotel_name', `%${needle}%`));
+    const r2 = await qName;
+
+    // Merge + de-dupe
+    const map = new Map();
+    (r1.data||[]).concat(r2.data||[]).forEach(row => map.set(row.id, row));
+    data  = [...map.values()];
+    count = data.length;
+    error = r1.error || r2.error || null;
   }
 
-  const { data, count, error } = await query;
   if (error){ q('#pageInfo').textContent='Fehler'; console.warn(error); return; }
 
-  (data || []).forEach(row => {
+  data.forEach(row => {
     const rStatus = uiStatus(row);
     const dotCls = rStatus==='canceled'?'dot-canceled':(rStatus==='done'?'dot-done':'dot-active');
     const guest = `${row.guest_last_name||'—'}${row.guest_first_name?', '+row.guest_first_name:''}`;
@@ -331,26 +353,26 @@ function fillEditDropdowns(hotelCode, curCat, curRate){
   });
 }
 
+/***** Edit-Dialog (Status read-only, „Erstellt am …“) *****/
 async function openEdit(id){
   const { data, error } = await supabase.from('reservations').select('*').eq('id', id).maybeSingle();
   if (error || !data) return alert('Konnte Reservierung nicht laden.');
 
-  // Felder befüllen
   q('#eResNo').value = data.reservation_number || '';
   q('#eHotel').value = shortName(data.hotel_name) || '';
   q('#eLname').value = data.guest_last_name || '';
   q('#eArr').value = data.arrival ? isoDate(new Date(data.arrival)) : '';
   q('#eDep').value = data.departure ? isoDate(new Date(data.departure)) : '';
 
-  // Status nur anzeigen (nicht editierbar)
-  const currentStatus = uiStatus(data);              // active/done/canceled (auto)
+  // Status nur anzeigen (nicht änderbar)
   const eStatus = q('#eStatus');
   if (eStatus){
-    eStatus.value = currentStatus;
-    eStatus.disabled = true;                         // 🔒 nicht änderbar
+    eStatus.value = uiStatus(data);
+    eStatus.disabled = true;
   }
 
   fillEditDropdowns(data.hotel_code, data.category||'', data.rate_name||'');
+
   q('#ePrice').value = data.rate_price || 0;
   q('#eNotes').value = data.notes || '';
   q('#eCcHolder').value = data.cc_holder || '';
@@ -358,8 +380,7 @@ async function openEdit(id){
   q('#eCcExpM').value   = data.cc_exp_month || '';
   q('#eCcExpY').value   = data.cc_exp_year  || '';
 
-  // Info unten links: immer "Erstellt am ..."
-  const createdAtTxt = data.created_at ? `Erstellt am ${D2.format(new Date(data.created_at))}` : '';
+  const createdAtTxt = data.created_at ? `Erstellt am ${new Date(data.created_at).toLocaleString('de-DE')}` : '';
   q('#editInfo').textContent = createdAtTxt;
 
   // Speichern (ohne Status!)
@@ -390,18 +411,18 @@ async function openEdit(id){
     q('#editInfo').textContent = error ? ('Fehler: '+error.message) : createdAtTxt;
   };
 
-  // Stornieren (Status darf hier geändert werden)
+  // Stornieren (einziger Weg Status zu ändern)
   q('#btnCancelRes').onclick = async ()=>{
     const { error } = await supabase.from('reservations').update({ status:'canceled', canceled_at: new Date().toISOString() }).eq('id', id);
     q('#editInfo').textContent = error ? ('Fehler: '+error.message) : createdAtTxt;
     await loadReservations();
   };
 
-  // Tabs & Modal öffnen
   qa('.tab').forEach(b=>b.classList.remove('active')); q('.tab[data-tab="tabDet"]').classList.add('active');
   qa('.tabpage').forEach(p=>p.classList.add('hidden')); q('#tabDet').classList.remove('hidden');
   openModal('modalEdit');
 }
+
 qa('.tab').forEach(btn=>{
   btn.addEventListener('click', ()=>{
     qa('.tab').forEach(b=>b.classList.remove('active')); btn.classList.add('active');
@@ -489,7 +510,7 @@ function updateSummary(selector='#summaryFinal'){
   });
 });
 
-/* Reservierung anlegen */
+/* Reservierung anlegen – nur hotel_code/hotel_name */
 function parseCc(){
   const num = (q('#ccNumber').value || '').replace(/\D/g,'');
   const last4 = num.slice(-4) || null;
@@ -501,7 +522,6 @@ function parseCc(){
   return { last4, holder, exp_m, exp_y };
 }
 function genResNo(){ return 'R' + Date.now().toString(36).toUpperCase(); }
-
 async function createReservation(){
   if (!validateStep('4')){ q('#newInfo').textContent='Bitte Pflichtfelder ausfüllen.'; return; }
   const code = q('#newHotel').value;
@@ -515,8 +535,8 @@ async function createReservation(){
   const payload = {
     reservation_number: genResNo(),
     status: 'active',
-    hotel_code: code,                       // <- FK über TEXT
-    hotel_name: hUI?.name || code,          // Anzeigezweck
+    hotel_code: code,
+    hotel_name: hUI?.name || code,
     arrival: q('#newArr').value || null,
     departure: q('#newDep').value || null,
     guests,
@@ -682,10 +702,8 @@ q('#btnCreate').addEventListener('click', createReservation);
 
 (async function init(){
   startClocks();
-  await loadHotelsDimension();        // << wichtig für hotel_id
   await refreshStatus(); setInterval(refreshStatus, 30000);
   await autoRollPastToDone();
-
   await buildMiniAnalytics();
 
   fillHotelFilter(q('#kpiFilterToday'));
