@@ -27,11 +27,7 @@ const HOTELS = [
 ];
 const HOTEL_BY_CODE = Object.fromEntries(HOTELS.map(h=>[h.code,h]));
 const PREFIXES = ['MASEVEN','Fidelity','Tante Alma','Delta by Marriot','Villa Viva'];
-const shortName = (full) => {
-  if (!full) return '—';
-  for (const p of PREFIXES) if (full.startsWith(p+' ')) return full.slice(p.length+1);
-  return full;
-};
+const shortName = (full) => { if(!full) return '—'; for(const p of PREFIXES){ if(full.startsWith(p+' ')) return full.slice(p.length+1); } return full; };
 
 /***** Dummy Kategorien/Raten *****/
 const HOTEL_CATEGORIES = { default: ['Standard','Superior','Suite'] };
@@ -52,10 +48,7 @@ function setChip(node, ok){ node.classList.remove('lvl-2','lvl-1','lvl-0'); node
 function download(filename, mime, content){ const blob = new Blob([content], {type:mime}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=filename; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href), 1000); }
 
 /***** Clock + Status *****/
-function startClocks(){
-  const tick = ()=>{ const d = new Date(); q('#clockLocal').textContent = d.toLocaleTimeString('de-DE'); q('#dateLocal').textContent = d.toLocaleDateString('de-DE'); };
-  tick(); setInterval(tick, 1000);
-}
+function startClocks(){ const tick=()=>{ const d=new Date(); q('#clockLocal').textContent=d.toLocaleTimeString('de-DE'); q('#dateLocal').textContent=d.toLocaleDateString('de-DE'); }; tick(); setInterval(tick,1000); }
 async function refreshStatus(){
   const a = await supabase.from('reservations').select('id',{head:true,count:'exact'});
   const b = await supabase.from('availability').select('date',{head:true,count:'exact'});
@@ -63,27 +56,75 @@ async function refreshStatus(){
   setChip(q('#chipHns'), false);
 }
 
-/***** Mini-Analytics — kompakter Look, Kurzname *****/
-function buildMiniAnalytics(){
+/***** Auto-Roll: Vergangenheit → done *****/
+async function autoRollPastToDone(){
+  const today = isoDate(soD(new Date()));
+  // setze confirmed/active/null auf done, wenn Anreise < heute und nicht canceled
+  const { error } = await supabase
+    .from('reservations')
+    .update({ status:'done' })
+    .lt('arrival', today)
+    .neq('status','canceled')
+    .or('status.eq.active,status.eq.confirmed,status.is.null');
+  if (error) console.warn('autoRoll error', error);
+}
+
+/***** Mini-Analytics — YoY OTA (fallback Total) *****/
+async function buildMiniAnalytics(){
   const list = q('#miniAnalyticsDock'); list.innerHTML='';
+  const today = soD(new Date());
+  const curStart = new Date(today); curStart.setDate(curStart.getDate()-6);
+  const prevYStart = new Date(curStart); prevYStart.setFullYear(prevYStart.getFullYear()-1);
+  const prevYEnd   = new Date(today);   prevYEnd.setFullYear(prevYEnd.getFullYear()-1);
+
+  // OTA in beiden Zeiträumen
+  const cur = await supabase.from('reservations')
+    .select('hotel_code,channel,created_at').gte('created_at', curStart.toISOString()).lte('created_at', today.toISOString());
+  const prv = await supabase.from('reservations')
+    .select('hotel_code,channel,created_at').gte('created_at', prevYStart.toISOString()).lte('created_at', prevYEnd.toISOString());
+
+  // Fallback: wenn OTA überall 0 → nimm alle Buchungen
+  const countOTA = a => (a?.data||[]).filter(r=>String(r.channel||'').toLowerCase()==='ota').length;
+  const allOTAZero = countOTA(cur)===0 && countOTA(prv)===0;
+
+  const toMap = (arr)=> {
+    const m=new Map();
+    (arr?.data||[]).forEach(r=>{
+      const key = r.hotel_code || '—';
+      const isOTA = String(r.channel||'').toLowerCase()==='ota';
+      if (allOTAZero || isOTA){
+        m.set(key, (m.get(key)||0)+1);
+      }
+    });
+    return m;
+  };
+  const mCur = toMap(cur), mPrv = toMap(prv);
+
   HOTELS.forEach(h=>{
-    const pts = Array.from({length:7}, ()=> Math.round(20 + Math.random()*60));
-    const max = Math.max(...pts), min = Math.min(...pts);
+    const c = mCur.get(h.code)||0, p = mPrv.get(h.code)||0;
+    let up = false;
+    if (p===0 && c>0) up = true;
+    else if (c>p) up = true;
+    else up = false;
+
+    // Dummy spark based on counts (compact)
+    const pts = Array.from({length:7}, (_,i)=> Math.max(0, Math.round((c/7) + (Math.random()*2-1))));
+    const max = Math.max(1, ...pts), min = Math.min(...pts);
     const path = pts.map((v,i)=>{
-      const x = (i/(pts.length-1))*70;
-      const y = 22 - ((v-min)/(Math.max(1,max-min)))*20 - 1;
+      const x = (i/(pts.length-1))*78;
+      const y = 22 - ((v-min)/(max-min||1))*20 - 1;
       return `${i===0?'M':'L'}${x.toFixed(1)},${y.toFixed(1)}`;
     }).join(' ');
-    const yoyUp = Math.random() > 0.5;
-    const item = el('div',{class:'dock-item',title:h.name},
+
+    const item = el('div',{class:'dock-item',title:`${h.name} · YoY ${p?Math.round(((c-p)/p)*100):'∞'}%`},
       el('span',{class:'dock-badge'}, h.group),
       el('div',{class:'dock-name'}, shortName(h.name)),
       (()=>{
-        const svg = el('svg',{class:'spark',viewBox:'0 0 70 22',xmlns:'http://www.w3.org/2000/svg'});
-        svg.append(el('path',{d:path, fill:'none', stroke: yoyUp?'#35e08a':'#ff4d6d','stroke-width':'2'}));
+        const svg = el('svg',{class:'spark',viewBox:'0 0 78 22',xmlns:'http://www.w3.org/2000/svg'});
+        svg.append(el('path',{d:path, fill:'none', stroke: up?'#35e08a':'#ff4d6d','stroke-width':'2'}));
         return svg;
       })(),
-      el('div',{class:`dock-arrow ${yoyUp?'up':'down'}`}, yoyUp ? '↑' : '↓')
+      el('div',{class:`dock-arrow ${up?'up':'down'}`}, up ? '↑' : '↓')
     );
     list.append(item);
   });
@@ -104,7 +145,7 @@ function fillHotelFilter(selectEl){
   HOTELS.forEach(h=> selectEl.append(el('option',{value:h.code}, h.name)));
 }
 
-/***** KPI Heute & Nächste7 (wie gehabt) *****/
+/***** KPI Berechnung *****/
 async function loadKpisToday(){
   const code = q('#kpiFilterToday').value;
   const hotel = code!=='all' ? HOTEL_BY_CODE[code] : null;
@@ -185,12 +226,20 @@ async function loadKpisNext(){
 }
 
 /***** Reservierungsliste (+ Statuslogik) *****/
-let page=1, pageSize=50, search='', fHotel='all', fResNo='', fFrom=null, fTo=null, fStatus='confirmed';
+let page=1, pageSize=50, search='', fHotel='all', fResNo='', fFrom=null, fTo=null, fStatus='active';
 
 function fillFilters(){
   const sel = q('#filterHotel'); sel.innerHTML='';
   sel.append(el('option',{value:'all'},'Alle Hotels'));
   HOTELS.forEach(h=> sel.append(el('option',{value:h.code}, h.name)));
+}
+
+function uiStatus(row){
+  const todayStr = isoDate(soD(new Date()));
+  let s = (row.status||'active').toLowerCase();
+  if (s==='confirmed') s = 'active';
+  if (s!=='canceled' && row.arrival && isoDate(new Date(row.arrival)) < todayStr) s = 'done';
+  return s;
 }
 
 async function loadReservations(){
@@ -199,7 +248,7 @@ async function loadReservations(){
   const todayStr = isoDate(soD(new Date()));
 
   let query = supabase.from('reservations')
-    .select('id,reservation_number,guest_last_name,arrival,departure,hotel_name,category,rate_name,rate_price,status', { count:'exact' })
+    .select('id,reservation_number,guest_last_name,arrival,departure,hotel_name,category,rate_name,rate_price,status,hotel_code', { count:'exact' })
     .order('arrival', { ascending: true })
     .range(from, to);
 
@@ -209,21 +258,20 @@ async function loadReservations(){
   if (fFrom)   query = query.gte('arrival', fFrom);
   if (fTo)     query = query.lte('arrival', fTo);
 
-  if (fStatus==='confirmed'){
-    query = query.eq('status','confirmed').gte('arrival', todayStr);
+  if (fStatus==='active'){
+    query = query.gte('arrival', todayStr).neq('status','canceled').or('status.eq.active,status.eq.confirmed,status.is.null');
   } else if (fStatus==='done'){
-    query = query.lte('arrival', todayStr).neq('status','canceled');
-  } else if (fStatus==='pending' || fStatus==='canceled'){
-    query = query.eq('status', fStatus);
-  }
+    query = query.lt('arrival', todayStr).neq('status','canceled');
+  } else if (fStatus==='canceled'){
+    query = query.eq('status','canceled');
+  } // 'all' = keine Statusbedingung
 
   const { data, count, error } = await query;
   if (error){ q('#pageInfo').textContent='Fehler'; console.warn(error); return; }
 
   (data || []).forEach(row => {
-    let rStatus = (row.status||'confirmed').toLowerCase();
-    if (rStatus==='confirmed' && row.arrival && isoDate(new Date(row.arrival)) <= todayStr) rStatus = 'done';
-    const dotCls = rStatus==='canceled'?'dot-canceled':(rStatus==='pending'?'dot-pending':(rStatus==='done'?'dot-done':'dot-confirmed'));
+    const rStatus = uiStatus(row);
+    const dotCls = rStatus==='canceled'?'dot-canceled':(rStatus==='done'?'dot-done':'dot-active');
 
     const tr = el('tr', { class: 'row', 'data-id': row.id },
       el('td', {}, row.reservation_number || '—'),
@@ -264,7 +312,7 @@ async function openEdit(id){
   const { data, error } = await supabase.from('reservations').select('*').eq('id', id).maybeSingle();
   if (error || !data) return alert('Konnte Reservierung nicht laden.');
   q('#eResNo').value = data.reservation_number || '';
-  q('#eStatus').value = data.status || 'confirmed';
+  q('#eStatus').value = uiStatus(data); // mapped
   q('#eHotel').value = shortName(data.hotel_name) || '';
   q('#eLname').value = data.guest_last_name || '';
   q('#eArr').value = data.arrival ? isoDate(new Date(data.arrival)) : '';
@@ -281,8 +329,12 @@ async function openEdit(id){
   q('#eCcExpY').value   = data.cc_exp_year  || '';
 
   q('#btnSaveEdit').onclick = async ()=>{
+    let status = q('#eStatus').value;
+    const arr = q('#eArr').value;
+    const todayStr = isoDate(soD(new Date()));
+    if (status==='active' && arr && arr < todayStr) status='done';
     const payload = {
-      status: q('#eStatus').value,
+      status,
       guest_last_name: q('#eLname').value,
       arrival: q('#eArr').value || null,
       departure: q('#eDep').value || null,
@@ -300,7 +352,7 @@ async function openEdit(id){
       cc_holder: q('#eCcHolder').value || null,
       cc_brand:  q('#eCcBrand').value  || null,
       cc_last4:  q('#eCcLast4').value  || null,
-      cc_exp_month: q('#eCcExpM').value ? Number(q('#eCcExpM').value) : null,
+      cc_exp_month: q('#eCcExpM').value ? Number(q('#eCcM').value) : Number(q('#eCcExpM').value||0),
       cc_exp_year:  q('#eCcExpY').value ? Number(q('#eCcExpY').value) : null
     };
     const { error } = await supabase.from('reservations').update(payload).eq('id', id);
@@ -324,17 +376,23 @@ qa('.tab').forEach(btn=>{
   });
 });
 
-/***** Wizard — Validierung pro Schritt *****/
+/***** Wizard — Validierung strikt + hübscher Flow *****/
 function wizardSet(step){
   qa('.wstep').forEach(b=>b.classList.toggle('active', b.dataset.step==step));
   qa('.wpage').forEach(p=>p.classList.add('hidden'));
   q('#w'+step).classList.remove('hidden');
-  q('#btnPrev').disabled = step==='1';
+
+  // Buttons
+  q('#btnPrev').classList.toggle('hidden', step==='1');
   q('#btnNext').classList.toggle('hidden', step==='4');
   q('#btnCreate').classList.toggle('hidden', step!=='4');
-  validateStep(step); // setzt Button-Enable
-  if (step==='3') updateSummary('#summarySide');
+
+  validateStep(step);
+  if (step==='4') updateSummary('#summaryFinal');
 }
+// Stepper nicht anklickbar (Flow erzwingen)
+qa('.wstep').forEach(s=> s.style.pointerEvents='none');
+
 function validateStep(step){
   let ok=false;
   if (step==='1'){
@@ -343,8 +401,8 @@ function validateStep(step){
     ok = !!q('#newCat').value;
   } else if (step==='3'){
     ok = !!q('#newRate').value && Number(q('#newPrice').value||0) > 0;
-  } else {
-    ok = true;
+  } else if (step==='4'){
+    ok = !!q('#newLname').value.trim();
   }
   q('#btnNext').disabled = !ok && step!=='4';
   return ok;
@@ -356,11 +414,7 @@ q('#btnNext').addEventListener('click', ()=>{
   const next = String(Math.min(4, Number(cur)+1));
   wizardSet(next);
 });
-['newHotel','newArr','newDep','newAdults','newChildren'].forEach(id=> q('#'+id).addEventListener('input', ()=>validateStep('1')));
-['newCat'].forEach(id=> q('#'+id).addEventListener('change', ()=>validateStep('2')));
-['newRate','newPrice'].forEach(id=> q('#'+id).addEventListener('input', ()=>validateStep('3')));
 
-/* Step 1 → Auswahl füllen */
 function fillHotelSelect(){
   const sel=q('#newHotel'); sel.innerHTML='';
   sel.append(el('option',{value:''},'Bitte wählen'));
@@ -370,10 +424,15 @@ function fillHotelSelect(){
     const rates= HOTEL_RATES['default'];
     q('#newCat').innerHTML = cats.map(c=>`<option value="${c}">${c}</option>`).join('');
     q('#newRate').innerHTML = rates.map(r=>`<option value="${r.name}" data-price="${r.price}">${r.name} (${EUR.format(r.price)})</option>`).join('');
-    q('#newPrice').value = rates[0].price; updateSummary('#summarySide'); validateStep('1');
+    q('#newPrice').value = rates[0].price;
+    validateStep('1'); updateSummary('#summaryFinal');
   });
 }
-q('#newRate').addEventListener('change',e=>{ const price=e.target.selectedOptions[0]?.dataset.price; if(price) q('#newPrice').value=price; updateSummary('#summarySide'); validateStep('3'); });
+q('#newRate').addEventListener('change',e=>{ const price=e.target.selectedOptions[0]?.dataset.price; if(price) q('#newPrice').value=price; validateStep('3'); updateSummary('#summaryFinal'); });
+['newArr','newDep','newAdults','newChildren','newHotel'].forEach(id=> q('#'+id).addEventListener('input', ()=>{ validateStep('1'); updateSummary('#summaryFinal'); }));
+['newCat'].forEach(id=> q('#'+id).addEventListener('change', ()=>{ validateStep('2'); updateSummary('#summaryFinal'); }));
+['newPrice'].forEach(id=> q('#'+id).addEventListener('input', ()=>{ validateStep('3'); updateSummary('#summaryFinal'); }));
+['newLname'].forEach(id=> q('#'+id).addEventListener('input', ()=> validateStep('4')));
 
 /* Summary Inhalte */
 function linesSummary(){
@@ -388,11 +447,22 @@ function linesSummary(){
     ['Preis', q('#newPrice').value?EUR.format(q('#newPrice').value):'—']
   ];
 }
-function updateSummary(selector='#summarySide'){
+function updateSummary(selector='#summaryFinal'){
   const box = q(selector); if (!box) return;
-  const rows = linesSummary().map(([k,v])=>`<div class="line"><span>${k}</span><span>${v}</span></div>`).join('');
+  const rows = linesSummary().map(([k,v])=>`<div class="summary line"><span>${k}</span><span>${v}</span></div>`).join('');
   box.innerHTML = `<h4 class="mono">Zusammenfassung</h4>${rows}`;
 }
+
+/* Live Credit-Card mirroring */
+['ccHolder','ccBrand','ccNumber','ccExpiry'].forEach(id=>{
+  const map = {ccHolder:'ccHolderLive',ccBrand:'ccBrandLive',ccNumber:'ccNumLive',ccExpiry:'ccExpLive'};
+  const fmtNum = v => v.replace(/\D/g,'').slice(0,16).replace(/(.{4})/g,'$1 ').trim().padEnd(19,'•');
+  q('#'+id).addEventListener('input', e=>{
+    const v = e.target.value;
+    if (id==='ccNumber') q('#'+map[id]).textContent = fmtNum(v);
+    else q('#'+map[id]).textContent = v || (id==='ccExpiry'?'MM/YY': id==='ccBrand'?'CARD':'NAME');
+  });
+});
 
 /* Reservierung anlegen */
 function parseCc(){
@@ -408,10 +478,7 @@ function parseCc(){
 }
 function genResNo(){ return 'R' + Date.now().toString(36).toUpperCase(); }
 async function createReservation(){
-  // letzte Validierung
-  if (!validateStep('3')){ q('#newInfo').textContent='Bitte erst Rate/Preis wählen.'; return; }
-  if (!q('#newLname').value.trim()){ q('#newInfo').textContent='Nachname ist Pflicht.'; wizardSet('4'); return; }
-
+  if (!validateStep('4')){ q('#newInfo').textContent='Bitte Pflichtfelder ausfüllen.'; return; }
   const code=q('#newHotel').value; const h=HOTEL_BY_CODE[code];
   const adults = Number(q('#newAdults').value||1);
   const children = Number(q('#newChildren').value||0);
@@ -420,7 +487,7 @@ async function createReservation(){
 
   const payload = {
     reservation_number: genResNo(),
-    status: 'confirmed',
+    status: 'active',
     hotel_name: h.name,
     hotel_code: code,
     arrival: q('#newArr').value || null,
@@ -495,7 +562,7 @@ async function buildMatrix(){
 }
 q('#availRun').addEventListener('click', buildMatrix);
 
-/***** Reporting *****/
+/***** Reporting (Anreise-Fenster, ohne Storno) *****/
 function setDefaultReportRange(){
   const to=soD(new Date()); const from=soD(new Date(Date.now()-29*86400000));
   q('#repFrom').value=isoDate(from); q('#repTo').value=isoDate(to);
@@ -508,9 +575,10 @@ function fillRepHotel(){
 async function runReport(){
   const from=q('#repFrom').value, to=q('#repTo').value, code=q('#repHotel').value;
   if (!from || !to){ return; }
-  let query = supabase.from('reservations').select('hotel_name,rate_price,created_at,channel')
-    .gte('created_at', new Date(from).toISOString())
-    .lte('created_at', new Date(new Date(to).getTime()+86399999).toISOString());
+  let query = supabase.from('reservations').select('hotel_name,rate_price,arrival,channel,status')
+    .gte('arrival', from)
+    .lte('arrival', to)
+    .neq('status','canceled');
   if (code!=='all'){ const h=HOTEL_BY_CODE[code]; if (h) query = query.eq('hotel_name', h.name); }
   const { data, error } = await query;
   const body=q('#repBody'); body.innerHTML='';
@@ -519,9 +587,11 @@ async function runReport(){
   (data||[]).forEach(r=>{
     const k=r.hotel_name||'—';
     const o=byHotel.get(k)||{bookings:0,revenue:0,ota:0};
-    o.bookings++; o.revenue+=Number(r.rate_price||0); if ((r.channel||'').toLowerCase()==='ota') o.ota++;
+    o.bookings++; o.revenue+=Number(r.rate_price||0);
+    if ((r.channel||'').toLowerCase()==='ota') o.ota++;
     byHotel.set(k,o);
   });
+  if (byHotel.size===0){ body.append(el('tr',{}, el('td',{colspan:'5'}, 'Keine Daten im Zeitraum'))); return; }
   [...byHotel.entries()].sort((a,b)=>b[1].revenue-a[1].revenue).forEach(([hotel,o])=>{
     const adr=o.bookings?o.revenue/o.bookings:null;
     const otaShare = o.bookings? Math.round(o.ota/o.bookings*100):0;
@@ -576,19 +646,21 @@ q('#btnReporting').addEventListener('click', async ()=>{
 q('#btnSettings').addEventListener('click', ()=> openModal('modalSettings'));
 q('#btnNew').addEventListener('click', ()=>{
   fillHotelSelect(); wizardSet('1'); q('#newInfo').textContent='';
-  // Inputs reset
+  // Reset Inputs
   ['newArr','newDep','newAdults','newChildren','newCat','newRate','newPrice','newFname','newLname','newEmail','newPhone','newStreet','newZip','newCity','newCompany','newVat','newCompanyZip','newAddress','newNotes','ccHolder','ccBrand','ccNumber','ccExpiry'].forEach(id=>{ const n=q('#'+id); if(n){ n.value=''; } });
   q('#newAdults').value=1; q('#newChildren').value=0; q('#btnNext').disabled=true;
+  // live card reset
+  q('#ccBrandLive').textContent='CARD'; q('#ccNumLive').textContent='•••• •••• •••• ••••'; q('#ccHolderLive').textContent='NAME'; q('#ccExpLive').textContent='MM/YY';
   openModal('modalNew');
 });
 q('#btnCreate').addEventListener('click', createReservation);
-q('#btnSketch').addEventListener('click', ()=>{ buildSketch(); openModal('modalSketch'); });
 
 (async function init(){
   startClocks();
   await refreshStatus(); setInterval(refreshStatus, 30000);
+  await autoRollPastToDone();
 
-  buildMiniAnalytics();
+  await buildMiniAnalytics();
 
   fillHotelFilter(q('#kpiFilterToday'));
   fillHotelFilter(q('#kpiFilterNext'));
@@ -596,7 +668,7 @@ q('#btnSketch').addEventListener('click', ()=>{ buildSketch(); openModal('modalS
   q('#kpiFilterNext').addEventListener('change', loadKpisNext);
 
   fillFilters();
-  q('#filterStatus').value = 'confirmed';
+  q('#filterStatus').value = 'active';
 
   await loadKpisToday();
   await loadKpisNext();
