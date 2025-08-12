@@ -7,10 +7,11 @@
   <link rel="stylesheet" href="./src/styles.css" />
 </head>
 <body>
+  <!-- Retro-Backdrop -->
   <div class="bg-grid"></div>
   <div class="crt"></div>
 
-  <!-- Topbar (ohne Icon-Buttons) -->
+  <!-- Topbar (ohne Icon-Duplikate) -->
   <header class="topbar shell">
     <div class="brand">
       <img src="./assets/logo.png" alt="Blue & Red Water Hospitality" class="logo" onerror="this.remove()">
@@ -41,7 +42,7 @@
           </div>
         </div>
 
-        <!-- Weekly mini-availability (heatmap, 3 Level inkl. Überbuchung) -->
+        <!-- Weekly mini-availability (3 Level inkl. Überbuchung) -->
         <div class="card alt">
           <div class="card-head">
             <h2 class="headline">Verfügbarkeit · aktuelle Woche</h2>
@@ -52,10 +53,12 @@
             </div>
           </div>
           <div id="mini-availability" class="mini-av"></div>
-          <p class="muted micro">Level: normal · angespannt · <strong>überbucht</strong>. Daten Demo bis HNS/Opera steht.</p>
+          <p class="muted micro">
+            Level: normal · angespannt (≥80%) · <strong>überbucht (≥100%)</strong> — Demo bis HNS/Opera steht.
+          </p>
         </div>
 
-        <!-- Module Tiles -->
+        <!-- Module Tiles (klar & ohne Redundanz) -->
         <section class="grid-tiles" aria-label="Module">
           <button class="tile" data-open="newRes">
             <span class="headline">Neue Reservierung</span>
@@ -76,8 +79,8 @@
         </section>
       </div>
 
+      <!-- Systemstatus -->
       <aside class="dash-right">
-        <!-- Systemstatus -->
         <div class="card console">
           <div class="console-head">
             <span class="lamp"></span>
@@ -100,7 +103,8 @@
   <!-- Overlay -->
   <div id="overlay" class="overlay" hidden></div>
 
-  <!-- MODALS (IDs bleiben kompatibel) -->
+  <!-- MODALS -->
+  <!-- Neue Reservierung -->
   <section id="modal-newRes" class="modal" aria-hidden="true" role="dialog" aria-modal="true">
     <div class="dialog">
       <header class="dialog-head">
@@ -108,12 +112,16 @@
         <button class="close" data-close aria-label="Schließen">✕</button>
       </header>
       <div class="dialog-body">
-        <div class="stepper"><div class="bar"><span id="stepper-thumb"></span></div><div class="labels"><em>Reise</em><em>Rate</em><em>Gast</em></div></div>
+        <div class="stepper">
+          <div class="bar"><span id="stepper-thumb"></span></div>
+          <div class="labels"><em>Reise</em><em>Rate</em><em>Gast</em></div>
+        </div>
         <div id="newResContent"></div>
       </div>
     </div>
   </section>
 
+  <!-- Reservierungen -->
   <section id="modal-reservations" class="modal" aria-hidden="true" role="dialog" aria-modal="true">
     <div class="dialog wide">
       <header class="dialog-head">
@@ -148,6 +156,7 @@
     </div>
   </section>
 
+  <!-- Verfügbarkeit -->
   <section id="modal-availability" class="modal" aria-hidden="true" role="dialog" aria-modal="true">
     <div class="dialog xwide">
       <header class="dialog-head">
@@ -163,13 +172,18 @@
         <div class="matrixwrap">
           <div id="availMatrix" class="matrix" aria-describedby="availHelp"></div>
         </div>
-        <p id="availHelp" class="muted micro">Hover → Zeile/Spalte highlight · <strong>Überbuchung</strong> wird markiert.</p>
+        <p id="availHelp" class="muted micro">Hover → Zeile/Spalte highlight · <strong>Überbuchung</strong> markiert.</p>
       </div>
     </div>
   </section>
 
   <!-- Platzhalter -->
-  <section id="modal-reporting" class="modal" aria-hidden="true"><div class="dialog"><header class="dialog-head"><h3 class="headline">Reporting</h3><button class="close" data-close>✕</button></header><div class="dialog-body"><p class="muted">KPIs via OHIP/HNS – folgt.</p></div></div></section>
+  <section id="modal-reporting" class="modal" aria-hidden="true">
+    <div class="dialog">
+      <header class="dialog-head"><h3 class="headline">Reporting</h3><button class="close" data-close>✕</button></header>
+      <div class="dialog-body"><p class="muted">KPIs via OHIP/HNS – folgt.</p></div>
+    </div>
+  </section>
 
   <footer class="statusbar shell">
     <span>© Blue & Red Water Hospitality</span>
