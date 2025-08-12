@@ -33,6 +33,8 @@
           <span class="pill" id="chipHns" title="HotelNetSolutions">HNS</span>
         </div>
         <div class="clock">
+          <span id="dateLocal">--.--.----</span>
+          <span class="sep">·</span>
           <span id="clockLocal">--:--:--</span>
           <span class="sep">/</span>
           <span id="clockServer">srv --:--:--</span>
@@ -40,6 +42,15 @@
       </div>
     </nav>
   </header>
+
+  <!-- LEFT: Mini-Analytics (dummy per Haus, nicht im Header) -->
+  <aside class="left-analytics" aria-label="7-Tage Buchungsverlauf">
+    <div class="la-head">
+      <div class="mono">Mini-Charts (7 Tage)</div>
+      <div class="muted">YoY OTA <span class="pill">↑/↓</span></div>
+    </div>
+    <div id="miniAnalyticsList" class="la-list"></div>
+  </aside>
 
   <main class="container" aria-live="polite">
     <!-- KPIs -->
@@ -50,7 +61,6 @@
           <div class="card-head">
             <h3 class="mono">KPI — Heute</h3>
             <div class="select-wrap">
-              <label class="sr-only" for="kpiFilterToday">Hotelfilter heute</label>
               <select id="kpiFilterToday" class="input sm theme-select"></select>
             </div>
           </div>
@@ -69,7 +79,6 @@
           <div class="card-head">
             <h3 class="mono">KPI — Nächste 7 Tage</h3>
             <div class="select-wrap">
-              <label class="sr-only" for="kpiFilterNext">Hotelfilter nächste 7 Tage</label>
               <select id="kpiFilterNext" class="input sm theme-select"></select>
             </div>
           </div>
@@ -89,14 +98,29 @@
         <div class="content">
           <div class="table-tools">
             <h3 class="mono" style="margin:0">Reservierungen</h3>
-            <div class="search"><input id="searchInput" class="input" placeholder="Nach Gastname suchen…" autocomplete="off" /></div>
+            <div class="row wrap">
+              <input id="searchInput" class="input" placeholder="Gastname…" />
+              <select id="filterHotel" class="input theme-select" style="width:220px;"></select>
+              <input id="filterResNo" class="input" placeholder="Res.-Nr." style="width:150px;" />
+              <input id="filterFrom" type="date" class="input" style="width:170px;" />
+              <input id="filterTo"   type="date" class="input" style="width:170px;" />
+              <button class="btn" id="btnRefresh">Refresh</button>
+            </div>
           </div>
+
           <div class="table-wrap">
-            <table class="resv">
+            <table class="resv" id="resTable">
               <thead>
                 <tr>
-                  <th>Gastname</th><th>Anreise</th><th>Abreise</th><th>Hotel</th>
-                  <th>Kategorie</th><th>Rate</th><th>Preis</th><th>Notizen</th>
+                  <th>Res.-Nr.</th>
+                  <th>Gastname</th>
+                  <th>Anreise</th>
+                  <th>Abreise</th>
+                  <th>Hotel</th>
+                  <th>Kategorie</th>
+                  <th>Rate</th>
+                  <th>Preis</th>
+                  <th>Status</th>
                 </tr>
               </thead>
               <tbody id="resvBody"></tbody>
@@ -121,35 +145,144 @@
   <!-- Backdrop + Modals -->
   <div class="modal-backdrop" id="backdrop" aria-hidden="true"></div>
 
-  <!-- Modals (unverändert, funktionieren mittig) -->
+  <!-- Neue Reservierung: Wizard -->
   <section class="modal" id="modalNew" role="dialog" aria-labelledby="newTitle" aria-modal="true">
     <header>
       <h3 id="newTitle" class="mono">Neue Reservierung</h3>
       <button class="btn" data-close>Schließen</button>
     </header>
     <div class="body">
-      <div class="grid2">
-        <label>Hotel <select id="newHotel" class="input"></select></label>
-        <label>Gäste <input id="newGuests" type="number" min="1" value="1" class="input"/></label>
-        <label>Anreise <input id="newArr" type="date" class="input"/></label>
-        <label>Abreise <input id="newDep" type="date" class="input"/></label>
-        <label>Kategorie
-          <select id="newCat" class="input"><option>Standard</option><option>Superior</option><option>Suite</option></select>
+      <div class="wizard-steps">
+        <button class="wstep active" data-step="1">1. Hotel</button>
+        <button class="wstep" data-step="2">2. Kategorie</button>
+        <button class="wstep" data-step="3">3. Rate</button>
+        <button class="wstep" data-step="4">4. Gast & Zahlung</button>
+      </div>
+
+      <div class="wpage" id="w1">
+        <label>Hotel
+          <select id="newHotel" class="input"></select>
         </label>
+        <div class="grid2">
+          <label>Anreise <input id="newArr" type="date" class="input"/></label>
+          <label>Abreise <input id="newDep" type="date" class="input"/></label>
+          <label>Gäste  <input id="newGuests" type="number" min="1" value="1" class="input"/></label>
+        </div>
+      </div>
+
+      <div class="wpage hidden" id="w2">
+        <label>Kategorie
+          <select id="newCat" class="input"></select>
+        </label>
+      </div>
+
+      <div class="wpage hidden" id="w3">
         <label>Rate
-          <select id="newRate" class="input">
-            <option value="Flex exkl. Frühstück" data-price="89">Flex exkl. Frühstück</option>
-            <option value="Flex inkl. Frühstück" data-price="109">Flex inkl. Frühstück</option>
-          </select>
+          <select id="newRate" class="input"></select>
         </label>
         <label>Preis <input id="newPrice" type="number" step="1" value="89" class="input"/></label>
-        <label>Gast Nachname <input id="newLname" type="text" placeholder="Mustermann" class="input"/></label>
       </div>
-      <div class="right"><button class="btn" id="btnCreate">Anlegen</button></div>
-      <p class="muted" id="newInfo" style="margin-top:6px;"></p>
+
+      <div class="wpage hidden" id="w4">
+        <div class="grid2">
+          <label>Vorname <input id="newFname" class="input" placeholder="Max"/></label>
+          <label>Nachname* <input id="newLname" class="input" placeholder="Mustermann" required/></label>
+          <label>E-Mail <input id="newEmail" class="input" placeholder="max@example.com"/></label>
+          <label>Telefon <input id="newPhone" class="input" placeholder="+49 ..."/></label>
+        </div>
+
+        <details class="box">
+          <summary class="mono">Firmenanschrift (optional)</summary>
+          <div class="grid2">
+            <label>Firma <input id="newCompany" class="input" /></label>
+            <label>USt-ID <input id="newVat" class="input" /></label>
+            <label>Rechnungs-E-Mail <input id="newInvEmail" class="input" /></label>
+            <label>Adresse <input id="newAddress" class="input" /></label>
+          </div>
+        </details>
+
+        <details class="box">
+          <summary class="mono">Kreditkarte (Platzhalter)</summary>
+          <div class="grid2">
+            <label>Karteninhaber <input id="ccHolder" class="input" /></label>
+            <label>Kartennummer <input id="ccNumber" class="input" placeholder="**** **** **** 1234" /></label>
+            <label>Ablauf (MM/JJ) <input id="ccExpiry" class="input" placeholder="12/27" /></label>
+            <label>Brand <input id="ccBrand" class="input" placeholder="Visa/Mastercard" /></label>
+          </div>
+          <p class="muted" style="margin-top:6px;">Es wird nur **Last4**, Brand & Ablauf gespeichert.</p>
+        </details>
+      </div>
+
+      <div class="wizard-actions">
+        <button class="btn ghost" id="btnPrev">Zurück</button>
+        <div style="flex:1"></div>
+        <button class="btn" id="btnNext">Weiter</button>
+        <button class="btn primary hidden" id="btnCreate">Reservierung abschicken</button>
+      </div>
+
+      <p class="muted" id="newInfo" style="margin-top:8px;"></p>
     </div>
   </section>
 
+  <!-- Reservierung bearbeiten -->
+  <section class="modal" id="modalEdit" role="dialog" aria-labelledby="editTitle" aria-modal="true">
+    <header>
+      <h3 id="editTitle" class="mono">Reservierung bearbeiten</h3>
+      <button class="btn" data-close>Schließen</button>
+    </header>
+    <div class="body">
+      <div class="tabs">
+        <button class="tab active" data-tab="tabDet">Details</button>
+        <button class="tab" data-tab="tabPay">Zahlung</button>
+        <button class="tab" data-tab="tabAct">Aktionen</button>
+      </div>
+
+      <div class="tabpage" id="tabDet">
+        <div class="grid2">
+          <label>Res.-Nr. <input id="eResNo" class="input" disabled/></label>
+          <label>Status
+            <select id="eStatus" class="input">
+              <option>confirmed</option>
+              <option>pending</option>
+              <option>canceled</option>
+            </select>
+          </label>
+          <label>Hotel <input id="eHotel" class="input" disabled/></label>
+          <label>Gast Nachname <input id="eLname" class="input"/></label>
+          <label>Anreise <input id="eArr" type="date" class="input"/></label>
+          <label>Abreise <input id="eDep" type="date" class="input"/></label>
+          <label>Kategorie <input id="eCat" class="input"/></label>
+          <label>Rate <input id="eRate" class="input"/></label>
+          <label>Preis <input id="ePrice" type="number" step="1" class="input"/></label>
+          <label>Notizen <input id="eNotes" class="input"/></label>
+        </div>
+        <div class="right"><button class="btn" id="btnSaveEdit">Speichern</button></div>
+      </div>
+
+      <div class="tabpage hidden" id="tabPay">
+        <div class="grid2">
+          <label>Karteninhaber <input id="eCcHolder" class="input"/></label>
+          <label>Brand <input id="eCcBrand" class="input"/></label>
+          <label>Last4 <input id="eCcLast4" class="input"/></label>
+          <label>Exp. Monat <input id="eCcExpM" type="number" min="1" max="12" class="input"/></label>
+          <label>Exp. Jahr <input id="eCcExpY" type="number" min="24" max="40" class="input"/></label>
+        </div>
+        <p class="muted">Hinweis: Es werden keine vollständigen Kartennummern gespeichert.</p>
+        <div class="right"><button class="btn" id="btnSavePay">Speichern</button></div>
+      </div>
+
+      <div class="tabpage hidden" id="tabAct">
+        <div class="box">
+          <p class="muted">Reservierung stornieren? Status wird auf <b>canceled</b> gesetzt.</p>
+          <button class="btn danger" id="btnCancelRes">Stornieren</button>
+        </div>
+      </div>
+
+      <p class="muted" id="editInfo" style="margin-top:8px;"></p>
+    </div>
+  </section>
+
+  <!-- Verfügbarkeit & Reporting & Settings & Skizze (unverändert) -->
   <section class="modal" id="modalAvail" role="dialog" aria-labelledby="availTitle" aria-modal="true">
     <header>
       <h3 id="availTitle" class="mono">Verfügbarkeit (14 Tage)</h3>
@@ -173,10 +306,15 @@
         <label>Von <input id="repFrom" type="date" class="input"></label>
         <label>Bis <input id="repTo" type="date" class="input"></label>
         <button class="btn" id="repRun">Aktualisieren</button>
+        <div style="flex:1"></div>
+        <button class="btn ghost" id="repCsv">Export CSV</button>
+        <button class="btn ghost" id="repXls">Export Excel</button>
+        <button class="btn ghost" id="kpiCsv">KPI CSV</button>
+        <button class="btn ghost" id="kpiXls">KPI Excel</button>
       </div>
       <div class="table-wrap">
         <table class="resv">
-          <thead><tr><th>Hotel</th><th>Buchungen</th><th>Umsatz</th><th>ADR</th></tr></thead>
+          <thead><tr><th>Hotel</th><th>Buchungen</th><th>Umsatz</th><th>ADR</th><th>OTA-Anteil</th></tr></thead>
           <tbody id="repBody"></tbody>
         </table>
       </div>
