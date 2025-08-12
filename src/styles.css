@@ -131,4 +131,26 @@ table.resv { width: 100%; border-collapse: collapse; }
   .kpis { grid-template-columns: 1fr 1fr; }
   .hero { grid-template-columns: 1fr; }
   .status-grid { grid-template-columns: 1fr 1fr; }
-}
+
+  /* Toolbar: Groups + small buttons */
+.toolbar { display:flex; align-items:center; gap: 14px; flex-wrap: wrap; }
+.toolbar-left { display:flex; gap:10px; flex-wrap:wrap; }
+.toolbar-right { margin-left:auto; display:flex; gap:8px; }
+.btn.sm { padding: 6px 10px; font-size: 12px; border-radius: 10px; font-weight: 700; }
+
+/* Clock block in header */
+.status-clock { display:flex; align-items:center; gap:12px; margin-left:12px; }
+
+/* Fix: modal above backdrop, inputs bedienbar */
+.modal-backdrop { z-index: 40; }   /* bleibt darunter */
+.modal { z-index: 60; }            /* liegt drüber */
+
+/* Kleine Helfer-Layouts */
+.grid2 { display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap:12px; }
+.row.wrap { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+.right { display:flex; justify-content:flex-end; }
+
+/* Hotelskizze Grid */
+.hotel-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(240px,1fr)); gap:12px; }
+.hotel-card { padding:12px; border:1px solid rgba(0,255,255,0.18); border-radius:12px; background: rgba(0,255,255,0.04); }
+.hotel-card .code { font-family:"JetBrains Mono", monospace; color: var(--accent-2); font-weight:700; }
