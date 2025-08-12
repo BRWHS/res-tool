@@ -1,196 +1,499 @@
-<!doctype html>
-<html lang="de">
+<!DOCTYPE html>
+<html lang="de" class="scroll-smooth">
 <head>
   <meta charset="utf-8" />
-  <title>res‑tool – Blue & Red Water Hospitality</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="./src/styles.css" />
-</head>
-<body>
-  <!-- Retro-Backdrop -->
-  <div class="bg-grid"></div>
-  <div class="crt"></div>
+  <title>hasco – Zentrales Reservierungstool</title>
+  <meta name="description" content="hasco: Einheitliche Oberfläche für Reservierungen über verschiedene PMS & Channel-Manager hinweg." />
 
-  <!-- Topbar (ohne Icon-Duplikate) -->
-  <header class="topbar shell">
-    <div class="brand">
-      <img src="./assets/logo.png" alt="Blue & Red Water Hospitality" class="logo" onerror="this.remove()">
-      <h1 class="headline">res‑tool</h1>
+  <!-- Tailwind CDN (keine Build-Chain nötig) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    /* Tailwind-Konfiguration: Farbsystem & Container */
+    tailwind.config = {
+      theme: {
+        container: { center: true, padding: '1rem' },
+        extend: {
+          colors: {
+            hasco: {
+              50: '#f4fbff',
+              100: '#e7f6ff',
+              200: '#c9eaff',
+              300: '#9ed8ff',
+              400: '#63beff',
+              500: '#369dff',
+              600: '#1a79e6',
+              700: '#155fba',
+              800: '#124f98',
+              900: '#0f427d',
+              950: '#0c2b50'
+            }
+          },
+          boxShadow: {
+            soft: '0 10px 30px -12px rgb(2 6 23 / 0.15)'
+          },
+          fontFamily: {
+            sans: ["Inter", "ui-sans-serif", "system-ui", "-apple-system", "Segoe UI", "Roboto", "Helvetica Neue", "Arial", "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji"]
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    /* Feinheiten */
+    .glass { backdrop-filter: saturate(140%) blur(8px); background: linear-gradient(180deg, rgba(255,255,255,.9), rgba(255,255,255,.75)); }
+    .dark .glass { background: linear-gradient(180deg, rgba(17,24,39,.85), rgba(17,24,39,.7)); }
+    .field-label { @apply text-sm font-medium text-slate-600 dark:text-slate-300; }
+    .field-input { @apply w-full rounded-xl border border-slate-300/80 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2.5 shadow-soft focus:outline-none focus:ring-4 focus:ring-hasco-300/50 dark:focus:ring-hasco-700/40; }
+    .btn-primary { @apply inline-flex items-center justify-center gap-2 rounded-2xl bg-hasco-700 px-4 py-2.5 font-semibold text-white shadow-soft hover:bg-hasco-800 focus:outline-none focus:ring-4 focus:ring-hasco-300/60 active:scale-[.99]; }
+    .btn-ghost { @apply inline-flex items-center gap-2 rounded-xl px-3 py-2 font-medium text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800; }
+    .pill { @apply inline-flex items-center gap-2 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-1 text-sm text-slate-700 dark:text-slate-200; }
+  </style>
+
+  <meta name="theme-color" content="#155fba" />
+</head>
+<body class="min-h-dvh bg-gradient-to-br from-slate-50 via-white to-sky-50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-950 text-slate-900 dark:text-slate-100">
+  <!-- Header / Navigation -->
+  <header class="sticky top-0 z-50 border-b border-white/40 dark:border-slate-800/60 bg-white/70 dark:bg-slate-900/70 backdrop-blur">
+    <div class="container flex items-center justify-between py-3">
+      <a href="#" class="flex items-center gap-3">
+        <svg width="36" height="36" viewBox="0 0 40 40" fill="none" aria-hidden="true" class="drop-shadow">
+          <rect x="4" y="4" width="32" height="32" rx="8" fill="url(#g)" />
+          <path d="M12 25c0-4.971 4.029-9 9-9h7v4h-7a5 5 0 0 0-5 5v6h-4v-6Z" fill="white"/>
+          <defs>
+            <linearGradient id="g" x1="4" y1="4" x2="36" y2="36" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#63beff"/>
+              <stop offset="1" stop-color="#155fba"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <span class="text-xl font-extrabold tracking-tight">hasco</span>
+      </a>
+      <nav class="hidden md:flex items-center gap-2">
+        <a href="#suche" class="btn-ghost">Suchen</a>
+        <a href="#vorteile" class="btn-ghost">Vorteile</a>
+        <a href="#wie-funktioniert" class="btn-ghost">Ablauf</a>
+        <a href="#kontakt" class="btn-ghost">Kontakt</a>
+        <button id="themeToggle" aria-label="Theme umschalten" class="pill">🌙 <span class="hidden sm:inline">Dark</span></button>
+      </nav>
+      <button id="menuBtn" class="md:hidden pill" aria-label="Menü öffnen">Menü</button>
     </div>
-    <div class="brand-meta">
-      <span id="date">—</span> · <span id="clock">—:—:—</span> · <span class="muted">Europe/Berlin</span>
+    <!-- Mobile Menu -->
+    <div id="mobileMenu" class="md:hidden hidden border-t border-white/50 dark:border-slate-800">
+      <div class="container py-2 flex flex-col gap-1">
+        <a href="#suche" class="btn-ghost">Suchen</a>
+        <a href="#vorteile" class="btn-ghost">Vorteile</a>
+        <a href="#wie-funktioniert" class="btn-ghost">Ablauf</a>
+        <a href="#kontakt" class="btn-ghost">Kontakt</a>
+        <button id="themeToggleMobile" class="btn-ghost">🌙 Dark</button>
+      </div>
     </div>
   </header>
 
-  <!-- DASHBOARD -->
-  <main class="shell mainpad">
-    <section class="dash">
-      <div class="dash-left">
-        <!-- KPIs -->
-        <div class="kpi-grid">
-          <div class="kpi">
-            <div class="kpi-label">Buchungen heute (alle Hotels)</div>
-            <div class="kpi-value" id="kpi-today">—</div>
-          </div>
-          <div class="kpi">
-            <div class="kpi-label">Buchungen letzte 7 Tage</div>
-            <div class="kpi-value" id="kpi-week">—</div>
-          </div>
-          <div class="kpi">
-            <div class="kpi-label">Ø Preis / Auslastung (Demo)</div>
-            <div class="kpi-value"><span id="kpi-adr">— €</span> · <span id="kpi-occ">—%</span></div>
-          </div>
-        </div>
-
-        <!-- Weekly mini-availability (3 Level inkl. Überbuchung) -->
-        <div class="card alt">
-          <div class="card-head">
-            <h2 class="headline">Verfügbarkeit · aktuelle Woche</h2>
-            <div class="card-tools">
-              <button class="chip" id="mini-prev">◀</button>
-              <button class="chip" id="mini-next">▶</button>
-              <button class="primary" data-open="availability">vollständige Matrix</button>
-            </div>
-          </div>
-          <div id="mini-availability" class="mini-av"></div>
-          <p class="muted micro">
-            Level: normal · angespannt (≥80%) · <strong>überbucht (≥100%)</strong> — Demo bis HNS/Opera steht.
+  <!-- Hero -->
+  <section class="relative overflow-hidden">
+    <div class="absolute inset-0 -z-10 opacity-70">
+      <svg aria-hidden="true" class="w-[140%] max-w-none -translate-y-24" viewBox="0 0 1155 678" fill="none">
+        <path fill="url(#gradient)" fill-opacity=".3" d="M317.219 518.975L203.852 678 0 438.341l317.219 80.634 204.172-286.402c-1.387 132.337 34.401 395.146 453.461 130.66 192.075-94.79 197.437-336.352 383.536-406.851-132.089 258.199-478.803 601.63-751.239 428.6Z" />
+        <defs>
+          <linearGradient id="gradient" x1="1155.49" x2="-78.208" y1="-37.5" y2="251.542" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#155fba"></stop>
+            <stop offset="1" stop-color="#63beff"></stop>
+          </linearGradient>
+        </defs>
+      </svg>
+    </div>
+    <div class="container py-16 md:py-24 lg:py-28">
+      <div class="grid lg:grid-cols-2 gap-10 items-center">
+        <div>
+          <h1 class="text-3xl md:text-5xl font-extrabold leading-tight tracking-tight">
+            Eine Oberfläche. Alle Häuser.
+          </h1>
+          <p class="mt-4 text-lg text-slate-700/90 dark:text-slate-300">
+            hasco vereinheitlicht Reservierungsprozesse über unterschiedliche PMS & Channel-Manager. Buchen, ändern & verwalten – zentral, sicher und sauber.
           </p>
-        </div>
-
-        <!-- Module Tiles (klar & ohne Redundanz) -->
-        <section class="grid-tiles" aria-label="Module">
-          <button class="tile" data-open="newRes">
-            <span class="headline">Neue Reservierung</span>
-            <small>Wizard: Reise → Rate → Gast</small>
-          </button>
-          <button class="tile" data-open="reservations">
-            <span class="headline">Reservierungen</span>
-            <small>einsehen · ändern · stornieren</small>
-          </button>
-          <button class="tile" data-open="availability">
-            <span class="headline">Verfügbarkeit</span>
-            <small>Matrix: Hotel × Tag</small>
-          </button>
-          <button class="tile" data-open="reporting">
-            <span class="headline">Reporting</span>
-            <small>ADR · RN · Umsatz</small>
-          </button>
-        </section>
-      </div>
-
-      <!-- Systemstatus -->
-      <aside class="dash-right">
-        <div class="card console">
-          <div class="console-head">
-            <span class="lamp"></span>
-            <span class="headline">Systemstatus</span>
-          </div>
-          <div class="console-body">
-            <div class="status-row"><span>Uhrzeit</span><strong id="clock2">—:—:—</strong></div>
-            <div class="status-row"><span>Datum</span><strong id="date2">—</strong></div>
-            <div class="status-row"><span>Supabase</span><strong id="sb-status">verbunden</strong></div>
-            <div class="status-row"><span>HotelNetSolutions</span><strong id="hns-status" class="muted">getrennt</strong></div>
+          <div class="mt-6 flex flex-wrap gap-3">
+            <span class="pill">⚡ Live-Preise & Verfügbarkeiten (HNS-API)</span>
+            <span class="pill">🔒 DSGVO-konform</span>
+            <span class="pill">🧩 PMS-agnostisch</span>
           </div>
         </div>
-      </aside>
-    </section>
-  </main>
+        <!-- Such-Widget -->
+        <div id="suche" class="glass rounded-3xl p-6 md:p-8 shadow-soft border border-white/40 dark:border-slate-800">
+          <form id="searchForm" class="grid grid-cols-1 sm:grid-cols-2 gap-4" autocomplete="off">
+            <!-- Hotel -->
+            <div class="sm:col-span-2">
+              <label class="field-label" for="hotel">Hotel / Property</label>
+              <select id="hotel" name="hotel" class="field-input" required>
+                <option value="" disabled selected>Bitte wählen…</option>
+                <option value="MASEVEN Stuttgart">MASEVEN Stuttgart</option>
+                <option value="MASEVEN München">MASEVEN München</option>
+                <option value="Landhotel Struck">Landhotel Struck</option>
+                <option value="Testhotel A">Testhotel A</option>
+                <option value="Testhotel B">Testhotel B</option>
+              </select>
+            </div>
 
-  <!-- Toast -->
-  <div id="toast" class="toast" aria-live="polite"></div>
+            <!-- Daten -->
+            <div>
+              <label class="field-label" for="arrival">Anreise</label>
+              <input id="arrival" name="arrival" type="date" class="field-input" required />
+            </div>
+            <div>
+              <label class="field-label" for="departure">Abreise</label>
+              <input id="departure" name="departure" type="date" class="field-input" required />
+            </div>
 
-  <!-- Overlay -->
-  <div id="overlay" class="overlay" hidden></div>
+            <!-- Gäste -->
+            <div>
+              <label class="field-label" for="guests">Gäste</label>
+              <div class="flex items-center gap-2">
+                <button class="pill" type="button" data-guest-action="dec" aria-label="Weniger Gäste">–</button>
+                <input id="guests" name="guests" type="number" min="1" value="1" class="field-input text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+                <button class="pill" type="button" data-guest-action="inc" aria-label="Mehr Gäste">+</button>
+              </div>
+            </div>
 
-  <!-- MODALS -->
-  <!-- Neue Reservierung -->
-  <section id="modal-newRes" class="modal" aria-hidden="true" role="dialog" aria-modal="true">
-    <div class="dialog">
-      <header class="dialog-head">
-        <h3 class="headline">Neue Reservierung</h3>
-        <button class="close" data-close aria-label="Schließen">✕</button>
-      </header>
-      <div class="dialog-body">
-        <div class="stepper">
-          <div class="bar"><span id="stepper-thumb"></span></div>
-          <div class="labels"><em>Reise</em><em>Rate</em><em>Gast</em></div>
-        </div>
-        <div id="newResContent"></div>
-      </div>
-    </div>
-  </section>
+            <!-- Promo -->
+            <div>
+              <label class="field-label" for="promo">Firmencode / Promo</label>
+              <input id="promo" name="promo" type="text" placeholder="Optional" class="field-input" />
+            </div>
 
-  <!-- Reservierungen -->
-  <section id="modal-reservations" class="modal" aria-hidden="true" role="dialog" aria-modal="true">
-    <div class="dialog wide">
-      <header class="dialog-head">
-        <h3 class="headline">Reservierungen</h3>
-        <button class="close" data-close aria-label="Schließen">✕</button>
-      </header>
-      <div class="dialog-body">
-        <div class="toolbar">
-          <input id="resSearch" placeholder="Gastname suchen…">
-        </div>
-        <div class="tablewrap">
-          <table class="table" id="resTable">
-            <thead>
-              <tr>
-                <th data-sort="guest">Gast</th>
-                <th data-sort="arrival">Anreise</th>
-                <th data-sort="departure">Abreise</th>
-                <th data-sort="hotel">Hotel</th>
-                <th data-sort="rate">Rate</th>
-                <th>Aktionen</th>
-              </tr>
-            </thead>
-            <tbody id="resTbody"></tbody>
-          </table>
-        </div>
-        <div class="pager">
-          <button id="resPrev">Zurück</button>
-          <span id="resPageinfo"></span>
-          <button id="resNext">Weiter</button>
+            <!-- CTA -->
+            <div class="sm:col-span-2 flex items-center justify-between gap-3 mt-2">
+              <div class="text-xs text-slate-500 dark:text-slate-400">Verfügbare Kategorien & Raten werden im nächsten Schritt angezeigt.</div>
+              <button class="btn-primary" type="submit">Verfügbarkeit prüfen</button>
+            </div>
+          </form>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Verfügbarkeit -->
-  <section id="modal-availability" class="modal" aria-hidden="true" role="dialog" aria-modal="true">
-    <div class="dialog xwide">
-      <header class="dialog-head">
-        <h3 class="headline">Verfügbarkeit</h3>
-        <button class="close" data-close aria-label="Schließen">✕</button>
-      </header>
-      <div class="dialog-body">
-        <div class="toolbar">
-          <label>Start <input type="date" id="availStart"></label>
-          <label>Tage <input type="number" id="availDays" min="1" max="31" value="14"></label>
-          <button class="primary" id="availGenerate">Aktualisieren</button>
-        </div>
-        <div class="matrixwrap">
-          <div id="availMatrix" class="matrix" aria-describedby="availHelp"></div>
-        </div>
-        <p id="availHelp" class="muted micro">Hover → Zeile/Spalte highlight · <strong>Überbuchung</strong> markiert.</p>
+  <!-- Ergebnisse / Step 2 (Dummy) -->
+  <section id="ergebnisse" class="py-12 md:py-16 hidden border-t border-slate-200/60 dark:border-slate-800">
+    <div class="container">
+      <div class="mb-6 flex items-center justify-between">
+        <h2 class="text-2xl font-bold">Verfügbare Kategorien</h2>
+        <div class="text-sm text-slate-600 dark:text-slate-300" id="resultMeta"> </div>
+      </div>
+      <div id="cards" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+      <div class="mt-8 flex items-center justify-between">
+        <button class="btn-ghost" id="backToSearch">← Zurück</button>
+        <button class="btn-primary" id="toSummary" disabled>Weiter</button>
       </div>
     </div>
   </section>
 
-  <!-- Platzhalter -->
-  <section id="modal-reporting" class="modal" aria-hidden="true">
-    <div class="dialog">
-      <header class="dialog-head"><h3 class="headline">Reporting</h3><button class="close" data-close>✕</button></header>
-      <div class="dialog-body"><p class="muted">KPIs via OHIP/HNS – folgt.</p></div>
+  <!-- Zusammenfassung / Step 3 (Dummy) -->
+  <section id="summary" class="py-12 md:py-16 hidden border-t border-slate-200/60 dark:border-slate-800">
+    <div class="container max-w-3xl">
+      <h2 class="text-2xl font-bold mb-6">Zusammenfassung</h2>
+      <div class="glass rounded-3xl p-6 border border-white/40 dark:border-slate-800">
+        <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+          <div>
+            <dt class="text-slate-500">Hotel</dt>
+            <dd id="sHotel" class="font-semibold">–</dd>
+          </div>
+          <div>
+            <dt class="text-slate-500">Reisedaten</dt>
+            <dd id="sDates" class="font-semibold">–</dd>
+          </div>
+          <div>
+            <dt class="text-slate-500">Gäste</dt>
+            <dd id="sGuests" class="font-semibold">–</dd>
+          </div>
+          <div>
+            <dt class="text-slate-500">Kategorie / Rate</dt>
+            <dd id="sRate" class="font-semibold">–</dd>
+          </div>
+        </dl>
+        <div class="mt-6 grid sm:grid-cols-3 gap-3">
+          <input type="email" id="sEmail" placeholder="Bestätigung an (optional)" class="field-input" />
+          <input type="text" id="sCard" placeholder="Kreditkarte (nur Dummy)" class="field-input" />
+          <button id="sendBooking" class="btn-primary">Reservierung abschicken</button>
+        </div>
+        <p id="submitNote" class="mt-3 text-xs text-slate-500">Dieser Schritt ist ein Frontend-Dummy. Die echte Übertragung an Supabase/HNS wird in der Integration aktiviert.</p>
+      </div>
     </div>
   </section>
 
-  <footer class="statusbar shell">
-    <span>© Blue & Red Water Hospitality</span>
-    <span class="muted">Res‑Tool • Demo UI</span>
+  <!-- Vorteile -->
+  <section id="vorteile" class="py-14 md:py-20">
+    <div class="container">
+      <h2 class="text-2xl md:text-3xl font-extrabold">Warum hasco?</h2>
+      <p class="mt-2 text-slate-600 dark:text-slate-300 max-w-2xl">Eine Oberfläche für alle Systeme: weniger Einarbeitung, weniger Fehler, schnellere Abwicklung.</p>
+      <div class="mt-8 grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Kacheln -->
+        <div class="glass rounded-3xl p-6 border border-white/40 dark:border-slate-800">
+          <div class="text-2xl">🧩</div>
+          <h3 class="mt-3 font-semibold text-lg">PMS-agnostisch</h3>
+          <p class="text-sm text-slate-600 dark:text-slate-300">Apaleo, OPERA, protel, Guestline, StayNTouch uvm. – einheitlicher Flow für die Reservierung.</p>
+        </div>
+        <div class="glass rounded-3xl p-6 border border-white/40 dark:border-slate-800">
+          <div class="text-2xl">⚡</div>
+          <h3 class="mt-3 font-semibold text-lg">Live-Preise</h3>
+          <p class="text-sm text-slate-600 dark:text-slate-300">Über die geplante HotelNetSolutions-Anbindung werden Preise & Verfügbarkeiten je Haus live angezeigt.</p>
+        </div>
+        <div class="glass rounded-3xl p-6 border border-white/40 dark:border-slate-800">
+          <div class="text-2xl">🛡️</div>
+          <h3 class="mt-3 font-semibold text-lg">Saubere Daten</h3>
+          <p class="text-sm text-slate-600 dark:text-slate-300">Input-Validierung, Logging & klare Prozesse reduzieren Fehler und Nacharbeit.</p>
+        </div>
+        <div class="glass rounded-3xl p-6 border border-white/40 dark:border-slate-800">
+          <div class="text-2xl">🔒</div>
+          <h3 class="mt-3 font-semibold text-lg">Sicherheit</h3>
+          <p class="text-sm text-slate-600 dark:text-slate-300">DSGVO-konforme Verarbeitung. Später: SSO, Rollen & Rechte, IP-Restriktionen.</p>
+        </div>
+        <div class="glass rounded-3xl p-6 border border-white/40 dark:border-slate-800">
+          <div class="text-2xl">🧠</div>
+          <h3 class="mt-3 font-semibold text-lg">Guided Flow</h3>
+          <p class="text-sm text-slate-600 dark:text-slate-300">Schritt für Schritt – von Suche über Kategorien/Raten bis zur Bestätigung.</p>
+        </div>
+        <div class="glass rounded-3xl p-6 border border-white/40 dark:border-slate-800">
+          <div class="text-2xl">📊</div>
+          <h3 class="mt-3 font-semibold text-lg">Übersicht</h3>
+          <p class="text-sm text-slate-600 dark:text-slate-300">Spätere Reservierungs- und KPI-Übersichten – exportierbar und filterbar.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Wie funktioniert es? -->
+  <section id="wie-funktioniert" class="py-14 md:py-20 border-t border-slate-200/60 dark:border-slate-800">
+    <div class="container">
+      <h2 class="text-2xl md:text-3xl font-extrabold">Ablauf</h2>
+      <ol class="mt-6 grid md:grid-cols-3 gap-6">
+        <li class="glass rounded-3xl p-6 border border-white/40 dark:border-slate-800">
+          <div class="text-2xl">1️⃣</div>
+          <h3 class="mt-3 font-semibold">Suche</h3>
+          <p class="text-sm text-slate-600 dark:text-slate-300">Hotel, Daten & Gäste wählen. Optional Firmen-/Promocode eingeben.</p>
+        </li>
+        <li class="glass rounded-3xl p-6 border border-white/40 dark:border-slate-800">
+          <div class="text-2xl">2️⃣</div>
+          <h3 class="mt-3 font-semibold">Kategorie & Rate</h3>
+          <p class="text-sm text-slate-600 dark:text-slate-300">Verfügbare Kategorien werden mit Dummyraten angezeigt – später live via HNS.</p>
+        </li>
+        <li class="glass rounded-3xl p-6 border border-white/40 dark:border-slate-800">
+          <div class="text-2xl">3️⃣</div>
+          <h3 class="mt-3 font-semibold">Zusammenfassung</h3>
+          <p class="text-sm text-slate-600 dark:text-slate-300">Kontaktdaten eintragen, prüfen und abschicken. Speicherung folgt in Supabase.</p>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- Kontakt / Footer -->
+  <footer id="kontakt" class="py-16">
+    <div class="container grid lg:grid-cols-2 gap-10 items-start">
+      <div>
+        <h2 class="text-2xl font-extrabold">Kontakt</h2>
+        <p class="mt-2 text-slate-600 dark:text-slate-300">Fragen, Feedback oder Demo anfragen? Wir freuen uns.</p>
+        <form class="mt-6 grid sm:grid-cols-2 gap-4" onsubmit="event.preventDefault(); alert('Danke! Wir melden uns.');">
+          <input type="text" placeholder="Name" class="field-input" required>
+          <input type="email" placeholder="E-Mail" class="field-input" required>
+          <textarea placeholder="Nachricht" class="field-input sm:col-span-2" rows="4" required></textarea>
+          <button class="btn-primary sm:col-span-2" type="submit">Absenden</button>
+        </form>
+      </div>
+      <div class="glass rounded-3xl p-6 border border-white/40 dark:border-slate-800">
+        <h3 class="font-semibold text-lg">Technische Notizen</h3>
+        <ul class="mt-3 space-y-2 text-sm text-slate-600 dark:text-slate-300 list-disc ml-5">
+          <li>Diese <strong>index.html</strong> ist komplett statisch, optimiert für Vercel/GitHub Pages.</li>
+          <li>Spätere Live-Daten via HotelNetSolutions → Kategorien/Raten/Verfügbarkeiten.</li>
+          <li>Speicherung & Auth: <strong>Supabase</strong> (Tabellen: <em>reservations</em>, <em>search_logs</em>, …).</li>
+          <li>Konkrete Hooks im Code sind mit <code>// TODO:</code> markiert.</li>
+          <li>Designsystem: Tailwind; Dark-Mode per Klassenumschaltung.</li>
+        </ul>
+        <div class="mt-4">
+          <a href="#" class="btn-ghost">Admin-Login (später)</a>
+        </div>
+      </div>
+    </div>
+    <div class="container mt-12 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500 dark:text-slate-400">
+      <div>© <span id="year"></span> hasco hospitality</div>
+      <div class="flex items-center gap-3">
+        <a href="#" class="hover:underline">Impressum</a>
+        <a href="#" class="hover:underline">Datenschutz</a>
+      </div>
+    </div>
   </footer>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script type="module" src="./src/app.js"></script>
+  <!-- Demo-Daten für Kategorien (Step 2) -->
+  <script>
+    const DUMMY_RATES = [
+      { name: 'Flex exklusive Frühstück', price: 89, desc: 'Test rate – volle Flexibilität, ohne Frühstück.' },
+      { name: 'Flex inklusive Frühstück', price: 109, desc: 'Test rate – volle Flexibilität, inkl. Frühstück.' }
+    ];
+
+    const DUMMY_CATEGORIES = [
+      { id: 'std', name: 'Standard Zimmer', img: 'https://images.unsplash.com/photo-1559599238-0f31959a4d31?q=80&w=1200&auto=format&fit=crop', capacity: 2 },
+      { id: 'dlx', name: 'Deluxe Zimmer', img: 'https://images.unsplash.com/photo-1606046604972-77cc76aee944?q=80&w=1200&auto=format&fit=crop', capacity: 2 },
+      { id: 'apt', name: 'Apartment', img: 'https://images.unsplash.com/photo-1505691723518-36a5ac3b2a19?q=80&w=1200&auto=format&fit=crop', capacity: 4 }
+    ];
+
+    // UI-Elemente
+    const $ = (sel, el=document) => el.querySelector(sel);
+    const $$ = (sel, el=document) => Array.from(el.querySelectorAll(sel));
+
+    const state = {
+      search: null, // {hotel, arrival, departure, guests, promo}
+      selection: null // {categoryId, rateName}
+    };
+
+    function fmtDateRange(a, d) {
+      try {
+        const ai = new Date(a); const di = new Date(d);
+        const fmt = new Intl.DateTimeFormat('de-DE', { day:'2-digit', month:'2-digit', year:'numeric' });
+        return `${fmt.format(ai)} – ${fmt.format(di)}`;
+      } catch { return `${a} – ${d}` }
+    }
+
+    // Header: Mobile Menü & Theme
+    (function headerInit(){
+      const menuBtn = $('#menuBtn');
+      const mobile = $('#mobileMenu');
+      menuBtn?.addEventListener('click', () => mobile.classList.toggle('hidden'));
+
+      const themeBtn = $('#themeToggle');
+      const themeBtnM = $('#themeToggleMobile');
+      const root = document.documentElement;
+      function applyTheme(t){
+        if(t==='dark'){ root.classList.add('dark'); localStorage.setItem('theme','dark'); }
+        else { root.classList.remove('dark'); localStorage.setItem('theme','light'); }
+      }
+      // initial
+      applyTheme(localStorage.getItem('theme') || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+      themeBtn?.addEventListener('click', () => applyTheme(root.classList.contains('dark')?'light':'dark'));
+      themeBtnM?.addEventListener('click', () => applyTheme(root.classList.contains('dark')?'light':'dark'));
+    })();
+
+    // Jahr im Footer
+    $('#year').textContent = new Date().getFullYear();
+
+    // Gäste +/-
+    $$('[data-guest-action]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const input = $('#guests');
+        const val = Math.max(1, parseInt(input.value || '1', 10) + (btn.dataset.guestAction==='inc'?1:-1));
+        input.value = val;
+      });
+    });
+
+    // Suche absenden → Step 2
+    $('#searchForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const form = e.currentTarget;
+      const payload = Object.fromEntries(new FormData(form).entries());
+      state.search = payload;
+      localStorage.setItem('hasco_search', JSON.stringify(payload)); // optionales Log
+
+      // Ergebnisse rendern (Dummy bis HNS-API)
+      renderResults();
+      document.getElementById('ergebnisse').classList.remove('hidden');
+      document.getElementById('summary').classList.add('hidden');
+      window.location.hash = '#ergebnisse';
+    });
+
+    function renderResults(){
+      const meta = $('#resultMeta');
+      const cards = $('#cards');
+      cards.innerHTML = '';
+      meta.textContent = `${state.search.hotel} • ${fmtDateRange(state.search.arrival, state.search.departure)} • ${state.search.guests} Gast(e)`;
+      state.selection = null;
+      $('#toSummary').disabled = true;
+
+      DUMMY_CATEGORIES.forEach(cat => {
+        const card = document.createElement('article');
+        card.className = 'rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-soft flex flex-col';
+        card.innerHTML = `
+          <div class="aspect-[16/10] bg-slate-100 dark:bg-slate-800 overflow-hidden">
+            <img src="${cat.img}" alt="${cat.name}" class="w-full h-full object-cover" loading="lazy" />
+          </div>
+          <div class="p-5 flex-1 flex flex-col gap-3">
+            <div class="flex items-start justify-between gap-3">
+              <h3 class="font-semibold text-lg">${cat.name}</h3>
+              <span class="pill">bis ${cat.capacity} Pers.</span>
+            </div>
+            <details class="group">
+              <summary class="cursor-pointer select-none text-sm text-hasco-800 dark:text-hasco-300 hover:underline">Raten anzeigen</summary>
+              <div class="mt-3 space-y-3">
+                ${DUMMY_RATES.map(r => `
+                  <label class="flex items-start gap-3 p-3 rounded-2xl border border-slate-200 dark:border-slate-700 hover:border-hasco-300 dark:hover:border-hasco-700">
+                    <input type="radio" name="rate_${cat.id}" value="${r.name} | ${r.price}€" class="mt-1" />
+                    <div>
+                      <div class="font-medium">${r.name}</div>
+                      <div class="text-sm text-slate-600 dark:text-slate-300">${r.desc}</div>
+                    </div>
+                    <div class="ml-auto font-semibold">${r.price.toFixed(0)} €</div>
+                  </label>
+                `).join('')}
+              </div>
+            </details>
+            <div class="mt-auto pt-2">
+              <button class="btn-primary w-full select-rate" data-cat="${cat.id}" data-name="${cat.name}">Diese Kategorie wählen</button>
+            </div>
+          </div>
+        `;
+        cards.appendChild(card);
+      });
+
+      // Auswahl-Buttons
+      $$('.select-rate', cards).forEach(btn => {
+        btn.addEventListener('click', () => {
+          const catId = btn.dataset.cat;
+          const catName = btn.dataset.name;
+          const chosen = $(`input[name="rate_${catId}"]:checked`, btn.closest('article'));
+          if(!chosen){
+            btn.blur();
+            btn.classList.add('ring-4','ring-red-300');
+            setTimeout(()=>btn.classList.remove('ring-4','ring-red-300'), 700);
+            return;
+          }
+          state.selection = { categoryId: catId, categoryName: catName, rate: chosen.value };
+          $('#toSummary').disabled = false;
+          // Visuelles Feedback
+          $$('.select-rate').forEach(b=>b.textContent='Diese Kategorie wählen');
+          btn.textContent = 'Ausgewählt ✓';
+        });
+      });
+
+      $('#backToSearch').onclick = () => { document.getElementById('ergebnisse').classList.add('hidden'); window.location.hash = '#suche'; };
+      $('#toSummary').onclick = toSummary;
+    }
+
+    function toSummary(){
+      if(!state.selection || !state.search) return;
+      $('#sHotel').textContent = state.search.hotel;
+      $('#sDates').textContent = fmtDateRange(state.search.arrival, state.search.departure);
+      $('#sGuests').textContent = state.search.guests;
+      $('#sRate').textContent = `${state.selection.categoryName} • ${state.selection.rate}`;
+      document.getElementById('summary').classList.remove('hidden');
+      document.getElementById('ergebnisse').classList.add('hidden');
+      window.location.hash = '#summary';
+    }
+
+    // Abschicken (Dummy) – Platzhalter für Supabase + Mail
+    $('#sendBooking').addEventListener('click', () => {
+      const payload = {
+        ...state.search,
+        category: state.selection?.categoryName,
+        rate: state.selection?.rate,
+        email: $('#sEmail').value || null,
+        card: $('#sCard').value || null,
+        created_at: new Date().toISOString()
+      };
+      console.log('BOOKING_PAYLOAD', payload);
+      /* TODO: Supabase
+      await fetch('https://YOUR-SUPABASE-EDGE-FUNCTION/reservations', { method:'POST', body: JSON.stringify(payload) })
+      */
+      alert('Reservierung (Demo) gesendet! Siehe Konsole für Payload.');
+    });
+  </script>
 </body>
 </html>
