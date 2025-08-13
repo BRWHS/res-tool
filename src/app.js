@@ -184,12 +184,18 @@ async function loadKpisToday(){
   const rB = await qb;
   const bookingsToday = (rB.data||[]).length;
 
-  let qotb = supabase.from('reservations').select('rate_price,hotel_code').eq('arrival', tDate).neq('status','canceled');
-  if (hotel) qotb = qotb.eq('hotel_code', hotel.code);
-  const rO = await qotb;
-  const rows = rO.data||[];
-  const revenue = rows.reduce((s,r)=> s + Number(r.rate_price||0), 0);
-  const adr = rows.length ? Math.round((revenue/rows.length)*100)/100 : null;
+let qotb = supabase
+  .from('reservations')
+  .select('rate_price, hotel_code')
+  .lte('arrival', tDate)  // Anreise heute oder früher
+  .gte('departure', tDate) // Abreise heute oder später
+  .neq('status', 'canceled');
+if (hotel) qotb = qotb.eq('hotel_code', hotel.code);
+const rO = await qotb;
+
+const rows = rO.data || [];
+const revenue = rows.reduce((s, r) => s + Number(r.rate_price || 0), 0);
+const adr = rows.length ? Math.round((revenue / rows.length) * 100) / 100 : null;
 
   let occ = null;
   if (hotel){
