@@ -174,50 +174,80 @@ function fillHotelFilter(selectEl){
 /***** KPI — Heute *****/
 async function loadKpisToday(){
   try {
-    const code = q('#kpiFilterToday') ? q('#kpiFilterToday').value : 'all';
+    const sel = q('#kpiFilterToday');
+    const code = sel ? sel.value : 'all';
     const hotel = code !== 'all' ? HOTELS.find(h=>h.code===code) : null;
 
-    const todayStart = soD(new Date());
+    const todayLocal = soD(new Date());            // local midnight
+    const tDate = isoDate(todayLocal);             // 'YYYY-MM-DD'
     const nowISO = new Date().toISOString();
-    const tDate = isoDate(todayStart);
+    const startOfTodayISO = todayLocal.toISOString();
 
-    // Buchungen heute (eingegangen)
+    // 1) Buchungen heute (Eingänge)
     let qb = supabase.from('reservations')
       .select('id,created_at')
-      .gte('created_at', todayStart.toISOString())
+      .gte('created_at', startOfTodayISO)
       .lte('created_at', nowISO);
     if (hotel) qb = qb.eq('hotel_code', hotel.code);
     const rB = await qb;
-    const bookingsToday = (rB.data||[]).length;
+    const bookingsToday = (rB.data || []).length;
 
-    // Umsatz & ADR: alle heute aktiven Aufenthalte
-    // Query A: arrival <= today AND departure >= today AND status != canceled
+    // 2) UMSATZ + ADR HEUTE = alle Aufenthalte, die HEUTE aktiv sind
+    //    Wir machen drei einfache Queries und mergen:
+
+    // A) arrival <= today AND departure >= today
     let qA = supabase.from('reservations')
-      .select('id,rate_price,hotel_code,arrival,departure,status')
+      .select('id, rate_price, hotel_code, hotel_name, arrival, departure, status')
       .lte('arrival', tDate)
       .gte('departure', tDate)
-      .neq('status','canceled');
+      .neq('status', 'canceled');
     if (hotel) qA = qA.eq('hotel_code', hotel.code);
-    const rA = await qA;
 
-    // Query B: arrival <= today AND departure IS NULL AND status != canceled
-    let qB = supabase.from('reservations')
-      .select('id,rate_price,hotel_code,arrival,departure,status')
+    // B) arrival <= today AND departure IS NULL
+    let qB2 = supabase.from('reservations')
+      .select('id, rate_price, hotel_code, hotel_name, arrival, departure, status')
       .lte('arrival', tDate)
       .is('departure', null)
-      .neq('status','canceled');
-    if (hotel) qB = qB.eq('hotel_code', hotel.code);
-    const rC = await qB;
+      .neq('status', 'canceled');
+    if (hotel) qB2 = qB2.eq('hotel_code', hotel.code);
 
-    const map = new Map();
-    (rA.data||[]).forEach(x=>map.set(x.id,x));
-    (rC.data||[]).forEach(x=>map.set(x.id,x));
-    const activeToday = Array.from(map.values());
+    // C) arrival <= today AND departure = ''  (leerer String als "keine Abreise")
+    let qC = supabase.from('reservations')
+      .select('id, rate_price, hotel_code, hotel_name, arrival, departure, status')
+      .lte('arrival', tDate)
+      .eq('departure', '')
+      .neq('status', 'canceled');
+    if (hotel) qC = qC.eq('hotel_code', hotel.code);
+
+    const [rA, rBopen, rC] = await Promise.all([qA, qB2, qC]);
+    if (rA.error)    console.warn('KPI A:', rA.error);
+    if (rBopen.error)console.warn('KPI B:', rBopen.error);
+    if (rC.error)    console.warn('KPI C:', rC.error);
+
+    // Merge & de-dupe
+    const byId = new Map();
+    (rA.data||[]).forEach(x => byId.set(x.id, x));
+    (rBopen.data||[]).forEach(x => byId.set(x.id, x));
+    (rC.data||[]).forEach(x => byId.set(x.id, x));
+
+    // Final-Filter in JS (falls DB-Typen/Timezone tricky sind)
+    const isActiveToday = (row) => {
+      const arr = row.arrival ? isoDate(new Date(row.arrival)) : null;
+      const depRaw = row.departure;
+      const dep = depRaw ? isoDate(new Date(depRaw)) : null;
+      const noDep = depRaw == null || depRaw === '' || dep === null;
+      const arrived = arr && arr <= tDate;
+      const notLeft = noDep || (dep && dep >= tDate);
+      const notCanceled = String(row.status||'').toLowerCase() !== 'canceled';
+      return arrived && notLeft && notCanceled;
+    };
+
+    const activeToday = Array.from(byId.values()).filter(isActiveToday);
 
     const revenue = activeToday.reduce((s,r)=> s + Number(r.rate_price||0), 0);
     const adr = activeToday.length ? Math.round((revenue/activeToday.length)*100)/100 : null;
 
-    // Auslastung heute
+    // 3) Auslastung heute (unverändert)
     let occ = null;
     if (hotel){
       const r = await supabase.from('availability').select('capacity,booked').eq('hotel_code', hotel.code).eq('date', tDate);
@@ -230,7 +260,7 @@ async function loadKpisToday(){
       }
     }
 
-    // Update UI
+    // UI updaten
     if (q('#tBookings')) q('#tBookings').textContent = bookingsToday;
     if (q('#tRevenue'))  q('#tRevenue').textContent  = euro(revenue);
     if (q('#tADR'))      q('#tADR').textContent      = euro(adr);
