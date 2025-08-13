@@ -153,118 +153,78 @@ function fillHotelFilter(selectEl){
 /***** KPI — Heute *****/
 async function loadKpisToday(){
   try {
-    const codeSel = q('#kpiFilterToday');
-    if (!codeSel) { console.warn('kpiFilterToday select fehlt'); return; }
-
-    const code  = codeSel.value;
+    const code  = q('#kpiFilterToday')?.value || 'all';
     const hotel = code !== 'all' ? HOTELS.find(h => h.code === code) : null;
 
     const todayStart = soD(new Date());
     const nowISO = new Date().toISOString();
-    const tDate = isoDate(todayStart); // 'YYYY-MM-DD'
+    const tDate = isoDate(todayStart); // YYYY-MM-DD
 
     // 1) Buchungen heute (eingegangen)
-    let qb = supabase
-      .from('reservations')
-      .select('id, created_at')
+    let qb = supabase.from('reservations')
+      .select('id,created_at')
       .gte('created_at', todayStart.toISOString())
       .lte('created_at', nowISO);
     if (hotel) qb = qb.eq('hotel_code', hotel.code);
-
     const rB = await qb;
-    if (rB.error) { console.error('Buchungen-heute Fehler:', rB.error); }
-    const bookingsToday = (rB.data || []).length;
+    const bookingsToday = (rB.data||[]).length;
 
-    // 2) UMSATZ + ADR HEUTE = alle Aufenthalte, die HEUTE aktiv sind
-    //    Variante ohne .or(): zwei sichere Queries und dann mergen
-
-    // 2a) Alle mit departure >= heute
-    let qA = supabase
-      .from('reservations')
-      .select('id, rate_price, hotel_code, arrival, departure, status')
+    // 2) Umsatz + ADR: alle Aufenthalte, die HEUTE aktiv sind
+    // arrival <= heute AND (departure >= heute OR departure IS NULL) AND status != canceled
+    let q1 = supabase.from('reservations')
+      .select('id,rate_price,hotel_code,arrival,departure,status')
       .lte('arrival', tDate)
       .gte('departure', tDate)
-      .neq('status', 'canceled');
-    if (hotel) qA = qA.eq('hotel_code', hotel.code);
-    const rA = await qA;
-    if (rA.error) { console.error('Revenue A Fehler:', rA.error); }
+      .neq('status','canceled');
+    if (hotel) q1 = q1.eq('hotel_code', hotel.code);
 
-    // 2b) Alle ohne departure (open-ended) und arrival <= heute
-    let qB = supabase
-      .from('reservations')
-      .select('id, rate_price, hotel_code, arrival, departure, status')
+    let q2 = supabase.from('reservations')
+      .select('id,rate_price,hotel_code,arrival,departure,status')
       .lte('arrival', tDate)
       .is('departure', null)
-      .neq('status', 'canceled');
-    if (hotel) qB = qB.eq('hotel_code', hotel.code);
-    const rC = await qB;
-    if (rC.error) { console.error('Revenue B Fehler:', rC.error); }
+      .neq('status','canceled');
+    if (hotel) q2 = q2.eq('hotel_code', hotel.code);
 
-    // Merge + de-dupe
+    const [r1, r2] = await Promise.all([q1, q2]);
     const map = new Map();
-    (rA.data || []).forEach(row => map.set(row.id, row));
-    (rC.data || []).forEach(row => map.set(row.id, row));
-    const activeToday = Array.from(map.values());
+    (r1.data||[]).forEach(r=>map.set(r.id,r));
+    (r2.data||[]).forEach(r=>map.set(r.id,r));
+    const activeToday = [...map.values()];
 
-    const revenue = activeToday.reduce((s, r) => s + Number(r.rate_price || 0), 0);
-    const adr = activeToday.length ? Math.round((revenue / activeToday.length) * 100) / 100 : null;
+    const revenue = activeToday.reduce((s,r)=> s + Number(r.rate_price||0), 0);
+    const adr = activeToday.length ? Math.round((revenue/activeToday.length)*100)/100 : null;
 
-    // 3) Auslastung heute (unverändert)
+    // 3) Auslastung heute (wie gehabt)
     let occ = null;
-    if (hotel) {
-      const r = await supabase
-        .from('availability')
-        .select('capacity, booked')
+    if (hotel){
+      const r = await supabase.from('availability')
+        .select('capacity,booked')
         .eq('hotel_code', hotel.code)
         .eq('date', tDate);
-      if (!r.error && r.data?.length) {
+      if (!r.error && r.data?.length){
         const a = r.data[0];
-        occ = Math.round(
-          Math.min(100, (Number(a.booked || 0) / Math.max(1, Number(a.capacity || 0))) * 100)
-        );
+        occ = Math.round(Math.min(100, (Number(a.booked||0)/Math.max(1,Number(a.capacity||0)))*100));
       }
     } else {
-      const r = await supabase
-        .from('availability')
-        .select('capacity, booked')
+      const r = await supabase.from('availability')
+        .select('capacity,booked')
         .eq('date', tDate);
-      if (!r.error && r.data?.length) {
-        const avg =
-          r.data.reduce(
-            (s, a) =>
-              s +
-              Math.min(
-                100,
-                Math.round(
-                  (Number(a.booked || 0) / Math.max(1, Number(a.capacity || 0))) * 100
-                )
-              ),
-            0
-          ) / r.data.length;
+      if (!r.error && r.data?.length){
+        const avg = r.data.reduce((s,a)=>
+          s + Math.min(100, Math.round((Number(a.booked||0)/Math.max(1,Number(a.capacity||0)))*100))
+        ,0)/r.data.length;
         occ = Math.round(avg);
       }
     }
 
-    // 4) UI aktualisieren
-    q('#tBookings').textContent = bookingsToday;
-    q('#tRevenue').textContent  = euro(revenue);
-    q('#tADR').textContent      = euro(adr);
-    q('#tOcc').textContent      = pct(occ);
-
-  } catch (err) {
-    console.error('loadKpisToday() fatal:', err);
-    // Falls DOM-IDs abweichen, nicht hart crashen:
-    if (q('#tBookings')) q('#tBookings').textContent = '—';
-    if (q('#tRevenue'))  q('#tRevenue').textContent  = '— €';
-    if (q('#tADR'))      q('#tADR').textContent      = '— €';
-    if (q('#tOcc'))      q('#tOcc').textContent      = '—%';
+    // 4) UI
+    q('#tBookings') && (q('#tBookings').textContent = bookingsToday);
+    q('#tRevenue')  && (q('#tRevenue').textContent  = euro(revenue));
+    q('#tADR')      && (q('#tADR').textContent      = euro(adr));
+    q('#tOcc')      && (q('#tOcc').textContent      = pct(occ));
+  } catch (e) {
+    console.error('loadKpisToday error:', e);
   }
-}
-
-  q('#tBookings').textContent = bookingsToday;
-  q('#tRevenue').textContent  = euro(revenue);
-  q('#tADR').textContent      = euro(adr);
-  q('#tOcc').textContent      = pct(occ);
 }
 } else {
     const r = await supabase.from('availability').select('capacity,booked').eq('date', tDate);
@@ -282,16 +242,72 @@ async function loadKpisToday(){
 
 /***** KPI — Nächste 7 Tage *****/
 async function loadKpisNext(){
-  const code = q('#kpiFilterNext').value;
-  const hotel = code!=='all' ? HOTELS.find(h=>h.code===code) : null;
-  const today = soD(new Date());
-  const start = new Date(today); start.setDate(start.getDate()+1);
-  const end   = new Date(today); end.setDate(end.getDate()+7);
+  try {
+    const code  = q('#kpiFilterNext')?.value || 'all';
+    const hotel = code !== 'all' ? HOTELS.find(h => h.code === code) : null;
 
-  let q1 = supabase.from('reservations').select('rate_price,hotel_code,arrival')
-    .gte('arrival', isoDate(start)).lte('arrival', isoDate(end)).neq('status','canceled');
-  if (hotel) q1 = q1.eq('hotel_code', hotel.code);
-  const { data, error } = await q1;
+    const today = soD(new Date());
+    const start = new Date(today); start.setDate(start.getDate()+1);
+    const end   = new Date(today); end.setDate(end.getDate()+7);
+    const d1 = isoDate(start), d2 = isoDate(end);
+
+    // Umsatz/ADR für +1..+7 basierend auf Aufenthalten, die den Zeitraum schneiden
+    let q1 = supabase.from('reservations')
+      .select('id,rate_price,hotel_code,arrival,departure,status')
+      .lte('arrival', d2)
+      .gte('departure', d1)
+      .neq('status','canceled');
+    if (hotel) q1 = q1.eq('hotel_code', hotel.code);
+
+    let q2 = supabase.from('reservations')
+      .select('id,rate_price,hotel_code,arrival,departure,status')
+      .lte('arrival', d2)
+      .is('departure', null)
+      .neq('status','canceled');
+    if (hotel) q2 = q2.eq('hotel_code', hotel.code);
+
+    const [r1, r2] = await Promise.all([q1, q2]);
+    const map = new Map();
+    (r1.data||[]).forEach(r=>map.set(r.id,r));
+    (r2.data||[]).forEach(r=>map.set(r.id,r));
+    const activeRange = [...map.values()];
+
+    const revenue  = activeRange.reduce((s,r)=> s + Number(r.rate_price||0), 0);
+    const adr      = activeRange.length ? Math.round((revenue/activeRange.length)*100)/100 : null;
+
+    // Ø Auslastung im Zeitraum (wie gehabt)
+    let nOcc = null;
+    if (hotel){
+      const r = await supabase.from('availability')
+        .select('capacity,booked')
+        .eq('hotel_code', hotel.code)
+        .gte('date', d1).lte('date', d2);
+      if (!r.error && r.data?.length){
+        const avg = r.data.reduce((s,a)=>
+          s + Math.min(100, Math.round((Number(a.booked||0)/Math.max(1,Number(a.capacity||0)))*100))
+        ,0)/r.data.length;
+        nOcc = Math.round(avg);
+      }
+    } else {
+      const r = await supabase.from('availability')
+        .select('capacity,booked')
+        .gte('date', d1).lte('date', d2);
+      if (!r.error && r.data?.length){
+        const avg = r.data.reduce((s,a)=>
+          s + Math.min(100, Math.round((Number(a.booked||0)/Math.max(1,Number(a.capacity||0)))*100))
+        ,0)/r.data.length;
+        nOcc = Math.round(avg);
+      }
+    }
+
+    q('#nRevenue') && (q('#nRevenue').textContent = euro(revenue));
+    q('#nADR')     && (q('#nADR').textContent     = euro(adr));
+    q('#nOcc')     && (q('#nOcc').textContent     = pct(nOcc));
+  } catch (e) {
+    console.error('loadKpisNext error:', e);
+  }
+}
+= await q1;
   const rows = (!error && Array.isArray(data)) ? data : [];
   const revenue  = rows.reduce((s,r)=> s + Number(r.rate_price||0), 0);
   const adr      = rows.length ? Math.round((revenue/rows.length)*100)/100 : null;
