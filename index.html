@@ -9,9 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;600;800&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="styles.css" />
-  <script defer src="https://unpkg.com/@supabase/supabase-js@2"></script>
-  <script defer src="app.js"></script>
+  <link rel="stylesheet" href="/src/styles.css" />
 </head>
 <body>
   <header class="topbar" role="banner">
@@ -65,7 +63,7 @@
           </div>
           <div class="kpis big">
             <div class="kpi"><div class="value" id="tBookings">—</div><div class="label">Buchungen (heute eingegangen)</div></div>
-            <div class="kpi"><div class="value" id="tRevenue">— €</div><div class="label">Umsatz (heute)</div></div>
+            <div class="kpi"><div class="value" id="tRevenue">— €</div><div class="label">Umsatz (Anreisen heute)</div></div>
             <div class="kpi"><div class="value" id="tADR">— €</div><div class="label">ADR (heute)</div></div>
             <div class="kpi"><div class="value" id="tOcc">—%</div><div class="label">Auslastung (heute)</div></div>
           </div>
@@ -81,7 +79,8 @@
             </div>
           </div>
           <div class="kpis big">
-            <div class="kpi"><div class="value" id="nRevenue">— €</div><div class="label">Umsatz (+1..+7, pro Nacht)</div></div>
+            <!-- Buchungen entfernt wie gewünscht -->
+            <div class="kpi"><div class="value" id="nRevenue">— €</div><div class="label">Umsatz (Anreisen +1..+7)</div></div>
             <div class="kpi"><div class="value" id="nADR">— €</div><div class="label">ADR (+1..+7)</div></div>
             <div class="kpi"><div class="value" id="nOcc">—%</div><div class="label">Ø Auslastung (+1..+7)</div></div>
           </div>
@@ -95,14 +94,12 @@
         <div class="content">
           <div class="card-head">
             <h3 class="mono" style="margin:0">Reservierungen</h3>
+            <span></span>
           </div>
 
           <div class="table-tools">
             <div class="row wrap">
-              <div class="input-with-clear">
-                <input id="searchInput" class="input" placeholder="Gastname…" />
-                <button id="searchClear" class="clear-btn" aria-label="Eingabe löschen" type="button">×</button>
-              </div>
+              <input id="searchInput" class="input" placeholder="Gastname…" />
               <select id="filterHotel" class="input theme-select" style="width:220px;"></select>
               <select id="filterStatus" class="input theme-select" style="width:170px;">
                 <option value="active">Status: Active (Zukunft)</option>
@@ -332,19 +329,19 @@
             <option value="7">7</option>
             <option value="14" selected>14</option>
             <option value="30">30</option>
+            <option value="60">60</option>
           </select>
         </label>
-        <button class="btn" id="availRun">Zeitraum laden</button>
+        <button class="btn" id="availRun">Aktualisieren</button>
+        <div class="muted" style="margin-left:auto;">Legende:
+          <span class="pill occ-g">≤64%</span>
+          <span class="pill occ-o">65–89%</span>
+          <span class="pill occ-r">≥90%</span>
+        </div>
       </div>
-
-      <div class="table-wrap">
-        <table id="matrixTable" class="resv">
-          <thead>
-            <tr>
-              <th class="sticky">Hotel</th>
-              <!-- Tage werden per JS ergänzt -->
-            </tr>
-          </thead>
+      <div class="matrix compact">
+        <table class="matrix" id="matrixTable">
+          <thead><tr><th class="sticky">Hotel</th></tr></thead>
           <tbody id="matrixBody"></tbody>
         </table>
       </div>
@@ -358,54 +355,54 @@
       <button class="btn" data-close>Schließen</button>
     </header>
     <div class="body">
-      <div class="row wrap" style="margin-bottom:8px;">
-        <label>Von <input id="repFrom" type="date" class="input" style="width:170px;"></label>
-        <label>Bis <input id="repTo" type="date" class="input" style="width:170px;"></label>
+      <div class="row wrap">
+        <label>Von <input id="repFrom" type="date" class="input"></label>
+        <label>Bis <input id="repTo" type="date" class="input"></label>
         <label>Hotel
-          <select id="repHotel" class="input theme-select" style="width:220px;"></select>
+          <select id="repHotel" class="input theme-select" style="width:260px;"></select>
         </label>
-        <button class="btn" id="repRun">Report erstellen</button>
+        <button class="btn" id="repRun">Aktualisieren</button>
         <div style="flex:1"></div>
-        <button class="btn ghost" id="repCsv">CSV</button>
-        <button class="btn ghost" id="repXls">XLS</button>
+        <button class="btn ghost" id="repCsv">Export CSV</button>
+        <button class="btn ghost" id="repXls">Export Excel</button>
       </div>
-
       <div class="table-wrap">
         <table class="resv">
-          <thead>
-            <tr>
-              <th>Hotel</th>
-              <th>Buchungen</th>
-              <th>Umsatz</th>
-              <th>ADR</th>
-              <th>OTA-Anteil</th>
-            </tr>
-          </thead>
+          <thead><tr><th>Hotel</th><th>Buchungen</th><th>Umsatz</th><th>ADR</th><th>OTA-Anteil</th></tr></thead>
           <tbody id="repBody"></tbody>
         </table>
       </div>
     </div>
   </section>
 
-  <!-- Settings & Skizze -->
-  <section class="modal" id="modalSettings" role="dialog" aria-modal="true">
+  <!-- Einstellungen -->
+  <section class="modal" id="modalSettings" role="dialog" aria-labelledby="setTitle" aria-modal="true">
     <header>
-      <h3 class="mono">Einstellungen</h3>
+      <h3 id="setTitle" class="mono">Einstellungen</h3>
       <button class="btn" data-close>Schließen</button>
     </header>
     <div class="body">
-      <div class="box muted">Hier kommen später Settings hin…</div>
+      <div class="grid2">
+        <label>Sprache
+          <select id="setLang" class="input theme-select"><option value="de">Deutsch</option><option value="en">English</option></select>
+        </label>
+        <label>Farbton (Hue)
+          <input id="setHue" type="range" min="160" max="200" value="180" />
+        </label>
+      </div>
     </div>
   </section>
 
-  <section class="modal" id="modalSketch" role="dialog" aria-modal="true">
+  <!-- Hotelskizze -->
+  <section class="modal" id="modalSketch" role="dialog" aria-labelledby="sketchTitle" aria-modal="true">
     <header>
-      <h3 class="mono">Hotelskizze</h3>
+      <h3 id="sketchTitle" class="mono">Hotelskizze</h3>
       <button class="btn" data-close>Schließen</button>
     </header>
-    <div class="body">
-      <div id="sketchGrid" class="sketch-grid"></div>
-    </div>
+    <div class="body"><div class="hotel-grid" id="sketchGrid"></div></div>
   </section>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.5/dist/umd/supabase.js" crossorigin="anonymous"></script>
+  <script src="/src/app.js"></script>
 </body>
 </html>
