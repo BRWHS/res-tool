@@ -25,29 +25,8 @@ const HOTELS = [
   { group:'Delta by Marriot', name:'Delta by Marriot Offenbach', code:'DBM-OF' },
   { group:'Villa Viva', name:'Villa Viva Hamburg',      code:'VV-HH' },
 ];
-
-const BRAND_PREFIXES = ['MASEVEN','Fidelity','Tante Alma','Delta by Marriot','Villa Viva'];
-const hotelCity = (full) => {
-  if(!full) return '';
-  for (const p of BRAND_PREFIXES){ if(full.startsWith(p+' ')) return full.slice(p.length+1); }
-  return full;
-};
-const displayHotel = (h) => h ? `${h.group} - ${hotelCity(h.name)}` : '—';
-const safeDisplayByCode = (code) => {
-  const h = HOTELS.find(x=>x.code===code);
-  return h ? displayHotel(h) : (code||'—');
-};
-const safeDisplayFromRow = (row) => {
-  const h = HOTELS.find(x=>x.code===row.hotel_code);
-  if (h) return displayHotel(h);
-  const raw = String(row.hotel_name||'').replace(/^[\s·•\-–—]+/,'').trim();
-  if (!raw) return row.hotel_code || '—';
-  for (const p of BRAND_PREFIXES){
-    if (raw.startsWith(p+' ')) return `${p} - ${raw.slice(p.length+1)}`;
-  }
-  return raw;
-};
-
+const PREFIXES = ['MASEVEN','Fidelity','Tante Alma','Delta by Marriot','Villa Viva'];
+const shortName = (full) => { if(!full) return '—'; for(const p of PREFIXES){ if(full.startsWith(p+' ')) return full.slice(p.length+1); } return full; };
 
 /* Alias-Keyword für Filter-Fallback per hotel_name */
 const HOTEL_KEYWORD = {
@@ -142,9 +121,9 @@ async function buildMiniAnalytics(){
       return `${i===0?'M':'L'}${x.toFixed(1)},${y.toFixed(1)}`;
     }).join(' ');
 
-    const item = el('div',{class:'dock-item',title:`${displayHotel(h)} · YoY ${p?Math.round(((c-p)/p)*100):'∞'}%`},
+    const item = el('div',{class:'dock-item',title:`${h.name} · YoY ${p?Math.round(((c-p)/p)*100):'∞'}%`},
       el('span',{class:'dock-badge'}, h.group),
-      el('div',{class:'dock-name'}, displayHotel(h)),
+      el('div',{class:'dock-name'}, shortName(h.name)),
       (()=>{
         const svg = el('svg',{class:'spark',viewBox:`0 0 ${SPARK_W} ${SPARK_H}`,xmlns:'http://www.w3.org/2000/svg'});
         svg.append(el('path',{d:path, fill:'none', stroke: up?'#35e08a':'#ff4d6d','stroke-width':'2'}));
@@ -168,7 +147,7 @@ window.addEventListener('keydown',(e)=>{ if(e.key==='Escape'){ qa('.modal').forE
 function fillHotelFilter(selectEl){
   selectEl.innerHTML = '';
   selectEl.append(el('option',{value:'all'},'Gesamt'));
-  HOTELS.forEach(h=> selectEl.append(el('option',{value:h.code}, displayHotel(h))));
+  HOTELS.forEach(h=> selectEl.append(el('option',{value:h.code}, h.name)));
 }
 
 /***** KPI — Heute *****/
@@ -179,29 +158,48 @@ async function loadKpisToday(){
   const nowISO = new Date().toISOString();
   const tDate = isoDate(todayStart);
 
-  let qb = supabase.from('reservations').select('id,created_at').gte('created_at', todayStart.toISOString()).lte('created_at', nowISO);
+  // Buchungen heute (eingegangen)
+  let qb = supabase.from('reservations')
+    .select('id,created_at')
+    .gte('created_at', todayStart.toISOString())
+    .lte('created_at', nowISO);
   if (hotel) qb = qb.eq('hotel_code', hotel.code);
   const rB = await qb;
   const bookingsToday = (rB.data||[]).length;
 
-let qotb = supabase
-  .from('reservations')
-  .select('rate_price, hotel_code')
-  .lte('arrival', tDate)  // Anreise heute oder früher
-  .gte('departure', tDate) // Abreise heute oder später
-  .neq('status', 'canceled');
-if (hotel) qotb = qotb.eq('hotel_code', hotel.code);
-const rO = await qotb;
+  // *** UMSATZ & ADR HEUTE = alle Aufenthalte, die HEUTE aktiv sind ***
+  // arrival <= heute AND (departure >= heute OR departure IS NULL), status != canceled
+  let qRev = supabase.from('reservations')
+    .select('rate_price,hotel_code,arrival,departure,status')
+    .lte('arrival', tDate)
+    .or(`departure.gte.${tDate},departure.is.null`)
+    .neq('status','canceled');
+  if (hotel) qRev = qRev.eq('hotel_code', hotel.code);
+  const rO = await qRev;
+  const rows = rO.data || [];
 
-const rows = rO.data || [];
-const revenue = rows.reduce((s, r) => s + Number(r.rate_price || 0), 0);
-const adr = rows.length ? Math.round((revenue / rows.length) * 100) / 100 : null;
+  const revenue = rows.reduce((s,r)=> s + Number(r.rate_price||0), 0);
+  const adr = rows.length ? Math.round((revenue/rows.length)*100)/100 : null;
 
+  // Auslastung heute (wie gehabt)
   let occ = null;
   if (hotel){
     const r = await supabase.from('availability').select('capacity,booked').eq('hotel_code', hotel.code).eq('date', tDate);
     if (!r.error && r.data?.length){ const a = r.data[0]; occ = Math.round(Math.min(100, (Number(a.booked||0)/Math.max(1,Number(a.capacity||0)))*100)); }
   } else {
+    const r = await supabase.from('availability').select('capacity,booked').eq('date', tDate);
+    if (!r.error && r.data?.length){
+      const avg = r.data.reduce((s,a)=> s + Math.min(100, Math.round((Number(a.booked||0)/Math.max(1,Number(a.capacity||0)))*100)), 0)/r.data.length;
+      occ = Math.round(avg);
+    }
+  }
+
+  q('#tBookings').textContent = bookingsToday;
+  q('#tRevenue').textContent  = euro(revenue);
+  q('#tADR').textContent      = euro(adr);
+  q('#tOcc').textContent      = pct(occ);
+}
+} else {
     const r = await supabase.from('availability').select('capacity,booked').eq('date', tDate);
     if (!r.error && r.data?.length){
       const avg = r.data.reduce((s,a)=> s + Math.min(100, Math.round((Number(a.booked||0)/Math.max(1,Number(a.capacity||0)))*100)), 0)/r.data.length;
@@ -259,7 +257,7 @@ let page=1, pageSize=50, search='', fHotel='all', fResNo='', fFrom=null, fTo=nul
 function fillFilters(){
   const sel = q('#filterHotel'); sel.innerHTML='';
   sel.append(el('option',{value:'all'},'Alle Hotels'));
-  HOTELS.forEach(h=> sel.append(el('option',{value:h.code}, displayHotel(h))));
+  HOTELS.forEach(h=> sel.append(el('option',{value:h.code}, h.name)));
 }
 
 function uiStatus(row){
@@ -312,7 +310,7 @@ async function loadReservations(){
     const r1 = await qCode;
 
     // zusätzlich per Name-Alias (ilike)
-    const needle = HOTEL_KEYWORD[fHotel] || hotelCity(HOTELS.find(h=>h.code===fHotel)?.name || '');
+    const needle = HOTEL_KEYWORD[fHotel] || shortName(HOTELS.find(h=>h.code===fHotel)?.name || '');
     let qName = supabase.from('reservations').select(selectCols).order('arrival',{ascending:true}).range(from,to);
     qName = applyFilters(qName.ilike('hotel_name', `%${needle}%`));
     const r2 = await qName;
@@ -334,7 +332,7 @@ async function loadReservations(){
 
     const tr = el('tr', { class: 'row', 'data-id': row.id },
       el('td', {}, row.reservation_number || '—'),
-      el('td', {}, safeDisplayFromRow(row)),
+      el('td', {}, shortName(row.hotel_name) || row.hotel_code || '—'),
       el('td', {}, guest),
       el('td', {}, row.arrival ? D2.format(new Date(row.arrival)) : '—'),
       el('td', {}, row.departure ? D2.format(new Date(row.departure)) : '—'),
@@ -386,7 +384,7 @@ async function openEdit(id){
   if (error || !data) return alert('Konnte Reservierung nicht laden.');
 
   q('#eResNo').value = data.reservation_number || '';
-  q('#eHotel').value = safeDisplayFromRow(data);
+  q('#eHotel').value = shortName(data.hotel_name) || '';
   q('#eLname').value = data.guest_last_name || '';
   q('#eArr').value = data.arrival ? isoDate(new Date(data.arrival)) : '';
   q('#eDep').value = data.departure ? isoDate(new Date(data.departure)) : '';
@@ -491,7 +489,7 @@ q('#btnNext').addEventListener('click', ()=>{
 function fillHotelSelect(){
   const sel=q('#newHotel'); sel.innerHTML='';
   sel.append(el('option',{value:''},'Bitte wählen'));
-  HOTELS.forEach(h=> sel.append(el('option',{value:h.code}, displayHotel(h))));
+  HOTELS.forEach(h=>sel.append(el('option',{value:h.code},h.name)));
   sel.addEventListener('change', ()=>{
     const cats = HOTEL_CATEGORIES['default'];
     const rates= HOTEL_RATES['default'];
@@ -512,7 +510,7 @@ function linesSummary(){
   const code=q('#newHotel').value; const h=HOTELS.find(x=>x.code===code);
   const adults = Number(q('#newAdults').value||1), children = Number(q('#newChildren').value||0);
   return [
-    ['Hotel', h ? displayHotel(h) : '—'],
+    ['Hotel', h?.name || '—'],
     ['Zeitraum', (q('#newArr').value||'—') + ' → ' + (q('#newDep').value||'—')],
     ['Belegung', `${adults} Erw. / ${children} Kind.`],
     ['Kategorie', q('#newCat').value||'—'],
@@ -563,7 +561,7 @@ async function createReservation(){
     reservation_number: genResNo(),
     status: 'active',
     hotel_code: code,
-    hotel_name: (hUI ? displayHotel(hUI) : code),
+    hotel_name: hUI?.name || code,
     arrival: q('#newArr').value || null,
     departure: q('#newDep').value || null,
     guests,
@@ -616,7 +614,7 @@ async function buildMatrix(){
   const from = isoDate(ds[0]), to = isoDate(ds.at(-1));
 
   for (const h of HOTELS){
-    const tr=el('tr'); tr.append(el('td',{class:'sticky'}, displayHotel(h)));
+    const tr=el('tr'); tr.append(el('td',{class:'sticky'}, h.name));
     const { data } = await supabase.from('availability')
       .select('date,capacity,booked')
       .eq('hotel_code', h.code)
@@ -643,7 +641,7 @@ function setDefaultReportRange(){
 function fillRepHotel(){
   const sel=q('#repHotel'); sel.innerHTML='';
   sel.append(el('option',{value:'all'},'Alle Hotels'));
-  HOTELS.forEach(h=> sel.append(el('option',{value:h.code}, displayHotel(h))));
+  HOTELS.forEach(h=> sel.append(el('option',{value:h.code},h.name)));
 }
 async function runReport(){
   const from=q('#repFrom').value, to=q('#repTo').value, code=q('#repHotel').value;
@@ -698,7 +696,7 @@ function buildSketch(){
   HOTELS.forEach(h=>{
     wrap.append(el('div',{class:'hotel-card'},
       el('div',{class:'muted'}, h.group),
-      el('div',{}, displayHotel(h)),
+      el('div',{}, h.name),
       el('div',{class:'code'}, h.code)
     ));
   });
