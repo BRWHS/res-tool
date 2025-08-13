@@ -1,3 +1,6 @@
+[INHALT AUS app_full_kpi_fixed.js START]
+// (Automatisch generiert) — Vollständige, aktualisierte app.js mit KPI-Fixes
+
 /***** Supabase *****/
 const SB_URL = "https://kytuiodojfcaggkvizto.supabase.co";
 const SB_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt5dHVpb2RvamZjYWdna3ZpenRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ4MzA0NjgsImV4cCI6MjA3MDQwNjQ2OH0.YobQZnCQ7LihWtewynoCJ6ZTjqetkGwh82Nd2mmmhLU";
@@ -150,27 +153,22 @@ function fillHotelFilter(selectEl){
   HOTELS.forEach(h=> selectEl.append(el('option',{value:h.code}, h.name)));
 }
 
-/***** KPI — Heute *****/
+/***** KPI — Heute (GEFIXT: aktive Aufenthalte heute) *****/
 async function loadKpisToday(){
   try {
-    const code  = q('#kpiFilterToday')?.value || 'all';
-    const hotel = code !== 'all' ? HOTELS.find(h => h.code === code) : null;
-
+    const code = q('#kpiFilterToday').value;
+    const hotel = code!=='all' ? HOTELS.find(h=>h.code===code) : null;
     const todayStart = soD(new Date());
     const nowISO = new Date().toISOString();
-    const tDate = isoDate(todayStart); // YYYY-MM-DD
+    const tDate = isoDate(todayStart);
 
-    // 1) Buchungen heute (eingegangen)
-    let qb = supabase.from('reservations')
-      .select('id,created_at')
-      .gte('created_at', todayStart.toISOString())
-      .lte('created_at', nowISO);
+    // Buchungen heute (eingegangen)
+    let qb = supabase.from('reservations').select('id,created_at').gte('created_at', todayStart.toISOString()).lte('created_at', nowISO);
     if (hotel) qb = qb.eq('hotel_code', hotel.code);
     const rB = await qb;
     const bookingsToday = (rB.data||[]).length;
 
-    // 2) Umsatz + ADR: alle Aufenthalte, die HEUTE aktiv sind
-    // arrival <= heute AND (departure >= heute OR departure IS NULL) AND status != canceled
+    // UMSATZ + ADR HEUTE = alle Aufenthalte, die HEUTE aktiv sind
     let q1 = supabase.from('reservations')
       .select('id,rate_price,hotel_code,arrival,departure,status')
       .lte('arrival', tDate)
@@ -194,64 +192,41 @@ async function loadKpisToday(){
     const revenue = activeToday.reduce((s,r)=> s + Number(r.rate_price||0), 0);
     const adr = activeToday.length ? Math.round((revenue/activeToday.length)*100)/100 : null;
 
-    // 3) Auslastung heute (wie gehabt)
+    // Auslastung heute (wie gehabt)
     let occ = null;
     if (hotel){
-      const r = await supabase.from('availability')
-        .select('capacity,booked')
-        .eq('hotel_code', hotel.code)
-        .eq('date', tDate);
+      const r = await supabase.from('availability').select('capacity,booked').eq('hotel_code', hotel.code).eq('date', tDate);
       if (!r.error && r.data?.length){
-        const a = r.data[0];
-        occ = Math.round(Math.min(100, (Number(a.booked||0)/Math.max(1,Number(a.capacity||0)))*100));
+        const a = r.data[0]; occ = Math.round(Math.min(100, (Number(a.booked||0)/Math.max(1,Number(a.capacity||0)))*100));
       }
     } else {
-      const r = await supabase.from('availability')
-        .select('capacity,booked')
-        .eq('date', tDate);
+      const r = await supabase.from('availability').select('capacity,booked').eq('date', tDate);
       if (!r.error && r.data?.length){
-        const avg = r.data.reduce((s,a)=>
-          s + Math.min(100, Math.round((Number(a.booked||0)/Math.max(1,Number(a.capacity||0)))*100))
-        ,0)/r.data.length;
+        const avg = r.data.reduce((s,a)=> s + Math.min(100, Math.round((Number(a.booked||0)/Math.max(1,Number(a.capacity||0)))*100)), 0)/r.data.length;
         occ = Math.round(avg);
       }
     }
 
-    // 4) UI
-    q('#tBookings') && (q('#tBookings').textContent = bookingsToday);
-    q('#tRevenue')  && (q('#tRevenue').textContent  = euro(revenue));
-    q('#tADR')      && (q('#tADR').textContent      = euro(adr));
-    q('#tOcc')      && (q('#tOcc').textContent      = pct(occ));
+    q('#tBookings').textContent = bookingsToday;
+    q('#tRevenue').textContent  = euro(revenue);
+    q('#tADR').textContent      = euro(adr);
+    q('#tOcc').textContent      = pct(occ);
   } catch (e) {
     console.error('loadKpisToday error:', e);
   }
 }
-} else {
-    const r = await supabase.from('availability').select('capacity,booked').eq('date', tDate);
-    if (!r.error && r.data?.length){
-      const avg = r.data.reduce((s,a)=> s + Math.min(100, Math.round((Number(a.booked||0)/Math.max(1,Number(a.capacity||0)))*100)), 0)/r.data.length;
-      occ = Math.round(avg);
-    }
-  }
 
-  q('#tBookings').textContent = bookingsToday;
-  q('#tRevenue').textContent  = euro(revenue);
-  q('#tADR').textContent      = euro(adr);
-  q('#tOcc').textContent      = pct(occ);
-}
-
-/***** KPI — Nächste 7 Tage *****/
+/***** KPI — Nächste 7 Tage (GEFIXT: Aufenthalte, die Zeitraum schneiden) *****/
 async function loadKpisNext(){
   try {
-    const code  = q('#kpiFilterNext')?.value || 'all';
-    const hotel = code !== 'all' ? HOTELS.find(h => h.code === code) : null;
-
+    const code = q('#kpiFilterNext').value;
+    const hotel = code!=='all' ? HOTELS.find(h=>h.code===code) : null;
     const today = soD(new Date());
     const start = new Date(today); start.setDate(start.getDate()+1);
     const end   = new Date(today); end.setDate(end.getDate()+7);
     const d1 = isoDate(start), d2 = isoDate(end);
 
-    // Umsatz/ADR für +1..+7 basierend auf Aufenthalten, die den Zeitraum schneiden
+    // Umsatz/ADR im Zeitraum: Aufenthalte, die den Zeitraum schneiden
     let q1 = supabase.from('reservations')
       .select('id,rate_price,hotel_code,arrival,departure,status')
       .lte('arrival', d2)
@@ -275,7 +250,7 @@ async function loadKpisNext(){
     const revenue  = activeRange.reduce((s,r)=> s + Number(r.rate_price||0), 0);
     const adr      = activeRange.length ? Math.round((revenue/activeRange.length)*100)/100 : null;
 
-    // Ø Auslastung im Zeitraum (wie gehabt)
+    // Ø Auslastung (wie gehabt)
     let nOcc = null;
     if (hotel){
       const r = await supabase.from('availability')
@@ -283,9 +258,7 @@ async function loadKpisNext(){
         .eq('hotel_code', hotel.code)
         .gte('date', d1).lte('date', d2);
       if (!r.error && r.data?.length){
-        const avg = r.data.reduce((s,a)=>
-          s + Math.min(100, Math.round((Number(a.booked||0)/Math.max(1,Number(a.capacity||0)))*100))
-        ,0)/r.data.length;
+        const avg = r.data.reduce((s,a)=> s + Math.min(100, Math.round((Number(a.booked||0)/Math.max(1,Number(a.capacity||0)))*100)), 0)/r.data.length;
         nOcc = Math.round(avg);
       }
     } else {
@@ -293,45 +266,17 @@ async function loadKpisNext(){
         .select('capacity,booked')
         .gte('date', d1).lte('date', d2);
       if (!r.error && r.data?.length){
-        const avg = r.data.reduce((s,a)=>
-          s + Math.min(100, Math.round((Number(a.booked||0)/Math.max(1,Number(a.capacity||0)))*100))
-        ,0)/r.data.length;
+        const avg = r.data.reduce((s,a)=> s + Math.min(100, Math.round((Number(a.booked||0)/Math.max(1,Number(a.capacity||0)))*100)), 0)/r.data.length;
         nOcc = Math.round(avg);
       }
     }
 
-    q('#nRevenue') && (q('#nRevenue').textContent = euro(revenue));
-    q('#nADR')     && (q('#nADR').textContent     = euro(adr));
-    q('#nOcc')     && (q('#nOcc').textContent     = pct(nOcc));
+    q('#nRevenue').textContent  = euro(revenue);
+    q('#nADR').textContent      = euro(adr);
+    q('#nOcc').textContent      = pct(nOcc);
   } catch (e) {
     console.error('loadKpisNext error:', e);
   }
-}
-= await q1;
-  const rows = (!error && Array.isArray(data)) ? data : [];
-  const revenue  = rows.reduce((s,r)=> s + Number(r.rate_price||0), 0);
-  const adr      = rows.length ? Math.round((revenue/rows.length)*100)/100 : null;
-
-  let nOcc = null;
-  if (hotel){
-    const r = await supabase.from('availability').select('capacity,booked')
-      .eq('hotel_code', hotel.code).gte('date', isoDate(start)).lte('date', isoDate(end));
-    if (!r.error && r.data?.length){
-      const avg = r.data.reduce((s,a)=> s + Math.min(100, Math.round((Number(a.booked||0)/Math.max(1,Number(a.capacity||0)))*100)), 0)/r.data.length;
-      nOcc = Math.round(avg);
-    }
-  } else {
-    const r = await supabase.from('availability').select('capacity,booked')
-      .gte('date', isoDate(start)).lte('date', isoDate(end));
-    if (!r.error && r.data?.length){
-      const avg = r.data.reduce((s,a)=> s + Math.min(100, Math.round((Number(a.booked||0)/Math.max(1,Number(a.capacity||0)))*100)), 0)/r.data.length;
-      nOcc = Math.round(avg);
-    }
-  }
-
-  q('#nRevenue').textContent  = euro(revenue);
-  q('#nADR').textContent      = euro(adr);
-  q('#nOcc').textContent      = pct(nOcc);
 }
 
 /***** Reservierungsliste (+ Statuslogik) *****/
