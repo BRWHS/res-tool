@@ -620,9 +620,32 @@ q('#btnNext').addEventListener('click', ()=>{
 });
 
 function fillHotelSelect(){
-  const sel=q('#newHotel'); sel.innerHTML='';
-  sel.append(el('option',{value:''},'Bitte wählen'));
-  HOTELS.forEach(h=> sel.append(el('option',{value:h.code}, displayHotel(h))));
+  const sel = q('#newHotel');
+  sel.innerHTML = '';
+  sel.append(el('option', { value:'' }, 'Bitte wählen'));
+  HOTELS.forEach(h => sel.append(el('option', { value:h.code }, displayHotel(h))));
+
+  // wenn Hotel wechselt: Kategorien/Raten befüllen + Previews resetten
+  sel.onchange = ()=>{
+    const cats  = HOTEL_CATEGORIES['default'];
+    const rates = HOTEL_RATES['default'];
+
+    q('#newCat').innerHTML  = cats.map(c=>`<option value="${c}">${c}</option>`).join('');
+    q('#newRate').innerHTML = rates.map(r=>`<option value="${r.name}" data-price="${r.price}">${r.name} (${EUR.format(r.price)})</option>`).join('');
+    q('#newPrice').value = rates[0].price;
+
+    // Hotelbild-Preview (fester Platzhalter → fällt auf IMG_FALLBACK zurück)
+    const hp = q('#imgHotelPreview');
+    if (hp){ hp.src = HOTEL_IMG_SRC; hp.onerror = ()=>{ hp.src = IMG_FALLBACK; }; }
+
+    // Kategorie-Preview leeren
+    const cp = q('#imgCatPreview');
+    if (cp){ cp.src = ''; }
+
+    validateStep('1');
+    updateSummary('#summaryFinal');
+  };
+}
 
   sel.addEventListener('change', ()=>{
     const cats = HOTEL_CATEGORIES['default'];
@@ -867,16 +890,37 @@ q('#repXls').addEventListener('click', ()=>{
 
 /***** Skizze + Settings *****/
 function showSketchList(){
-  q('#sketchStateView').classList.add('hidden');
+  // Liste anzeigen, View verstecken
+  q('#sketchStateView')?.classList.add('hidden');
   const list = q('#sketchStateList');
+  if (!list) return;
   list.innerHTML = '';
+
   HOTELS.forEach(h=>{
-    const b = el('button', {class:'btn'}, displayHotel(h));
+    const b = el('button', { class:'btn' }, displayHotel(h));
     b.addEventListener('click', ()=> showSketchFor(h));
     list.append(b);
   });
+
   q('#sketchStateList').classList.remove('hidden');
 }
+
+function showSketchFor(hotel){
+  // Liste verstecken, View zeigen, Bild setzen
+  q('#sketchStateList')?.classList.add('hidden');
+  const label = q('#sketchHotelLabel');
+  const img   = q('#sketchImage');
+
+  if (label) label.textContent = displayHotel(hotel);
+  if (img){
+    img.src = SKETCH_IMG_SRC;
+    img.onerror = ()=>{ img.src = IMG_FALLBACK; };
+  }
+  q('#sketchStateView')?.classList.remove('hidden');
+}
+
+// Aufruf von außen (z.B. beim Öffnen des Modals)
+function buildSketch(){ showSketchList(); }
 
 function buildSketch(){
   const wrap = q('#sketchGrid'); 
@@ -907,26 +951,65 @@ q('#btnAvail').addEventListener('click', async ()=>{
   await buildMatrix();
   openModal('modalAvail');
 });
+
 q('#btnReporting').addEventListener('click', async ()=>{
-  setDefaultReportRange(); fillRepHotel(); await runReport(); openModal('modalReporting');
+  setDefaultReportRange();
+  fillRepHotel();
+  await runReport();
+  openModal('modalReporting');
 });
+
 q('#btnSettings').addEventListener('click', ()=> openModal('modalSettings'));
-q('#btnSketch').addEventListener('click', ()=>{ buildSketch(); openModal('modalSketch'); });
+
+q('#btnSketch').addEventListener('click', ()=>{
+  buildSketch();        // zeigt die Liste der Hotel-Buttons
+  openModal('modalSketch');
+});
+
 q('#sketchBack')?.addEventListener('click', showSketchList);
 
-  fillHotelSelect(); wizardSet('1'); q('#newInfo').textContent='';
+// *** NEU: korrekter Klick-Handler für "Neue Reservierung"
+q('#btnNew').addEventListener('click', ()=>{
+  fillHotelSelect();
+  wizardSet('1');
+  q('#newInfo').textContent = '';
+
   // Reset
-  ['newArr','newDep','newAdults','newChildren','newCat','newRate','newPrice','newFname','newLname','newEmail','newPhone','newStreet','newZip','newCity','newCompany','newVat','newCompanyZip','newAddress','newNotes','ccHolder','ccNumber','ccExpiry'].forEach(id=>{ const n=q('#'+id); if(n){ n.value=''; } });
-  q('#newAdults').value=1; q('#newChildren').value=0; q('#btnNext').disabled=true;
-  
+  [
+    'newArr','newDep','newAdults','newChildren','newCat','newRate','newPrice',
+    'newFname','newLname','newEmail','newPhone','newStreet','newZip','newCity',
+    'newCompany','newVat','newCompanyZip','newAddress','newNotes','ccHolder','ccNumber','ccExpiry'
+  ].forEach(id=>{
+    const n = q('#'+id);
+    if (n) n.value = '';
+  });
+  q('#newAdults').value = 1;
+  q('#newChildren').value = 0;
+  q('#btnNext').disabled = true;
+
   // Bild-Previews initial setzen
-  const hp = q('#imgHotelPreview'); if (hp){ hp.src = HOTEL_IMG_SRC; hp.onerror = ()=>{ hp.src = IMG_FALLBACK; }; }
-  const cp = q('#imgCatPreview');   if (cp){ cp.src = HOTEL_IMG_SRC; cp.onerror = ()=>{ cp.src = IMG_FALLBACK; }; }
-  
-  // live card reset
-  q('#ccNumLive').textContent='•••• •••• •••• ••••'; q('#ccHolderLive').textContent='NAME'; q('#ccExpLive').textContent='MM/YY';
+  const hp = q('#imgHotelPreview');
+  if (hp){ hp.src = HOTEL_IMG_SRC; hp.onerror = ()=>{ hp.src = IMG_FALLBACK; }; }
+  const cp = q('#imgCatPreview');
+  if (cp){ cp.src = ''; } // erst nach Kategorieauswahl
+
+  // Live-Card reset
+  q('#ccNumLive').textContent    = '•••• •••• •••• ••••';
+  q('#ccHolderLive').textContent = 'NAME';
+  q('#ccExpLive').textContent    = 'MM/YY';
+
   openModal('modalNew');
 });
+
+// Kategorie-Preview aktualisieren (außerhalb von fillHotelSelect, nicht verschachtelt)
+q('#newCat').addEventListener('change', ()=>{
+  const img = q('#imgCatPreview');
+  if (img){
+    img.src = HOTEL_IMG_SRC;
+    img.onerror = ()=>{ img.src = IMG_FALLBACK; };
+  }
+});
+
 q('#btnCreate').addEventListener('click', createReservation);
 
 (async function init(){
@@ -946,4 +1029,6 @@ q('#btnCreate').addEventListener('click', createReservation);
   await loadKpisToday();
   await loadKpisNext();
   await loadReservations();
+})();
+;
 })();
