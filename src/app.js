@@ -1,3 +1,18 @@
+// Bildpfade (lege echte Dateien unter /assets/ ab)
+const HOTEL_IMG_SRC  = '/assets/hotel-placeholder.png';
+const SKETCH_IMG_SRC = '/assets/sketch-placeholder.png';
+
+// sehr kleiner, hübscher SVG-Fallback (runde Ecken)
+const IMG_FALLBACK = 'data:image/svg+xml;utf8,' +
+  encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="800" height="500" viewBox="0 0 800 500">
+  <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0ea5b0"/><stop offset="1" stop-color="#052a36"/></linearGradient></defs>
+  <rect x="0" y="0" width="800" height="500" rx="24" ry="24" fill="url(#g)"/>
+  <g fill="none" stroke="rgba(255,255,255,0.18)"><rect x="28" y="28" width="744" height="444" rx="18" ry="18"/></g>
+  <g fill="#d9faff" font-family="Inter, Arial" font-size="22" font-weight="700">
+    <text x="50" y="70">res‑tool · Platzhalterbild</text>
+    <text x="50" y="104" opacity=".7">Lade /assets/... um ein echtes Bild zu zeigen</text>
+  </g></svg>`);
+
 /***** Supabase *****/
 const SB_URL = "https://kytuiodojfcaggkvizto.supabase.co";
 const SB_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt5dHVpb2RvamZjYWdna3ZpenRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ4MzA0NjgsImV4cCI6MjA3MDQwNjQ2OH0.YobQZnCQ7LihWtewynoCJ6ZTjqetkGwh82Nd2mmmhLU";
@@ -615,6 +630,14 @@ function fillHotelSelect(){
     q('#newCat').innerHTML = cats.map(c=>`<option value="${c}">${c}</option>`).join('');
     q('#newRate').innerHTML = rates.map(r=>`<option value="${r.name}" data-price="${r.price}">${r.name} (${EUR.format(r.price)})</option>`).join('');
     q('#newPrice').value = rates[0].price;
+    q('#newHotel').addEventListener('change', ()=>{
+  const img = q('#imgHotelPreview');
+  if (img){ img.src = HOTEL_IMG_SRC; img.onerror = ()=>{ img.src = IMG_FALLBACK; }; }
+});
+q('#newCat').addEventListener('change', ()=>{
+  const img = q('#imgCatPreview');
+  if (img){ img.src = HOTEL_IMG_SRC; img.onerror = ()=>{ img.src = IMG_FALLBACK; }; }
+});
 
     // Hotelbild-Preview setzen/zurücksetzen
     const code = sel.value;
@@ -843,30 +866,28 @@ q('#repXls').addEventListener('click', ()=>{
 });
 
 /***** Skizze + Settings *****/
-function buildSketch(){
-  const wrap = q('#sketchGrid'); if(!wrap) return; wrap.innerHTML = '';
-  const preview = q('#sketchPreview'); const img = preview ? q('#sketchPreview img') : null;
-  if (preview && img){ preview.classList.add('hidden'); img.src=''; }
-
+function showSketchList(){
+  q('#sketchStateView').classList.add('hidden');
+  const list = q('#sketchStateList');
+  list.innerHTML = '';
   HOTELS.forEach(h=>{
-    const btn = el('button',{class:'btn sm', title:'Skizze anzeigen'}, 'Skizze anzeigen');
-    btn.addEventListener('click', ()=>{
-      if (img && preview){
-        img.src = TEST_IMG(`Skizze · ${displayHotel(h)}`, 960, 600);
-        img.alt = `Skizze · ${displayHotel(h)}`;
-        preview.classList.remove('hidden');
-        preview.scrollIntoView({behavior:'smooth', block:'nearest'});
-      }
-    });
-
-    wrap.append(el('div',{class:'hotel-card'},
-      el('div',{class:'muted'}, h.group),
-      el('div',{}, displayHotel(h)),
-      el('div',{class:'code'}, h.code),
-      btn
-    ));
+    const b = el('button', {class:'btn'}, displayHotel(h));
+    b.addEventListener('click', ()=> showSketchFor(h));
+    list.append(b);
   });
+  q('#sketchStateList').classList.remove('hidden');
 }
+
+function showSketchFor(hotel){
+  q('#sketchStateList').classList.add('hidden');
+  q('#sketchHotelLabel').textContent = displayHotel(hotel);
+  const img = q('#sketchImage');
+  img.src = SKETCH_IMG_SRC;
+  img.onerror = ()=>{ img.src = IMG_FALLBACK; };
+  q('#sketchStateView').classList.remove('hidden');
+}
+
+function buildSketch(){ showSketchList(); }
 
 /***** EVENTS & INIT *****/
 q('#btnAvail').addEventListener('click', async ()=>{
@@ -880,11 +901,17 @@ q('#btnReporting').addEventListener('click', async ()=>{
 });
 q('#btnSettings').addEventListener('click', ()=> openModal('modalSettings'));
 q('#btnSketch').addEventListener('click', ()=>{ buildSketch(); openModal('modalSketch'); });
-q('#btnNew').addEventListener('click', ()=>{
+q('#sketchBack')?.addEventListener('click', showSketchList);
+
   fillHotelSelect(); wizardSet('1'); q('#newInfo').textContent='';
   // Reset
   ['newArr','newDep','newAdults','newChildren','newCat','newRate','newPrice','newFname','newLname','newEmail','newPhone','newStreet','newZip','newCity','newCompany','newVat','newCompanyZip','newAddress','newNotes','ccHolder','ccNumber','ccExpiry'].forEach(id=>{ const n=q('#'+id); if(n){ n.value=''; } });
   q('#newAdults').value=1; q('#newChildren').value=0; q('#btnNext').disabled=true;
+  
+  // Bild-Previews initial setzen
+  const hp = q('#imgHotelPreview'); if (hp){ hp.src = HOTEL_IMG_SRC; hp.onerror = ()=>{ hp.src = IMG_FALLBACK; }; }
+  const cp = q('#imgCatPreview');   if (cp){ cp.src = HOTEL_IMG_SRC; cp.onerror = ()=>{ cp.src = IMG_FALLBACK; }; }
+  
   // live card reset
   q('#ccNumLive').textContent='•••• •••• •••• ••••'; q('#ccHolderLive').textContent='NAME'; q('#ccExpLive').textContent='MM/YY';
   openModal('modalNew');
