@@ -184,3 +184,21 @@ table.matrix{width:100%;border-collapse:collapse}
   .grid2{grid-template-columns:1fr}
   .cc-wrap{grid-template-columns:1fr}
 }
+/* Image Previews (Hotel/Kategorie) */
+.img-preview{
+  display:flex; align-items:center; justify-content:center;
+}
+.img-preview img{
+  width:100%; max-width:420px; height:auto; border-radius:14px;
+  border:1px solid rgba(0,255,255,.15);
+  box-shadow:0 8px 28px rgba(0,255,255,.12);
+  background:rgba(0,255,255,.03);
+}
+
+/* Hotelskizze Thumbs */
+.hotel-card img{
+  width:100%; height:auto; border-radius:12px;
+  border:1px solid rgba(0,255,255,.15); margin-bottom:8px;
+  box-shadow:0 6px 18px rgba(0,255,255,.10);
+  background:rgba(0,255,255,.03);
+}
