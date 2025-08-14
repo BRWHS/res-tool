@@ -649,20 +649,60 @@ function fillHotelSelect(){
   const sel=q('#newHotel'); sel.innerHTML='';
   sel.append(el('option',{value:''},'Bitte wählen'));
   HOTELS.forEach(h=> sel.append(el('option',{value:h.code}, displayHotel(h))));
+
   sel.addEventListener('change', ()=>{
+    // Kategorien/Raten initialisieren wie bisher
     const cats = HOTEL_CATEGORIES['default'];
     const rates= HOTEL_RATES['default'];
     q('#newCat').innerHTML = cats.map(c=>`<option value="${c}">${c}</option>`).join('');
     q('#newRate').innerHTML = rates.map(r=>`<option value="${r.name}" data-price="${r.price}">${r.name} (${EUR.format(r.price)})</option>`).join('');
     q('#newPrice').value = rates[0].price;
+
+    // NEU: Hotelbild anzeigen
+    const code = sel.value;
+    const imgEl = q('#hotelPreview img');
+    const wrap  = q('#hotelPreview');
+    if (code){
+      const hObj = HOTELS.find(x=>x.code===code);
+      imgEl.src = HOTEL_IMAGES[code] || placeholder(hotelCity(hObj?.name || code));
+      imgEl.alt = `Hotelbild · ${displayHotel(hObj)}`;
+      wrap.classList.remove('hidden');
+    } else {
+      imgEl.src = ''; wrap.classList.add('hidden');
+    }
+
+    // Kategorie‑Preview zurücksetzen (wird in Step 2 gesetzt)
+    const cp = q('#catPreview'); if (cp){ cp.classList.add('hidden'); q('#catPreview img').src=''; }
+
     validateStep('1'); updateSummary('#summaryFinal');
   });
 }
+
 q('#newRate').addEventListener('change',e=>{ const price=e.target.selectedOptions[0]?.dataset.price; if(price) q('#newPrice').value=price; validateStep('3'); updateSummary('#summaryFinal'); });
 ['newArr','newDep','newAdults','newChildren','newHotel'].forEach(id=> q('#'+id).addEventListener('input', ()=>{ validateStep('1'); updateSummary('#summaryFinal'); }));
 ['newCat'].forEach(id=> q('#'+id).addEventListener('change', ()=>{ validateStep('2'); updateSummary('#summaryFinal'); }));
 ['newPrice'].forEach(id=> q('#'+id).addEventListener('input', ()=>{ validateStep('3'); updateSummary('#summaryFinal'); }));
 ['newLname'].forEach(id=> q('#'+id).addEventListener('input', ()=> validateStep('4')));
+
+q('#newCat').addEventListener('change', ()=>{
+  validateStep('2'); updateSummary('#summaryFinal');
+
+  // NEU: Kategoriebild setzen
+  const code = q('#newHotel').value;
+  const cat  = q('#newCat').value;
+  const imgEl = q('#catPreview img');
+  const wrap  = q('#catPreview');
+
+  const perHotel = (CATEGORY_IMAGES[code] || {});
+  const url = perHotel[cat] || CATEGORY_IMAGES.default[cat] || placeholder(`Kategorie · ${cat||'—'}`);
+  if (cat){
+    imgEl.src = url;
+    imgEl.alt = `Kategoriebild · ${safeDisplayByCode(code)} · ${cat}`;
+    wrap.classList.remove('hidden');
+  } else {
+    imgEl.src=''; wrap.classList.add('hidden');
+  }
+});
 
 /* Summary */
 function linesSummary(){
@@ -853,11 +893,14 @@ q('#repXls').addEventListener('click', ()=>{
 function buildSketch(){
   const wrap = q('#sketchGrid'); if(!wrap) return; wrap.innerHTML = '';
   HOTELS.forEach(h=>{
-    wrap.append(el('div',{class:'hotel-card'},
+    const card = el('div',{class:'hotel-card'},
+      // NEU: Skizzenbild oben
+      el('img',{src: placeholder(`${hotelCity(h.name)} · Skizze`, 520, 320), alt:`Skizze · ${displayHotel(h)}`}),
       el('div',{class:'muted'}, h.group),
       el('div',{}, displayHotel(h)),
       el('div',{class:'code'}, h.code)
-    ));
+    );
+    wrap.append(card);
   });
 }
 
