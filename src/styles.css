@@ -195,3 +195,27 @@ table.matrix{width:100%;border-collapse:collapse}
   box-shadow:0 8px 28px rgba(0,255,255,.12);
   background:rgba(0,255,255,.03)
 }
+
+/* Bildkarten / Platzhalter */
+.imgcard{
+  width:100%;
+  aspect-ratio: 16 / 10;
+  border:1px solid rgba(0,255,255,.18);
+  border-radius:14px;
+  background:rgba(0,255,255,.04);
+  display:grid;
+  place-items:center;
+  overflow:hidden;
+}
+.imgcard img{
+  max-width:100%;
+  max-height:100%;
+  border-radius:12px;
+  display:block;
+}
+
+/* breitere Skizze */
+.imgcard.wide{ aspect-ratio: 16 / 9; }
+
+/* Hotelskizze Zustände */
+#sketchStateList .btn{ margin:4px; }
