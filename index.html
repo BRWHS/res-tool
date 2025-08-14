@@ -165,15 +165,15 @@
         <div class="wstep" data-step="4"><span>4</span><b>Gast & Zahlung</b></div>
       </div>
 
-      <!-- STEP 1 -->
+     <!-- STEP 1 -->
       <div class="wpage" id="w1">
+        <!-- NEW: Hotel-Preview rechts -->
         <div class="grid2">
           <label>Hotel
             <select id="newHotel" class="input theme-select"></select>
           </label>
-          <!-- Hotelbild Vorschau -->
-          <div id="hotelPreview" class="img-preview hidden" aria-live="polite">
-            <img src="" alt="Hotelbild" loading="lazy" decoding="async" />
+          <div class="imgcard">
+            <img id="imgHotelPreview" alt="Hotelbild" />
           </div>
           <label>Anreise <input id="newArr" type="date" class="input"/></label>
           <label>Abreise <input id="newDep" type="date" class="input"/></label>
@@ -187,9 +187,9 @@
         <label>Kategorie
           <select id="newCat" class="input theme-select"></select>
         </label>
-        <!-- Kategoriebild Vorschau -->
-        <div id="catPreview" class="img-preview hidden" aria-live="polite">
-          <img src="" alt="Zimmer-/Kategoriebild" loading="lazy" decoding="async" />
+        <!-- NEW: Kategorien-Preview -->
+        <div class="imgcard" style="margin-top:8px;">
+          <img id="imgCatPreview" alt="Zimmer/Kategorie" />
         </div>
       </div>
 
@@ -400,15 +400,22 @@
   </section>
 
   <!-- Hotelskizze -->
-  <section class="modal" id="modalSketch" role="dialog" aria-labelledby="sketchTitle" aria-modal="true">
+<section class="modal" id="modalSketch" role="dialog" aria-labelledby="sketchTitle" aria-modal="true">
     <header>
       <h3 id="sketchTitle" class="mono">Hotelskizze</h3>
       <button class="btn" data-close>Schließen</button>
     </header>
     <div class="body">
-      <div class="hotel-grid" id="sketchGrid"></div>
-      <div id="sketchPreview" class="img-preview hidden" style="margin-top:12px;">
-        <img src="" alt="Hotelskizze Vorschau" loading="lazy" decoding="async" />
+      <!-- NEW: zwei Zustände – Buttonliste und Sketch-View -->
+      <div id="sketchStateList" class="row wrap"></div>
+      <div id="sketchStateView" class="hidden">
+        <div class="row wrap" style="margin-bottom:8px;">
+          <button class="btn" id="sketchBack">← Zurück zur Auswahl</button>
+          <div class="muted" id="sketchHotelLabel" style="margin-left:8px;"></div>
+        </div>
+        <div class="imgcard wide">
+          <img id="sketchImage" alt="Hotelskizze" />
+        </div>
       </div>
     </div>
   </section>
