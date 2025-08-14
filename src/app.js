@@ -922,28 +922,6 @@ function showSketchFor(hotel){
 // Aufruf von außen (z.B. beim Öffnen des Modals)
 function buildSketch(){ showSketchList(); }
 
-function buildSketch(){
-  const wrap = q('#sketchGrid'); 
-  if(!wrap) return; 
-  wrap.innerHTML = '';
-
-  HOTELS.forEach(h=>{
-    const btn = el('button', { class: 'btn', style: 'width:100%' }, displayHotel(h));
-    btn.addEventListener('click', ()=>{
-      wrap.innerHTML = ''; // vorherige Inhalte leeren
-      wrap.append(
-        el('h3', {}, displayHotel(h)),
-        el('img', { 
-          src: 'bilder/skizze-test.png', // Platzhalterbild
-          alt: `Skizze von ${displayHotel(h)}`, 
-          style: 'max-width:100%;border-radius:12px;'
-        })
-      );
-    });
-    wrap.append(btn);
-  });
-}
-
 /***** EVENTS & INIT *****/
 q('#btnAvail').addEventListener('click', async ()=>{
   q('#availFrom').value = isoDate(new Date());
@@ -1030,5 +1008,4 @@ q('#btnCreate').addEventListener('click', createReservation);
   await loadKpisNext();
   await loadReservations();
 })();
-;
-})();
+
