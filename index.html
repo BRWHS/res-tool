@@ -167,25 +167,35 @@
       </div>
 
       <!-- STEP 1 -->
-      <div class="wpage" id="w1">
-        <div class="grid2">
-          <label>Hotel
-            <select id="newHotel" class="input theme-select"></select>
-          </label>
-          <div></div>
-          <label>Anreise <input id="newArr" type="date" class="input"/></label>
-          <label>Abreise <input id="newDep" type="date" class="input"/></label>
-          <label>Erwachsene <input id="newAdults" type="number" min="1" value="1" class="input"/></label>
-          <label>Kinder <input id="newChildren" type="number" min="0" value="0" class="input"/></label>
-        </div>
-      </div>
+    <div class="wpage" id="w1">
+  <div class="grid2">
+    <label>Hotel
+      <select id="newHotel" class="input theme-select"></select>
+    </label>
+
+    <!-- NEU: Hotelbild -->
+    <div id="hotelPreview" class="img-preview hidden" aria-live="polite">
+      <img src="" alt="Hotelbild" />
+    </div>
+
+    <label>Anreise <input id="newArr" type="date" class="input"/></label>
+    <label>Abreise <input id="newDep" type="date" class="input"/></label>
+    <label>Erwachsene <input id="newAdults" type="number" min="1" value="1" class="input"/></label>
+    <label>Kinder <input id="newChildren" type="number" min="0" value="0" class="input"/></label>
+  </div>
+</div>
 
       <!-- STEP 2 -->
-      <div class="wpage hidden" id="w2">
-        <label>Kategorie
-          <select id="newCat" class="input theme-select"></select>
-        </label>
-      </div>
+<div class="wpage hidden" id="w2">
+  <label>Kategorie
+    <select id="newCat" class="input theme-select"></select>
+  </label>
+
+  <!-- NEU: Kategoriebild -->
+  <div id="catPreview" class="img-preview hidden" aria-live="polite">
+    <img src="" alt="Zimmer-/Kategoriebild" />
+  </div>
+</div>
 
       <!-- STEP 3 -->
       <div class="wpage hidden" id="w3">
