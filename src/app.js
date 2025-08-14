@@ -61,6 +61,42 @@ const HOTEL_KEYWORD = {
 const HOTEL_CATEGORIES = { default: ['Standard','Superior','Suite'] };
 const HOTEL_RATES = { default: [ {name:'Flex exkl. Frühstück', price:89}, {name:'Flex inkl. Frühstück', price:109} ] };
 
+/***** Image placeholders *****/
+const placeholder = (text, w=800, h=500) =>
+  `https://via.placeholder.com/${w}x${h}.png?text=${encodeURIComponent(text)}`;
+
+const HOTEL_IMAGES = {
+  // später echte URLs einsetzen, bis dahin hübsche Platzhalter:
+  'MA7-M-DOR': placeholder('MASEVEN · Dornach'),
+  'MA7-M-TRU': placeholder('MASEVEN · Trudering'),
+  'MA7-FRA'  : placeholder('MASEVEN · Frankfurt'),
+  'MA7-STR'  : placeholder('MASEVEN · Stuttgart'),
+  'FID-ROB'  : placeholder('Fidelity · Robenstein'),
+  'FID-STR'  : placeholder('Fidelity · Struck'),
+  'FID-DOE'  : placeholder('Fidelity · Doerr'),
+  'FID-GRB'  : placeholder('Fidelity · Gr. Baum'),
+  'FID-LAN'  : placeholder('Fidelity · Landskron'),
+  'FID-PUE'  : placeholder('Fidelity · Pürgl'),
+  'FID-SEP'  : placeholder('Fidelity · Seppl'),
+  'TAL-BON'  : placeholder('Tante Alma · Bonn'),
+  'TAL-KOE'  : placeholder('Tante Alma · Köln'),
+  'TAL-ERF'  : placeholder('Tante Alma · Erfurt'),
+  'TAL-MAN'  : placeholder('Tante Alma · Mannheim'),
+  'TAL-MUE'  : placeholder('Tante Alma · Mülheim'),
+  'TAL-SON'  : placeholder('Tante Alma · Sonnen'),
+  'DBM-OF'   : placeholder('Delta by Marriott · Offenbach'),
+  'VV-HH'    : placeholder('Villa Viva · Hamburg'),
+};
+
+const CATEGORY_IMAGES = {
+  // optional: pro Haus eigene Bilder je Kategorie – Default greift sonst
+  default: {
+    'Standard': placeholder('Kategorie · Standard'),
+    'Superior': placeholder('Kategorie · Superior'),
+    'Suite'   : placeholder('Kategorie · Suite')
+  }
+};
+
 /***** Helpers *****/
 const D2 = new Intl.DateTimeFormat('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'});
 const Dm = new Intl.DateTimeFormat('de-DE',{day:'2-digit',month:'2-digit'});
