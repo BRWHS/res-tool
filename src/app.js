@@ -680,7 +680,7 @@ q('#newCat').addEventListener('change', ()=>{
 
     validateStep('1'); updateSummary('#summaryFinal');
   });
-}
+
 q('#newRate').addEventListener('change',e=>{ const price=e.target.selectedOptions[0]?.dataset.price; if(price) q('#newPrice').value=price; validateStep('3'); updateSummary('#summaryFinal'); });
 ['newArr','newDep','newAdults','newChildren','newHotel'].forEach(id=> q('#'+id).addEventListener('input', ()=>{ validateStep('1'); updateSummary('#summaryFinal'); }));
 
