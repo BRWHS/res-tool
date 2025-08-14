@@ -878,16 +878,27 @@ function showSketchList(){
   q('#sketchStateList').classList.remove('hidden');
 }
 
-function showSketchFor(hotel){
-  q('#sketchStateList').classList.add('hidden');
-  q('#sketchHotelLabel').textContent = displayHotel(hotel);
-  const img = q('#sketchImage');
-  img.src = SKETCH_IMG_SRC;
-  img.onerror = ()=>{ img.src = IMG_FALLBACK; };
-  q('#sketchStateView').classList.remove('hidden');
-}
+function buildSketch(){
+  const wrap = q('#sketchGrid'); 
+  if(!wrap) return; 
+  wrap.innerHTML = '';
 
-function buildSketch(){ showSketchList(); }
+  HOTELS.forEach(h=>{
+    const btn = el('button', { class: 'btn', style: 'width:100%' }, displayHotel(h));
+    btn.addEventListener('click', ()=>{
+      wrap.innerHTML = ''; // vorherige Inhalte leeren
+      wrap.append(
+        el('h3', {}, displayHotel(h)),
+        el('img', { 
+          src: 'bilder/skizze-test.png', // Platzhalterbild
+          alt: `Skizze von ${displayHotel(h)}`, 
+          style: 'max-width:100%;border-radius:12px;'
+        })
+      );
+    });
+    wrap.append(btn);
+  });
+}
 
 /***** EVENTS & INIT *****/
 q('#btnAvail').addEventListener('click', async ()=>{
