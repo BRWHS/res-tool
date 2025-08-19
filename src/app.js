@@ -602,6 +602,7 @@ function wizardSet(step){
   q('#btnCreate').classList.toggle('hidden', step!=='4');
   validateStep(step);
   if (step==='4') updateSummary('#summaryFinal');
+  if (step === '2' || step === '3') ensureCatRatePopulated();
 }
 qa('.wstep').forEach(s=> s.style.pointerEvents='none');
 
@@ -622,19 +623,35 @@ q('#btnNext').addEventListener('click', ()=>{
   wizardSet(next);
 });
 
+function ensureCatRatePopulated() {
+  if (!q('#newCat').options.length || !q('#newRate').options.length) {
+    const evt = new Event('change'); // triggers the fill logic above
+    q('#newHotel').dispatchEvent(evt);
+  }
+}
+
 function fillHotelSelect(){
   const sel=q('#newHotel'); sel.innerHTML='';
   sel.append(el('option',{value:''},'Bitte wählen'));
   HOTELS.forEach(h=> sel.append(el('option',{value:h.code}, displayHotel(h))));
-  sel.addEventListener('change', ()=>{
-    const cats = HOTEL_CATEGORIES['default'];
-    const rates= HOTEL_RATES['default'];
-    q('#newCat').innerHTML  = cats.map(c=>`<option value="${c}">${c}</option>`).join('');
-    q('#newRate').innerHTML = rates.map(r=>`<option value="${r.name}" data-price="${r.price}">${r.name} (${EUR.format(r.price)})</option>`).join('');
-    q('#newPrice').value = rates[0].price;
-    setCatImage(SKETCH_IMG_SRC);     // <— Kategorie-Preview befüllen
-    validateStep('1'); updateSummary('#summaryFinal');
-  });
+  sel.addEventListener('change', () => {
+  const cats  = HOTEL_CATEGORIES['default'];
+  const rates = HOTEL_RATES['default'];
+
+  // Fill + preselect category
+  q('#newCat').innerHTML = cats.map((c,i)=>`<option value="${c}" ${i===0?'selected':''}>${c}</option>`).join('');
+
+  // Fill + preselect rate (+ price)
+  q('#newRate').innerHTML = rates
+    .map((r,i)=>`<option value="${r.name}" data-price="${r.price}" ${i===0?'selected':''}>${r.name} (${EUR.format(r.price)})</option>`)
+    .join('');
+  q('#newPrice').value = rates[0].price;
+
+  // Re-validate both steps in case user is already on 2/3
+  validateStep('1');
+  validateStep('2');
+  updateSummary('#summaryFinal');
+});
 }
 
 function validateStep(step){
