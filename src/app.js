@@ -3,6 +3,19 @@ const SB_URL = "https://kytuiodojfcaggkvizto.supabase.co";
 const SB_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt5dHVpb2RvamZjYWdna3ZpenRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ4MzA0NjgsImV4cCI6MjA3MDQwNjQ2OH0.YobQZnCQ7LihWtewynoCJ6ZTjqetkGwh82Nd2mmmhLU";
 const supabase = window.supabase.createClient(SB_URL, SB_ANON_KEY);
 
+// Bildquellen
+const HOTEL_IMG_SRC  = '/assets/hotel-placeholder.png';
+const SKETCH_IMG_SRC = '/assets/sketch-placeholder.png';
+const IMG_FALLBACK = 'data:image/svg+xml;utf8,' + encodeURIComponent(
+  `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="500" viewBox="0 0 800 500">
+     <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+       <stop offset="0" stop-color="#0ea5b0"/><stop offset="1" stop-color="#052a36"/>
+     </linearGradient></defs>
+     <rect width="800" height="500" rx="24" fill="url(#g)"/>
+     <text x="50%" y="50%" fill="#9adce6" font-family="Inter" font-size="24" text-anchor="middle">Kein Bild</text>
+   </svg>`
+);
+
 /***** Hotels (UI-Liste) *****/
 const HOTELS = [
   { group:'MASEVEN',  name:'MASEVEN München Dornach',   code:'MA7-M-DOR' },
@@ -622,6 +635,27 @@ function fillHotelSelect(){
     validateStep('1'); updateSummary('#summaryFinal');
   });
 }
+
+function setHotelImage(src){
+  const img = q('#hotelImg'); if(!img) return;
+  img.src = src || HOTEL_IMG_SRC;
+  img.onerror = () => { img.onerror = null; img.src = IMG_FALLBACK; };
+}
+
+// Beim Öffnen der „Neue Reservierung“-Modal zurücksetzen:
+q('#btnNew').addEventListener('click', ()=>{
+  fillHotelSelect(); wizardSet('1'); q('#newInfo').textContent='';
+  // ... dein Reset ...
+  setHotelImage(HOTEL_IMG_SRC);
+  openModal('modalNew');
+});
+
+// Wenn Hotel gewählt wurde, ggf. später je Hotel austauschen.
+// Bis wir echte Hausbilder haben, bleibt der Platzhalter.
+q('#newHotel')?.addEventListener('change', ()=>{
+  setHotelImage(HOTEL_IMG_SRC);
+});
+
 q('#newRate').addEventListener('change',e=>{ const price=e.target.selectedOptions[0]?.dataset.price; if(price) q('#newPrice').value=price; validateStep('3'); updateSummary('#summaryFinal'); });
 ['newArr','newDep','newAdults','newChildren','newHotel'].forEach(id=> q('#'+id).addEventListener('input', ()=>{ validateStep('1'); updateSummary('#summaryFinal'); }));
 ['newCat'].forEach(id=> q('#'+id).addEventListener('change', ()=>{ validateStep('2'); updateSummary('#summaryFinal'); }));
