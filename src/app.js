@@ -580,20 +580,36 @@ function validateStep(step){
 }
 
 // Füllt Cat/Rate wenn leer (wichtig für Step 2/3)
-function ensureCatRatePopulated(){
-  const cats  = HOTEL_CATEGORIES.default || [];
-  const rates = HOTEL_RATES.default || [];
+// ---- ensure Cat/Rate are populated whenever we enter step 2/3
+function ensureCatRatePopulated() {
+  const cats  = HOTEL_CATEGORIES['default'];
+  const rates = HOTEL_RATES['default'];
+
   const selCat  = q('#newCat');
   const selRate = q('#newRate');
 
-  if (selCat && !selCat.options.length && cats.length){
-    selCat.innerHTML = cats.map((c,i)=>`<option value="${c}" ${i===0?'selected':''}>${c}</option>`).join('');
+  if (selCat && selCat.options.length === 0) {
+    selCat.innerHTML = cats.map(c => `<option value="${c}">${c}</option>`).join('');
+    selCat.value = cats[0];
   }
-  if (selRate && !selRate.options.length && rates.length){
-    selRate.innerHTML = rates.map((r,i)=>`<option value="${r.name}" data-price="${r.price}" ${i===0?'selected':''}>${r.name} (${EUR.format(r.price)})</option>`).join('');
-    const p = rates[0].price;
-    if (q('#newPrice') && p!=null) q('#newPrice').value = p;
+  if (selRate && selRate.options.length === 0) {
+    selRate.innerHTML = rates
+      .map(r => `<option value="${r.name}" data-price="${r.price}">${r.name} (${EUR.format(r.price)})</option>`)
+      .join('');
+    selRate.value = rates[0].name;
+    const priceInput = q('#newPrice');
+    if (priceInput) priceInput.value = rates[0].price;
   }
+}
+
+// ---- optional: safe cat-preview handling (works whether the <img> exists or not)
+const CAT_PLACEHOLDER = '/assets/sketch-placeholder.png';
+function refreshCatPreview() {
+  const img = q('#imgCatPreview');
+  if (!img) return;                      // no image in current HTML? silently ignore
+  img.src = CAT_PLACEHOLDER;             // always reset to a valid placeholder
+  img.onload  = () => { img.style.display = 'block'; };
+  img.onerror = () => { img.style.display = 'none'; };
 }
 function wizardSet(step){
   qa('.wstep').forEach(b=>b.classList.toggle('active', b.dataset.step==step));
@@ -602,9 +618,15 @@ function wizardSet(step){
   q('#btnPrev').classList.toggle('hidden', step==='1');
   q('#btnNext').classList.toggle('hidden', step==='4');
   q('#btnCreate').classList.toggle('hidden', step!=='4');
-  if (step==='2' || step==='3') ensureCatRatePopulated();
+
+  // NEW: make sure selects are filled when we land on 2 or 3
+  if (step === '2' || step === '3') {
+    ensureCatRatePopulated();
+    refreshCatPreview();
+  }
+  if (step === '4') updateSummary('#summaryFinal');
+
   validateStep(step);
-  if (step==='4') updateSummary('#summaryFinal');
 }
 
 qa('.wstep').forEach(s=> s.style.pointerEvents='none');
@@ -631,6 +653,7 @@ function fillHotelSelect(){
   sel.addEventListener('change', ()=>{
     const cats  = HOTEL_CATEGORIES['default'];
     const rates = HOTEL_RATES['default'];
+    refreshCatPreview();
 
     // Optionen neu setzen
     q('#newCat').innerHTML  = cats.map((c,i)=>`<option value="${c}" ${i===0?'selected':''}>${c}</option>`).join('');
