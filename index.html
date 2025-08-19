@@ -176,7 +176,9 @@
       <select id="newHotel" class="input theme-select"></select>
     </label>
     <!-- spacer for future hotel image / or leave empty -->
-    <div></div>
+    <div class= "imgcard" style="max-width: 300px;magin-top:2px;">
+      <img id="hotelImg" alt="Hoteldbild" style="display:block;width:100%;border-radius:12px;" />
+    </div>
 
     <label>Anreise <input id="newArr" type="date" class="input"/></label>
     <label>Abreise <input id="newDep" type="date" class="input"/></label>
@@ -198,7 +200,11 @@
       <!-- STEP 2 -->
 <div class="wpage hidden" id="w2">
   <label>Kategorie
-    <select id="newCat" class="input theme-select"></select>
+    <select id="newCat" class="input theme-select">
+<div class="imgcard" style="max-width:300px;margin-top:8px;">
+  <img id="imgCatPreview" alt="Zimmer/Kategorie" style="display:block;width:100%;border-radius:12px;" />
+</div>
+</select>
   </label>
 
   <!-- kleine Vorschau, damit das „broken image“ nicht riesig ist -->
