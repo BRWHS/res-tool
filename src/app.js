@@ -872,7 +872,7 @@ q('#btnSketch').addEventListener('click', ()=>{ buildSketch(); openModal('modalS
   // live card reset
   q('#ccNumLive').textContent='•••• •••• •••• ••••'; q('#ccHolderLive').textContent='NAME'; q('#ccExpLive').textContent='MM/YY';
   openModal('modalNew');
-);
+;
 q('#btnCreate').addEventListener('click', createReservation);
 
 q('#btnNew').addEventListener('click', ()=>{
