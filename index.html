@@ -171,39 +171,27 @@
 
      <!-- STEP 1 -->
 <div class="wpage" id="w1">
-  <div class="grid2 w1-grid">
-    <!-- linke Spalte: Hotel + Gastdaten + Basisdaten -->
-    <div>
-      <label>Hotel
-        <select id="newHotel" class="input theme-select"></select>
-      </label>
+  <div class="grid2">
+    <label>Hotel
+      <select id="newHotel" class="input theme-select"></select>
+    </label>
+    <!-- spacer for future hotel image / or leave empty -->
+    <div></div>
 
-      <h4 class="mono section" style="margin-top:10px;">Gastdaten</h4>
-      <div class="grid2">
-        <label>Vorname <input id="newFname" class="input" placeholder="Max"/></label>
-        <label>Nachname* <input id="newLname" class="input" placeholder="Mustermann" required/></label>
-        <label>E‑Mail <input id="newEmail" class="input" placeholder="max@example.com"/></label>
-        <label>Telefon <input id="newPhone" class="input" placeholder="+49 …"/></label>
-        <label>Straße <input id="newStreet" class="input" placeholder="Musterstraße 1"/></label>
-        <label>PLZ <input id="newZip" class="input" placeholder="80331"/></label>
-        <label>Ort <input id="newCity" class="input" placeholder="München"/></label>
-      </div>
+    <label>Anreise <input id="newArr" type="date" class="input"/></label>
+    <label>Abreise <input id="newDep" type="date" class="input"/></label>
 
-      <h4 class="mono section">Aufenthalt</h4>
-      <div class="grid2">
-        <label>Anreise <input id="newArr" type="date" class="input"/></label>
-        <label>Abreise <input id="newDep" type="date" class="input"/></label>
-        <label>Erwachsene <input id="newAdults" type="number" min="1" value="1" class="input"/></label>
-        <label>Kinder <input id="newChildren" type="number" min="0" value="0" class="input"/></label>
-      </div>
-    </div>
+    <label>Erwachsene <input id="newAdults" type="number" min="1" value="1" class="input"/></label>
+    <label>Kinder <input id="newChildren" type="number" min="0" value="0" class="input"/></label>
 
-    <!-- rechte Spalte: Hotelbild -->
-    <div>
-      <div class="imgcard">
-        <img id="hotelImg" alt="Hotelbild" />
-      </div>
-    </div>
+    <!-- Gastdaten kompakt direkt in Step 1 -->
+    <label>Vorname <input id="newFname" class="input" placeholder="Max"/></label>
+    <label>Nachname* <input id="newLname" class="input" placeholder="Mustermann" required/></label>
+    <label>E‑Mail <input id="newEmail" class="input" placeholder="max@example.com"/></label>
+    <label>Telefon <input id="newPhone" class="input" placeholder="+49 ..."/></label>
+    <label>Straße <input id="newStreet" class="input" placeholder="Musterstraße 1"/></label>
+    <label>PLZ <input id="newZip" class="input" placeholder="80331"/></label>
+    <label>Ort <input id="newCity" class="input" placeholder="München"/></label>
   </div>
 </div>
 
