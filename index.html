@@ -169,108 +169,126 @@
         <div class="wstep" data-step="4"><span>4</span><b>Gast & Zahlung</b></div>
       </div>
 
-     <!-- STEP 1 -->
-<div class="wpage" id="w1">
-  <div class="grid2">
+    <!-- STEP 1 -->
+<div class="wpage compact" id="w1">
+  <div class="grid-compact">
     <label>Hotel
       <select id="newHotel" class="input theme-select"></select>
     </label>
-    <!-- spacer for future hotel image / or leave empty -->
-    <div class= "imgcard" style="max-width: 300px;magin-top:2px;">
-      <img id="hotelImg" alt="Hoteldbild" style="display:block;width:100%;border-radius:12px;" />
-    </div>
+    <label>Anreise
+      <input id="newArr" type="date" class="input"/>
+    </label>
+    <label>Abreise
+      <input id="newDep" type="date" class="input"/>
+    </label>
+    <label>Erwachsene
+      <input id="newAdults" type="number" min="1" value="1" class="input"/>
+    </label>
+    <label>Kinder
+      <input id="newChildren" type="number" min="0" value="0" class="input"/>
+    </label>
 
-    <label>Anreise <input id="newArr" type="date" class="input"/></label>
-    <label>Abreise <input id="newDep" type="date" class="input"/></label>
-
-    <label>Erwachsene <input id="newAdults" type="number" min="1" value="1" class="input"/></label>
-    <label>Kinder <input id="newChildren" type="number" min="0" value="0" class="input"/></label>
-
-    <!-- Gastdaten kompakt direkt in Step 1 -->
-    <label>Vorname <input id="newFname" class="input" placeholder="Max"/></label>
-    <label>Nachname* <input id="newLname" class="input" placeholder="Mustermann" required/></label>
-    <label>E‑Mail <input id="newEmail" class="input" placeholder="max@example.com"/></label>
-    <label>Telefon <input id="newPhone" class="input" placeholder="+49 ..."/></label>
-    <label>Straße <input id="newStreet" class="input" placeholder="Musterstraße 1"/></label>
-    <label>PLZ <input id="newZip" class="input" placeholder="80331"/></label>
-    <label>Ort <input id="newCity" class="input" placeholder="München"/></label>
+    <!-- kompakte Gastdaten gleich in Step 1 -->
+    <label>Vorname
+      <input id="newFname" class="input" placeholder="Max"/>
+    </label>
+    <label>Nachname*
+      <input id="newLname" class="input" placeholder="Mustermann" required/>
+    </label>
+    <label>E‑Mail
+      <input id="newEmail" class="input" placeholder="max@example.com"/>
+    </label>
+    <label>Telefon
+      <input id="newPhone" class="input" placeholder="+49 …"/>
+    </label>
   </div>
 </div>
 
-      <!-- STEP 2 -->
-<div class="wpage hidden" id="w2">
-  <label>Kategorie
-    <select id="newCat" class="input theme-select">
-<div class="imgcard" style="max-width:300px;margin-top:8px;">
-  <img id="imgCatPreview" alt="Zimmer/Kategorie" style="display:block;width:100%;border-radius:12px;" />
-</div>
-</select>
-  </label>
-
-  <!-- kleine Vorschau, damit das „broken image“ nicht riesig ist -->
-  <div class="imgcard" style="margin-top:8px;max-width:320px;">
-    <img id="imgCatPreview" alt="Zimmer/Kategorie" style="width:100%;border-radius:12px;display:block;" />   
-        </div>
-      </div>
-
-      <!-- STEP 3 -->
-      <div class="wpage hidden" id="w3">
-        <div class="grid2">
-          <label>Rate
-            <select id="newRate" class="input theme-select"></select>
-          </label>
-          <label>Preis <input id="newPrice" type="number" step="1" value="89" class="input"/></label>
-        </div>
-      </div>
-
-      <!-- STEP 4 -->
-      <div class="wpage hidden" id="w4">
-        <aside class="summary box" id="summaryFinal"></aside>
-
-        <h4 class="mono section">Gastdaten</h4>
-
-        <details class="box">
-          <summary class="mono">Firma (optional)</summary>
-          <div class="grid2">
-            <label>Firma <input id="newCompany" class="input" /></label>
-            <label>USt-ID <input id="newVat" class="input" /></label>
-            <label>PLZ <input id="newCompanyZip" class="input" /></label>
-            <label>Adresse <input id="newAddress" class="input" placeholder="Straße + Ort" /></label>
-          </div>
-        </details>
-
-        <h4 class="mono section">Kreditkarte</h4>
-        <div class="cc-wrap">
-          <div class="cc-visual">
-            <div class="cc-chip"></div>
-            <div class="cc-num"  id="ccNumLive">•••• •••• •••• ••••</div>
-            <div class="cc-holder" id="ccHolderLive">NAME</div>
-            <div class="cc-exp"    id="ccExpLive">MM/YY</div>
-          </div>
-          <div class="cc-form">
-            <div class="grid2">
-              <label>Karteninhaber <input id="ccHolder" class="input" /></label>
-              <label>Kartennummer <input id="ccNumber" class="input" placeholder="•••• •••• •••• 1234" /></label>
-              <label>Ablauf (MM/JJ) <input id="ccExpiry" class="input" placeholder="12/27" /></label>
-            </div>
-          </div>
-        </div>
-
-        <label class="section mono">Notizen
-          <textarea id="newNotes" class="input" rows="3" placeholder="Besonderheiten, Wünsche …"></textarea>
-        </label>
-      </div>
-
-      <div class="wizard-actions">
-        <button class="btn ghost hidden" id="btnPrev">Zurück</button>
-        <div style="flex:1"></div>
-        <button class="btn" id="btnNext" disabled>Weiter</button>
-        <button class="btn primary hidden" id="btnCreate">Reservierung abschicken</button>
-      </div>
-
-      <p class="muted" id="newInfo" style="margin-top:8px;"></p>
+<!-- STEP 2 -->
+<div class="wpage narrow hidden" id="w2">
+  <div class="row wrap" style="gap:12px;align-items:flex-start;">
+    <label style="min-width:260px;flex:1">Kategorie
+      <select id="newCat" class="input theme-select"></select>
+    </label>
+    <div class="imgcard tiny">
+      <img id="imgCatPreview" alt="Zimmer/Kategorie" />
     </div>
-  </section>
+  </div>
+</div>
+
+<!-- STEP 3 -->
+<div class="wpage narrow hidden" id="w3">
+  <div class="row wrap" style="gap:12px;align-items:flex-start;">
+    <label style="min-width:260px;flex:1">Rate
+      <select id="newRate" class="input theme-select"></select>
+    </label>
+    <label style="width:160px">Preis
+      <input id="newPrice" type="number" step="1" value="89" class="input"/>
+    </label>
+  </div>
+  <div id="ratePolicyBox" class="box rate-policy">
+    <div class="mono muted tiny">Stornobedingung</div>
+    <div id="ratePolicy" class="tiny">Bis zum Anreisetag 18:00 Uhr kostenfrei stornierbar.</div>
+  </div>
+</div>
+
+<!-- STEP 4 -->
+<div class="wpage hidden" id="w4">
+  <aside class="summary box" id="summaryFinal"></aside>
+
+  <h4 class="mono section">Adresse (Gast)</h4>
+  <div class="grid2">
+    <label>Straße
+      <input id="newStreet" class="input" placeholder="Musterstraße 1"/>
+    </label>
+    <label>PLZ
+      <input id="newZip" class="input" placeholder="80331"/>
+    </label>
+    <label>Ort
+      <input id="newCity" class="input" placeholder="München"/>
+    </label>
+  </div>
+
+  <details class="box">
+    <summary class="mono">Firma (optional)</summary>
+    <div class="grid2">
+      <label>Firma
+        <input id="newCompany" class="input" />
+      </label>
+      <label>USt.-ID
+        <input id="newVat" class="input" />
+      </label>
+      <label>PLZ + Ort
+        <input id="newCompanyZipCity" class="input" placeholder="80331 München" />
+      </label>
+      <label>Adresse (Straße)
+        <input id="newAddressStreet" class="input" placeholder="Musterstraße 99" />
+      </label>
+    </div>
+  </details>
+
+  <h4 class="mono section">Kreditkarte</h4>
+  <div class="cc-wrap">
+    <div class="cc-visual">
+      <div class="cc-chip"></div>
+      <div class="cc-num"  id="ccNumLive">•••• •••• •••• ••••</div>
+      <div class="cc-holder" id="ccHolderLive">NAME</div>
+      <div class="cc-exp"    id="ccExpLive">MM/YY</div>
+    </div>
+    <div class="cc-form">
+      <div class="grid2">
+        <label>Karteninhaber <input id="ccHolder" class="input" /></label>
+        <label>Kartennummer <input id="ccNumber" class="input" placeholder="•••• •••• •••• 1234" /></label>
+        <label>Ablauf (MM/JJ) <input id="ccExpiry" class="input" placeholder="12/27" /></label>
+      </div>
+    </div>
+  </div>
+
+  <label class="section mono">Notizen
+    <textarea id="newNotes" class="input" rows="3" placeholder="Besonderheiten, Wünsche …"></textarea>
+  </label>
+</div>
+
 
   <!-- Reservierung bearbeiten -->
   <section class="modal" id="modalEdit" role="dialog" aria-labelledby="editTitle" aria-modal="true">
