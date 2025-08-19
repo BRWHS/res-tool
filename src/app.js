@@ -581,20 +581,20 @@ function validateStep(step){
 
 // Füllt Cat/Rate wenn leer (wichtig für Step 2/3)
 function ensureCatRatePopulated(){
-  const cats  = HOTEL_CATEGORIES['default'];
-  const rates = HOTEL_RATES['default'];
+  const cats  = HOTEL_CATEGORIES.default || [];
+  const rates = HOTEL_RATES.default || [];
   const selCat  = q('#newCat');
   const selRate = q('#newRate');
 
-  if (selCat && !selCat.options.length) {
+  if (selCat && !selCat.options.length && cats.length){
     selCat.innerHTML = cats.map((c,i)=>`<option value="${c}" ${i===0?'selected':''}>${c}</option>`).join('');
   }
-  if (selRate && !selRate.options.length) {
+  if (selRate && !selRate.options.length && rates.length){
     selRate.innerHTML = rates.map((r,i)=>`<option value="${r.name}" data-price="${r.price}" ${i===0?'selected':''}>${r.name} (${EUR.format(r.price)})</option>`).join('');
-    q('#newPrice').value = rates[0].price;
+    const p = rates[0].price;
+    if (q('#newPrice') && p!=null) q('#newPrice').value = p;
   }
 }
-
 function wizardSet(step){
   qa('.wstep').forEach(b=>b.classList.toggle('active', b.dataset.step==step));
   qa('.wpage').forEach(p=>p.classList.add('hidden'));
@@ -602,16 +602,9 @@ function wizardSet(step){
   q('#btnPrev').classList.toggle('hidden', step==='1');
   q('#btnNext').classList.toggle('hidden', step==='4');
   q('#btnCreate').classList.toggle('hidden', step!=='4');
-
-  // NEU: Defaults sicher bereitstellen
-  if (step==='2' || step==='3') ensureCatRateOptions();
-
+  if (step==='2' || step==='3') ensureCatRatePopulated();
   validateStep(step);
   if (step==='4') updateSummary('#summaryFinal');
-  if (step==='2' && !q('#newCat').value){
-  const cats = HOTEL_CATEGORIES['default'];
-  q('#newCat').innerHTML = cats.map(c=>`<option value="${c}">${c}</option>`).join('');
-  q('#newCat').value = cats[0];
 }
 
 qa('.wstep').forEach(s=> s.style.pointerEvents='none');
@@ -917,34 +910,103 @@ function buildSketch(){
 }
 
 /***** EVENTS & INIT *****/
+
+// Buttons / Modals
 q('#btnAvail').addEventListener('click', async ()=>{
   q('#availFrom').value = isoDate(new Date());
   q('#availDays').value = '14';
   await buildMatrix();
   openModal('modalAvail');
 });
+
 q('#btnReporting').addEventListener('click', async ()=>{
-  setDefaultReportRange(); fillRepHotel(); await runReport(); openModal('modalReporting');
+  setDefaultReportRange();
+  fillRepHotel();
+  await runReport();
+  openModal('modalReporting');
 });
+
 q('#btnSettings').addEventListener('click', ()=> openModal('modalSettings'));
-q('#btnSketch').addEventListener('click', ()=>{ buildSketch(); openModal('modalSketch'); });
+
+q('#btnSketch').addEventListener('click', ()=>{
+  buildSketch();
+  openModal('modalSketch');
+});
+
 q('#btnNew').addEventListener('click', ()=>{
-  fillHotelSelect(); wizardSet('1'); q('#newInfo').textContent='';
   // Reset
-  ['newArr','newDep','newAdults','newChildren','newCat','newRate','newPrice','newFname','newLname','newEmail','newPhone','newStreet','newZip','newCity','newCompany','newVat','newCompanyZip','newAddress','newNotes','ccHolder','ccNumber','ccExpiry'].forEach(id=>{ const n=q('#'+id); if(n){ n.value=''; } });
-  q('#newAdults').value=1; q('#newChildren').value=0; q('#btnNext').disabled=true;
-  // Default-Images (falls vorhanden)
-  setHotelImage(HOTEL_IMG_SRC);
-  setCatImage(SKETCH_IMG_SRC);
-  // live card reset
-  q('#ccNumLive').textContent='•••• •••• •••• ••••'; q('#ccHolderLive').textContent='NAME'; q('#ccExpLive').textContent='MM/YY';
+  ['newArr','newDep','newAdults','newChildren','newCat','newRate','newPrice','newFname','newLname','newEmail','newPhone','newStreet','newZip','newCity','newCompany','newVat','newCompanyZip','newAddress','newNotes','ccHolder','ccNumber','ccExpiry']
+    .forEach(id=>{ const n=q('#'+id); if(n){ n.value=''; } });
+  q('#newAdults').value = 1;
+  q('#newChildren').value = 0;
+  q('#btnNext').disabled = true;
+
+  // Karte reset
+  q('#ccNumLive').textContent='•••• •••• •••• ••••';
+  q('#ccHolderLive').textContent='NAME';
+  q('#ccExpLive').textContent='MM/YY';
+
+  // Hotel-Select + Platzhalterbilder
+  fillHotelSelect();
+  setHotelImage(IMG?.hotel || '/assets/hotel-placeholder.png');
+
+  // Falls der User sofort auf „Weiter“ klickt:
+  ensureCatRatePopulated();
+
+  wizardSet('1');
+  q('#newInfo').textContent='';
   openModal('modalNew');
 });
+
 q('#btnCreate').addEventListener('click', createReservation);
 
+// Wizard Navigation
+q('#btnPrev').addEventListener('click', ()=>{
+  const cur = Number(qa('.wstep.active')[0].dataset.step);
+  wizardSet(String(Math.max(1,cur-1)));
+});
+
+q('#btnNext').addEventListener('click', ()=>{
+  const cur = String(qa('.wstep.active')[0].dataset.step);
+  if (!validateStep(cur)){
+    q('#newInfo').textContent='Bitte Pflichtfelder ausfüllen.';
+    return;
+  }
+  const next = String(Math.min(4, Number(cur)+1));
+  wizardSet(next);
+});
+
+// Rates/Inputs → Live-Validation
+q('#newRate').addEventListener('change', e=>{
+  const price = e.target.selectedOptions[0]?.dataset.price;
+  if (price) q('#newPrice').value = price;
+  validateStep('3');
+  updateSummary('#summaryFinal');
+});
+['newArr','newDep','newAdults','newChildren','newHotel'].forEach(id=>{
+  const n = q('#'+id);
+  if (!n) return;
+  n.addEventListener('input', ()=>{
+    validateStep('1');
+    updateSummary('#summaryFinal');
+  });
+});
+q('#newCat').addEventListener('change', ()=>{
+  validateStep('2');
+  updateSummary('#summaryFinal');
+});
+q('#newPrice').addEventListener('input', ()=>{
+  validateStep('3');
+  updateSummary('#summaryFinal');
+});
+q('#newLname').addEventListener('input', ()=> validateStep('4'));
+
+// ---- INIT IIFE sauber geschlossen ----
 (async function init(){
   startClocks();
-  await refreshStatus(); setInterval(refreshStatus, 30000);
+  await refreshStatus();
+  setInterval(refreshStatus, 30000);
+
   await autoRollPastToDone();
   await buildMiniAnalytics();
 
@@ -959,4 +1021,4 @@ q('#btnCreate').addEventListener('click', createReservation);
   await loadKpisToday();
   await loadKpisNext();
   await loadReservations();
-})();
+})();  // <= WICHTIG: schließt die IIFE korrekt
