@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
+  
+<link rel="preload" as="image" href="/assets/hotel-placeholder.png">
+<link rel="preload" as="image" href="/assets/sketch-placeholder.png">
+  
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>res-tool — Dashboard</title>
@@ -169,17 +173,20 @@
       <div class="wpage" id="w1">
         <!-- NEW: Hotel-Preview rechts -->
         <div class="grid2">
-          <label>Hotel
-            <select id="newHotel" class="input theme-select"></select>
-          </label>
-          <div class="imgcard">
-            <img id="imgHotelPreview" alt="Hotelbild" />
-          </div>
-          <label>Anreise <input id="newArr" type="date" class="input"/></label>
-          <label>Abreise <input id="newDep" type="date" class="input"/></label>
-          <label>Erwachsene <input id="newAdults" type="number" min="1" value="1" class="input"/></label>
-          <label>Kinder <input id="newChildren" type="number" min="0" value="0" class="input"/></label>
-        </div>
+  <label>Hotel
+    <select id="newHotel" class="input theme-select"></select>
+  </label>
+
+  <!-- Bild rechts -->
+  <aside class="image-box">
+    <img id="hotelImg" src="/assets/hotel-placeholder.png" alt="Hotelbild" loading="lazy">
+  </aside>
+
+  <label>Anreise <input id="newArr" type="date" class="input"/></label>
+  <label>Abreise <input id="newDep" type="date" class="input"/></label>
+  <label>Erwachsene <input id="newAdults" type="number" min="1" value="1" class="input"/></label>
+  <label>Kinder <input id="newChildren" type="number" min="0" value="0" class="input"/></label>
+</div>
       </div>
 
       <!-- STEP 2 -->
