@@ -8,7 +8,7 @@ const supabase = window.supabase.createClient(SB_URL, SB_ANON_KEY);
      <rect width="100%" height="100%" rx="16" fill="#0f1520"/>
      <text x="50%" y="50%" fill="#9adce6" font-family="Inter" font-size="18" text-anchor="middle">Kein Bild</text>
    </svg>`
-);
+;
 function setHotelImage(src){
   const img = q('#hotelImg'); if(!img) return;
   img.src = src || HOTEL_IMG_SRC;
