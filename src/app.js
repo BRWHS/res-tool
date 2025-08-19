@@ -4,8 +4,6 @@ const SB_URL = "https://kytuiodojfcaggkvizto.supabase.co";
 const SB_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt5dHVpb2RvamZjYWdna3ZpenRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ4MzA0NjgsImV4cCI6MjA3MDQwNjQ2OH0.YobQZnCQ7LihWtewynoCJ6ZTjqetkGwh82Nd2mmmhLU";
 const supabase = window.supabase.createClient(SB_URL, SB_ANON_KEY);
 
-const HOTEL_IMG_SRC = '/assets/hotel-placeholder.png';
-const IMG_FALLBACK  = 'data:image/svg+xml;utf8,' + encodeURIComponent(
   `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600">
      <rect width="100%" height="100%" rx="16" fill="#0f1520"/>
      <text x="50%" y="50%" fill="#9adce6" font-family="Inter" font-size="18" text-anchor="middle">Kein Bild</text>
@@ -610,6 +608,10 @@ function wizardSet(step){
 
   validateStep(step);
   if (step==='4') updateSummary('#summaryFinal');
+  if (step==='2' && !q('#newCat').value){
+  const cats = HOTEL_CATEGORIES['default'];
+  q('#newCat').innerHTML = cats.map(c=>`<option value="${c}">${c}</option>`).join('');
+  q('#newCat').value = cats[0];
 }
 
 qa('.wstep').forEach(s=> s.style.pointerEvents='none');
