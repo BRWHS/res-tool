@@ -727,7 +727,7 @@ q('#newLname').addEventListener('input', ()=> validateStep('4'));
   wizardSet('1');
   q('#newInfo').textContent='';
   openModal('modalNew');
-);
+;
 
 /***** Availability *****/
 function datesFrom(startDate, days){
