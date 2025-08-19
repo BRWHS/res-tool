@@ -593,6 +593,27 @@ qa('.tab').forEach(btn=>{
 });
 
 /***** Wizard *****/
+
+// Fail‑Safe: Optionen für Kategorie/Rate sicherstellen
+function ensureCatRateOptions(){
+  const cats  = HOTEL_CATEGORIES['default'];
+  const rates = HOTEL_RATES['default'];
+
+  const selCat  = q('#newCat');
+  const selRate = q('#newRate');
+
+  if (selCat && selCat.options.length === 0) {
+    selCat.innerHTML = cats.map(c => `<option value="${c}">${c}</option>`).join('');
+    selCat.value = cats[0];
+  }
+  if (selRate && selRate.options.length === 0) {
+    selRate.innerHTML = rates.map(r => `<option value="${r.name}" data-price="${r.price}">${r.name} (${EUR.format(r.price)})</option>`).join('');
+    selRate.value = rates[0].name;
+    const priceInput = q('#newPrice');
+    if (priceInput) priceInput.value = rates[0].price;
+  }
+}
+
 function wizardSet(step){
   qa('.wstep').forEach(b=>b.classList.toggle('active', b.dataset.step==step));
   qa('.wpage').forEach(p=>p.classList.add('hidden'));
@@ -637,6 +658,10 @@ function fillHotelSelect(){
   sel.addEventListener('change', () => {
   const cats  = HOTEL_CATEGORIES['default'];
   const rates = HOTEL_RATES['default'];
+
+q('#newCat').value  = HOTEL_CATEGORIES['default'][0];
+q('#newRate').value = HOTEL_RATES['default'][0].name;
+q('#newPrice').value = HOTEL_RATES['default'][0].price;
 
   // Fill + preselect category
   q('#newCat').innerHTML = cats.map((c,i)=>`<option value="${c}" ${i===0?'selected':''}>${c}</option>`).join('');
