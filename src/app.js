@@ -599,7 +599,7 @@ qa('.tab').forEach(btn=>{
      <rect width="800" height="500" rx="24" fill="#0f1520"/>
      <text x="50%" y="50%" fill="#9adce6" font-family="Inter" font-size="24" text-anchor="middle">Kein Bild</text>
    </svg>`
-);
+;
 
 // sichere Bild-Setter
 function setHotelImage(src){
