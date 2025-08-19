@@ -594,12 +594,7 @@ qa('.tab').forEach(btn=>{
 
 /***** Wizard *****/
 
-/***** Wizard *****/
-
 // Platzhalter-Bilder
-const HOTEL_IMG_SRC  = '/assets/hotel-placeholder.png';
-const SKETCH_IMG_SRC = '/assets/sketch-placeholder.png';
-const IMG_FALLBACK   = 'data:image/svg+xml;utf8,' + encodeURIComponent(
   `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="500" viewBox="0 0 800 500">
      <rect width="800" height="500" rx="24" fill="#0f1520"/>
      <text x="50%" y="50%" fill="#9adce6" font-family="Inter" font-size="24" text-anchor="middle">Kein Bild</text>
@@ -625,36 +620,31 @@ const DEFAULT_CATS  = HOTEL_CATEGORIES.default;
 const DEFAULT_RATES = HOTEL_RATES.default;
 
 // füllt Cat/Rate robust (wird bei Modal-Open, Hotel-Change und beim Betreten Step 2/3 aufgerufen)
-function ensureCatRateOptions() {
-  const selCat  = document.getElementById('newCat');
-  const selRate = document.getElementById('newRate');
-  const price   = document.getElementById('newPrice');
+function ensureCatRateOptions(){
+  const cats  = HOTEL_CATEGORIES['default'];
+  const rates = HOTEL_RATES['default'];
+  const selCat  = q('#newCat');
+  const selRate = q('#newRate');
 
   if (selCat && selCat.options.length === 0) {
-    selCat.innerHTML = DEFAULT_CATS.map((c,i)=>`<option value="${c}" ${i===0?'selected':''}>${c}</option>`).join('');
+    selCat.innerHTML = cats.map(c => `<option value="${c}">${c}</option>`).join('');
+    selCat.value = cats[0];
   }
   if (selRate && selRate.options.length === 0) {
-    selRate.innerHTML = DEFAULT_RATES
-      .map((r,i)=>`<option value="${r.name}" data-price="${r.price}" ${i===0?'selected':''}>${r.name} (${EUR.format(r.price)})</option>`)
-      .join('');
-    if (price) price.value = DEFAULT_RATES[0].price;
+    selRate.innerHTML = rates.map(r => `<option value="${r.name}" data-price="${r.price}">${r.name} (${EUR.format(r.price)})</option>`).join('');
+    selRate.value = rates[0].name;
+    const priceInput = q('#newPrice');
+    if (priceInput) priceInput.value = rates[0].price;
   }
 }
 
 // EINZIGE validateStep-Version
 function validateStep(step){
   let ok=false;
-  if (step==='1'){
-    ok = !!q('#newHotel').value && !!q('#newArr').value && !!q('#newDep').value;
-  } else if (step==='2'){
-    ensureCatRateOptions(); // sicher, dass Cat vorhanden ist
-    ok = !!q('#newCat').value;
-  } else if (step==='3'){
-    ensureCatRateOptions(); // sicher, dass Rate/Preis vorhanden sind
-    ok = !!q('#newRate').value && Number(q('#newPrice').value||0) > 0;
-  } else if (step==='4'){
-    ok = !!q('#newLname').value.trim();
-  }
+  if (step==='1'){ ok = !!q('#newHotel').value && !!q('#newArr').value && !!q('#newDep').value && !!q('#newLname').value.trim(); }
+  else if (step==='2'){ ok = !!q('#newCat').value; }
+  else if (step==='3'){ ok = !!q('#newRate').value && Number(q('#newPrice').value||0) > 0; }
+  else if (step==='4'){ ok = true; }
   q('#btnNext').disabled = !ok && step!=='4';
   return ok;
 }
@@ -721,8 +711,6 @@ q('#newCat').addEventListener('change', ()=>{ setCatImage(SKETCH_IMG_SRC); valid
 q('#newPrice').addEventListener('input', ()=>{ validateStep('3'); updateSummary('#summaryFinal'); });
 q('#newLname').addEventListener('input', ()=> validateStep('4'));
 
-// Modal öffnen → alles resetten + sichere Defaults
-q('#btnNew').addEventListener('click', ()=>{
   // Reset Felder
   ['newArr','newDep','newAdults','newChildren','newCat','newRate','newPrice','newFname','newLname','newEmail','newPhone','newStreet','newZip','newCity','newCompany','newVat','newCompanyZip','newAddress','newNotes','ccHolder','ccNumber','ccExpiry']
     .forEach(id=>{ const n=q('#'+id); if(n) n.value=''; });
@@ -877,8 +865,7 @@ q('#btnReporting').addEventListener('click', async ()=>{
 });
 q('#btnSettings').addEventListener('click', ()=> openModal('modalSettings'));
 q('#btnSketch').addEventListener('click', ()=>{ buildSketch(); openModal('modalSketch'); });
-q('#btnNew').addEventListener('click', ()=>{
-  fillHotelSelect(); wizardSet('1'); q('#newInfo').textContent='';
+
   // Reset
   ['newArr','newDep','newAdults','newChildren','newCat','newRate','newPrice','newFname','newLname','newEmail','newPhone','newStreet','newZip','newCity','newCompany','newVat','newCompanyZip','newAddress','newNotes','ccHolder','ccNumber','ccExpiry'].forEach(id=>{ const n=q('#'+id); if(n){ n.value=''; } });
   q('#newAdults').value=1; q('#newChildren').value=0; q('#btnNext').disabled=true;
