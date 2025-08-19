@@ -4,6 +4,19 @@ const SB_URL = "https://kytuiodojfcaggkvizto.supabase.co";
 const SB_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt5dHVpb2RvamZjYWdna3ZpenRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ4MzA0NjgsImV4cCI6MjA3MDQwNjQ2OH0.YobQZnCQ7LihWtewynoCJ6ZTjqetkGwh82Nd2mmmhLU";
 const supabase = window.supabase.createClient(SB_URL, SB_ANON_KEY);
 
+const HOTEL_IMG_SRC = '/assets/hotel-placeholder.png';
+const IMG_FALLBACK  = 'data:image/svg+xml;utf8,' + encodeURIComponent(
+  `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600">
+     <rect width="100%" height="100%" rx="16" fill="#0f1520"/>
+     <text x="50%" y="50%" fill="#9adce6" font-family="Inter" font-size="18" text-anchor="middle">Kein Bild</text>
+   </svg>`
+);
+function setHotelImage(src){
+  const img = q('#hotelImg'); if(!img) return;
+  img.src = src || HOTEL_IMG_SRC;
+  img.onerror = () => { img.onerror = null; img.src = IMG_FALLBACK; };
+}
+
 // Bildquellen (nur für interne Platzhalter, keine doppelten Deklarationen!)
 const HOTEL_IMG_SRC  = '/assets/hotel-placeholder.png';
 const SKETCH_IMG_SRC = '/assets/sketch-placeholder.png';
@@ -591,25 +604,49 @@ function wizardSet(step){
   q('#btnPrev').classList.toggle('hidden', step==='1');
   q('#btnNext').classList.toggle('hidden', step==='4');
   q('#btnCreate').classList.toggle('hidden', step!=='4');
-  if (step === '2' || step === '3') ensureCatRatePopulated();
+
+  // NEU: Defaults sicher bereitstellen
+  if (step==='2' || step==='3') ensureCatRateOptions();
+
   validateStep(step);
   if (step==='4') updateSummary('#summaryFinal');
 }
+
 qa('.wstep').forEach(s=> s.style.pointerEvents='none');
+
+function ensureCatRateOptions(){
+  const cats  = (HOTEL_CATEGORIES['default']||[]);
+  const rates = (HOTEL_RATES['default']||[]);
+  const selCat  = q('#newCat');
+  const selRate = q('#newRate');
+
+  if (selCat && !selCat.options.length && cats.length){
+    selCat.innerHTML = cats.map((c,i)=>`<option value="${c}" ${i===0?'selected':''}>${c}</option>`).join('');
+  }
+  if (selRate && !selRate.options.length && rates.length){
+    selRate.innerHTML = rates.map((r,i)=>`<option value="${r.name}" data-price="${r.price}" ${i===0?'selected':''}>${r.name} (${EUR.format(r.price)})</option>`).join('');
+    q('#newPrice') && (q('#newPrice').value = rates[0].price);
+  }
+}
 
 function fillHotelSelect(){
   const sel=q('#newHotel'); sel.innerHTML='';
   sel.append(el('option',{value:''},'Bitte wählen'));
   HOTELS.forEach(h=> sel.append(el('option',{value:h.code}, displayHotel(h))));
-
-  sel.onchange = () => {
+  sel.addEventListener('change', ()=>{
     const cats  = HOTEL_CATEGORIES['default'];
     const rates = HOTEL_RATES['default'];
-    q('#newCat').innerHTML = cats.map((c,i)=>`<option value="${c}" ${i===0?'selected':''}>${c}</option>`).join('');
+
+    // Optionen neu setzen
+    q('#newCat').innerHTML  = cats.map((c,i)=>`<option value="${c}" ${i===0?'selected':''}>${c}</option>`).join('');
     q('#newRate').innerHTML = rates.map((r,i)=>`<option value="${r.name}" data-price="${r.price}" ${i===0?'selected':''}>${r.name} (${EUR.format(r.price)})</option>`).join('');
     q('#newPrice').value = rates[0].price;
-    validateStep('1'); validateStep('2'); updateSummary('#summaryFinal');
-  };
+
+    // Hotelbild (Platzhalter)
+    setHotelImage(HOTEL_IMG_SRC);
+
+    validateStep('1'); updateSummary('#summaryFinal');
+  });
 }
 
 function setHotelImage(src){
