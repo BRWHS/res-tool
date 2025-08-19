@@ -948,7 +948,7 @@ q('#btnNew').addEventListener('click', ()=>{
 
   // Hotel-Select + Platzhalterbilder
   fillHotelSelect();
-  setHotelImage(IMG?.hotel || '/assets/hotel-placeholder.png');
+  setHotelImage('/assets/hotel-placeholder.png');
 
   // Falls der User sofort auf „Weiter“ klickt:
   ensureCatRatePopulated();
