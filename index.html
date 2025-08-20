@@ -171,38 +171,65 @@
 
     <!-- STEP 1 -->
 <div class="wpage compact" id="w1">
-  <div class="grid-compact">
-    <label>Hotel
-      <select id="newHotel" class="input theme-select"></select>
-    </label>
-    <label>Anreise
-      <input id="newArr" type="date" class="input"/>
-    </label>
-    <label>Abreise
-      <input id="newDep" type="date" class="input"/>
-    </label>
-    <label>Erwachsene
-      <input id="newAdults" type="number" min="1" value="1" class="input"/>
-    </label>
-    <label>Kinder
-      <input id="newChildren" type="number" min="0" value="0" class="input"/>
-    </label>
+  <div class="grid-compact-2">
+    <!-- Formular-Spalte -->
+    <div class="form-col">
+      <div class="grid-compact">
+        <label>Hotel
+          <select id="newHotel" class="input theme-select"></select>
+        </label>
+        <label>Anreise
+          <input id="newArr" type="date" class="input"/>
+        </label>
+        <label>Abreise
+          <input id="newDep" type="date" class="input"/>
+        </label>
+        <label>Erwachsene
+          <input id="newAdults" type="number" min="1" value="1" class="input"/>
+        </label>
+        <label>Kinder
+          <input id="newChildren" type="number" min="0" value="0" class="input"/>
+        </label>
 
-    <!-- kompakte Gastdaten gleich in Step 1 -->
-    <label>Vorname
-      <input id="newFname" class="input" placeholder="Max"/>
-    </label>
-    <label>Nachname*
-      <input id="newLname" class="input" placeholder="Mustermann" required/>
-    </label>
-    <label>E‑Mail
-      <input id="newEmail" class="input" placeholder="max@example.com"/>
-    </label>
-    <label>Telefon
-      <input id="newPhone" class="input" placeholder="+49 …"/>
-    </label>
+        <!-- Gastdaten direkt in Step 1 -->
+        <label>Vorname
+          <input id="newFname" class="input" placeholder="Max"/>
+        </label>
+        <label>Nachname*
+          <input id="newLname" class="input" placeholder="Mustermann" required/>
+        </label>
+        <label>E‑Mail
+          <input id="newEmail" class="input" placeholder="max@example.com"/>
+        </label>
+        <label>Telefon
+          <input id="newPhone" class="input" placeholder="+49 …"/>
+        </label>
+
+        <!-- PRIVAT: Adresse -->
+        <label>Straße
+          <input id="newStreet" class="input" placeholder="Musterstraße 1"/>
+        </label>
+        <label>PLZ
+          <input id="newZip" class="input" placeholder="80331"/>
+        </label>
+        <label>Ort
+          <input id="newCity" class="input" placeholder="München"/>
+        </label>
+      </div>
+    </div>
+
+    <!-- Bild-Spalte -->
+    <div class="preview-col">
+      <div class="imgcard hotel">
+        <img id="hotelImg" alt="Hotelbild" />
+      </div>
+      <p class="muted tiny" style="margin-top:8px;">
+        Tipp: Hotel wählen → Bild aktualisiert sich automatisch.
+      </p>
+    </div>
   </div>
 </div>
+
 
 <!-- STEP 2 -->
 <div class="wpage narrow hidden" id="w2">
