@@ -71,7 +71,7 @@ select::-ms-expand{display:none}
 .card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
 .select-wrap{display:flex;gap:8px;align-items:center}
 
-/* KPIs */
+/* KPIs / Performance */
 .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
 .kpi{padding:16px;border:1px solid rgba(0,255,255,.15);border-radius:14px;background:rgba(0,255,255,.03)}
 .kpis.big .kpi .value{font-size:28px;font-weight:800;line-height:1.2}
@@ -140,6 +140,13 @@ table.matrix{width:100%;border-collapse:collapse}
 .matrix th,.matrix td{border-bottom:1px dashed rgba(0,255,255,.12);text-align:center}
 .matrix th.sticky{position:sticky;left:0;background:var(--panel-2);text-align:left;z-index:1}
 .pill{display:inline-block;padding:4px 8px;border-radius:999px;border:1px solid rgba(0,255,255,.25);background:rgba(0,255,255,.06);font-weight:700;font-size:11px}
+
+/* Status pills for connections */
+.pill.lvl-0{ color:#35e08a; border-color:rgba(53,224,138,.45); background:rgba(53,224,138,.12); }
+.pill.lvl-1{ color:#ff4d6d; border-color:rgba(255,77,109,.55); background:rgba(255,77,109,.10); }
+.pill.lvl-2{ color:#ffd166; border-color:rgba(255,209,102,.55); background:rgba(255,209,102,.10); }
+
+/* Occupancy color rings */
 .occ-g{box-shadow:inset 0 0 0 2px rgba(53,224,138,.35)}
 .occ-o{box-shadow:inset 0 0 0 2px rgba(255,209,102,.45)}
 .occ-r{box-shadow:inset 0 0 0 2px rgba(255,77,109,.6)}
@@ -185,10 +192,8 @@ table.matrix{width:100%;border-collapse:collapse}
   .cc-wrap{grid-template-columns:1fr}
 }
 
-/* Image previews for Hotel/Kategorie/Skizze */
-.img-preview{
-  display:flex;align-items:center;justify-content:center;
-}
+/* Image previews / placeholders */
+.img-preview{ display:flex;align-items:center;justify-content:center; }
 .img-preview img{
   width:100%;max-width:520px;height:auto;border-radius:14px;
   border:1px solid rgba(0,255,255,.15);
@@ -196,28 +201,20 @@ table.matrix{width:100%;border-collapse:collapse}
   background:rgba(0,255,255,.03)
 }
 
-/* Bildkarten / Platzhalter */
+/* Generic img card */
 .imgcard{
-  width:100%;
-  aspect-ratio: 16 / 10;
+  width:100%; aspect-ratio: 4 / 3;
   border:1px solid rgba(0,255,255,.18);
-  border-radius:14px;
-  background:rgba(0,255,255,.04);
-  display:grid;
-  place-items:center;
-  overflow:hidden;
-}
-.imgcard img{
-  max-width:100%;
-  max-height:100%;
   border-radius:12px;
-  display:block;
+  background:rgba(0,255,255,.04);
+  display:grid; place-items:center; overflow:hidden;
 }
+.imgcard img{ width:100%; height:100%; object-fit:cover }
 
-/* breitere Skizze */
+/* Wide variant */
 .imgcard.wide{ aspect-ratio: 16 / 9; }
 
-/* Hotelskizze Zustände */
+/* Hotelskizze buttons */
 #sketchStateList .btn{ margin:4px; }
 
 .image-box{
@@ -227,45 +224,10 @@ table.matrix{width:100%;border-collapse:collapse}
 }
 .image-box img{ max-width:100%; max-height:240px; border-radius:10px; opacity:.95 }
 
-/* Step-1 Bildkarte kompakt */
-.imgcard{
-  aspect-ratio: 4 / 3;
-  border:1px solid rgba(0,255,255,.18);
-  border-radius:12px;
-  background:rgba(0,255,255,.04);
-  display:grid;
-  place-items:center;
-  overflow:hidden;
-}
-.imgcard img{ width:100%; height:100%; object-fit:cover }
-
-/* Wizard – kompakte Layouts */
-.wpage.compact .grid-compact{
-  display:grid;
-  grid-template-columns:repeat(4, minmax(0,1fr));
-  gap:10px;
-}
-@media (max-width:980px){
-  .wpage.compact .grid-compact{ grid-template-columns:1fr 1fr; }
-}
-
-.wpage.narrow .imgcard.tiny{
-  width:220px;
-  border:1px solid rgba(0,255,255,.18);
-  border-radius:12px;
-  background:rgba(0,255,255,.04);
-  padding:8px;
-}
-.wpage.narrow .imgcard.tiny img{
-  width:100%;
-  display:block;
-  border-radius:8px;
-}
-
 .tiny{ font-size:12px; }
 .rate-policy{ margin-top:10px; }
 
-/* Step 1 – Zweispaltiges Layout mit Bild rechts */
+/* Two-column + preview */
 .grid-compact-2{
   display:grid;
   grid-template-columns: 2fr 1fr;
@@ -279,7 +241,7 @@ table.matrix{width:100%;border-collapse:collapse}
   .grid-compact-2{ grid-template-columns: 1fr; }
 }
 
-/* Inneres Formular-Grid */
+/* Inner form grid */
 .grid-compact{
   display:grid;
   grid-template-columns: repeat(2, minmax(0,1fr));
@@ -289,7 +251,7 @@ table.matrix{width:100%;border-collapse:collapse}
   .grid-compact{ grid-template-columns: 1fr; }
 }
 
-/* Hotelbild-Karte */
+/* Hotel image card */
 .imgcard.hotel{
   width: 100%;
   max-width: 420px;
@@ -303,8 +265,3 @@ table.matrix{width:100%;border-collapse:collapse}
   display: block;
   border-radius: 10px;
 }
-
-/* Kleine Typo-Helfer */
-.tiny{ font-size: 12px; }
-
-
