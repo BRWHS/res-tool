@@ -156,165 +156,165 @@
   <div class="modal-backdrop" id="backdrop" aria-hidden="true"></div>
 
   <!-- Neue Reservierung -->
-  <section class="modal" id="modalNew" role="dialog" aria-labelledby="newTitle" aria-modal="true">
-    <header>
-      <h3 id="newTitle" class="mono">Neue Reservierung</h3>
-      <button class="btn" data-close>Schließen</button>
-    </header>
-    <div class="body">
-      <div class="wizard-steps">
-        <div class="wstep active" data-step="1"><span>1</span><b>Hotel & Daten</b></div>
-        <div class="wstep" data-step="2"><span>2</span><b>Kategorie</b></div>
-        <div class="wstep" data-step="3"><span>3</span><b>Rate</b></div>
-        <div class="wstep" data-step="4"><span>4</span><b>Gast & Zahlung</b></div>
-      </div>
+<section class="modal" id="modalNew" role="dialog" aria-labelledby="newTitle" aria-modal="true">
+  <header>
+    <h3 id="newTitle" class="mono">Neue Reservierung</h3>
+    <button class="btn" data-close>Schließen</button>
+  </header>
+
+  <div class="body">
+    <div class="wizard-steps">
+      <div class="wstep active" data-step="1"><span>1</span><b>Hotel & Daten</b></div>
+      <div class="wstep" data-step="2"><span>2</span><b>Kategorie</b></div>
+      <div class="wstep" data-step="3"><span>3</span><b>Rate</b></div>
+      <div class="wstep" data-step="4"><span>4</span><b>Gast & Zahlung</b></div>
+    </div>
 
     <!-- STEP 1 -->
-<div class="wpage compact" id="w1">
-  <div class="grid-compact-2">
-    <!-- Formular-Spalte -->
-    <div class="form-col">
-      <div class="grid-compact">
-        <label>Hotel
-          <select id="newHotel" class="input theme-select"></select>
-        </label>
-        <label>Anreise
-          <input id="newArr" type="date" class="input"/>
-        </label>
-        <label>Abreise
-          <input id="newDep" type="date" class="input"/>
-        </label>
-        <label>Erwachsene
-          <input id="newAdults" type="number" min="1" value="1" class="input"/>
-        </label>
-        <label>Kinder
-          <input id="newChildren" type="number" min="0" value="0" class="input"/>
-        </label>
+    <div class="wpage compact" id="w1">
+      <div class="grid2" style="align-items:start">
+        <div>
+          <h4 class="mono section" style="margin-top:0">Aufenthaltsdaten</h4>
+          <div class="grid2">
+            <label style="grid-column:1 / -1">Hotel
+              <select id="newHotel" class="input theme-select" style="width:100%"></select>
+            </label>
+            <label>Anreise
+              <input id="newArr" type="date" class="input"/>
+            </label>
+            <label>Abreise
+              <input id="newDep" type="date" class="input"/>
+            </label>
+            <label>Erwachsene
+              <input id="newAdults" type="number" min="1" value="1" class="input"/>
+            </label>
+            <label>Kinder
+              <input id="newChildren" type="number" min="0" value="0" class="input"/>
+            </label>
+          </div>
 
-        <!-- Gastdaten direkt in Step 1 -->
-        <label>Vorname
-          <input id="newFname" class="input" placeholder="Max"/>
-        </label>
-        <label>Nachname*
-          <input id="newLname" class="input" placeholder="Mustermann" required/>
-        </label>
-        <label>E‑Mail
-          <input id="newEmail" class="input" placeholder="max@example.com"/>
-        </label>
-        <label>Telefon
-          <input id="newPhone" class="input" placeholder="+49 …"/>
-        </label>
+          <h4 class="mono section">Gästendaten</h4>
+          <div class="grid2">
+            <label>Vorname
+              <input id="newFname" class="input" placeholder="Max"/>
+            </label>
+            <label>Nachname*
+              <input id="newLname" class="input" placeholder="Mustermann" required/>
+            </label>
+            <label>PLZ
+              <input id="newZip" class="input" placeholder="80331"/>
+            </label>
+            <label>Straße
+              <input id="newStreet" class="input" placeholder="Musterstraße 1"/>
+            </label>
+            <label>Ort
+              <input id="newCity" class="input" placeholder="München"/>
+            </label>
+          </div>
 
-        <!-- PRIVAT: Adresse -->
-        <label>Straße
-          <input id="newStreet" class="input" placeholder="Musterstraße 1"/>
-        </label>
-        <label>PLZ
-          <input id="newZip" class="input" placeholder="80331"/>
-        </label>
-        <label>Ort
-          <input id="newCity" class="input" placeholder="München"/>
-        </label>
+          <h4 class="mono section">Kontaktdaten</h4>
+          <div class="grid2">
+            <label>E‑Mail
+              <input id="newEmail" class="input" placeholder="max@example.com"/>
+            </label>
+            <label>Telefon
+              <input id="newPhone" class="input" placeholder="+49 …"/>
+            </label>
+          </div>
+        </div>
+
+        <!-- Preview image column -->
+        <div>
+          <div class="box" style="position:sticky;top:6px">
+            <div class="muted mono" style="margin-bottom:6px">Hotelbild</div>
+            <img id="hotelImg" alt="Hotel" style="width:100%;height:180px;object-fit:cover;border-radius:12px;display:block"/>
+          </div>
+        </div>
       </div>
     </div>
 
-    <!-- Bild-Spalte -->
-    <div class="preview-col">
-      <div class="imgcard hotel">
-        <img id="hotelImg" alt="Hotelbild" />
+    <!-- STEP 2 -->
+    <div class="wpage narrow hidden" id="w2">
+      <div class="row wrap" style="gap:12px;align-items:flex-start;">
+        <label style="min-width:260px;flex:1">Kategorie
+          <select id="newCat" class="input theme-select"></select>
+        </label>
+        <div class="box" style="padding:8px;max-width:280px">
+          <img id="imgCatPreview" alt="Zimmer/Kategorie"
+               style="width:100%;height:160px;object-fit:cover;border-radius:12px;display:block"/>
+        </div>
       </div>
-      <p class="muted tiny" style="margin-top:8px;">
-        Tipp: Hotel wählen → Bild aktualisiert sich automatisch.
-      </p>
     </div>
-  </div>
-</div>
 
-
-<!-- STEP 2 -->
-<div class="wpage narrow hidden" id="w2">
-  <div class="row wrap" style="gap:12px;align-items:flex-start;">
-    <label style="min-width:260px;flex:1">Kategorie
-      <select id="newCat" class="input theme-select"></select>
-    </label>
-    <div class="imgcard tiny">
-      <img id="imgCatPreview" alt="Zimmer/Kategorie" />
+    <!-- STEP 3 -->
+    <div class="wpage narrow hidden" id="w3">
+      <div class="row wrap" style="gap:12px;align-items:flex-start;">
+        <label style="min-width:260px;flex:1">Rate
+          <select id="newRate" class="input theme-select"></select>
+        </label>
+        <label style="width:160px">Preis
+          <input id="newPrice" type="number" step="1" value="89" class="input"/>
+        </label>
+      </div>
+      <div id="ratePolicyBox" class="box rate-policy" style="margin-top:8px">
+        <div class="mono muted tiny">Stornobedingung</div>
+        <div id="ratePolicy" class="tiny">Bis zum Anreisetag 18:00 Uhr kostenfrei stornierbar.</div>
+      </div>
     </div>
-  </div>
-</div>
 
-<!-- STEP 3 -->
-<div class="wpage narrow hidden" id="w3">
-  <div class="row wrap" style="gap:12px;align-items:flex-start;">
-    <label style="min-width:260px;flex:1">Rate
-      <select id="newRate" class="input theme-select"></select>
-    </label>
-    <label style="width:160px">Preis
-      <input id="newPrice" type="number" step="1" value="89" class="input"/>
-    </label>
-  </div>
-  <div id="ratePolicyBox" class="box rate-policy">
-    <div class="mono muted tiny">Stornobedingung</div>
-    <div id="ratePolicy" class="tiny">Bis zum Anreisetag 18:00 Uhr kostenfrei stornierbar.</div>
-  </div>
-</div>
+    <!-- STEP 4 -->
+    <div class="wpage hidden" id="w4">
+      <aside class="summary box" id="summaryFinal"></aside>
 
-<!-- STEP 4 -->
-<div class="wpage hidden" id="w4">
-  <aside class="summary box" id="summaryFinal"></aside>
-
-  <h4 class="mono section">Adresse (Gast)</h4>
-  <div class="grid2">
-    <label>Straße
-      <input id="newStreet" class="input" placeholder="Musterstraße 1"/>
-    </label>
-    <label>PLZ
-      <input id="newZip" class="input" placeholder="80331"/>
-    </label>
-    <label>Ort
-      <input id="newCity" class="input" placeholder="München"/>
-    </label>
-  </div>
-
-  <details class="box">
-    <summary class="mono">Firma (optional)</summary>
-    <div class="grid2">
-      <label>Firma
-        <input id="newCompany" class="input" />
-      </label>
-      <label>USt.-ID
-        <input id="newVat" class="input" />
-      </label>
-      <label>PLZ + Ort
-        <input id="newCompanyZipCity" class="input" placeholder="80331 München" />
-      </label>
-      <label>Adresse (Straße)
-        <input id="newAddressStreet" class="input" placeholder="Musterstraße 99" />
-      </label>
-    </div>
-  </details>
-
-  <h4 class="mono section">Kreditkarte</h4>
-  <div class="cc-wrap">
-    <div class="cc-visual">
-      <div class="cc-chip"></div>
-      <div class="cc-num"  id="ccNumLive">•••• •••• •••• ••••</div>
-      <div class="cc-holder" id="ccHolderLive">NAME</div>
-      <div class="cc-exp"    id="ccExpLive">MM/YY</div>
-    </div>
-    <div class="cc-form">
+      <h4 class="mono section">Firma (optional)</h4>
       <div class="grid2">
-        <label>Karteninhaber <input id="ccHolder" class="input" /></label>
-        <label>Kartennummer <input id="ccNumber" class="input" placeholder="•••• •••• •••• 1234" /></label>
-        <label>Ablauf (MM/JJ) <input id="ccExpiry" class="input" placeholder="12/27" /></label>
+        <label>Firma
+          <input id="newCompany" class="input" />
+        </label>
+        <label>USt.-ID
+          <input id="newVat" class="input" />
+        </label>
+        <label>PLZ + Ort
+          <input id="newCompanyZipCity" class="input" placeholder="80331 München" />
+        </label>
+        <label>Adresse (Straße)
+          <input id="newAddressStreet" class="input" placeholder="Musterstraße 99" />
+        </label>
       </div>
-    </div>
-  </div>
 
-  <label class="section mono">Notizen
-    <textarea id="newNotes" class="input" rows="3" placeholder="Besonderheiten, Wünsche …"></textarea>
-  </label>
-</div>
+      <h4 class="mono section">Kreditkarte</h4>
+      <div class="cc-wrap">
+        <div class="cc-visual">
+          <div class="cc-chip"></div>
+          <div class="cc-num"  id="ccNumLive">•••• •••• •••• ••••</div>
+          <div class="cc-holder" id="ccHolderLive">NAME</div>
+          <div class="cc-exp"    id="ccExpLive">MM/YY</div>
+        </div>
+        <div class="cc-form">
+          <div class="grid2">
+            <label>Karteninhaber <input id="ccHolder" class="input" /></label>
+            <label>Kartennummer <input id="ccNumber" class="input" placeholder="•••• •••• •••• 1234" /></label>
+            <label>Ablauf (MM/JJ) <input id="ccExpiry" class="input" placeholder="12/27" /></label>
+          </div>
+        </div>
+      </div>
+
+      <label class="section mono">Notizen
+        <textarea id="newNotes" class="input" rows="3" placeholder="Besonderheiten, Wünsche …"></textarea>
+      </label>
+    </div>
+
+    <!-- Wizard actions (bring back the buttons) -->
+    <div class="wizard-actions">
+      <button class="btn ghost hidden" id="btnPrev">Zurück</button>
+      <div style="flex:1"></div>
+      <button class="btn" id="btnNext" disabled>Weiter</button>
+      <button class="btn primary hidden" id="btnCreate">Reservierung abschicken</button>
+    </div>
+
+    <p class="muted" id="newInfo" style="margin-top:8px;"></p>
+  </div>
+</section>
 
 
   <!-- Reservierung bearbeiten -->
