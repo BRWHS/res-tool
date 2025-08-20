@@ -132,6 +132,33 @@
     safeSetImg(q('#sketchImage'), src || SKETCH_IMG_SRC);
   }
 
+  // --- Image placeholders for wizard previews ---
+const HOTEL_IMG_SRC  = '/assets/hotel-placeholder.png';
+const SKETCH_IMG_SRC = '/assets/sketch-placeholder.png';
+const IMG_FALLBACK   = 'data:image/svg+xml;utf8,' + encodeURIComponent(
+  `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="500" viewBox="0 0 800 500">
+     <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+       <stop offset="0" stop-color="#0ea5b0"/><stop offset="1" stop-color="#052a36"/>
+     </linearGradient></defs>
+     <rect width="800" height="500" rx="24" fill="url(#g)"/>
+     <text x="50%" y="50%" fill="#9adce6" font-family="Inter" font-size="24" text-anchor="middle">Kein Bild</text>
+   </svg>`
+);
+
+function setHotelImage(src) {
+  const img = document.querySelector('#hotelImg');
+  if (!img) return;
+  img.src = src || HOTEL_IMG_SRC;
+  img.onerror = () => { img.onerror = null; img.src = IMG_FALLBACK; };
+}
+
+function setCatImage(src) {
+  const img = document.querySelector('#imgCatPreview');
+  if (!img) return;
+  img.src = src || SKETCH_IMG_SRC;
+  img.onerror = () => { img.onerror = null; img.src = IMG_FALLBACK; };
+}
+
   /***** Clock + Status *****/
   function startClocks(){
     const tick=()=>{ const d=new Date();
@@ -646,6 +673,9 @@
     }
     if (step==='1'){
       setHotelImage(HOTEL_IMG_SRC);
+
+    if (step === '2') setCatImage(SKETCH_IMG_SRC);
+
     }
 
     validateStep(step);
@@ -685,6 +715,10 @@
       validateStep('1'); updateSummary('#summaryFinal');
     });
   }
+
+  // keep hotel preview always visible
+setHotelImage(HOTEL_IMG_SRC);
+document.querySelector('#newHotel')?.addEventListener('change', ()=> setHotelImage(HOTEL_IMG_SRC));
 
   // Wizard Buttons
   q('#btnPrev')?.addEventListener('click', ()=>{
@@ -727,6 +761,8 @@
     const box = q(selector); if (!box) return;
     const rows = linesSummary().map(([k,v])=>`<div class="summary line"><span>${k}</span><span>${v}</span></div>`).join('');
     box.innerHTML = `<h4 class="mono">Zusammenfassung</h4>${rows}`;
+
+    ['Gast', (document.querySelector('#newFname')?.value || '—') + ' ' + (document.querySelector('#newLname')?.value || '—')],
   }
 
   /* Live Credit-Card mirroring */
@@ -785,8 +821,8 @@
       guest_city: q('#newCity')?.value || null,
       company_name: q('#newCompany')?.value || null,
       company_vat: q('#newVat')?.value || null,
-      company_postal_code: q('#newCompanyZip')?.value || null,
-      company_address: q('#newAddress')?.value || null,
+      company_postal_code: document.querySelector('#newCompanyZipCity')?.value || null, // now "PLZ Ort" combined
+      company_address:document.querySelector('#newAddressStreet')?.value || null,  // street only
       cc_holder: cc.holder,
       cc_last4: cc.last4,
       cc_exp_month: cc.exp_m,
