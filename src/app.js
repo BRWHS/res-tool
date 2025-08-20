@@ -66,6 +66,13 @@
     {name:'Flex inkl. Frühstück', price:109}
   ]};
 
+  /***** Kategorie-Metadaten (Step 2) *****/
+  const CAT_META = {
+    'Standard':  { size:'18–22 m²', beds:'Queen (160)',    note:'Komfortabel, ruhig' },
+    'Superior':  { size:'22–28 m²', beds:'King (180)/Twin', note:'Mehr Platz, Sitzecke' },
+    'Suite':     { size:'35–45 m²', beds:'King (180)',      note:'Separater Wohnbereich' }
+  };
+
   /***** Helpers *****/
   const D2 = new Intl.DateTimeFormat('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'});
   const Dm = new Intl.DateTimeFormat('de-DE',{day:'2-digit',month:'2-digit'});
@@ -93,6 +100,14 @@
     a.href=URL.createObjectURL(blob); a.download=filename; a.click();
     setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
   }
+  function isoWeek(d){
+    const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    const dayNum = (date.getUTCDay() + 6) % 7;
+    date.setUTCDate(date.getUTCDate() - dayNum + 3);
+    const firstThursday = new Date(Date.UTC(date.getUTCFullYear(),0,4));
+    const diff = (date - firstThursday) / 86400000;
+    return 1 + Math.round(diff / 7);
+  }
 
   /***** Bild-Helfer *****/
   function safeSetImg(imgEl, src){
@@ -107,7 +122,6 @@
     let img = q('#hotelImg');
     if (img) return img;
 
-    // Versuche die 2. Zelle (im HTML ist ein leerer <div> als Platzhalter)
     const slot = grid.children[1];
     const wrap = slot || el('div', {});
     wrap.classList.add('imgcard');
@@ -144,7 +158,10 @@
     const a = await supabase.from('reservations').select('id',{head:true,count:'exact'});
     const b = await supabase.from('availability').select('date',{head:true,count:'exact'});
     setChip(q('#chipSb'), !a.error && !b.error);
-    setChip(q('#chipHns'), false);
+    // HNS ist noch nicht verbunden → hart auf rot (lvl-2)
+    const chipH = q('#chipHns');
+    chipH?.classList.remove('lvl-0','lvl-1','lvl-2');
+    chipH?.classList.add('lvl-2');
   }
 
   /***** Auto-Roll: Vergangenheit → done *****/
@@ -164,7 +181,7 @@
       .or('status.eq.active,status.eq.confirmed,status.is.null');
   }
 
-  /***** Mini-Analytics — YoY OTA (fallback Total) *****/
+  /***** Mini-Analytics — YoY (Tagesvergleich Vorjahr, ohne OTA-Filter) *****/
   async function buildMiniAnalytics(){
     const list = q('#miniAnalyticsDock'); if (!list) return; list.innerHTML='';
     const today = soD(new Date());
@@ -173,19 +190,15 @@
     const prevYEnd   = new Date(today);   prevYEnd.setFullYear(prevYEnd.getFullYear()-1);
 
     const cur = await supabase.from('reservations')
-      .select('hotel_code,channel,created_at').gte('created_at', curStart.toISOString()).lte('created_at', today.toISOString());
+      .select('hotel_code,created_at').gte('created_at', curStart.toISOString()).lte('created_at', today.toISOString());
     const prv = await supabase.from('reservations')
-      .select('hotel_code,channel,created_at').gte('created_at', prevYStart.toISOString()).lte('created_at', prevYEnd.toISOString());
-
-    const countOTA = a => (a?.data||[]).filter(r=>String(r.channel||'').toLowerCase()==='ota').length;
-    const allOTAZero = countOTA(cur)===0 && countOTA(prv)===0;
+      .select('hotel_code,created_at').gte('created_at', prevYStart.toISOString()).lte('created_at', prevYEnd.toISOString());
 
     const toMap = (arr)=> {
       const m=new Map();
       (arr?.data||[]).forEach(r=>{
         const key = r.hotel_code || '—';
-        const isOTA = String(r.channel||'').toLowerCase()==='ota';
-        if (allOTAZero || isOTA){ m.set(key, (m.get(key)||0)+1); }
+        m.set(key, (m.get(key)||0)+1);
       });
       return m;
     };
@@ -197,6 +210,7 @@
       const c = mCur.get(h.code)||0, p = mPrv.get(h.code)||0;
       const up = p===0 ? c>0 : c>p;
 
+      // Fake-Sparkline (bis echte Zeitreihe kommt)
       const pts = Array.from({length:7}, ()=> Math.max(0, Math.round((c/7) + (Math.random()*2-1))));
       const max = Math.max(1, ...pts), min = Math.min(...pts);
       const path = pts.map((v,i)=>{
@@ -205,9 +219,12 @@
         return `${i===0?'M':'L'}${x.toFixed(1)},${y.toFixed(1)}`;
       }).join(' ');
 
-      const item = el('div',{class:'dock-item',title:`${displayHotel(h)} · YoY ${p?Math.round(((c-p)/p)*100):'∞'}%`},
-        el('span',{class:'dock-badge'}, h.group),
-        el('div',{class:'dock-name'}, displayHotel(h)),
+      const brandAndHotel = `${h.group} ${hotelCity(h.name)}`;
+
+      const item = el('div',{class:'dock-item',title:`${brandAndHotel} · YoY ${p?Math.round(((c-p)/p)*100):'∞'}%`},
+        // Badge optional — kann man auch ausblenden
+        // el('span',{class:'dock-badge'}, h.group),
+        el('div',{class:'dock-name'}, brandAndHotel),
         (()=>{
           const svg = el('svg',{class:'spark',viewBox:`0 0 ${SPARK_W} ${SPARK_H}`,xmlns:'http://www.w3.org/2000/svg'});
           svg.append(el('path',{d:path, fill:'none', stroke: up?'#35e08a':'#ff4d6d','stroke-width':'2'}));
@@ -236,7 +253,7 @@
     if(e.key==='Escape'){ qa('.modal').forEach(m=>m.style.display='none'); backdrop.style.display='none'; document.body.classList.remove('modal-open'); }
   });
 
-  /***** KPI-Filter füllen *****/
+  /***** KPI/Performance-Filter füllen *****/
   function fillHotelFilter(selectEl){
     if (!selectEl) return;
     selectEl.innerHTML = '';
@@ -244,7 +261,7 @@
     HOTELS.forEach(h=> selectEl.append(el('option',{value:h.code}, displayHotel(h))));
   }
 
-  /***** KPI — Heute *****/
+  /***** Performance — Heute *****/
   async function loadKpisToday(){
     try {
       const sel = q('#kpiFilterToday');
@@ -256,7 +273,7 @@
       const nowISO = new Date().toISOString();
       const startISO = today.toISOString();
 
-      // (1) Buchungen heute
+      // (1) Buchungen heute (eingegangen)
       let qb = supabase.from('reservations')
         .select('id,created_at')
         .gte('created_at', startISO)
@@ -265,7 +282,7 @@
       const rB = await qb;
       const bookingsToday = (rB.data || []).length;
 
-      // (2) Heutige Aufenthalte (ohne leeren-String-Filter, damit kein 400)
+      // (2) Heutige Aufenthalte (Nacht heute→morgen)
       // A) arrival <= today AND departure >= today
       let qA = supabase.from('reservations')
         .select('id, rate_price, hotel_code, hotel_name, arrival, departure, status')
@@ -300,7 +317,9 @@
       };
       const activeToday = Array.from(byId.values()).filter(isActiveToday);
 
+      // Umsatz = Summe der (pro-Nacht-)Rate der Buchungen, die die Nacht heute→morgen beinhalten
       const revenue = activeToday.reduce((s,r)=> s + Number(r.rate_price||0), 0);
+      // ADR (heute) = Umsatz / Anzahl Buchungen, die die Nacht heute→morgen bleiben
       const adr = activeToday.length ? Math.round((revenue/activeToday.length)*100)/100 : null;
 
       // (3) Auslastung
@@ -329,7 +348,7 @@
     }
   }
 
-  /***** KPI — Nächste 7 Tage *****/
+  /***** Performance — Nächste 7 Tage *****/
   async function loadKpisNext(){
     try {
       const code = q('#kpiFilterNext')?.value || 'all';
@@ -338,6 +357,12 @@
       const today = soD(new Date());
       const start = new Date(today); start.setDate(start.getDate()+1);
       const end   = new Date(today); end.setDate(end.getDate()+7);
+
+      // KW-Label updaten (falls vorhanden)
+      const kwFrom = isoWeek(start);
+      const kwTo   = isoWeek(end);
+      const kwNode = q('#kwLabel');
+      if (kwNode) kwNode.textContent = kwFrom===kwTo ? `(KW ${kwFrom})` : `(KW ${kwFrom}–${kwTo})`;
 
       const startDate = isoDate(start);
       const endDate   = isoDate(end);
@@ -381,7 +406,19 @@
         }
       });
 
-      const adr = totalNights ? Math.round((totalRevenue/totalNights)*100)/100 : null;
+      // Anzahl Buchungen mit mind. 1 Nacht im Fenster:
+      const bookingsInWindow = rows.filter(r=>{
+        const arr = soD(new Date(r.arrival));
+        const dep = r.departure ? soD(new Date(r.departure)) : null;
+        const stayEndExcl = dep ? dep : endPlus1;
+        const overlapStart = new Date(Math.max(arr.getTime(), start.getTime()));
+        const overlapEndExcl = new Date(Math.min(stayEndExcl.getTime(), endPlus1.getTime()));
+        const nights = Math.max(0, Math.round((overlapEndExcl - overlapStart)/DAY));
+        return nights > 0;
+      }).length;
+
+      // ADR (Woche) = Umsatz / Buchungen (nicht / Nächte)
+      const adr = bookingsInWindow ? Math.round((totalRevenue/bookingsInWindow)*100)/100 : null;
 
       // Auslastung: Ø über Zeitraum
       let nOcc = null;
@@ -587,7 +624,7 @@
       const payload = {
         cc_holder: q('#eCcHolder').value || null,
         cc_last4:  q('#eCcLast4').value  || null,
-        cc_exp_month: q('#eCcExpM').value ? Number(q('#eCcM').value) : null,
+        cc_exp_month: q('#eCcExpM').value ? Number(q('#eCcExpM').value) : null,
         cc_exp_year:  q('#eCcExpY').value ? Number(q('#eCcExpY').value) : null
       };
       const { error } = await supabase.from('reservations').update(payload).eq('id', id);
@@ -629,6 +666,21 @@
       selRate.value = rates[0].name;
       q('#newPrice') && (q('#newPrice').value = rates[0].price);
     }
+    updateCatMeta();
+  }
+
+  function updateCatMeta(){
+    const cat = q('#newCat')?.value || 'Standard';
+    const m = CAT_META[cat] || {};
+    const elBody = q('#catMetaBody');
+    if (elBody){
+      elBody.innerHTML =
+        `<div>Größe: <b>${m.size||'—'}</b></div>
+         <div>Betten: <b>${m.beds||'—'}</b></div>
+         <div>Hinweis: <b>${m.note||'—'}</b></div>`;
+    }
+    const cap = q('#imgCatCaption');
+    if (cap) cap.textContent = `${cat} – Beispielbild`;
   }
 
   function wizardSet(step){
@@ -639,10 +691,9 @@
     q('#btnNext')?.classList.toggle('hidden', step==='4');
     q('#btnCreate')?.classList.toggle('hidden', step!=='4');
 
-    // Wenn in Step 2/3 → sicherstellen, dass Optionen + Bilder gesetzt sind
     if (step==='2' || step==='3'){
       ensureCatRateOptions();
-      setCatImage(SKETCH_IMG_SRC); // kleine Preview nie "broken"
+      setCatImage(SKETCH_IMG_SRC);
     }
     if (step==='1'){
       setHotelImage(HOTEL_IMG_SRC);
@@ -658,7 +709,7 @@
     if (step==='1'){ ok = !!q('#newHotel')?.value && !!q('#newArr')?.value && !!q('#newDep')?.value; }
     else if (step==='2'){ ok = !!q('#newCat')?.value; }
     else if (step==='3'){ ok = !!q('#newRate')?.value && Number(q('#newPrice')?.value||0) > 0; }
-    else if (step==='4'){ ok = true; } // Gastdaten dürfen hier ergänzt werden, Pflicht in DB ist Nachname
+    else if (step==='4'){ ok = true; }
     q('#btnNext') && (q('#btnNext').disabled = (!ok && step!=='4'));
     return ok;
   }
@@ -673,16 +724,14 @@
       const cats  = HOTEL_CATEGORIES['default'];
       const rates = HOTEL_RATES['default'];
 
-      // Kategorien + Raten setzen
       q('#newCat')  && (q('#newCat').innerHTML  = cats.map((c,i)=>`<option value="${c}" ${i===0?'selected':''}>${c}</option>`).join(''));
       q('#newRate') && (q('#newRate').innerHTML = rates.map((r,i)=>`<option value="${r.name}" data-price="${r.price}" ${i===0?'selected':''}>${r.name} (${EUR.format(r.price)})</option>`).join(''));
       q('#newPrice') && (q('#newPrice').value = rates[0].price);
 
-      // Bilder
       setHotelImage(HOTEL_IMG_SRC);
       setCatImage(SKETCH_IMG_SRC);
 
-      validateStep('1'); updateSummary('#summaryFinal');
+      validateStep('1'); updateSummary('#summaryFinal'); updateCatMeta();
     });
   }
 
@@ -707,10 +756,10 @@
   ['newArr','newDep','newAdults','newChildren','newHotel','newFname','newLname'].forEach(id=>{
     const n=q('#'+id); n?.addEventListener('input', ()=>{ validateStep('1'); updateSummary('#summaryFinal'); });
   });
-  q('#newCat')  ?.addEventListener('change', ()=>{ validateStep('2'); updateSummary('#summaryFinal'); setCatImage(SKETCH_IMG_SRC); });
+  q('#newCat')  ?.addEventListener('change', ()=>{ validateStep('2'); updateSummary('#summaryFinal'); setCatImage(SKETCH_IMG_SRC); updateCatMeta(); });
   q('#newPrice')?.addEventListener('input',  ()=>{ validateStep('3'); updateSummary('#summaryFinal'); });
 
-  /* Summary */
+  /* Summary (Step 4) */
   function linesSummary(){
     const code = q('#newHotel')?.value;
     const h    = HOTELS.find(x=>x.code===code);
@@ -792,8 +841,8 @@
       guest_city: q('#newCity')?.value || null,
       company_name: q('#newCompany')?.value || null,
       company_vat: q('#newVat')?.value || null,
-      // IDs an neues HTML angepasst:
-      company_postal_code: q('#newCompanyZipCity')?.value || null,   // kombiniert "PLZ + Ort"
+      // Aus dem HTML: kombinierte Felder
+      company_postal_code: q('#newCompanyZipCity')?.value || null,
       company_address: q('#newAddressStreet')?.value || null,
       cc_holder: cc.holder,
       cc_last4: cc.last4,
@@ -918,7 +967,6 @@
 
   /***** Skizze *****/
   function buildSketch(){
-    // Neuer 2-Zustände-View
     const list = q('#sketchStateList');
     const view = q('#sketchStateView');
     const back = q('#sketchBack');
