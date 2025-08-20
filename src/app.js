@@ -587,7 +587,7 @@
       const payload = {
         cc_holder: q('#eCcHolder').value || null,
         cc_last4:  q('#eCcLast4').value  || null,
-        cc_exp_month: q('#eCcExpM').value ? Number(q('#eCcExpM').value) : null,
+        cc_exp_month: q('#eCcExpM').value ? Number(q('#eCcM').value) : null,
         cc_exp_year:  q('#eCcExpY').value ? Number(q('#eCcExpY').value) : null
       };
       const { error } = await supabase.from('reservations').update(payload).eq('id', id);
@@ -704,7 +704,7 @@
     if(price && q('#newPrice')) q('#newPrice').value=price;
     validateStep('3'); updateSummary('#summaryFinal');
   });
-  ['newArr','newDep','newAdults','newChildren','newHotel'].forEach(id=>{
+  ['newArr','newDep','newAdults','newChildren','newHotel','newFname','newLname'].forEach(id=>{
     const n=q('#'+id); n?.addEventListener('input', ()=>{ validateStep('1'); updateSummary('#summaryFinal'); });
   });
   q('#newCat')  ?.addEventListener('change', ()=>{ validateStep('2'); updateSummary('#summaryFinal'); setCatImage(SKETCH_IMG_SRC); });
@@ -712,15 +712,22 @@
 
   /* Summary */
   function linesSummary(){
-    const code=q('#newHotel')?.value; const h=HOTELS.find(x=>x.code===code);
-    const adults = Number(q('#newAdults')?.value||1), children = Number(q('#newChildren')?.value||0);
+    const code = q('#newHotel')?.value;
+    const h    = HOTELS.find(x=>x.code===code);
+    const adults   = Number(q('#newAdults')?.value||1);
+    const children = Number(q('#newChildren')?.value||0);
+    const fname = q('#newFname')?.value || '';
+    const lname = q('#newLname')?.value || '';
+    const gast  = (lname || fname) ? `${lname}${fname ? ', '+fname : ''}` : '—';
+
     return [
-      ['Hotel', h ? displayHotel(h) : '—'],
+      ['Hotel',    h ? displayHotel(h) : '—'],
+      ['Gast',     gast],
       ['Zeitraum', (q('#newArr')?.value||'—') + ' → ' + (q('#newDep')?.value||'—')],
       ['Belegung', `${adults} Erw. / ${children} Kind.`],
       ['Kategorie', q('#newCat')?.value||'—'],
-      ['Rate', q('#newRate')?.value||'—'],
-      ['Preis', q('#newPrice')?.value?EUR.format(q('#newPrice').value):'—']
+      ['Rate',      q('#newRate')?.value||'—'],
+      ['Preis',     q('#newPrice')?.value ? EUR.format(q('#newPrice').value) : '—']
     ];
   }
   function updateSummary(selector='#summaryFinal'){
@@ -785,8 +792,9 @@
       guest_city: q('#newCity')?.value || null,
       company_name: q('#newCompany')?.value || null,
       company_vat: q('#newVat')?.value || null,
-      company_postal_code: q('#newCompanyZip')?.value || null,
-      company_address: q('#newAddress')?.value || null,
+      // IDs an neues HTML angepasst:
+      company_postal_code: q('#newCompanyZipCity')?.value || null,   // kombiniert "PLZ + Ort"
+      company_address: q('#newAddressStreet')?.value || null,
       cc_holder: cc.holder,
       cc_last4: cc.last4,
       cc_exp_month: cc.exp_m,
@@ -967,7 +975,7 @@
 
   q('#btnNew')?.addEventListener('click', ()=>{
     // Reset
-    ['newArr','newDep','newAdults','newChildren','newCat','newRate','newPrice','newFname','newLname','newEmail','newPhone','newStreet','newZip','newCity','newCompany','newVat','newCompanyZip','newAddress','newNotes','ccHolder','ccNumber','ccExpiry']
+    ['newArr','newDep','newAdults','newChildren','newCat','newRate','newPrice','newFname','newLname','newEmail','newPhone','newStreet','newZip','newCity','newCompany','newVat','newCompanyZipCity','newAddressStreet','newNotes','ccHolder','ccNumber','ccExpiry']
       .forEach(id=>{ const n=q('#'+id); if(n){ n.value=''; } });
     q('#newAdults') && (q('#newAdults').value=1);
     q('#newChildren') && (q('#newChildren').value=0);
