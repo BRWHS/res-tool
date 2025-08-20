@@ -3,6 +3,7 @@
 <head>
   <link rel="preload" as="image" href="/assets/hotel-placeholder.png">
   <link rel="preload" as="image" href="/assets/sketch-placeholder.png">
+
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>res-tool — Dashboard</title>
@@ -43,29 +44,29 @@
     </nav>
   </header>
 
-  <!-- Mini-Charts (YoY OTA) -->
+  <!-- Mini-Charts (YoY) -->
   <aside class="analytics-dock" aria-label="Mini-Charts">
     <div class="dock-head">
-      <span class="mono">YoY · OTA · 7T</span>
+      <span class="mono">YoY — Tagesvergleich</span>
       <button class="btn sm" id="dockToggle" title="Ein-/Ausblenden">–</button>
     </div>
     <div id="miniAnalyticsDock" class="dock-list"></div>
   </aside>
 
   <main class="container" aria-live="polite">
-    <!-- KPIs -->
+    <!-- Performance -->
     <section class="grid hero" aria-label="Dashboard Übersicht">
       <article class="card scanlines">
         <div class="content">
           <div class="card-head">
-            <h3 class="mono">KPI — Heute</h3>
+            <h3 class="mono">Performance — Heute</h3>
             <div class="select-wrap">
               <select id="kpiFilterToday" class="input sm theme-select"></select>
             </div>
           </div>
           <div class="kpis big">
             <div class="kpi"><div class="value" id="tBookings">—</div><div class="label">Buchungen (heute eingegangen)</div></div>
-            <div class="kpi"><div class="value" id="tRevenue">— €</div><div class="label">Umsatz (Anreisen heute)</div></div>
+            <div class="kpi"><div class="value" id="tRevenue">— €</div><div class="label">Umsatz (Gesamt)</div></div>
             <div class="kpi"><div class="value" id="tADR">— €</div><div class="label">ADR (heute)</div></div>
             <div class="kpi"><div class="value" id="tOcc">—%</div><div class="label">Auslastung (heute)</div></div>
           </div>
@@ -75,15 +76,16 @@
       <article class="card scanlines">
         <div class="content">
           <div class="card-head">
-            <h3 class="mono">KPI — Nächste 7 Tage</h3>
+            <h3 class="mono">Performance — Nächste 7 Tage</h3>
             <div class="select-wrap">
+              <span class="pill" id="kwNext" title="Kalenderwoche"></span>
               <select id="kpiFilterNext" class="input sm theme-select"></select>
             </div>
           </div>
           <div class="kpis big">
-            <div class="kpi"><div class="value" id="nRevenue">— €</div><div class="label">Umsatz (Anreisen +1..+7)</div></div>
-            <div class="kpi"><div class="value" id="nADR">— €</div><div class="label">ADR (+1..+7)</div></div>
-            <div class="kpi"><div class="value" id="nOcc">—%</div><div class="label">Ø Auslastung (+1..+7)</div></div>
+            <div class="kpi"><div class="value" id="nRevenue">— €</div><div class="label">Umsatz (Gesamt)</div></div>
+            <div class="kpi"><div class="value" id="nADR">— €</div><div class="label">ADR (nächste 7 Tage)</div></div>
+            <div class="kpi"><div class="value" id="nOcc">—%</div><div class="label">Auslastung (nächste 7 Tage)</div></div>
           </div>
         </div>
       </article>
@@ -171,7 +173,6 @@
       <!-- STEP 1 -->
       <div class="wpage compact" id="w1">
         <div class="grid2" style="align-items:start">
-          <!-- Linke Spalte -->
           <div>
             <h4 class="mono section" style="margin-top:0">Aufenthaltsdaten</h4>
             <div class="grid2">
@@ -192,7 +193,6 @@
               </label>
             </div>
 
-            <!-- Schreibweise korrigiert -->
             <h4 class="mono section">Gästedaten</h4>
             <div class="grid2">
               <label>Vorname
@@ -207,43 +207,41 @@
               <label>Straße
                 <input id="newStreet" class="input" placeholder="Musterstraße 1"/>
               </label>
-              <label>Ort
+              <label style="grid-column:1 / -1">Ort
                 <input id="newCity" class="input" placeholder="München"/>
+              </label>
+            </div>
+
+            <h4 class="mono section">Kontaktdaten</h4>
+            <div class="grid2">
+              <label>E‑Mail
+                <input id="newEmail" class="input" placeholder="max@example.com"/>
+              </label>
+              <label>Telefon
+                <input id="newPhone" class="input" placeholder="+49 …"/>
               </label>
             </div>
           </div>
 
-          <!-- Rechte Spalte -->
+          <!-- Preview image column -->
           <div>
             <div class="box" style="position:sticky;top:6px">
               <div class="muted mono" style="margin-bottom:6px">Hotelbild</div>
               <img id="hotelImg" alt="Hotel" style="width:100%;height:180px;object-fit:cover;border-radius:12px;display:block"/>
             </div>
-
-            <!-- NEU: Kontaktdaten rechts unter dem Bild -->
-            <div class="box" style="margin-top:12px">
-              <h4 class="mono" style="margin:0 0 8px">Kontaktdaten</h4>
-              <div class="grid2">
-                <label>E‑Mail
-                  <input id="newEmail" class="input" placeholder="max@example.com"/>
-                </label>
-                <label>Telefon
-                  <input id="newPhone" class="input" placeholder="+49 …"/>
-                </label>
-              </div>
-            </div>
           </div>
         </div>
       </div>
 
-      <!-- STEP 2 (kompakter) -->
+      <!-- STEP 2 -->
       <div class="wpage narrow hidden" id="w2">
         <div class="row wrap" style="gap:12px;align-items:flex-start;">
-          <label style="min-width:220px;flex:0 0 260px">Kategorie
-            <select id="newCat" class="input sm theme-select"></select>
+          <label style="min-width:260px;flex:1">Kategorie
+            <select id="newCat" class="input theme-select"></select>
           </label>
-          <div class="imgcard tiny" style="max-width:280px">
-            <img id="imgCatPreview" alt="Zimmer/Kategorie"/>
+          <div class="box" style="padding:8px;max-width:280px">
+            <img id="imgCatPreview" alt="Zimmer/Kategorie"
+                 style="width:100%;height:160px;object-fit:cover;border-radius:12px;display:block"/>
           </div>
         </div>
       </div>
