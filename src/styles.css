@@ -265,4 +265,46 @@ table.matrix{width:100%;border-collapse:collapse}
 .tiny{ font-size:12px; }
 .rate-policy{ margin-top:10px; }
 
+/* Step 1 – Zweispaltiges Layout mit Bild rechts */
+.grid-compact-2{
+  display:grid;
+  grid-template-columns: 2fr 1fr;
+  gap:16px;
+  align-items: flex-start;
+}
+.form-col { min-width: 0; }
+.preview-col { min-width: 240px; }
+
+@media (max-width: 980px){
+  .grid-compact-2{ grid-template-columns: 1fr; }
+}
+
+/* Inneres Formular-Grid */
+.grid-compact{
+  display:grid;
+  grid-template-columns: repeat(2, minmax(0,1fr));
+  gap:10px;
+}
+@media (max-width: 720px){
+  .grid-compact{ grid-template-columns: 1fr; }
+}
+
+/* Hotelbild-Karte */
+.imgcard.hotel{
+  width: 100%;
+  max-width: 420px;
+  border: 1px solid rgba(0,255,255,.18);
+  border-radius: 14px;
+  background: rgba(0,255,255,.04);
+  padding: 10px;
+}
+.imgcard.hotel img{
+  width: 100%;
+  display: block;
+  border-radius: 10px;
+}
+
+/* Kleine Typo-Helfer */
+.tiny{ font-size: 12px; }
+
 
