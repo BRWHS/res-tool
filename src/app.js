@@ -1158,71 +1158,93 @@ q('#repPdf')?.addEventListener('click', async ()=>{
 });
 
 
-  /***** EVENTS & INIT *****/
-  q('#btnAvail')?.addEventListener('click', async ()=>{
-    q('#availFrom') && (q('#availFrom').value = isoDate(new Date()));
-    q('#availDays') && (q('#availDays').value = '14');
-    await buildMatrix();
-    openModal('modalAvail');
+ /***** EVENTS & INIT *****/
+q('#btnAvail')?.addEventListener('click', async ()=>{
+  q('#availFrom') && (q('#availFrom').value = isoDate(new Date()));
+  q('#availDays') && (q('#availDays').value = '14');
+  await buildMatrix();
+  openModal('modalAvail');
+});
+
+q('#btnReporting')?.addEventListener('click', async ()=>{
+  setDefaultReportRange();
+  fillRepHotel();
+  await runReport();
+  openModal('modalReporting');
+});
+
+q('#btnSettings')?.addEventListener('click', ()=> openModal('modalSettings'));
+
+q('#btnSketch')?.addEventListener('click', ()=>{
+  buildSketch();
+  openModal('modalSketch');
+});
+
+q('#btnNew')?.addEventListener('click', ()=>{
+  // Reset Form-Felder
+  [
+    'newArr','newDep','newAdults','newChildren','newCat','newRate','newPrice',
+    'newFname','newLname','newEmail','newPhone','newStreet','newZip','newCity',
+    'newCompany','newVat','newCompanyZipCity','newAddressStreet','newNotes',
+    'ccHolder','ccNumber','ccExpiry'
+  ].forEach(id=>{
+    const n = q('#'+id);
+    if (n) n.value = '';
   });
-  q('#btnReporting')?.addEventListener('click', async ()=>{
-    setDefaultReportRange(); fillRepHotel(); await runReport(); openModal('modalReporting');
-  });
-  q('#btnSettings')?.addEventListener('click', ()=> openModal('modalSettings'));
-  q('#btnSketch')?.addEventListener('click', ()=>{ buildSketch(); openModal('modalSketch'); });
+  q('#newAdults')   && (q('#newAdults').value   = 1);
+  q('#newChildren') && (q('#newChildren').value = 0);
+  q('#btnNext')     && (q('#btnNext').disabled  = true);
 
-  q('#btnNew')?.addEventListener('click', ()=>{
-    // Reset
-    ['newArr','newDep','newAdults','newChildren','newCat','newRate','newPrice','newFname','newLname','newEmail','newPhone','newStreet','newZip','newCity','newCompany','newVat','newCompanyZipCity','newAddressStreet','newNotes','ccHolder','ccNumber','ccExpiry']
-      .forEach(id=>{ const n=q('#'+id); if(n){ n.value=''; } });
-    q('#newAdults') && (q('#newAdults').value=1);
-    q('#newChildren') && (q('#newChildren').value=0);
-    q('#btnNext') && (q('#btnNext').disabled=true);
+  // Live-Card reset
+  q('#ccNumLive')    && (q('#ccNumLive').textContent    = '•••• •••• •••• ••••');
+  q('#ccHolderLive') && (q('#ccHolderLive').textContent = 'NAME');
+  q('#ccExpLive')    && (q('#ccExpLive').textContent    = 'MM/YY');
 
-    // Live-Card reset
-    q('#ccNumLive')    && (q('#ccNumLive').textContent='•••• •••• •••• ••••');
-    q('#ccHolderLive') && (q('#ccHolderLive').textContent='NAME');
-    q('#ccExpLive')    && (q('#ccExpLive').textContent='MM/YY');
+  // Selects + Bilder
+  fillHotelSelect();
+  ensureCatRateOptions();
+  setHotelImage(HOTEL_IMG_SRC);
+  setCatImage(SKETCH_IMG_SRC);
 
-    // Selects + Bilder
-    fillHotelSelect();
-    ensureCatRateOptions();
-    setHotelImage(HOTEL_IMG_SRC);
-    setCatImage(SKETCH_IMG_SRC);
+  wizardSet('1');
+  q('#newInfo') && (q('#newInfo').textContent = '');
+  openModal('modalNew');
+});
 
-    wizardSet('1');
-    q('#newInfo') && (q('#newInfo').textContent='');
-    openModal('modalNew');
-  });
+// Init
+(async function init(){
+  startClocks();
 
-  (async function init(){
-    startClocks();
-    await refreshStatus(); setInterval(refreshStatus, 30000);
-    await autoRollPastToDone();
-    await buildMiniAnalytics();
+  await refreshStatus();
+  setInterval(refreshStatus, 30000);
 
-    fillHotelFilter(q('#kpiFilterToday'));
-    fillHotelFilter(q('#kpiFilterNext'));
-    q('#kpiFilterToday')?.addEventListener('change', loadKpisToday);
-    q('#kpiFilterNext')?.addEventListener('change', loadKpisNext);
+  await autoRollPastToDone();
+  await buildMiniAnalytics();
 
-    fillFilters();
-    if (q('#filterStatus')) q('#filterStatus').value = 'active';
+  // KPI-Filter + Events
+  fillHotelFilter(q('#kpiFilterToday'));
+  fillHotelFilter(q('#kpiFilterNext'));
+  q('#kpiFilterToday')?.addEventListener('change', loadKpisToday);
+  q('#kpiFilterNext')?.addEventListener('change', loadKpisNext);
 
-    await loadKpisToday();
-    await loadKpisNext();
-    await loadReservations();
-  })();
+  // Listen-Filter
+  fillFilters();
+  if (q('#filterStatus')) q('#filterStatus').value = 'active';
 
-  // ===== Hilfsfunktion aus Liste (wegen Scope) =====
-  function safeDisplayFromRow(row){
-    const h = HOTELS.find(x=>x.code===row.hotel_code);
-    if (h) return displayHotel(h);
-    const raw = String(row.hotel_name||'').replace(/^[\s·•\-–—]+/,'').trim();
-    if (!raw) return row.hotel_code || '—';
-    for (const p of BRAND_PREFIXES){
-      if (raw.startsWith(p+' ')) return `${p} - ${raw.slice(p.length+1)}`;
-    }
-    return raw;
+  await loadKpisToday();
+  await loadKpisNext();
+  await loadReservations();
+})();
+
+// ===== Hilfsfunktion aus Liste (wegen Scope) =====
+function safeDisplayFromRow(row){
+  const h = HOTELS.find(x=>x.code===row.hotel_code);
+  if (h) return displayHotel(h);
+  const raw = String(row.hotel_name||'').replace(/^[\s·•\-–—]+/,'').trim();
+  if (!raw) return row.hotel_code || '—';
+  for (const p of BRAND_PREFIXES){
+    if (raw.startsWith(p+' ')) return `${p} - ${raw.slice(p.length+1)}`;
   }
+  return raw;
 }
+
