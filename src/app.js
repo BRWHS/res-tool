@@ -187,62 +187,73 @@
       .or('status.eq.active,status.eq.confirmed,status.is.null');
   }
 
-  /***** Mini-Analytics — YoY (Tagesvergleich Vorjahr, ohne OTA-Filter) *****/
-  async function buildMiniAnalytics(){
-    const list = q('#miniAnalyticsDock'); if (!list) return; list.innerHTML='';
-    const today = soD(new Date());
-    const curStart = new Date(today); curStart.setDate(curStart.getDate()-6);
-    const prevYStart = new Date(curStart); prevYStart.setFullYear(prevYStart.getFullYear()-1);
-    const prevYEnd   = new Date(today);   prevYEnd.setFullYear(prevYEnd.getFullYear()-1);
+ /***** Mini-Analytics — YoY (heute vs. heute vor 1 Jahr) *****/
+async function buildMiniAnalytics(){
+  const list = q('#miniAnalyticsDock'); if (!list) return; list.innerHTML = '';
 
-    const cur = await supabase.from('reservations')
-      .select('hotel_code,created_at').gte('created_at', curStart.toISOString()).lte('created_at', today.toISOString());
-    const prv = await supabase.from('reservations')
-      .select('hotel_code,created_at').gte('created_at', prevYStart.toISOString()).lte('created_at', prevYEnd.toISOString());
+  // Heute (Start/Ende)
+  const today = soD(new Date());                       // 00:00:00 heute
+  const todayStartISO = today.toISOString();
+  const todayEnd = new Date(today); todayEnd.setDate(todayEnd.getDate() + 1); // exklusiv
+  const todayEndISO = todayEnd.toISOString();
 
-    const toMap = (arr)=> {
-      const m=new Map();
-      (arr?.data||[]).forEach(r=>{
-        const key = r.hotel_code || '—';
-        m.set(key, (m.get(key)||0)+1);
-      });
-      return m;
-    };
-    const mCur = toMap(cur), mPrv = toMap(prv);
+  // Gleicher Kalendertag im Vorjahr
+  const prev = new Date(today);
+  prev.setFullYear(prev.getFullYear() - 1);
+  const prevStart = soD(prev);
+  const prevEnd = new Date(prevStart); prevEnd.setDate(prevEnd.getDate() + 1);
+  const prevStartISO = prevStart.toISOString();
+  const prevEndISO = prevEnd.toISOString();
 
-    const SPARK_W = 60, SPARK_H = 22;
+  // Buchungen (created_at) für heute / Vorjahr laden
+  const cur = await supabase.from('reservations')
+    .select('hotel_code,created_at')
+    .gte('created_at', todayStartISO).lt('created_at', todayEndISO);
 
-    HOTELS.forEach(h=>{
-      const c = mCur.get(h.code)||0, p = mPrv.get(h.code)||0;
-      const up = p===0 ? c>0 : c>p;
+  const prv = await supabase.from('reservations')
+    .select('hotel_code,created_at')
+    .gte('created_at', prevStartISO).lt('created_at', prevEndISO);
 
-      // Fake-Sparkline (bis echte Zeitreihe kommt)
-      const pts = Array.from({length:7}, ()=> Math.max(0, Math.round((c/7) + (Math.random()*2-1))));
-      const max = Math.max(1, ...pts), min = Math.min(...pts);
-      const path = pts.map((v,i)=>{
-        const x = (i/(pts.length-1))*SPARK_W;
-        const y = SPARK_H - ((v-min)/(max-min||1))*(SPARK_H-2) - 1;
-        return `${i===0?'M':'L'}${x.toFixed(1)},${y.toFixed(1)}`;
-      }).join(' ');
+  const countByHotel = (res) => {
+    const m = new Map();
+    (res?.data || []).forEach(r => m.set(r.hotel_code || '—', (m.get(r.hotel_code || '—') || 0) + 1));
+    return m;
+  };
 
-      const brandAndHotel = `${h.group} ${hotelCity(h.name)}`;
+  const mCur = countByHotel(cur);
+  const mPrv = countByHotel(prv);
 
-      const item = el('div',{class:'dock-item',title:`${brandAndHotel} · YoY ${p?Math.round(((c-p)/p)*100):'∞'}%`},
-        // Badge optional — kann man auch ausblenden
-        // el('span',{class:'dock-badge'}, h.group),
-        el('div',{class:'dock-name'}, brandAndHotel),
-        (()=>{
-          const svg = el('svg',{class:'spark',viewBox:`0 0 ${SPARK_W} ${SPARK_H}`,xmlns:'http://www.w3.org/2000/svg'});
-          svg.append(el('path',{d:path, fill:'none', stroke: up?'#35e08a':'#ff4d6d','stroke-width':'2'}));
-          return svg;
-        })(),
-        el('div',{class:`dock-arrow ${up?'up':'down'}`}, up ? '↑' : '↓')
-      );
-      list.append(item);
-    });
-  }
-  q('#dockToggle')?.addEventListener('click', ()=> q('.analytics-dock')?.classList.toggle('dock-collapsed'));
+  // kleines SVG-Sparkline als Deko (7 zufällige Punkte, bis echte Tagesreihe kommt)
+  const SPARK_W = 60, SPARK_H = 22;
 
+  HOTELS.forEach(h => {
+    const c = mCur.get(h.code) || 0;
+    const p = mPrv.get(h.code) || 0;
+    const up = p === 0 ? c > 0 : c > p;
+
+    const pts = Array.from({ length: 7 }, () => Math.max(0, Math.round((c / 7) + (Math.random() * 2 - 1))));
+    const max = Math.max(1, ...pts), min = Math.min(...pts);
+    const path = pts.map((v, i) => {
+      const x = (i / (pts.length - 1)) * SPARK_W;
+      const y = SPARK_H - ((v - min) / (max - min || 1)) * (SPARK_H - 2) - 1;
+      return `${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`;
+    }).join(' ');
+
+    const brandAndHotel = `${h.group} ${hotelCity(h.name)}`;
+    const yoyPct = p ? Math.round(((c - p) / p) * 100) : (c > 0 ? '∞' : 0);
+
+    const item = el('div', { class: 'dock-item', title: `${brandAndHotel} · YoY ${yoyPct}%` },
+      el('div', { class: 'dock-name' }, brandAndHotel),
+      (() => {
+        const svg = el('svg', { class: 'spark', viewBox: `0 0 ${SPARK_W} ${SPARK_H}`, xmlns: 'http://www.w3.org/2000/svg' });
+        svg.append(el('path', { d: path, fill: 'none', stroke: up ? '#35e08a' : '#ff4d6d', 'stroke-width': '2' }));
+        return svg;
+      })(),
+      el('div', { class: `dock-arrow ${up ? 'up' : 'down'}` }, up ? '↑' : '↓')
+    );
+    list.append(item);
+  });
+}
   /***** MODALS *****/
   const backdrop = q('#backdrop');
   function openModal(id){
