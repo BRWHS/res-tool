@@ -1126,7 +1126,7 @@ q('#repPdf')?.addEventListener('click', async ()=>{
   doc.setFontSize(9);
   doc.text(`Erstellt: ${ts}`, 40, 76);
 
-  // Tabelle aus reportSummary
+  // Tabelle
   const head = [['Hotel','Buchungen','Umsatz','ADR','Belegungsrate']];
   const body = reportSummary.labels.map((label, i)=>[
     label,
@@ -1135,6 +1135,69 @@ q('#repPdf')?.addEventListener('click', async ()=>{
     (reportSummary.adr[i]!=null ? EUR.format(reportSummary.adr[i]) : '—'),
     (reportSummary.occPct[i]!=null ? (reportSummary.occPct[i] + '%') : '—')
   ]);
+
+  doc.autoTable({
+    head, body,
+    startY: 96,
+    styles: { font: 'helvetica', fontSize: 9, cellPadding: 6 },
+    headStyles: { fillColor: [0, 180, 180] }
+  });
+
+  // Charts kompakt nebeneinander
+  const revCanvas = document.getElementById('chartRevenue');
+  const bokCanvas = document.getElementById('chartBookings');
+
+  const pageW = doc.internal.pageSize.getWidth();
+  const pageH = doc.internal.pageSize.getHeight();
+  const marginX = 40;
+  const gap = 20;
+
+  let y = (doc.lastAutoTable?.finalY || 96) + 30;
+
+  if (revCanvas || bokCanvas) {
+    const maxW = (pageW - marginX*2 - gap) / 2; // zwei Spalten
+
+    // Falls nur ein Chart existiert → volle Breite nutzen
+    const placeOne = (canvas, labelText) => {
+      const img = canvas.toDataURL('image/png', 1.0);
+      const w = pageW - marginX*2;
+      const h = (canvas.height/canvas.width) * w * 0.5; // kompakter
+      // Neue Seite falls nötig
+      if (y + 20 + h > pageH - 40) { doc.addPage(); y = 40; }
+      doc.setFont('helvetica','bold'); doc.setFontSize(11);
+      doc.text(labelText, marginX, y); y += 10;
+      doc.addImage(img, 'PNG', marginX, y, w, h); y += h;
+    };
+
+    if (revCanvas && bokCanvas) {
+      const imgR = revCanvas.toDataURL('image/png', 1.0);
+      const imgB = bokCanvas.toDataURL('image/png', 1.0);
+      const hR = (revCanvas.height/revCanvas.width) * maxW;
+      const hB = (bokCanvas.height/bokCanvas.width) * maxW;
+      const h = Math.min(220, Math.max(hR, hB)); // Deckelung für Kompaktheit
+
+      // Neue Seite falls nötig
+      if (y + 30 + h > pageH - 40) { doc.addPage(); y = 40; }
+
+      // Titelzeile
+      doc.setFont('helvetica','bold'); doc.setFontSize(11);
+      doc.text('Umsatz pro Hotel', marginX, y);
+      doc.text('Buchungen pro Hotel', marginX + maxW + gap, y);
+      y += 10;
+
+      // Bilder nebeneinander
+      doc.addImage(imgR, 'PNG', marginX, y, maxW, h);
+      doc.addImage(imgB, 'PNG', marginX + maxW + gap, y, maxW, h);
+      y += h;
+    } else if (revCanvas) {
+      placeOne(revCanvas, 'Umsatz pro Hotel');
+    } else if (bokCanvas) {
+      placeOne(bokCanvas, 'Buchungen pro Hotel');
+    }
+  }
+
+  doc.save('report.pdf');
+});
 
   doc.autoTable({
     head, body,
