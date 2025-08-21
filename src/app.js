@@ -697,7 +697,7 @@
      // ▼ NEU: Platzhalter-Beschreibung unter dem Dropdown
   const desc = q('#catDesc');
   if (desc) {
-    desc.textContent = "das Zimmer hat eine größe von mehr oder weniger als 40m², toaster, mikrowelle und einen Balkon mit tollem Ausblick";
+    desc.textContent = "das Zimmer hat eine größe von mehr oder weniger als 40m², Toaster, Mikrowelle und Balkon mit Ausblick. Dies ist ein Placeholder‑Text und soll einen visuellen Effekt erzeugen. Die Beschreibung soll dem Agent alle Infos zu der Zimmerkategorie liefern, um möglichst präziser arbeiten zu können";
     }
   }
 
