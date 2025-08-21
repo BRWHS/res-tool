@@ -336,5 +336,27 @@ table.matrix{width:100%;border-collapse:collapse}
   .rep-charts{ grid-template-columns:1fr; }
   .rep-tools .btn{ width:100%; }
 }
+/* Reporting Modal Logo */
+.rep-logo {
+  display:inline-block;
+  width:18px; height:18px;
+  margin-right:8px;
+  border-radius:50%;
+  background:conic-gradient(from 180deg, rgba(0,255,255,.9), rgba(0,255,255,.25));
+  box-shadow:0 0 10px rgba(0,255,255,.35), inset 0 0 8px rgba(0,255,255,.2);
+  vertical-align:middle;
+}
+
+/* Reporting Hotel Label Fix */
+#modalReporting .row.wrap label {
+  display:flex;
+  flex-direction:column;
+  font-size:13px;
+}
+#modalReporting .row.wrap label input,
+#modalReporting .row.wrap label select {
+  margin-top:4px;
+}
+
 
 
