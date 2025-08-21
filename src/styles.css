@@ -279,15 +279,27 @@ table.matrix{width:100%;border-collapse:collapse}
 .grid-compact { gap: 8px; }
 }
 
-/* Step 2: links Dropdown+Beschreibung, rechts Bild */
-.s2-grid{
+/* Step 2 – Layout kompakt */
+.s2-top{
   display:grid;
-  grid-template-columns: 1fr 320px; /* links flexibel, rechts fix */
+  grid-template-columns: 1fr 2fr; /* links Dropdown+Fakten, rechts große Beschreibung */
   gap:16px;
-  align-items:flex-start;
+  align-items:start;
 }
-@media (max-width: 720px){
-  .s2-grid{ grid-template-columns: 1fr; }
+.s2-label{ display:block; min-width:240px }
+.s2-desc{ min-height: 150px; }       /* ~3x Dropdownhöhe */
+.s2-facts{ margin-top:10px; }
+
+.s2-gallery{
+  display:grid;
+  grid-template-columns: repeat(3, minmax(0,1fr));
+  gap:10px;
+  margin-top:14px;
+}
+.s2-gallery .imgcard{ aspect-ratio: 4 / 3; } /* gleichmäßig, kompakt */
+
+@media (max-width: 820px){
+  .s2-top{ grid-template-columns: 1fr; }
 }
 
 
