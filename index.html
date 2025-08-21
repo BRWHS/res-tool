@@ -14,6 +14,11 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;600;800&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="/src/styles.css" />
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.3/dist/jspdf.plugin.autotable.min.js"></script>
+
 </head>
 <body>
   <header class="topbar" role="banner">
@@ -454,14 +459,36 @@
         <div style="flex:1"></div>
         <button class="btn ghost" id="repCsv">Export CSV</button>
         <button class="btn ghost" id="repXls">Export Excel</button>
+        <button class="btn ghost" id="repPdf">Export PDF</button>
       </div>
       <div class="table-wrap">
         <table class="resv">
-          <thead><tr><th>Hotel</th><th>Buchungen</th><th>Umsatz</th><th>ADR</th><th>OTA-Anteil</th></tr></thead>
+          <thead>
+            <tr>
+              <th>Hotel</th>
+              <th>Buchungen</th>
+              <th>Umsatz</th>
+              <th>ADR</th>
+              <th>Belegungsrate</th>
+          </tr>
+        </thead>
           <tbody id="repBody"></tbody>
         </table>
       </div>
     </div>
+    <div class="box" style="margin-top:12px">
+  <h4 class="mono" style="margin:0 0 8px">Diagramme</h4>
+  <div class="grid2">
+    <div>
+      <div class="mono muted tiny" style="margin-bottom:6px">Umsatz pro Hotel</div>
+      <canvas id="chartRevenue" height="140"></canvas>
+    </div>
+    <div>
+      <div class="mono muted tiny" style="margin-bottom:6px">Buchungen pro Hotel</div>
+      <canvas id="chartBookings" height="140"></canvas>
+    </div>
+  </div>
+</div>
   </section>
 
   <!-- Einstellungen -->
