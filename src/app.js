@@ -945,31 +945,27 @@ function updateReportCharts() {
   const bookings = reportSummary.bookings;
 
   // Revenue-Bar
-  const ctxR = document.getElementById('chartRevenue')?.getContext('2d');
-  if (ctxR) {
-    if (chartRevenue) chartRevenue.destroy();
-    chartRevenue = new Chart(ctxR, {
-      type: 'bar',
-      data: { labels, datasets: [{ label: 'Umsatz (€)', data: revenue }] },
-      options: {
-        responsive: true,
-        plugins: { legend: { display: false } },
-        scales: { y: { beginAtZero: true } }
-      }
-    });
+chartRevenue = new Chart(ctxR, {
+  type: 'bar',
+  data: { labels, datasets: [{ label: 'Umsatz (€)', data: revenue }] },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,           // << neu
+    plugins: { legend: { display: false } },
+    scales: { y: { beginAtZero: true } }
   }
+});
 
-  // Bookings-Pie
-  const ctxB = document.getElementById('chartBookings')?.getContext('2d');
-  if (ctxB) {
-    if (chartBookings) chartBookings.destroy();
-    chartBookings = new Chart(ctxB, {
-      type: 'pie',
-      data: { labels, datasets: [{ label: 'Buchungen', data: bookings }] },
-      options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
-    });
+// Bookings-Pie
+chartBookings = new Chart(ctxB, {
+  type: 'pie',
+  data: { labels, datasets: [{ label: 'Buchungen', data: bookings }] },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,           // << neu
+    plugins: { legend: { position: 'bottom' } }
   }
-}
+});
 
 function setDefaultReportRange(){
   const to=soD(new Date()); const from=soD(new Date(Date.now()-29*86400000));
