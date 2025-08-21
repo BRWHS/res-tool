@@ -1329,30 +1329,83 @@ q('#btnNew')?.addEventListener('click', ()=>{
   await loadReservations();
 })();
 
-  // --- Einstellungen / Admin ---
+ // --- Einstellungen / Admin ---
 const ADMIN_PW = "325643";
 const SETTINGS_KEY = "resTool.settings";
 const LOG_KEY = "resTool.activityLog";
 
 const I18N = {
-  de: {
-    "settings.language": "Sprache",
-    "settings.hue": "Farbton",
-    "settings.save": "Einstellungen speichern",
-    // Beispieltexte (füge bei Bedarf weitere hinzu)
-    "ui.saved": "Einstellungen gespeichert",
-    "ui.wrongpw": "Falsches Admin‑Passwort",
-    "ui.needpw": "Bitte Admin‑Passwort eingeben"
-  },
-  en: {
-    "settings.language": "Language",
-    "settings.hue": "Hue",
-    "settings.save": "Save settings",
-    "ui.saved": "Settings saved",
-    "ui.wrongpw": "Wrong admin password",
-    "ui.needpw": "Please enter admin password"
-  }
+  de: { "settings.language":"Sprache","settings.hue":"Farbton","settings.save":"Einstellungen speichern",
+        "ui.saved":"Einstellungen gespeichert","ui.wrongpw":"Falsches Admin‑Passwort","ui.needpw":"Bitte Admin‑Passwort eingeben" },
+  en: { "settings.language":"Language","settings.hue":"Hue","settings.save":"Save settings",
+        "ui.saved":"Settings saved","ui.wrongpw":"Wrong admin password","ui.needpw":"Please enter admin password" }
 };
+function getSettings(){ try{ return JSON.parse(localStorage.getItem(SETTINGS_KEY))||{lang:'de',hue:180}; }catch(e){ return {lang:'de',hue:180}; } }
+function saveSettings(obj){ localStorage.setItem(SETTINGS_KEY, JSON.stringify(obj)); logActivity('settings','saved',{settings:obj}); }
+function t(key){ const lang=(getSettings().lang||'de'); return (I18N[lang]&&I18N[lang][key])||I18N.de[key]||key; }
+function translateAll(){ document.querySelectorAll('[data-i18n]').forEach(n=> n.textContent=t(n.getAttribute('data-i18n')) ); }
+function applySettings(){
+  const s=getSettings(); translateAll();
+  const h=Number(s.hue||180);
+  document.documentElement.style.setProperty('--accent',  `hsl(${h} 100% 55%)`);
+  document.documentElement.style.setProperty('--accent-2',`hsl(${h} 80% 65%)`);
+  document.documentElement.style.setProperty('--glow',    `0 0 10px hsla(${h} 100% 60% / .35)`);
+  const sel=document.getElementById('selLang'); if(sel) sel.value=s.lang||'de';
+  const rng=document.getElementById('rngHue');  if(rng){ rng.value=h; const v=document.getElementById('hueVal'); if(v) v.textContent=h+'°'; }
+}
+function requireAdmin(onSuccess){
+  const pw=prompt(t('ui.needpw'));
+  if (pw===ADMIN_PW) onSuccess && onSuccess(); else if (pw!==null) alert(t('ui.wrongpw'));
+}
+function logActivity(type, action, meta){
+  const row={ ts:new Date().toISOString(), type, action, meta:meta||{} };
+  const list=readLog(); list.push(row); localStorage.setItem(LOG_KEY, JSON.stringify(list));
+}
+function readLog(){ try{ return JSON.parse(localStorage.getItem(LOG_KEY))||[]; }catch(e){ return []; } }
+function filterLog({q='',type='',from='',to=''}){ const data=readLog(); return data.filter(d=>{
+  if (type && d.type!==type) return false;
+  if (from && new Date(d.ts) < new Date(from)) return false;
+  if (to   && new Date(d.ts) > new Date(to+'T23:59:59')) return false;
+  if (q){ const blob=(d.action+' '+JSON.stringify(d.meta||{})).toLowerCase(); if(!blob.includes(q.toLowerCase())) return false; }
+  return true;
+}).sort((a,b)=> new Date(b.ts)-new Date(a.ts)); }
+function renderLogTable(rows){
+  const tbody=document.querySelector('#logTable tbody'); if(!tbody) return;
+  tbody.innerHTML=''; rows.forEach(r=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${new Date(r.ts).toLocaleString('de-DE')}</td><td>${r.type}</td><td>${r.action}</td>
+                  <td><code style="white-space:nowrap">${JSON.stringify(r.meta||{}).slice(0,120)}${JSON.stringify(r.meta||{}).length>120?'…':''}</code></td>`;
+    tbody.appendChild(tr);
+  });
+}
+document.addEventListener('DOMContentLoaded', ()=>{
+  applySettings();
+  const selLang=document.getElementById('selLang');
+  const rngHue =document.getElementById('rngHue');
+  const hueVal =document.getElementById('hueVal');
+  selLang?.addEventListener('change', ()=>{ const s=getSettings(); s.lang=selLang.value; saveSettings(s); applySettings(); });
+  rngHue?.addEventListener('input', ()=>{ const s=getSettings(); s.hue=Number(rngHue.value||0); saveSettings(s); if(hueVal) hueVal.textContent=s.hue+'°'; applySettings(); });
+  document.getElementById('btnSaveSettings')?.addEventListener('click', ()=>{ saveSettings(getSettings()); applySettings(); alert(t('ui.saved')); });
+  document.getElementById('btnChannel')?.addEventListener('click', ()=>{ requireAdmin(()=> openModal('modalChannel')); logActivity('channel','open_settings'); });
+  document.getElementById('btnLog')?.addEventListener('click', ()=>{ requireAdmin(()=>{
+    document.getElementById('logSearch').value=''; document.getElementById('logType').value='';
+    document.getElementById('logFrom').value='';   document.getElementById('logTo').value='';
+    renderLogTable(filterLog({})); openModal('modalLog');
+  }); logActivity('system','open_log'); });
+  document.getElementById('logApply')?.addEventListener('click', ()=>{
+    renderLogTable(filterLog({
+      q:document.getElementById('logSearch').value.trim(),
+      type:document.getElementById('logType').value,
+      from:document.getElementById('logFrom').value,
+      to:document.getElementById('logTo').value
+    }));
+  });
+  document.getElementById('logClear')?.addEventListener('click', ()=>{
+    document.getElementById('logSearch').value=''; document.getElementById('logType').value='';
+    document.getElementById('logFrom').value='';   document.getElementById('logTo').value='';
+    renderLogTable(filterLog({}));
+  });
+});
 
 function t(key){ 
   const lang = (getSettings().lang || 'de');
