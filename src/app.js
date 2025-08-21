@@ -922,11 +922,72 @@ async function buildMiniAnalytics(){
       const map={}; (data||[]).forEach(r=>map[r.date]=r);
 
       ds.forEach(d=>{
-        const k=isoDate(d); const cap=map[k]?.capacity??100; const b=map[k]?.booked??0;
-        const p = Math.min(100, Math.round((Number(b)/Math.max(1,Number(cap)))*100));
-        tr.append(el('td',{}, el('span',{class:`pill ${occClass(p)}`}, `${p}%`)));
-      });
+  const k   = isoDate(d);
+  const cap = map[k]?.capacity ?? 100;
+  const b   = map[k]?.booked ?? 0;
+  const p   = Math.min(100, Math.round((Number(b)/Math.max(1,Number(cap)))*100));
+  const avail = Math.max(0, Number(cap) - Number(b));
 
+  const pill = el('span', { class: `pill ${occClass(p)}` }, `${p}%`);
+
+  // Dummy-Kategorien nach Verfügbarkeit aufteilen
+  const split = splitDummyCategories(avail);
+
+  // Tooltip-Events
+  pill.addEventListener('mouseenter', (evt)=>{
+    const title = `${displayHotel(h)} · ${Dm.format(d)}`;
+    const lines = [
+      ['Standard', split.Standard],
+      ['Superior', split.Superior],
+      ['Suite',    split.Suite]
+    ];
+    showAvailTooltip(evt, title, lines);
+  });
+  pill.addEventListener('mousemove', moveAvailTooltip);
+  pill.addEventListener('mouseleave', hideAvailTooltip);
+
+  tr.append(el('td', {}, pill));
+});
+
+      // ---- Availability Tooltip Helpers ----
+let __availTT = null;
+function ensureAvailTooltip(){
+  if (__availTT) return __availTT;
+  __availTT = document.createElement('div');
+  __availTT.className = 'avail-tt';
+  __availTT.style.display = 'none';
+  document.body.appendChild(__availTT);
+  return __availTT;
+}
+function showAvailTooltip(evt, title, lines){
+  const tt = ensureAvailTooltip();
+  tt.innerHTML = `
+    <div class="tt-title">${title}</div>
+    ${lines.map(([label, val]) => `<div class="tt-line"><span>${label}</span><span>${val}</span></div>`).join('')}
+  `;
+  tt.style.display = 'block';
+  moveAvailTooltip(evt);
+}
+function moveAvailTooltip(evt){
+  const tt = ensureAvailTooltip();
+  const pad = 12;
+  const x = evt.clientX + pad;
+  const y = evt.clientY + pad;
+  tt.style.left = x + 'px';
+  tt.style.top  = y + 'px';
+}
+function hideAvailTooltip(){
+  const tt = ensureAvailTooltip();
+  tt.style.display = 'none';
+}
+function splitDummyCategories(avail){
+  // Verteile die Verfügbarkeit (cap - booked) grob auf Standard/Superior/Suite (50/30/20)
+  const a = Math.max(0, Number(avail)||0);
+  const std = Math.max(0, Math.floor(a * 0.5));
+  const sup = Math.max(0, Math.floor(a * 0.3));
+  const sui = Math.max(0, a - std - sup);
+  return { Standard: std, Superior: sup, Suite: sui };
+}
       body.append(tr);
     }
   }
