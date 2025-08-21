@@ -923,7 +923,9 @@
 
   /***** Reporting *****/
   
-  // --- Reporting: Chart State ---
+  /***** Reporting *****/
+
+// --- Reporting: Chart State ---
 let chartRevenue = null;
 let chartBookings = null;
 
@@ -956,7 +958,7 @@ function updateReportCharts() {
       }
     });
   }
-  
+
   // Bookings-Pie
   const ctxB = document.getElementById('chartBookings')?.getContext('2d');
   if (ctxB) {
@@ -968,98 +970,78 @@ function updateReportCharts() {
     });
   }
 }
-  function setDefaultReportRange(){
-    const to=soD(new Date()); const from=soD(new Date(Date.now()-29*86400000));
-    q('#repFrom') && (q('#repFrom').value=isoDate(from));
-    q('#repTo')   && (q('#repTo').value=isoDate(to));
-  }
-  function fillRepHotel(){
-    const sel=q('#repHotel'); if (!sel) return;
-    sel.innerHTML='';
-    sel.append(el('option',{value:'all'},'Alle Hotels'));
-    HOTELS.forEach(h=> sel.append(el('option',{value:h.code}, displayHotel(h))));
-  }
-  async function runReport(){
-  const from = document.querySelector('#repFrom')?.value;
-  const to   = document.querySelector('#repTo')?.value;
-  const code = document.querySelector('#repHotel')?.value || 'all';
+
+function setDefaultReportRange(){
+  const to=soD(new Date()); const from=soD(new Date(Date.now()-29*86400000));
+  q('#repFrom') && (q('#repFrom').value=isoDate(from));
+  q('#repTo')   && (q('#repTo').value=isoDate(to));
+}
+function fillRepHotel(){
+  const sel=q('#repHotel'); if (!sel) return;
+  sel.innerHTML='';
+  sel.append(el('option',{value:'all'},'Alle Hotels'));
+  HOTELS.forEach(h=> sel.append(el('option',{value:h.code}, displayHotel(h))));
+}
+
+async function runReport(){
+  const from = q('#repFrom')?.value;
+  const to   = q('#repTo')?.value;
+  const code = q('#repHotel')?.value || 'all';
   if (!from || !to) return;
 
-  const body = document.querySelector('#repBody');
-  if (!body) return;
+  const body = q('#repBody'); if (!body) return;
   body.innerHTML = '';
 
-  // 1) Reservierungen laden (für Buchungen, Umsatz, ADR)
+  // (1) Reservierungen laden (Buchungen, Umsatz, ADR)
   let qRes = supabase.from('reservations')
     .select('hotel_name,hotel_code,rate_price,arrival,departure,status,channel,created_at')
     .gte('arrival', from).lte('arrival', to)
     .neq('status','canceled');
   if (code !== 'all') qRes = qRes.eq('hotel_code', code);
   const { data: resRows, error: resErr } = await qRes;
+  if (resErr){ body.append(el('tr',{}, el('td',{colspan:'5'}, 'Fehler beim Laden (Reservierungen)'))); return; }
 
-  if (resErr){
-    body.append(el('tr',{}, el('td',{colspan:'5'}, 'Fehler beim Laden (Reservierungen)')));
-    return;
-  }
-
-  // 2) Availability laden (für Belegungsrate)
+  // (2) Availability laden (Belegungsrate)
   let qAv = supabase.from('availability')
     .select('date,hotel_code,capacity,booked')
     .gte('date', from).lte('date', to);
   if (code !== 'all') qAv = qAv.eq('hotel_code', code);
   const { data: avRows, error: avErr } = await qAv;
-  if (avErr){
-    body.append(el('tr',{}, el('td',{colspan:'5'}, 'Fehler beim Laden (Availability)')));
-    return;
-  }
+  if (avErr){ body.append(el('tr',{}, el('td',{colspan:'5'}, 'Fehler beim Laden (Availability)'))); return; }
 
-  // 3) Maps je Hotel
-  const byHotel = new Map(); // {bookings, revenue, nights, adr? -> später}
+  // (3) Aggregation
+  const byHotel = new Map();
   (resRows||[]).forEach(r=>{
     const key = r.hotel_code || r.hotel_name || '—';
-    const o = byHotel.get(key) || { hotel_code: r.hotel_code, hotel_name: r.hotel_name || r.hotel_code, bookings:0, revenue:0, nights:0 };
+    const o = byHotel.get(key) || { hotel_code:r.hotel_code, hotel_name:r.hotel_name||r.hotel_code, bookings:0, revenue:0 };
     o.bookings += 1;
     o.revenue  += Number(r.rate_price||0);
-    // für ADR (hier pro Buchung 1 Nacht, wie bestehende Logik in Reporting)
-    // wenn du ADR = Umsatz/Nächte möchtest, musst du hier Nächte berechnen
     byHotel.set(key, o);
   });
 
-  // 4) Belegungsrate je Hotel aus Availability
-  //    -> Ø Prozent über alle Tage im Zeitraum (min 0..100, capacity>0)
-  const occMap = new Map(); // key -> { sumPct, count }
+  const occMap = new Map(); // code -> {sum,n}
   (avRows||[]).forEach(a=>{
     const cap = Number(a.capacity||0), b = Number(a.booked||0);
-    if (cap > 0){
-      const pct = Math.min(100, Math.round((b / cap) * 100));
+    if (cap>0){
+      const p = Math.min(100, Math.round((b/cap)*100));
       const k = a.hotel_code || '—';
-      const o = occMap.get(k) || { sum:0, n:0 };
-      o.sum += pct; o.n += 1;
-      occMap.set(k, o);
+      const o = occMap.get(k) || {sum:0,n:0};
+      o.sum += p; o.n += 1;
+      occMap.set(k,o);
     }
   });
 
-  // 5) Zeilen bauen + Summary für Charts/PDF
-  // labels = schöner Hotelname
-  const labels   = [];
-  const bookings = [];
-  const revenue  = [];
-  const adrArr   = [];
-  const occPct   = [];
-
-  const rows = [...byHotel.entries()].map(([key, o])=>{
-    // Display-Name:
-    const h = HOTELS.find(x=>x.code===o.hotel_code);
-    const name = h ? `${h.group} - ${ (h.name||'').replace(/^.*? /,'') }` : (o.hotel_name || key);
-
-    const adr = o.bookings ? (o.revenue / o.bookings) : null;
-    // Belegungsrate:
-    const occObj = occMap.get(o.hotel_code || key);
-    const occ = (occObj && occObj.n>0) ? Math.round(occObj.sum / occObj.n) : null;
+  const labels=[], bookings=[], revenue=[], adrArr=[], occPct=[];
+  const rows = [...byHotel.entries()].map(([key,o])=>{
+    const h   = HOTELS.find(x=>x.code===o.hotel_code);
+    const name= h ? `${h.group} - ${ (h.name||'').replace(/^.*? /,'') }` : (o.hotel_name || key);
+    const adr = o.bookings ? (o.revenue/o.bookings) : null;
+    const om  = occMap.get(o.hotel_code || key);
+    const occ = (om && om.n>0) ? Math.round(om.sum/om.n) : null;
 
     labels.push(name);
     bookings.push(o.bookings);
-    revenue.push(Math.round(o.revenue)); // für Balken
+    revenue.push(Math.round(o.revenue));
     adrArr.push(adr);
     occPct.push(occ);
 
@@ -1068,16 +1050,13 @@ function updateReportCharts() {
 
   if (rows.length===0){
     body.append(el('tr',{}, el('td',{colspan:'5'}, 'Keine Daten im Zeitraum')));
-    // Charts leeren
     reportSummary = { labels:[], bookings:[], revenue:[], adr:[], occPct:[] };
     updateReportCharts();
     return;
   }
 
-  // Sortierung: nach Umsatz absteigend
   rows.sort((a,b)=> b.revenue - a.revenue);
 
-  // Tabelle rendern
   rows.forEach(r=>{
     body.append(el('tr',{},
       el('td',{}, r.name),
@@ -1088,50 +1067,23 @@ function updateReportCharts() {
     ));
   });
 
-  // Chart-Daten speichern & Charts aktualisieren
   reportSummary = { labels, bookings, revenue, adr: adrArr, occPct };
   updateReportCharts();
 }
 
-    const from=q('#repFrom')?.value, to=q('#repTo')?.value, code=q('#repHotel')?.value || 'all';
-    if (!from || !to){ return; }
-    let query = supabase.from('reservations').select('hotel_name,hotel_code,rate_price,arrival,channel,status')
-      .gte('arrival', from).lte('arrival', to).neq('status','canceled');
-    if (code!=='all'){ query = query.eq('hotel_code', code); }
-    const { data, error } = await query;
-    const body=q('#repBody'); if (!body) return; body.innerHTML='';
-    if (error){ body.append(el('tr',{}, el('td',{colspan:'5'}, 'Fehler beim Laden'))); return; }
-    const byHotel=new Map();
-    (data||[]).forEach(r=>{
-      const k=r.hotel_name || r.hotel_code || '—';
-      const o=byHotel.get(k)||{bookings:0,revenue:0,ota:0};
-      o.bookings++; o.revenue+=Number(r.rate_price||0);
-      if ((r.channel||'').toLowerCase()==='ota') o.ota++;
-      byHotel.set(k,o);
-    });
-    if (byHotel.size===0){ body.append(el('tr',{}, el('td',{colspan:'5'}, 'Keine Daten im Zeitraum'))); return; }
-    [...byHotel.entries()].sort((a,b)=>b[1].revenue-a[1].revenue).forEach(([hotel,o])=>{
-      const adr=o.bookings?o.revenue/o.bookings:null;
-      const otaShare = o.bookings? Math.round(o.ota/o.bookings*100):0;
-      body.append(el('tr',{},
-        el('td',{},hotel),
-        el('td',{},String(o.bookings)),
-        el('td',{},EUR.format(o.revenue)),
-        el('td',{}, adr!=null?EUR.format(adr):'—'),
-        el('td',{}, otaShare+'%')
-      ));
-    });
-  }
-  q('#repRun')?.addEventListener('click', runReport);
-  q('#repCsv')?.addEventListener('click', ()=>{
-    document.querySelector('#repCsv')?.addEventListener('click', ()=>{
+// Buttons
+q('#repRun')?.addEventListener('click', runReport);
+
+q('#repCsv')?.addEventListener('click', ()=>{
   const tbody = Array.from(document.querySelectorAll('#repBody tr'));
   const rows = [['Hotel','Buchungen','Umsatz','ADR','Belegungsrate']];
   tbody.forEach(tr=> rows.push([...tr.children].map(td=>td.textContent)));
-  download('report.csv','text/csv;charset=utf-8', rows.map(r=>r.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(',')).join('\n'));
+  download('report.csv','text/csv;charset=utf-8',
+    rows.map(r=>r.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(',')).join('\n')
+  );
 });
 
-document.querySelector('#repXls')?.addEventListener('click', ()=>{
+q('#repXls')?.addEventListener('click', ()=>{
   const tbody = Array.from(document.querySelectorAll('#repBody tr'));
   const rows = [['Hotel','Buchungen','Umsatz','ADR','Belegungsrate']];
   tbody.forEach(tr=> rows.push([...tr.children].map(td=>td.textContent)));
@@ -1146,14 +1098,14 @@ document.querySelector('#repXls')?.addEventListener('click', ()=>{
   download('report.xls','application/vnd.ms-excel', xls);
 });
 
-    document.querySelector('#repPdf')?.addEventListener('click', async ()=>{
+q('#repPdf')?.addEventListener('click', async ()=>{
   const { jsPDF } = window.jspdf || {};
   if (!jsPDF) return alert('PDF-Bibliothek nicht geladen.');
 
   const doc = new jsPDF({ orientation: 'p', unit: 'pt', format: 'a4' });
 
-  const from = document.querySelector('#repFrom')?.value || '';
-  const to   = document.querySelector('#repTo')?.value || '';
+  const from = q('#repFrom')?.value || '';
+  const to   = q('#repTo')?.value || '';
   const title = 'Report';
   const subtitle = `Zeitraum: ${from} – ${to}`;
   const ts = new Date().toLocaleString('de-DE');
@@ -1189,7 +1141,6 @@ document.querySelector('#repXls')?.addEventListener('click', ()=>{
   const revCanvas = document.getElementById('chartRevenue');
   const bokCanvas = document.getElementById('chartBookings');
 
-  // Platz prüfen – ggf. neue Seite
   const addImg = (canvas, labelText) => {
     if (!canvas) return;
     const img = canvas.toDataURL('image/png', 1.0);
@@ -1210,48 +1161,6 @@ document.querySelector('#repXls')?.addEventListener('click', ()=>{
   doc.save('report.pdf');
 });
 
-  /***** Skizze *****/
-  function buildSketch(){
-    const list = q('#sketchStateList');
-    const view = q('#sketchStateView');
-    const back = q('#sketchBack');
-    const label= q('#sketchHotelLabel');
-
-    if (list && view){
-      list.innerHTML = '';
-      list.classList.remove('hidden');
-      view.classList.add('hidden');
-
-      HOTELS.forEach(h=>{
-        const btn = el('button',{class:'btn'}, displayHotel(h));
-        btn.addEventListener('click', ()=>{
-          if (label) label.textContent = displayHotel(h);
-          setSketchImage(SKETCH_IMG_SRC);
-          list.classList.add('hidden');
-          view.classList.remove('hidden');
-        });
-        list.append(btn);
-      });
-
-      if (back){
-        back.onclick = ()=>{ view.classList.add('hidden'); list.classList.remove('hidden'); };
-      }
-      return;
-    }
-
-    // Fallback: einfache Grid-Liste
-    const grid = q('#sketchGrid');
-    if (grid){
-      grid.innerHTML = '';
-      HOTELS.forEach(h=>{
-        grid.append(el('div',{class:'hotel-card'},
-          el('div',{class:'muted'}, h.group),
-          el('div',{}, displayHotel(h)),
-          el('div',{class:'code'}, h.code)
-        ));
-      });
-    }
-  }
 
   /***** EVENTS & INIT *****/
   q('#btnAvail')?.addEventListener('click', async ()=>{
