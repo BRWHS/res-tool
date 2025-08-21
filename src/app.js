@@ -681,6 +681,12 @@
     }
     const cap = q('#imgCatCaption');
     if (cap) cap.textContent = `${cat} – Beispielbild`;
+
+     // ▼ NEU: Platzhalter-Beschreibung unter dem Dropdown
+  const desc = q('#catDesc');
+  if (desc) {
+    desc.textContent = "das Zimmer hat eine größe von mehr oder weniger als 40m², toaster, mikrowelle und einen Balkon mit tollem Ausblick";
+    }
   }
 
   function wizardSet(step){
