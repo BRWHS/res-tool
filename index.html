@@ -443,70 +443,56 @@
   </section>
 
   <!-- Reporting -->
-  <section class="modal" id="modalReporting" role="dialog" aria-labelledby="repTitle" aria-modal="true">
-    <header>
-      <h3 id="repTitle" class="mono">Reporting</h3>
-      <button class="btn" data-close>Schließen</button>
-    </header>
-    <div class="body">
-  <div class="row wrap">
-    <label>Von <input id="repFrom" type="date" class="input"></label>
-    <label>Bis <input id="repTo" type="date" class="input"></label>
-    <label>Hotel
-      <select id="repHotel" class="input theme-select" style="width:260px;"></select>
-    </label>
-    <button class="btn" id="repRun">Aktualisieren</button>
+<section class="modal" id="modalReporting" role="dialog" aria-labelledby="repTitle" aria-modal="true">
+  <header>
+    <h3 id="repTitle" class="mono">Reporting</h3>
+    <button class="btn" data-close>Schließen</button>
+  </header>
+  <div class="body">
+    <div class="row wrap">
+      <label>Von <input id="repFrom" type="date" class="input"></label>
+      <label>Bis <input id="repTo" type="date" class="input"></label>
+      <label>Hotel
+        <select id="repHotel" class="input theme-select" style="width:260px;"></select>
+      </label>
+      <button class="btn" id="repRun">Aktualisieren</button>
 
-    <!-- kompakte Export-Spalte rechts -->
-    <div class="rep-tools">
-      <button class="btn ghost" id="repXls">Export Excel</button>
-      <button class="btn ghost" id="repCsv">Export CSV</button>
-      <button class="btn ghost" id="repPdf">Export PDF</button>
+      <!-- kompakte Export-Spalte rechts -->
+      <div class="rep-tools">
+        <button class="btn ghost" id="repXls">Export Excel</button>
+        <button class="btn ghost" id="repCsv">Export CSV</button>
+        <button class="btn ghost" id="repPdf">Export PDF</button>
+      </div>
+    </div>
+
+    <!-- kompakte, gleich hohe Charts -->
+    <div class="rep-charts">
+      <div class="chart-card">
+        <h4 class="mono">Umsatz pro Hotel</h4>
+        <div class="chart-box"><canvas id="chartRevenue"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h4 class="mono">Buchungen pro Hotel</h4>
+        <div class="chart-box"><canvas id="chartBookings"></canvas></div>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table class="resv">
+        <thead>
+          <tr>
+            <th>Hotel</th>
+            <th>Buchungen</th>
+            <th>Umsatz</th>
+            <th>ADR</th>
+            <th>Belegungsrate</th>
+          </tr>
+        </thead>
+        <tbody id="repBody"></tbody>
+      </table>
     </div>
   </div>
-
-  <!-- kompakte, gleich hohe Charts -->
-  <div class="rep-charts">
-    <div class="chart-card">
-      <h4 class="mono">Umsatz pro Hotel</h4>
-      <div class="chart-box"><canvas id="chartRevenue"></canvas></div>
-    </div>
-    <div class="chart-card">
-      <h4 class="mono">Buchungen pro Hotel</h4>
-      <div class="chart-box"><canvas id="chartBookings"></canvas></div>
-    </div>
-  </div>
-
-  <div class="table-wrap">
-    <table class="resv">
-      <thead>
-        <tr>
-          <th>Hotel</th>
-          <th>Buchungen</th>
-          <th>Umsatz</th>
-          <th>ADR</th>
-          <th>Belegungsrate</th>
-        </tr>
-      </thead>
-      <tbody id="repBody"></tbody>
-    </table>
-  </div>
-</div>
-
-    <div class="box" style="margin-top:12px">
-  <h4 class="mono" style="margin:0 0 8px">Diagramme</h4>
-  <div class="grid2">
-    <div>
-      <div class="mono muted tiny" style="margin-bottom:6px">Umsatz pro Hotel</div>
-      <canvas id="chartRevenue" height="140"></canvas>
-    </div>
-    <div>
-      <div class="mono muted tiny" style="margin-bottom:6px">Buchungen pro Hotel</div>
-      <canvas id="chartBookings" height="140"></canvas>
-    </div>
-  </div>
-</div>
-  </section>
+</section>
 
   <!-- Einstellungen -->
   <section class="modal" id="modalSettings" role="dialog" aria-labelledby="setTitle" aria-modal="true">
