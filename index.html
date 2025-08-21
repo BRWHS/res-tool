@@ -449,33 +449,50 @@
       <button class="btn" data-close>Schließen</button>
     </header>
     <div class="body">
-      <div class="row wrap">
-        <label>Von <input id="repFrom" type="date" class="input"></label>
-        <label>Bis <input id="repTo" type="date" class="input"></label>
-        <label>Hotel
-          <select id="repHotel" class="input theme-select" style="width:260px;"></select>
-        </label>
-        <button class="btn" id="repRun">Aktualisieren</button>
-        <div style="flex:1"></div>
-        <button class="btn ghost" id="repCsv">Export CSV</button>
-        <button class="btn ghost" id="repXls">Export Excel</button>
-        <button class="btn ghost" id="repPdf">Export PDF</button>
-      </div>
-      <div class="table-wrap">
-        <table class="resv">
-          <thead>
-            <tr>
-              <th>Hotel</th>
-              <th>Buchungen</th>
-              <th>Umsatz</th>
-              <th>ADR</th>
-              <th>Belegungsrate</th>
-          </tr>
-        </thead>
-          <tbody id="repBody"></tbody>
-        </table>
-      </div>
+  <div class="row wrap">
+    <label>Von <input id="repFrom" type="date" class="input"></label>
+    <label>Bis <input id="repTo" type="date" class="input"></label>
+    <label>Hotel
+      <select id="repHotel" class="input theme-select" style="width:260px;"></select>
+    </label>
+    <button class="btn" id="repRun">Aktualisieren</button>
+
+    <!-- kompakte Export-Spalte rechts -->
+    <div class="rep-tools">
+      <button class="btn ghost" id="repXls">Export Excel</button>
+      <button class="btn ghost" id="repCsv">Export CSV</button>
+      <button class="btn ghost" id="repPdf">Export PDF</button>
     </div>
+  </div>
+
+  <!-- kompakte, gleich hohe Charts -->
+  <div class="rep-charts">
+    <div class="chart-card">
+      <h4 class="mono">Umsatz pro Hotel</h4>
+      <div class="chart-box"><canvas id="chartRevenue"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h4 class="mono">Buchungen pro Hotel</h4>
+      <div class="chart-box"><canvas id="chartBookings"></canvas></div>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table class="resv">
+      <thead>
+        <tr>
+          <th>Hotel</th>
+          <th>Buchungen</th>
+          <th>Umsatz</th>
+          <th>ADR</th>
+          <th>Belegungsrate</th>
+        </tr>
+      </thead>
+      <tbody id="repBody"></tbody>
+    </table>
+  </div>
+</div>
+
     <div class="box" style="margin-top:12px">
   <h4 class="mono" style="margin:0 0 8px">Diagramme</h4>
   <div class="grid2">
@@ -531,6 +548,9 @@
   </section>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.5/dist/umd/supabase.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
   <script src="/src/app.js"></script>
 </body>
 </html>
