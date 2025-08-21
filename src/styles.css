@@ -364,6 +364,17 @@ table.matrix{width:100%;border-collapse:collapse}
   vertical-align:middle;
 }
 
+/* New Reservation Modal Logo */
+.newres-logo {
+  display:inline-block;
+  width:28px; height:28px;
+  margin-right:10px;
+  border-radius:6px;
+  background:linear-gradient(135deg, rgba(0,255,255,.85), rgba(0,255,255,.25));
+  box-shadow:0 0 10px rgba(0,255,255,.35), inset 0 0 8px rgba(0,255,255,.25);
+  vertical-align:middle;
+}
+
 /* Reporting Hotel Label Fix */
 #modalReporting .row.wrap label {
   display:flex;
