@@ -234,30 +234,44 @@
   </div>
 </div>
 
-      <!-- STEP 2 -->
-<div class="wpage narrow hidden" id="w2">
-  <div class="s2-grid">
-    <!-- LINKS -->
-    <div>
-      <label>Kategorie
-        <select id="newCat" class="input theme-select" style="width:100%"></select>
+     <!-- STEP 2 -->
+<div class="wpage narrow" id="w2">
+  <div class="s2-top">
+    <!-- LINKS: Kategorie + Fakten -->
+    <div class="s2-left">
+      <label class="s2-label">Kategorie
+        <select id="newCat" class="input theme-select"></select>
       </label>
-      <div class="box" style="margin-top:10px">
-        <div class="mono muted tiny" style="margin-bottom:4px">Beschreibung</div>
-        <div id="catDesc" class="tiny">
-          das Zimmer hat eine größe von mehr oder weniger als 40m², Toaster, Mikrowelle und Balkon mit Ausblick
+
+      <div class="box s2-facts">
+        <div class="mono muted tiny" style="margin-bottom:4px">Fakten (Placeholder)</div>
+        <div class="tiny">
+          Max Personen: 2<br/>
+          Haustiere erlaubt: Nein<br/>
+          Check In: 15:00<br/>
+          Check Out: 11:00
         </div>
       </div>
     </div>
 
-    <!-- RECHTS -->
-    <div class="box" style="padding:8px;max-width:320px;justify-self:end">
-      <img id="imgCatPreview" alt="Zimmer/Kategorie"
-           style="width:100%;height:350px;object-fit:cover;border-radius:12px;display:block"/>
+    <!-- RECHTS: Beschreibung (hoch) -->
+    <div class="box s2-desc">
+      <div class="mono muted tiny" style="margin-bottom:4px">Beschreibung</div>
+      <div id="catDesc" class="tiny">
+        das Zimmer hat eine größe von mehr oder weniger als 40m², Toaster, Mikrowelle und Balkon mit Ausblick.
+        Dies ist ein Placeholder‑Text und soll einen visuellen Effekt erzeugen. Die Beschreibung soll dem Agent
+        alle Infos zu der Zimmerkategorie liefern, um möglichst präziser arbeiten zu können.
+      </div>
     </div>
   </div>
-</div>
 
+  <!-- GALERIE: 3 Bilder (Placeholder) -->
+  <div class="s2-gallery">
+    <div class="imgcard"><img id="imgCatPreview"  alt="Kategorie Bild 1" /></div>
+    <div class="imgcard"><img id="imgCatPreview2" alt="Kategorie Bild 2" /></div>
+    <div class="imgcard"><img id="imgCatPreview3" alt="Kategorie Bild 3" /></div>
+  </div>
+</div>
 
        <!-- STEP 3 -->
       <div class="wpage narrow hidden" id="w3">
