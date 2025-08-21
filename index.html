@@ -169,7 +169,7 @@
         <div class="wstep" data-step="4"><span>4</span><b>Gast & Zahlung</b></div>
       </div>
 
-     <!-- STEP 1 -->
+  <!-- STEP 1 -->
 <div class="wpage compact" id="w1">
   <div class="grid-compact-2" style="align-items:start">
     <!-- Linke Spalte: Aufenthalts- & Gästedaten -->
@@ -216,17 +216,23 @@
     <!-- Rechte Spalte: Hotelbild + Kontaktdaten -->
     <div class="preview-col">
       <div class="imgcard hotel">
-        <img id="hotelImg" alt="Hotelbild"/>
+        <img
+          id="hotelImg"
+          src="/assets/hotel-placeholder.png"
+          alt="Hotelbild"
+          style="width:100%;height:360px;object-fit:cover;border-radius:10px;display:block"
+          onerror="this.onerror=null;this.src='/assets/hotel-placeholder.png';"
+        />
       </div>
 
       <div class="box" style="margin-top:12px">
         <h4 class="mono section" style="margin:0 0 6px">Kontaktdaten</h4>
         <div class="grid-compact">
-          <label>E‑Mail
-            <input id="newEmail" class="input" placeholder="max@example.com"/>
-          </label>
-          <label>Telefon
+          <label style="grid-column:1 / -1">Telefon
             <input id="newPhone" class="input" placeholder="+49 …"/>
+          </label>
+          <label style="grid-column:1 / -1">E‑Mail
+            <input id="newEmail" class="input" placeholder="max@example.com"/>
           </label>
         </div>
       </div>
