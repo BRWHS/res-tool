@@ -65,13 +65,6 @@ select.input, select.theme-select{
 select.input option, select.theme-select option{background:var(--panel)!important;color:var(--text)!important}
 select::-ms-expand{display:none}
 
-/* Tiny helper */
-.hidden{display:none!important}
-.right{display:flex;justify-content:flex-end}
-.muted{color:var(--muted)}
-.section{margin:10px 0 6px}
-
-/* Cards */
 .card{background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid rgba(0,255,255,.15);border-radius:var(--radius);box-shadow:var(--shadow);overflow:clip}
 .card .content{padding:16px}
 .card h3{margin:0;font-size:16px;color:var(--accent-2);letter-spacing:.4px}
@@ -97,12 +90,11 @@ table.resv{width:100%;border-collapse:collapse}
 .dot-active{background:var(--ok)} .dot-done{background:var(--warn)} .dot-canceled{background:var(--danger)}
 .row{cursor:pointer}.row:hover{background:rgba(0,255,255,.04)}
 .pagination{display:flex;gap:8px;align-items:center;justify-content:flex-end;margin-top:10px}
-
-/* Simple grids */
+.muted{color:var(--muted)} .hidden{display:none!important}
 .grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-.grid-compact{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-.grid-compact-2{display:grid;grid-template-columns:2fr 1fr;gap:16px;align-items:flex-start}
-.form-col{min-width:0}.preview-col{min-width:240px}
+.right{display:flex;justify-content:flex-end}
+.box{padding:12px;border:1px solid rgba(0,255,255,.18);border-radius:12px;background:rgba(0,255,255,.04);margin-top:8px}
+.section{margin:10px 0 6px}
 
 /* Wizard */
 .wizard-steps{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
@@ -111,7 +103,7 @@ table.resv{width:100%;border-collapse:collapse}
 .wstep.active{background:linear-gradient(180deg,rgba(0,255,255,.15),rgba(0,255,255,.05));border-color:rgba(0,255,255,.4)}
 .wizard-actions{display:flex;gap:8px;align-items:center;margin-top:10px}
 
-/* Summary */
+/* Summary smaller */
 .summary{font-size:12px}
 .summary h4{margin:0 0 6px;color:var(--accent-2)}
 .summary .line{display:flex;justify-content:space-between;gap:8px;font-size:12px;border-bottom:1px dashed rgba(0,255,255,.12);padding:4px 0}
@@ -150,16 +142,23 @@ table.matrix{width:100%;border-collapse:collapse}
 .pill{display:inline-block;padding:4px 8px;border-radius:999px;border:1px solid rgba(0,255,255,.25);background:rgba(0,255,255,.06);font-weight:700;font-size:11px}
 
 /* Availability — Hover Tooltip über Prozent-Pill */
-.matrix .pill{cursor:help}
-.avail-tt{
-  position:fixed;z-index:9999;background:var(--panel-2);
-  border:1px solid rgba(0,255,255,.25);border-radius:10px;padding:8px 10px;
-  box-shadow:var(--shadow);font-size:12px;pointer-events:none;min-width:180px
-}
-.avail-tt .tt-title{font-weight:700;color:var(--accent-2);margin-bottom:4px}
-.avail-tt .tt-line{display:flex;justify-content:space-between;gap:12px}
+.matrix .pill { cursor: help; }
 
-/* Status chips */
+.avail-tt{
+  position: fixed; z-index: 9999;
+  background: var(--panel-2);
+  border:1px solid rgba(0,255,255,.25);
+  border-radius:10px;
+  padding:8px 10px;
+  box-shadow: var(--shadow);
+  font-size:12px;
+  pointer-events:none;
+  min-width:180px;
+}
+.avail-tt .tt-title{ font-weight:700; color:var(--accent-2); margin-bottom:4px; }
+.avail-tt .tt-line{ display:flex; justify-content:space-between; gap:12px; }
+
+/* Status pills for connections */
 .pill.lvl-0{ color:#35e08a; border-color:rgba(53,224,138,.45); background:rgba(53,224,138,.12); }
 .pill.lvl-1{ color:#ff4d6d; border-color:rgba(255,77,109,.55); background:rgba(255,77,109,.10); }
 .pill.lvl-2{ color:#ffd166; border-color:rgba(255,209,102,.55); background:rgba(255,209,102,.10); }
@@ -175,22 +174,6 @@ table.matrix{width:100%;border-collapse:collapse}
 .modal header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid rgba(0,255,255,.18)}
 .modal .body{padding:16px}
 
-/* Logos */
-.rep-logo,
-.settings-logo,
-.newres-logo{
-  display:inline-grid;place-items:center;
-  width:28px;height:28px;margin-right:10px;vertical-align:middle;
-  background:linear-gradient(135deg, rgba(0,255,255,.85), rgba(0,255,255,.25));
-  box-shadow:0 0 10px rgba(0,255,255,.35), inset 0 0 8px rgba(0,255,255,.25);
-}
-.rep-logo{border-radius:50%}
-.rep-logo::before{content:"⟲";color:var(--accent);font-weight:800;text-shadow:0 0 8px rgba(0,255,255,.6)}
-.settings-logo{border-radius:50%}
-.settings-logo::before{content:"⚙";color:var(--accent);font-weight:800;text-shadow:0 0 8px rgba(0,255,255,.6)}
-.newres-logo{border-radius:6px;font-weight:800;color:var(--accent);font-family:"JetBrains Mono",monospace;font-size:18px;line-height:1;text-shadow:0 0 8px rgba(0,255,255,.6)}
-.newres-logo::before{content:"+"}
-
 /* Credit Card UI */
 .cc-wrap{display:grid;grid-template-columns:320px 1fr;gap:14px;align-items:start}
 .cc-visual{
@@ -205,11 +188,10 @@ table.matrix{width:100%;border-collapse:collapse}
 .cc-holder{position:absolute;left:18px;bottom:18px;font-weight:700}
 .cc-exp{position:absolute;right:18px;bottom:18px;font-weight:700}
 
-/* Image helpers */
-.imgcard{width:100%;aspect-ratio:4/3;border:1px solid rgba(0,255,255,.18);border-radius:12px;background:rgba(0,255,255,.04);display:grid;place-items:center;overflow:hidden}
-.imgcard img{width:100%;height:100%;object-fit:cover}
-.imgcard.hotel{max-width:420px;padding:10px}
-.imgcard.hotel img{height:320px;border-radius:10px}
+/* Hotelskizze */
+.hotel-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+.hotel-card{padding:12px;border:1px solid rgba(0,255,255,.18);border-radius:12px;background:rgba(0,255,255,.04)}
+.hotel-card .code{font-family:"JetBrains Mono",monospace;color:var(--accent-2);font-weight:700}
 
 /* Right quick links */
 .quick-links{position:fixed;right:16px;top:92px;display:flex;flex-direction:column;gap:8px;z-index:70}
@@ -225,5 +207,232 @@ table.matrix{width:100%;border-collapse:collapse}
   .quick-links{right:10px;top:auto;bottom:16px;flex-direction:row}
   .grid2{grid-template-columns:1fr}
   .cc-wrap{grid-template-columns:1fr}
-  .grid-compact-2{grid-template-columns:1fr}
 }
+
+/* Image previews / placeholders */
+.img-preview{ display:flex;align-items:center;justify-content:center; }
+.img-preview img{
+  width:100%;max-width:520px;height:auto;border-radius:14px;
+  border:1px solid rgba(0,255,255,.15);
+  box-shadow:0 8px 28px rgba(0,255,255,.12);
+  background:rgba(0,255,255,.03)
+}
+
+/* Generic img card */
+.imgcard{
+  width:100%; aspect-ratio: 4 / 3;
+  border:1px solid rgba(0,255,255,.18);
+  border-radius:12px;
+  background:rgba(0,255,255,.04);
+  display:grid; place-items:center; overflow:hidden;
+}
+.imgcard img{ width:100%; height:100%; object-fit:cover }
+
+/* Wide variant */
+.imgcard.wide{ aspect-ratio: 16 / 9; }
+
+/* Hotelskizze buttons */
+#sketchStateList .btn{ margin:4px; }
+
+.image-box{
+  display:grid; place-items:center;
+  min-height:260px; border:1px solid rgba(0,255,255,.18);
+  border-radius:12px; background:rgba(0,255,255,.04);
+}
+.image-box img{ max-width:100%; max-height:240px; border-radius:10px; opacity:.95 }
+
+.tiny{ font-size:12px; }
+.rate-policy{ margin-top:10px; }
+
+/* Two-column + preview */
+.grid-compact-2{
+  display:grid;
+  grid-template-columns: 2fr 1fr;
+  gap:16px;
+  align-items: flex-start;
+}
+.form-col { min-width: 0; }
+.preview-col { min-width: 240px; }
+
+@media (max-width: 980px){
+  .grid-compact-2{ grid-template-columns: 1fr; }
+}
+
+/* Inner form grid */
+.grid-compact{
+  display:grid;
+  grid-template-columns: repeat(2, minmax(0,1fr));
+  gap:10px;
+}
+@media (max-width: 720px){
+  .grid-compact{ grid-template-columns: 1fr; }
+}
+
+/* Hotel image card */
+.imgcard.hotel{
+  width: 100%;
+  max-width: 420px;
+  border: 1px solid rgba(0,255,255,.18);
+  border-radius: 14px;
+  background: rgba(0,255,255,.04);
+  padding: 10px;
+}
+.imgcard.hotel img{
+  width: 100%;
+  display: block;
+  border-radius: 10px;
+
+/* Hotel image height ~ doppelt */
+.imgcard.hotel { padding: 10px; }
+.imgcard.hotel img{
+  width: 100%;
+  height: 320px;           /* vorher nicht fix – jetzt ~doppelte Höhe */
+  object-fit: cover;
+  display: block;
+  border-radius: 10px;
+}
+
+/* etwas engere Abstände im kompakten Formular-Grid */
+.grid-compact { gap: 8px; }
+}
+
+/* Step 2 – Layout kompakt */
+.s2-top{
+  display:grid;
+  grid-template-columns: 1fr 2fr; /* links Dropdown+Fakten, rechts große Beschreibung */
+  gap:16px;
+  align-items:start;
+}
+.s2-label{ display:block; min-width:240px }
+.s2-desc{ min-height: 150px; }       /* ~3x Dropdownhöhe */
+.s2-facts{ margin-top:10px; }
+
+.s2-gallery{
+  display:grid;
+  grid-template-columns: repeat(3, minmax(0,1fr));
+  gap:10px;
+  margin-top:14px;
+}
+.s2-gallery .imgcard{ aspect-ratio: 4 / 3; } /* gleichmäßig, kompakt */
+
+@media (max-width: 820px){
+  .s2-top{ grid-template-columns: 1fr; }
+}
+/* Reporting Layout */
+.rep-tools{
+  margin-left:auto;
+  display:flex; flex-direction:column;
+  gap:6px;
+}
+.rep-tools .btn{ width:160px; padding:8px 10px; }
+
+/* Charts gleichmäßig & kompakt */
+.rep-charts{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:12px;
+  margin:10px 0 6px;
+}
+.chart-card{
+  border:1px solid rgba(0,255,255,.18);
+  border-radius:12px;
+  background:rgba(0,255,255,.04);
+  padding:10px;
+  height:260px;              /* gleich hohe Kacheln */
+  display:flex; flex-direction:column;
+}
+.chart-card h4{
+  margin:0 0 6px;
+  font-size:13px; color:var(--accent-2);
+}
+.chart-box{ flex:1; min-height:0; }
+.chart-box canvas{ width:100% !important; height:100% !important; }
+
+/* kleine Screens: Charts untereinander */
+@media (max-width: 820px){
+  .rep-charts{ grid-template-columns:1fr; }
+  .rep-tools .btn{ width:100%; }
+}
+/* Reporting Modal Logo */
+.rep-logo {
+  display:inline-block;
+  width:28px; height:28px;
+  margin-right:10px;
+  border-radius:50%;
+  background:conic-gradient(from 180deg, rgba(0,255,255,.9), rgba(0,255,255,.25));
+  box-shadow:0 0 10px rgba(0,255,255,.35), inset 0 0 8px rgba(0,255,255,.2);
+  vertical-align:middle;
+}
+
+/* New Reservation Modal Logo */
+.newres-logo {
+  display:inline-grid;
+  place-items:center;
+  width:28px; height:28px;
+  margin-right:10px;
+  border-radius:6px;
+  background:linear-gradient(135deg, rgba(0,255,255,.85), rgba(0,255,255,.25));
+  box-shadow:0 0 10px rgba(0,255,255,.35), inset 0 0 8px rgba(0,255,255,.25);
+  vertical-align:middle;
+  font-weight:800;
+  color:var(--accent);
+  font-family:"JetBrains Mono", monospace;
+  font-size:18px;
+  line-height:1;
+  text-shadow:0 0 8px rgba(0,255,255,.6);
+}
+.newres-logo::before {
+  content:"+";
+}
+
+
+/* Reporting Hotel Label Fix */
+#modalReporting .row.wrap label {
+  display:flex;
+  flex-direction:column;
+  font-size:13px;
+}
+#modalReporting .row.wrap label input,
+#modalReporting .row.wrap label select {
+  margin-top:4px;
+}
+/* Settings (Einstellungen) – Zahnrad-Logo */
+.settings-logo{
+  display:inline-grid; place-items:center;
+  width:28px; height:28px; margin-right:10px;
+  border-radius:50%;
+  background:linear-gradient(135deg, rgba(0,255,255,.85), rgba(0,255,255,.25));
+  box-shadow:0 0 10px rgba(0,255,255,.35), inset 0 0 8px rgba(0,255,255,.25);
+  vertical-align:middle;
+  text-shadow:0 0 8px rgba(0,255,255,.6);
+  color:var(--accent);
+  font-size:16px; font-weight:800; line-height:1;
+}
+.settings-logo::before{ content:"⚙"; }
+
+/* Settings form layout */
+.settings-grid{
+  display:grid; gap:14px;
+  grid-template-columns: minmax(220px, 1fr) minmax(220px, 1fr);
+}
+.settings-row{ display:flex; align-items:center; gap:10px; }
+.settings-row label{ min-width:160px; opacity:.85; }
+
+/* Hue slider look (keine Sonderfarben – Theme übernimmt) */
+input[type="range"].hue{
+  width: 220px;
+}
+
+/* Simple table for Log Activity */
+.table{
+  width:100%; border-collapse:collapse; font-size: 13px;
+}
+.table th, .table td{
+  padding:8px 10px; border-bottom:1px solid rgba(255,255,255,.06);
+}
+.table th{ text-align:left; opacity:.8; }
+.filters{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px; }
+.filters > *{ min-width:160px; }
+
+
+
