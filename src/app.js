@@ -922,6 +922,52 @@
   q('#availRun')?.addEventListener('click', buildMatrix);
 
   /***** Reporting *****/
+  
+  // --- Reporting: Chart State ---
+let chartRevenue = null;
+let chartBookings = null;
+
+// zuletzt berechnete Zusammenfassung (für PDF-Export)
+let reportSummary = {
+  labels: [],
+  bookings: [],
+  revenue: [],
+  adr: [],
+  occPct: [] // Belegungsrate
+};
+
+// Charts zeichnen/aktualisieren
+function updateReportCharts() {
+  const labels   = reportSummary.labels;
+  const revenue  = reportSummary.revenue;
+  const bookings = reportSummary.bookings;
+
+  // Revenue-Bar
+  const ctxR = document.getElementById('chartRevenue')?.getContext('2d');
+  if (ctxR) {
+    if (chartRevenue) chartRevenue.destroy();
+    chartRevenue = new Chart(ctxR, {
+      type: 'bar',
+      data: { labels, datasets: [{ label: 'Umsatz (€)', data: revenue }] },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true } }
+      }
+    });
+  }
+  
+  // Bookings-Pie
+  const ctxB = document.getElementById('chartBookings')?.getContext('2d');
+  if (ctxB) {
+    if (chartBookings) chartBookings.destroy();
+    chartBookings = new Chart(ctxB, {
+      type: 'pie',
+      data: { labels, datasets: [{ label: 'Buchungen', data: bookings }] },
+      options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+    });
+  }
+}
   function setDefaultReportRange(){
     const to=soD(new Date()); const from=soD(new Date(Date.now()-29*86400000));
     q('#repFrom') && (q('#repFrom').value=isoDate(from));
@@ -934,6 +980,119 @@
     HOTELS.forEach(h=> sel.append(el('option',{value:h.code}, displayHotel(h))));
   }
   async function runReport(){
+  const from = document.querySelector('#repFrom')?.value;
+  const to   = document.querySelector('#repTo')?.value;
+  const code = document.querySelector('#repHotel')?.value || 'all';
+  if (!from || !to) return;
+
+  const body = document.querySelector('#repBody');
+  if (!body) return;
+  body.innerHTML = '';
+
+  // 1) Reservierungen laden (für Buchungen, Umsatz, ADR)
+  let qRes = supabase.from('reservations')
+    .select('hotel_name,hotel_code,rate_price,arrival,departure,status,channel,created_at')
+    .gte('arrival', from).lte('arrival', to)
+    .neq('status','canceled');
+  if (code !== 'all') qRes = qRes.eq('hotel_code', code);
+  const { data: resRows, error: resErr } = await qRes;
+
+  if (resErr){
+    body.append(el('tr',{}, el('td',{colspan:'5'}, 'Fehler beim Laden (Reservierungen)')));
+    return;
+  }
+
+  // 2) Availability laden (für Belegungsrate)
+  let qAv = supabase.from('availability')
+    .select('date,hotel_code,capacity,booked')
+    .gte('date', from).lte('date', to);
+  if (code !== 'all') qAv = qAv.eq('hotel_code', code);
+  const { data: avRows, error: avErr } = await qAv;
+  if (avErr){
+    body.append(el('tr',{}, el('td',{colspan:'5'}, 'Fehler beim Laden (Availability)')));
+    return;
+  }
+
+  // 3) Maps je Hotel
+  const byHotel = new Map(); // {bookings, revenue, nights, adr? -> später}
+  (resRows||[]).forEach(r=>{
+    const key = r.hotel_code || r.hotel_name || '—';
+    const o = byHotel.get(key) || { hotel_code: r.hotel_code, hotel_name: r.hotel_name || r.hotel_code, bookings:0, revenue:0, nights:0 };
+    o.bookings += 1;
+    o.revenue  += Number(r.rate_price||0);
+    // für ADR (hier pro Buchung 1 Nacht, wie bestehende Logik in Reporting)
+    // wenn du ADR = Umsatz/Nächte möchtest, musst du hier Nächte berechnen
+    byHotel.set(key, o);
+  });
+
+  // 4) Belegungsrate je Hotel aus Availability
+  //    -> Ø Prozent über alle Tage im Zeitraum (min 0..100, capacity>0)
+  const occMap = new Map(); // key -> { sumPct, count }
+  (avRows||[]).forEach(a=>{
+    const cap = Number(a.capacity||0), b = Number(a.booked||0);
+    if (cap > 0){
+      const pct = Math.min(100, Math.round((b / cap) * 100));
+      const k = a.hotel_code || '—';
+      const o = occMap.get(k) || { sum:0, n:0 };
+      o.sum += pct; o.n += 1;
+      occMap.set(k, o);
+    }
+  });
+
+  // 5) Zeilen bauen + Summary für Charts/PDF
+  // labels = schöner Hotelname
+  const labels   = [];
+  const bookings = [];
+  const revenue  = [];
+  const adrArr   = [];
+  const occPct   = [];
+
+  const rows = [...byHotel.entries()].map(([key, o])=>{
+    // Display-Name:
+    const h = HOTELS.find(x=>x.code===o.hotel_code);
+    const name = h ? `${h.group} - ${ (h.name||'').replace(/^.*? /,'') }` : (o.hotel_name || key);
+
+    const adr = o.bookings ? (o.revenue / o.bookings) : null;
+    // Belegungsrate:
+    const occObj = occMap.get(o.hotel_code || key);
+    const occ = (occObj && occObj.n>0) ? Math.round(occObj.sum / occObj.n) : null;
+
+    labels.push(name);
+    bookings.push(o.bookings);
+    revenue.push(Math.round(o.revenue)); // für Balken
+    adrArr.push(adr);
+    occPct.push(occ);
+
+    return { name, bookings:o.bookings, revenue:o.revenue, adr, occ };
+  });
+
+  if (rows.length===0){
+    body.append(el('tr',{}, el('td',{colspan:'5'}, 'Keine Daten im Zeitraum')));
+    // Charts leeren
+    reportSummary = { labels:[], bookings:[], revenue:[], adr:[], occPct:[] };
+    updateReportCharts();
+    return;
+  }
+
+  // Sortierung: nach Umsatz absteigend
+  rows.sort((a,b)=> b.revenue - a.revenue);
+
+  // Tabelle rendern
+  rows.forEach(r=>{
+    body.append(el('tr',{},
+      el('td',{}, r.name),
+      el('td',{}, String(r.bookings)),
+      el('td',{}, EUR.format(r.revenue)),
+      el('td',{}, r.adr!=null ? EUR.format(r.adr) : '—'),
+      el('td',{}, r.occ!=null ? (r.occ + '%') : '—')
+    ));
+  });
+
+  // Chart-Daten speichern & Charts aktualisieren
+  reportSummary = { labels, bookings, revenue, adr: adrArr, occPct };
+  updateReportCharts();
+}
+
     const from=q('#repFrom')?.value, to=q('#repTo')?.value, code=q('#repHotel')?.value || 'all';
     if (!from || !to){ return; }
     let query = supabase.from('reservations').select('hotel_name,hotel_code,rate_price,arrival,channel,status')
@@ -965,23 +1124,91 @@
   }
   q('#repRun')?.addEventListener('click', runReport);
   q('#repCsv')?.addEventListener('click', ()=>{
-    const tbody = qa('#repBody tr'); const rows = [['Hotel','Buchungen','Umsatz','ADR','OTA-Anteil']];
-    tbody.forEach(tr=> rows.push([...tr.children].map(td=>td.textContent)));
-    download('report.csv','text/csv;charset=utf-8', rows.map(r=>r.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(',')).join('\n'));
+    document.querySelector('#repCsv')?.addEventListener('click', ()=>{
+  const tbody = Array.from(document.querySelectorAll('#repBody tr'));
+  const rows = [['Hotel','Buchungen','Umsatz','ADR','Belegungsrate']];
+  tbody.forEach(tr=> rows.push([...tr.children].map(td=>td.textContent)));
+  download('report.csv','text/csv;charset=utf-8', rows.map(r=>r.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(',')).join('\n'));
+});
+
+document.querySelector('#repXls')?.addEventListener('click', ()=>{
+  const tbody = Array.from(document.querySelectorAll('#repBody tr'));
+  const rows = [['Hotel','Buchungen','Umsatz','ADR','Belegungsrate']];
+  tbody.forEach(tr=> rows.push([...tr.children].map(td=>td.textContent)));
+  const header=`<?xml version="1.0"?>
+  <Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+    xmlns:o="urn:schemas-microsoft-com:office:office"
+    xmlns:x="urn:schemas-microsoft-com:office:excel"
+    xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+    <Worksheet ss:Name="Report"><Table>`;
+  const rowsXml = rows.map(r=>`<Row>`+r.map(c=>`<Cell><Data ss:Type="String">${String(c??'').replace(/&/g,'&amp;').replace(/</g,'&lt;')}</Data></Cell>`).join('')+`</Row>`).join('');
+  const xls = header+rowsXml+`</Table></Worksheet></Workbook>`;
+  download('report.xls','application/vnd.ms-excel', xls);
+});
+
+    document.querySelector('#repPdf')?.addEventListener('click', async ()=>{
+  const { jsPDF } = window.jspdf || {};
+  if (!jsPDF) return alert('PDF-Bibliothek nicht geladen.');
+
+  const doc = new jsPDF({ orientation: 'p', unit: 'pt', format: 'a4' });
+
+  const from = document.querySelector('#repFrom')?.value || '';
+  const to   = document.querySelector('#repTo')?.value || '';
+  const title = 'Report';
+  const subtitle = `Zeitraum: ${from} – ${to}`;
+  const ts = new Date().toLocaleString('de-DE');
+
+  // Header
+  doc.setFont('helvetica','bold'); doc.setFontSize(16);
+  doc.text(title, 40, 40);
+  doc.setFont('helvetica','normal'); doc.setFontSize(11);
+  doc.text(subtitle, 40, 60);
+  doc.setFontSize(9);
+  doc.text(`Erstellt: ${ts}`, 40, 76);
+
+  // Tabelle aus reportSummary
+  const head = [['Hotel','Buchungen','Umsatz','ADR','Belegungsrate']];
+  const body = reportSummary.labels.map((label, i)=>[
+    label,
+    String(reportSummary.bookings[i] ?? ''),
+    (reportSummary.revenue[i]!=null ? EUR.format(reportSummary.revenue[i]) : '—'),
+    (reportSummary.adr[i]!=null ? EUR.format(reportSummary.adr[i]) : '—'),
+    (reportSummary.occPct[i]!=null ? (reportSummary.occPct[i] + '%') : '—')
+  ]);
+
+  doc.autoTable({
+    head, body,
+    startY: 96,
+    styles: { font: 'helvetica', fontSize: 9, cellPadding: 6 },
+    headStyles: { fillColor: [0, 180, 180] }
   });
-  q('#repXls')?.addEventListener('click', ()=>{
-    const tbody = qa('#repBody tr'); const rows = [['Hotel','Buchungen','Umsatz','ADR','OTA-Anteil']];
-    tbody.forEach(tr=> rows.push([...tr.children].map(td=>td.textContent)));
-    const header=`<?xml version="1.0"?>
-    <Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
-      xmlns:o="urn:schemas-microsoft-com:office:office"
-      xmlns:x="urn:schemas-microsoft-com:office:excel"
-      xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
-      <Worksheet ss:Name="Report"><Table>`;
-    const rowsXml = rows.map(r=>`<Row>`+r.map(c=>`<Cell><Data ss:Type="String">${String(c??'').replace(/&/g,'&amp;').replace(/</g,'&lt;')}</Data></Cell>`).join('')+`</Row>`).join('');
-    const xls = header+rowsXml+`</Table></Worksheet></Workbook>`;
-    download('report.xls','application/vnd.ms-excel', xls);
-  });
+
+  let y = doc.lastAutoTable?.finalY || 96;
+
+  // Charts als Bilder
+  const revCanvas = document.getElementById('chartRevenue');
+  const bokCanvas = document.getElementById('chartBookings');
+
+  // Platz prüfen – ggf. neue Seite
+  const addImg = (canvas, labelText) => {
+    if (!canvas) return;
+    const img = canvas.toDataURL('image/png', 1.0);
+    const maxW = 520, w = maxW, h = (canvas.height/canvas.width)*w;
+    if (y + 40 + h > doc.internal.pageSize.getHeight() - 40){
+      doc.addPage(); y = 40;
+    } else {
+      y += 20;
+    }
+    doc.setFont('helvetica','bold'); doc.setFontSize(11);
+    doc.text(labelText, 40, y); y += 10;
+    doc.addImage(img, 'PNG', 40, y, w, h); y += h;
+  };
+
+  addImg(revCanvas, 'Umsatz pro Hotel');
+  addImg(bokCanvas, 'Buchungen pro Hotel');
+
+  doc.save('report.pdf');
+});
 
   /***** Skizze *****/
   function buildSketch(){
