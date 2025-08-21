@@ -301,5 +301,40 @@ table.matrix{width:100%;border-collapse:collapse}
 @media (max-width: 820px){
   .s2-top{ grid-template-columns: 1fr; }
 }
+/* Reporting Layout */
+.rep-tools{
+  margin-left:auto;
+  display:flex; flex-direction:column;
+  gap:6px;
+}
+.rep-tools .btn{ width:160px; padding:8px 10px; }
+
+/* Charts gleichmäßig & kompakt */
+.rep-charts{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:12px;
+  margin:10px 0 6px;
+}
+.chart-card{
+  border:1px solid rgba(0,255,255,.18);
+  border-radius:12px;
+  background:rgba(0,255,255,.04);
+  padding:10px;
+  height:260px;              /* gleich hohe Kacheln */
+  display:flex; flex-direction:column;
+}
+.chart-card h4{
+  margin:0 0 6px;
+  font-size:13px; color:var(--accent-2);
+}
+.chart-box{ flex:1; min-height:0; }
+.chart-box canvas{ width:100% !important; height:100% !important; }
+
+/* kleine Screens: Charts untereinander */
+@media (max-width: 820px){
+  .rep-charts{ grid-template-columns:1fr; }
+  .rep-tools .btn{ width:100%; }
+}
 
 
