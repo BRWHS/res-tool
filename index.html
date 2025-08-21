@@ -503,7 +503,9 @@
   <!-- Einstellungen -->
   <section class="modal" id="modalSettings" role="dialog" aria-labelledby="setTitle" aria-modal="true">
     <header>
-      <h3 id="setTitle" class="mono">Einstellungen</h3>
+      <h3 class="mono">
+  <span class="settings-logo"></span> Einstellungen
+</h3>
       <button class="btn" data-close>Schließen</button>
     </header>
     <div class="body">
@@ -516,6 +518,78 @@
         </label>
       </div>
     </div>
+    <div id="settingsPanel" class="settings-grid">
+  <div class="settings-row">
+    <label for="selLang" data-i18n="settings.language">Sprache</label>
+    <select id="selLang">
+      <option value="de">Deutsch</option>
+      <option value="en">English</option>
+    </select>
+  </div>
+
+  <div class="settings-row">
+    <label for="rngHue" data-i18n="settings.hue">Farbton</label>
+    <input id="rngHue" class="hue" type="range" min="0" max="359" step="1">
+    <span id="hueVal" style="min-width:38px;text-align:right;">0°</span>
+  </div>
+
+  <div class="settings-row">
+    <button id="btnSaveSettings" class="btn" data-i18n="settings.save">Einstellungen speichern</button>
+  </div>
+
+  <div class="settings-row">
+    <button id="btnChannel" class="btn warn">Channel – Einstellungen</button>
+    <button id="btnLog" class="btn secondary">Log Activity</button>
+  </div>
+</div>
+    <!-- Channel Settings Modal (passwortgeschützt) -->
+<section class="modal" id="modalChannel" aria-hidden="true">
+  <header>
+    <h3 class="mono"><span class="settings-logo"></span> Channel – Einstellungen</h3>
+    <button class="icon" data-close="#modalChannel">✕</button>
+  </header>
+  <div class="content">
+    <p>Admin‑Bereich zur API‑Verkabelung (HNS etc.). Inhalte folgen.</p>
+    <p style="opacity:.7">Zukünftig: API Keys, Hotel‑Mappings, Raten‑/Kategorie‑Routing.</p>
+  </div>
+  <footer>
+    <button class="btn" data-close="#modalChannel">Schließen</button>
+  </footer>
+</section>
+
+<!-- Log Activity Modal (passwortgeschützt) -->
+<section class="modal" id="modalLog" aria-hidden="true">
+  <header>
+    <h3 class="mono"><span class="settings-logo"></span> Log Activity</h3>
+    <button class="icon" data-close="#modalLog">✕</button>
+  </header>
+  <div class="content">
+    <div class="filters">
+      <input id="logSearch" type="search" placeholder="Suche… (Text/Meta)">
+      <select id="logType">
+        <option value="">Typ: Alle</option>
+        <option value="settings">settings</option>
+        <option value="reservation">reservation</option>
+        <option value="channel">channel</option>
+        <option value="system">system</option>
+      </select>
+      <input id="logFrom" type="date">
+      <input id="logTo" type="date">
+      <button id="logApply" class="btn">Filter anwenden</button>
+      <button id="logClear" class="btn secondary">Zurücksetzen</button>
+    </div>
+    <table class="table" id="logTable">
+      <thead>
+        <tr><th>Datum</th><th>Typ</th><th>Aktion</th><th>Details</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+  <footer>
+    <button class="btn" data-close="#modalLog">Schließen</button>
+  </footer>
+</section>
+
   </section>
 
   <!-- Hotelskizze -->
