@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <link rel="preload" as="image" href="/assets/hotel-placeholder.png">
-  <link rel="preload" as="image" href="/assets/sketch-placeholder.png">
-
+  
+<link rel="preload" as="image" href="/assets/hotel-placeholder.png">
+<link rel="preload" as="image" href="/assets/sketch-placeholder.png">
+  
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>res-tool — Dashboard</title>
@@ -44,29 +45,29 @@
     </nav>
   </header>
 
-  <!-- Mini-Charts (YoY) -->
+  <!-- Mini-Charts (YoY OTA) -->
   <aside class="analytics-dock" aria-label="Mini-Charts">
     <div class="dock-head">
-      <span class="mono">YoY — Tagesvergleich</span>
+      <span class="mono">YoY · OTA · 7T</span>
       <button class="btn sm" id="dockToggle" title="Ein-/Ausblenden">–</button>
     </div>
     <div id="miniAnalyticsDock" class="dock-list"></div>
   </aside>
 
   <main class="container" aria-live="polite">
-    <!-- Performance -->
+    <!-- KPIs -->
     <section class="grid hero" aria-label="Dashboard Übersicht">
       <article class="card scanlines">
         <div class="content">
           <div class="card-head">
-            <h3 class="mono">Performance — Heute</h3>
+            <h3 class="mono">KPI — Heute</h3>
             <div class="select-wrap">
               <select id="kpiFilterToday" class="input sm theme-select"></select>
             </div>
           </div>
           <div class="kpis big">
             <div class="kpi"><div class="value" id="tBookings">—</div><div class="label">Buchungen (heute eingegangen)</div></div>
-            <div class="kpi"><div class="value" id="tRevenue">— €</div><div class="label">Umsatz (Gesamt)</div></div>
+            <div class="kpi"><div class="value" id="tRevenue">— €</div><div class="label">Umsatz (Anreisen heute)</div></div>
             <div class="kpi"><div class="value" id="tADR">— €</div><div class="label">ADR (heute)</div></div>
             <div class="kpi"><div class="value" id="tOcc">—%</div><div class="label">Auslastung (heute)</div></div>
           </div>
@@ -76,16 +77,15 @@
       <article class="card scanlines">
         <div class="content">
           <div class="card-head">
-            <h3 class="mono">Performance — Nächste 7 Tage</h3>
+            <h3 class="mono">KPI — Nächste 7 Tage</h3>
             <div class="select-wrap">
-              <span class="pill" id="kwNext" title="Kalenderwoche"></span>
               <select id="kpiFilterNext" class="input sm theme-select"></select>
             </div>
           </div>
           <div class="kpis big">
-            <div class="kpi"><div class="value" id="nRevenue">— €</div><div class="label">Umsatz (Gesamt)</div></div>
-            <div class="kpi"><div class="value" id="nADR">— €</div><div class="label">ADR (nächste 7 Tage)</div></div>
-            <div class="kpi"><div class="value" id="nOcc">—%</div><div class="label">Auslastung (nächste 7 Tage)</div></div>
+            <div class="kpi"><div class="value" id="nRevenue">— €</div><div class="label">Umsatz (Anreisen +1..+7)</div></div>
+            <div class="kpi"><div class="value" id="nADR">— €</div><div class="label">ADR (+1..+7)</div></div>
+            <div class="kpi"><div class="value" id="nOcc">—%</div><div class="label">Ø Auslastung (+1..+7)</div></div>
           </div>
         </div>
       </article>
@@ -161,7 +161,6 @@
       <h3 id="newTitle" class="mono">Neue Reservierung</h3>
       <button class="btn" data-close>Schließen</button>
     </header>
-
     <div class="body">
       <div class="wizard-steps">
         <div class="wstep active" data-step="1"><span>1</span><b>Hotel & Daten</b></div>
@@ -170,117 +169,111 @@
         <div class="wstep" data-step="4"><span>4</span><b>Gast & Zahlung</b></div>
       </div>
 
-      <!-- STEP 1 -->
-      <div class="wpage compact" id="w1">
-        <div class="grid2" style="align-items:start">
-          <div>
-            <h4 class="mono section" style="margin-top:0">Aufenthaltsdaten</h4>
-            <div class="grid2">
-              <label style="grid-column:1 / -1">Hotel
-                <select id="newHotel" class="input theme-select" style="width:100%"></select>
-              </label>
-              <label>Anreise
-                <input id="newArr" type="date" class="input"/>
-              </label>
-              <label>Abreise
-                <input id="newDep" type="date" class="input"/>
-              </label>
-              <label>Erwachsene
-                <input id="newAdults" type="number" min="1" value="1" class="input"/>
-              </label>
-              <label>Kinder
-                <input id="newChildren" type="number" min="0" value="0" class="input"/>
-              </label>
-            </div>
+     <!-- STEP 1 -->
+<div class="wpage compact" id="w1">
+  <div class="grid-compact-2" style="align-items:start">
+    <!-- Linke Spalte: Aufenthalts- & Gästedaten -->
+    <div class="form-col">
+      <h4 class="mono section" style="margin-top:0">Aufenthaltsdaten</h4>
+      <div class="grid-compact">
+        <label style="grid-column:1 / -1">Hotel
+          <select id="newHotel" class="input theme-select" style="width:100%"></select>
+        </label>
+        <label>Anreise
+          <input id="newArr" type="date" class="input"/>
+        </label>
+        <label>Abreise
+          <input id="newDep" type="date" class="input"/>
+        </label>
+        <label>Erwachsene
+          <input id="newAdults" type="number" min="1" value="1" class="input"/>
+        </label>
+        <label>Kinder
+          <input id="newChildren" type="number" min="0" value="0" class="input"/>
+        </label>
+      </div>
 
-            <h4 class="mono section">Gästedaten</h4>
-            <div class="grid2">
-              <label>Vorname
-                <input id="newFname" class="input" placeholder="Max"/>
-              </label>
-              <label>Nachname*
-                <input id="newLname" class="input" placeholder="Mustermann" required/>
-              </label>
-              <label>PLZ
-                <input id="newZip" class="input" placeholder="80331"/>
-              </label>
-              <label>Straße
-                <input id="newStreet" class="input" placeholder="Musterstraße 1"/>
-              </label>
-              <label style="grid-column:1 / -1">Ort
-                <input id="newCity" class="input" placeholder="München"/>
-              </label>
-            </div>
+      <h4 class="mono section">Gästedaten</h4>
+      <div class="grid-compact">
+        <label>Vorname
+          <input id="newFname" class="input" placeholder="Max"/>
+        </label>
+        <label>Nachname*
+          <input id="newLname" class="input" placeholder="Mustermann" required/>
+        </label>
+        <label>PLZ
+          <input id="newZip" class="input" placeholder="80331"/>
+        </label>
+        <label>Straße
+          <input id="newStreet" class="input" placeholder="Musterstraße 1"/>
+        </label>
+        <label style="grid-column:1 / -1">Ort
+          <input id="newCity" class="input" placeholder="München"/>
+        </label>
+      </div>
+    </div>
 
-            <h4 class="mono section">Kontaktdaten</h4>
-            <div class="grid2">
-              <label>E‑Mail
-                <input id="newEmail" class="input" placeholder="max@example.com"/>
-              </label>
-              <label>Telefon
-                <input id="newPhone" class="input" placeholder="+49 …"/>
-              </label>
-            </div>
-          </div>
+    <!-- Rechte Spalte: Hotelbild + Kontaktdaten -->
+    <div class="preview-col">
+      <div class="imgcard hotel">
+        <img id="hotelImg" alt="Hotelbild"/>
+      </div>
 
-          <!-- Preview image column -->
-          <div>
-            <div class="box" style="position:sticky;top:6px">
-              <div class="muted mono" style="margin-bottom:6px">Hotelbild</div>
-              <img id="hotelImg" alt="Hotel" style="width:100%;height:180px;object-fit:cover;border-radius:12px;display:block"/>
-            </div>
-          </div>
+      <div class="box" style="margin-top:12px">
+        <h4 class="mono section" style="margin:0 0 6px">Kontaktdaten</h4>
+        <div class="grid-compact">
+          <label>E‑Mail
+            <input id="newEmail" class="input" placeholder="max@example.com"/>
+          </label>
+          <label>Telefon
+            <input id="newPhone" class="input" placeholder="+49 …"/>
+          </label>
         </div>
       </div>
+    </div>
+  </div>
+</div>
 
       <!-- STEP 2 -->
-      <div class="wpage narrow hidden" id="w2">
-        <div class="row wrap" style="gap:12px;align-items:flex-start;">
-          <label style="min-width:260px;flex:1">Kategorie
-            <select id="newCat" class="input theme-select"></select>
-          </label>
-          <div class="box" style="padding:8px;max-width:280px">
-            <img id="imgCatPreview" alt="Zimmer/Kategorie"
-                 style="width:100%;height:160px;object-fit:cover;border-radius:12px;display:block"/>
-          </div>
-        </div>
+<div class="wpage narrow hidden" id="w2">
+  <div class="row wrap" style="gap:12px;align-items:flex-start;">
+    <label style="min-width:220px;width:240px">Kategorie
+      <select id="newCat" class="input theme-select" style="width:100%"></select>
+    </label>
+
+    <div style="flex:1;min-width:260px">
+      <div class="box" style="padding:8px;max-width:380px">
+        <img id="imgCatPreview" alt="Zimmer/Kategorie"
+             style="width:100%;height:220px;object-fit:cover;border-radius:12px;display:block"/>
       </div>
 
-      <!-- STEP 3 -->
-      <div class="wpage narrow hidden" id="w3">
-        <div class="row wrap" style="gap:12px;align-items:flex-start;">
-          <label style="min-width:260px;flex:1">Rate
-            <select id="newRate" class="input theme-select"></select>
-          </label>
-          <label style="width:160px">Preis
-            <input id="newPrice" type="number" step="1" value="89" class="input"/>
-          </label>
-        </div>
-        <div id="ratePolicyBox" class="box rate-policy" style="margin-top:8px">
-          <div class="mono muted tiny">Stornobedingung</div>
-          <div id="ratePolicy" class="tiny">Bis zum Anreisetag 18:00 Uhr kostenfrei stornierbar.</div>
+      <!-- Beschreibung unter dem Dropdown -->
+      <div class="box" style="margin-top:10px">
+        <div class="mono muted tiny" style="margin-bottom:4px">Beschreibung</div>
+        <div id="catDesc" class="tiny">
+          das Zimmer hat eine größer von mehr oder weniger als 40m², toaster, mikrowelle
+          und einen Balkon mit tollem ausblick
         </div>
       </div>
+    </div>
+  </div>
+</div>
 
       <!-- STEP 4 -->
       <div class="wpage hidden" id="w4">
         <aside class="summary box" id="summaryFinal"></aside>
 
-        <h4 class="mono section">Firma (optional)</h4>
-        <div class="grid2">
-          <label>Firma
-            <input id="newCompany" class="input" />
-          </label>
-          <label>USt.-ID
-            <input id="newVat" class="input" />
-          </label>
-          <label>PLZ + Ort
-            <input id="newCompanyZipCity" class="input" placeholder="80331 München" />
-          </label>
-          <label>Adresse (Straße)
-            <input id="newAddressStreet" class="input" placeholder="Musterstraße 99" />
-          </label>
-        </div>
+        <h4 class="mono section">Gastdaten</h4>
+
+        <details class="box">
+          <summary class="mono">Firma (optional)</summary>
+          <div class="grid2">
+            <label>Firma <input id="newCompany" class="input" /></label>
+            <label>USt-ID <input id="newVat" class="input" /></label>
+            <label>PLZ <input id="newCompanyZip" class="input" /></label>
+            <label>Adresse <input id="newAddress" class="input" placeholder="Straße + Ort" /></label>
+          </div>
+        </details>
 
         <h4 class="mono section">Kreditkarte</h4>
         <div class="cc-wrap">
@@ -304,7 +297,6 @@
         </label>
       </div>
 
-      <!-- Wizard actions -->
       <div class="wizard-actions">
         <button class="btn ghost hidden" id="btnPrev">Zurück</button>
         <div style="flex:1"></div>
@@ -455,12 +447,13 @@
   </section>
 
   <!-- Hotelskizze -->
-  <section class="modal" id="modalSketch" role="dialog" aria-labelledby="sketchTitle" aria-modal="true">
+<section class="modal" id="modalSketch" role="dialog" aria-labelledby="sketchTitle" aria-modal="true">
     <header>
       <h3 id="sketchTitle" class="mono">Hotelskizze</h3>
       <button class="btn" data-close>Schließen</button>
     </header>
     <div class="body">
+      <!-- NEW: zwei Zustände – Buttonliste und Sketch-View -->
       <div id="sketchStateList" class="row wrap"></div>
       <div id="sketchStateView" class="hidden">
         <div class="row wrap" style="margin-bottom:8px;">
