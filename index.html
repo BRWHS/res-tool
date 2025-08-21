@@ -236,10 +236,10 @@
 
       <!-- STEP 2 -->
 <div class="wpage narrow hidden" id="w2">
-  <div class="row wrap" style="gap:16px;align-items:flex-start;">
-    
-    <div style="flex:1;min-width:260px">
-      <div class="box" style="padding:8px;max-width:380px">
+  <div class="s2-grid">
+    <!-- LINKS: Bild + Beschreibung -->
+    <div>
+      <div class="box" style="padding:8px;">
         <img id="imgCatPreview" alt="Zimmer/Kategorie"
              style="width:100%;height:220px;object-fit:cover;border-radius:12px;display:block"/>
       </div>
@@ -252,11 +252,12 @@
       </div>
     </div>
 
-    <!-- Kategorie Dropdown rechts -->
-    <label style="min-width:220px;width:240px">Kategorie
-      <select id="newCat" class="input theme-select" style="width:100%"></select>
-    </label>
-
+    <!-- RECHTS: Kategorie-Dropdown -->
+    <div class="s2-right">
+      <label>Kategorie
+        <select id="newCat" class="input theme-select" style="width:100%"></select>
+      </label>
+    </div>
   </div>
 </div>
 
