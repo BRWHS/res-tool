@@ -278,3 +278,16 @@ table.matrix{width:100%;border-collapse:collapse}
 /* etwas engere Abstände im kompakten Formular-Grid */
 .grid-compact { gap: 8px; }
 }
+
+/* Step 2 layout */
+.s2-grid{
+  display:grid;
+  grid-template-columns: 1fr 260px; /* links flexibel, rechts fix */
+  gap:16px;
+  align-items:flex-start;
+}
+.s2-right{ min-width:0 } /* verhindert Überlauf */
+@media (max-width: 720px){
+  .s2-grid{ grid-template-columns: 1fr; }
+}
+
