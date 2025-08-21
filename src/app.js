@@ -667,7 +667,13 @@
       q('#newPrice') && (q('#newPrice').value = rates[0].price);
     }
     updateCatMeta();
+    
+    // Platzhalter-Beschreibung unter dem Dropdown (später pro Hotel/Kategorie dynamisch)
+  const desc = q('#catDesc');
+  if (desc) {
+    desc.textContent = "das Zimmer hat eine größer von mehr oder weniger als 40m², toaster, mikrowelle und einen Balkon mit tollem ausblick";
   }
+}
 
   function updateCatMeta(){
     const cat = q('#newCat')?.value || 'Standard';
