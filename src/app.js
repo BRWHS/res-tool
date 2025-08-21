@@ -922,8 +922,6 @@
   q('#availRun')?.addEventListener('click', buildMatrix);
 
   /***** Reporting *****/
-  
-  /***** Reporting *****/
 
 // --- Reporting: Chart State ---
 let chartRevenue = null;
@@ -944,28 +942,39 @@ function updateReportCharts() {
   const revenue  = reportSummary.revenue;
   const bookings = reportSummary.bookings;
 
-  // Revenue-Bar
-chartRevenue = new Chart(ctxR, {
-  type: 'bar',
-  data: { labels, datasets: [{ label: 'Umsatz (€)', data: revenue }] },
-  options: {
-    responsive: true,
-    maintainAspectRatio: false,           // << neu
-    plugins: { legend: { display: false } },
-    scales: { y: { beginAtZero: true } }
-  }
-});
+  // Canvas-Kontexte holen
+  const ctxR = document.getElementById('chartRevenue')?.getContext('2d');
+  const ctxB = document.getElementById('chartBookings')?.getContext('2d');
 
-// Bookings-Pie
-chartBookings = new Chart(ctxB, {
-  type: 'pie',
-  data: { labels, datasets: [{ label: 'Buchungen', data: bookings }] },
-  options: {
-    responsive: true,
-    maintainAspectRatio: false,           // << neu
-    plugins: { legend: { position: 'bottom' } }
+  // Revenue-Bar
+  if (ctxR) {
+    if (chartRevenue) chartRevenue.destroy();
+    chartRevenue = new Chart(ctxR, {
+      type: 'bar',
+      data: { labels, datasets: [{ label: 'Umsatz (€)', data: revenue }] },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true } }
+      }
+    });
   }
-});
+
+  // Bookings-Pie
+  if (ctxB) {
+    if (chartBookings) chartBookings.destroy();
+    chartBookings = new Chart(ctxB, {
+      type: 'pie',
+      data: { labels, datasets: [{ label: 'Buchungen', data: bookings }] },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom' } }
+      }
+    });
+  }
+}
 
 function setDefaultReportRange(){
   const to=soD(new Date()); const from=soD(new Date(Date.now()-29*86400000));
@@ -1051,8 +1060,10 @@ async function runReport(){
     return;
   }
 
+  // nach Umsatz sortieren
   rows.sort((a,b)=> b.revenue - a.revenue);
 
+  // Tabelle rendern
   rows.forEach(r=>{
     body.append(el('tr',{},
       el('td',{}, r.name),
@@ -1063,6 +1074,7 @@ async function runReport(){
     ));
   });
 
+  // Charts refresh
   reportSummary = { labels, bookings, revenue, adr: adrArr, occPct };
   updateReportCharts();
 }
@@ -1133,7 +1145,7 @@ q('#repPdf')?.addEventListener('click', async ()=>{
 
   let y = doc.lastAutoTable?.finalY || 96;
 
-  // Charts als Bilder
+  // Charts als PNG-Bilder einbetten
   const revCanvas = document.getElementById('chartRevenue');
   const bokCanvas = document.getElementById('chartBookings');
 
@@ -1156,6 +1168,7 @@ q('#repPdf')?.addEventListener('click', async ()=>{
 
   doc.save('report.pdf');
 });
+
 
 
 /***** EVENTS & INIT *****/
@@ -1231,5 +1244,4 @@ function safeDisplayFromRow(row){
   }
   return raw;
 }
-
-
+})();
