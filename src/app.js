@@ -1145,23 +1145,32 @@ q('#repPdf')?.addEventListener('click', async ()=>{
 
   let y = doc.lastAutoTable?.finalY || 96;
 
-  // Charts als PNG-Bilder einbetten
+  // Charts als PNG-Bilder einbetten (nebeneinander, kleiner)
   const revCanvas = document.getElementById('chartRevenue');
   const bokCanvas = document.getElementById('chartBookings');
 
-  const addImg = (canvas, labelText) => {
-    if (!canvas) return;
-    const img = canvas.toDataURL('image/png', 1.0);
-    const maxW = 520, w = maxW, h = (canvas.height/canvas.width)*w;
-    if (y + 40 + h > doc.internal.pageSize.getHeight() - 40){
-      doc.addPage(); y = 40;
-    } else {
-      y += 20;
-    }
+  const pageW = doc.internal.pageSize.getWidth();
+  const marginX = 40;
+  const maxW = (pageW - marginX*2 - 20) / 2; // zwei Charts nebeneinander
+  const yStart = (doc.lastAutoTable?.finalY || 96) + 30;
+
+  if (revCanvas && bokCanvas) {
+    const imgR = revCanvas.toDataURL('image/png', 1.0);
+    const imgB = bokCanvas.toDataURL('image/png', 1.0);
+
+    const hR = (revCanvas.height/revCanvas.width) * maxW;
+    const hB = (bokCanvas.height/bokCanvas.width) * maxW;
+    const h = Math.max(hR, hB); // gleiche Höhe für beide
+
+    // Titelzeile
     doc.setFont('helvetica','bold'); doc.setFontSize(11);
-    doc.text(labelText, 40, y); y += 10;
-    doc.addImage(img, 'PNG', 40, y, w, h); y += h;
-  };
+    doc.text('Umsatz pro Hotel', marginX, yStart-10);
+    doc.text('Buchungen pro Hotel', marginX + maxW + 20, yStart-10);
+
+    // Bilder nebeneinander
+    doc.addImage(imgR, 'PNG', marginX, yStart, maxW, h);
+    doc.addImage(imgB, 'PNG', marginX + maxW + 20, yStart, maxW, h);
+  }
 
   addImg(revCanvas, 'Umsatz pro Hotel');
   addImg(bokCanvas, 'Buchungen pro Hotel');
