@@ -1158,47 +1158,37 @@ q('#repPdf')?.addEventListener('click', async ()=>{
 });
 
 
- /***** EVENTS & INIT *****/
+/***** EVENTS & INIT *****/
 q('#btnAvail')?.addEventListener('click', async ()=>{
   q('#availFrom') && (q('#availFrom').value = isoDate(new Date()));
   q('#availDays') && (q('#availDays').value = '14');
   await buildMatrix();
   openModal('modalAvail');
 });
-
 q('#btnReporting')?.addEventListener('click', async ()=>{
-  setDefaultReportRange();
-  fillRepHotel();
-  await runReport();
+  setDefaultReportRange(); 
+  fillRepHotel(); 
+  await runReport(); 
   openModal('modalReporting');
 });
-
 q('#btnSettings')?.addEventListener('click', ()=> openModal('modalSettings'));
-
-q('#btnSketch')?.addEventListener('click', ()=>{
-  buildSketch();
-  openModal('modalSketch');
+q('#btnSketch')?.addEventListener('click', ()=>{ 
+  buildSketch(); 
+  openModal('modalSketch'); 
 });
 
 q('#btnNew')?.addEventListener('click', ()=>{
-  // Reset Form-Felder
-  [
-    'newArr','newDep','newAdults','newChildren','newCat','newRate','newPrice',
-    'newFname','newLname','newEmail','newPhone','newStreet','newZip','newCity',
-    'newCompany','newVat','newCompanyZipCity','newAddressStreet','newNotes',
-    'ccHolder','ccNumber','ccExpiry'
-  ].forEach(id=>{
-    const n = q('#'+id);
-    if (n) n.value = '';
-  });
-  q('#newAdults')   && (q('#newAdults').value   = 1);
-  q('#newChildren') && (q('#newChildren').value = 0);
-  q('#btnNext')     && (q('#btnNext').disabled  = true);
+  // Reset
+  ['newArr','newDep','newAdults','newChildren','newCat','newRate','newPrice','newFname','newLname','newEmail','newPhone','newStreet','newZip','newCity','newCompany','newVat','newCompanyZipCity','newAddressStreet','newNotes','ccHolder','ccNumber','ccExpiry']
+    .forEach(id=>{ const n=q('#'+id); if(n){ n.value=''; } });
+  q('#newAdults') && (q('#newAdults').value=1);
+  q('#newChildren') && (q('#newChildren').value=0);
+  q('#btnNext') && (q('#btnNext').disabled=true);
 
   // Live-Card reset
-  q('#ccNumLive')    && (q('#ccNumLive').textContent    = '•••• •••• •••• ••••');
-  q('#ccHolderLive') && (q('#ccHolderLive').textContent = 'NAME');
-  q('#ccExpLive')    && (q('#ccExpLive').textContent    = 'MM/YY');
+  q('#ccNumLive')    && (q('#ccNumLive').textContent='•••• •••• •••• ••••');
+  q('#ccHolderLive') && (q('#ccHolderLive').textContent='NAME');
+  q('#ccExpLive')    && (q('#ccExpLive').textContent='MM/YY');
 
   // Selects + Bilder
   fillHotelSelect();
@@ -1207,27 +1197,21 @@ q('#btnNew')?.addEventListener('click', ()=>{
   setCatImage(SKETCH_IMG_SRC);
 
   wizardSet('1');
-  q('#newInfo') && (q('#newInfo').textContent = '');
+  q('#newInfo') && (q('#newInfo').textContent='');
   openModal('modalNew');
 });
 
-// Init
 (async function init(){
   startClocks();
-
-  await refreshStatus();
-  setInterval(refreshStatus, 30000);
-
+  await refreshStatus(); setInterval(refreshStatus, 30000);
   await autoRollPastToDone();
   await buildMiniAnalytics();
 
-  // KPI-Filter + Events
   fillHotelFilter(q('#kpiFilterToday'));
   fillHotelFilter(q('#kpiFilterNext'));
   q('#kpiFilterToday')?.addEventListener('change', loadKpisToday);
   q('#kpiFilterNext')?.addEventListener('change', loadKpisNext);
 
-  // Listen-Filter
   fillFilters();
   if (q('#filterStatus')) q('#filterStatus').value = 'active';
 
@@ -1247,4 +1231,5 @@ function safeDisplayFromRow(row){
   }
   return raw;
 }
+
 
