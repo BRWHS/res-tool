@@ -140,8 +140,14 @@
     safeSetImg(img, src || HOTEL_IMG_SRC);
   }
   function setCatImage(src){
+  const arr = ['#imgCatPreview', '#imgCatPreview2', '#imgCatPreview3'].map(sel => q(sel)).filter(Boolean);
+  if (arr.length === 0) { // Fallback falls alte Struktur
     safeSetImg(q('#imgCatPreview'), src || SKETCH_IMG_SRC);
+    return;
   }
+  arr.forEach(imgEl => safeSetImg(imgEl, src || SKETCH_IMG_SRC));
+}
+
   function setSketchImage(src){
     safeSetImg(q('#sketchImage'), src || SKETCH_IMG_SRC);
   }
@@ -669,9 +675,9 @@
     updateCatMeta();
     
     // Platzhalter-Beschreibung unter dem Dropdown (später pro Hotel/Kategorie dynamisch)
-  const desc = q('#catDesc');
+   const desc = q('#catDesc');
   if (desc) {
-    desc.textContent = "das Zimmer hat eine größer von mehr oder weniger als 40m², toaster, mikrowelle und einen Balkon mit tollem ausblick";
+    desc.textContent = "das Zimmer hat eine größe von mehr oder weniger als 40m², Toaster, Mikrowelle und Balkon mit Ausblick. Dies ist ein Placeholder‑Text und soll einen visuellen Effekt erzeugen. Die Beschreibung soll dem Agent alle Infos zu der Zimmerkategorie liefern, um möglichst präziser arbeiten zu können.";
   }
 }
 
