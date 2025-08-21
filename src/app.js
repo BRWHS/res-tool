@@ -1329,6 +1329,195 @@ q('#btnNew')?.addEventListener('click', ()=>{
   await loadReservations();
 })();
 
+  // --- Einstellungen / Admin ---
+const ADMIN_PW = "325643";
+const SETTINGS_KEY = "resTool.settings";
+const LOG_KEY = "resTool.activityLog";
+
+const I18N = {
+  de: {
+    "settings.language": "Sprache",
+    "settings.hue": "Farbton",
+    "settings.save": "Einstellungen speichern",
+    // Beispieltexte (füge bei Bedarf weitere hinzu)
+    "ui.saved": "Einstellungen gespeichert",
+    "ui.wrongpw": "Falsches Admin‑Passwort",
+    "ui.needpw": "Bitte Admin‑Passwort eingeben"
+  },
+  en: {
+    "settings.language": "Language",
+    "settings.hue": "Hue",
+    "settings.save": "Save settings",
+    "ui.saved": "Settings saved",
+    "ui.wrongpw": "Wrong admin password",
+    "ui.needpw": "Please enter admin password"
+  }
+};
+
+function t(key){ 
+  const lang = (getSettings().lang || 'de');
+  return (I18N[lang] && I18N[lang][key]) || I18N['de'][key] || key; 
+}
+function translateAll(){
+  document.querySelectorAll('[data-i18n]').forEach(n=>{
+    n.textContent = t(n.getAttribute('data-i18n'));
+  });
+  // Beispiel: Platzhalter in Inputs
+  const s = getSettings().lang || 'de';
+  const phSearch = s === 'en' ? 'Search… (text/meta)' : 'Suche… (Text/Meta)';
+  const el = document.getElementById('logSearch'); if (el) el.placeholder = phSearch;
+}
+function getSettings(){
+  try{ return JSON.parse(localStorage.getItem(SETTINGS_KEY)) || { lang:'de', hue: 180 }; }
+  catch(e){ return { lang:'de', hue:180 }; }
+}
+function saveSettings(obj){
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(obj));
+  logActivity('settings','saved', {settings: obj});
+}
+function applySettings(){
+  const s = getSettings();
+  // Sprache – UI aktualisieren
+  translateAll();
+  // Hue → Theme Variablen (du kannst hier die Intensitäten tweaken)
+  const h = Number(s.hue||180);
+  const accent  = `hsl(${h} 100% 55%)`;
+  const accent2 = `hsl(${h} 80% 65%)`;
+  const glow    = `0 0 10px hsla(${h} 100% 60% / .35)`;
+  document.documentElement.style.setProperty('--accent', accent);
+  document.documentElement.style.setProperty('--accent-2', accent2);
+  document.documentElement.style.setProperty('--glow', glow);
+  // Controls spiegeln
+  const sel = document.getElementById('selLang'); if (sel) sel.value = s.lang || 'de';
+  const rng = document.getElementById('rngHue'); if (rng){ rng.value = h; const v=document.getElementById('hueVal'); if(v) v.textContent = h+'°'; }
+}
+function requireAdmin(onSuccess){
+  const pw = prompt(t('ui.needpw'));
+  if (pw === ADMIN_PW){ onSuccess && onSuccess(); }
+  else if (pw !== null){ alert(t('ui.wrongpw')); }
+}
+function logActivity(type, action, meta){
+  const row = {
+    ts: new Date().toISOString(),
+    type, action,
+    meta: meta || {}
+  };
+  const list = readLog(); list.push(row);
+  localStorage.setItem(LOG_KEY, JSON.stringify(list));
+}
+function readLog(){
+  try{ return JSON.parse(localStorage.getItem(LOG_KEY)) || []; }
+  catch(e){ return []; }
+}
+function filterLog({q='', type='', from='', to=''}){
+  const data = readLog();
+  const f = (d)=>{
+    if (type && d.type !== type) return false;
+    if (from && (new Date(d.ts) < new Date(from))) return false;
+    if (to   && (new Date(d.ts) > new Date(to+'T23:59:59'))) return false;
+    if (q){
+      const blob = (d.action + ' ' + JSON.stringify(d.meta||{})).toLowerCase();
+      if (!blob.includes(q.toLowerCase())) return false;
+    }
+    return true;
+  };
+  return data.filter(f).sort((a,b)=> new Date(b.ts) - new Date(a.ts));
+}
+function renderLogTable(rows){
+  const tbody = document.querySelector('#logTable tbody'); if (!tbody) return;
+  tbody.innerHTML = '';
+  rows.forEach(r=>{
+    const tr = document.createElement('tr');
+    const details = JSON.stringify(r.meta||{}, null, 0);
+    tr.innerHTML = `
+      <td>${new Date(r.ts).toLocaleString()}</td>
+      <td>${r.type}</td>
+      <td>${r.action}</td>
+      <td><code style="white-space:nowrap">${details.length>120? (details.slice(0,120)+'…'): details}</code></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+document.addEventListener('DOMContentLoaded', ()=>{
+  // Controls referenzieren
+  const selLang = document.getElementById('selLang');
+  const rngHue  = document.getElementById('rngHue');
+  const hueVal  = document.getElementById('hueVal');
+  const btnSave = document.getElementById('btnSaveSettings');
+  const btnChannel = document.getElementById('btnChannel');
+  const btnLog  = document.getElementById('btnLog');
+
+  // Settings anwenden (lädt & setzt UI)
+  applySettings();
+
+  // Sprache ändern (live)
+  if (selLang){
+    selLang.addEventListener('change', ()=>{
+      const s = getSettings(); s.lang = selLang.value; saveSettings(s); applySettings();
+    });
+  }
+  // Hue Slider (live)
+  if (rngHue){
+    rngHue.addEventListener('input', ()=>{
+      const h = Number(rngHue.value||0);
+      if (hueVal) hueVal.textContent = h + '°';
+      const s = getSettings(); s.hue = h; saveSettings(s); applySettings();
+    });
+  }
+  // Speichern Button (extra „OK“-Feedback)
+  if (btnSave){
+    btnSave.addEventListener('click', ()=>{
+      const s = getSettings(); saveSettings(s); applySettings();
+      alert(t('ui.saved'));
+    });
+  }
+  // Channel – Einstellungen (admin)
+  if (btnChannel){
+    btnChannel.addEventListener('click', ()=>{
+      requireAdmin(()=> openModal('#modalChannel'));
+      logActivity('channel','open_settings');
+    });
+  }
+  // Log Activity (admin)
+  if (btnLog){
+    btnLog.addEventListener('click', ()=>{
+      requireAdmin(()=>{
+        // Filter reset + render
+        document.getElementById('logSearch').value = '';
+        document.getElementById('logType').value = '';
+        document.getElementById('logFrom').value = '';
+        document.getElementById('logTo').value = '';
+        renderLogTable(filterLog({}));
+        openModal('#modalLog');
+      });
+      logActivity('system','open_log');
+    });
+  }
+
+  // Log Filter Events
+  const btnApply = document.getElementById('logApply');
+  const btnClear = document.getElementById('logClear');
+  if (btnApply){
+    btnApply.addEventListener('click', ()=>{
+      const q   = document.getElementById('logSearch').value.trim();
+      const type= document.getElementById('logType').value;
+      const from= document.getElementById('logFrom').value;
+      const to  = document.getElementById('logTo').value;
+      renderLogTable(filterLog({q,type,from,to}));
+    });
+  }
+  if (btnClear){
+    btnClear.addEventListener('click', ()=>{
+      document.getElementById('logSearch').value = '';
+      document.getElementById('logType').value   = '';
+      document.getElementById('logFrom').value   = '';
+      document.getElementById('logTo').value     = '';
+      renderLogTable(filterLog({}));
+    });
+  }
+});
+
+
 // ===== Hilfsfunktion aus Liste (wegen Scope) =====
 function safeDisplayFromRow(row){
   const h = HOTELS.find(x=>x.code===row.hotel_code);
