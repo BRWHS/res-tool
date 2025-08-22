@@ -151,6 +151,38 @@
   function setSketchImage(src){
     safeSetImg(q('#sketchImage'), src || SKETCH_IMG_SRC);
   }
+  
+/* ===== Hotelskizze ===== */
+function showSketch(hotel){
+  // Label setzen
+  const label = document.querySelector('#sketchHotelLabel');
+  if (label) label.textContent = `${hotel.group} - ${hotel.name.replace(/^.*? /,'')}`;
+
+  // Bild setzen (vorerst Platzhalter – echte Assets später per code-basiertem Pfad)
+  setSketchImage(SKETCH_IMG_SRC);
+
+  // Ansicht umschalten
+  document.querySelector('#sketchStateList')?.classList.add('hidden');
+  document.querySelector('#sketchStateView')?.classList.remove('hidden');
+}
+
+function buildSketch(){
+  const list = document.querySelector('#sketchStateList');
+  const view = document.querySelector('#sketchStateView');
+  if (!list || !view) return;
+
+  // Startzustand
+  view.classList.add('hidden');
+  list.classList.remove('hidden');
+  list.innerHTML = '';
+
+  // Buttons je Hotel rendern
+  HOTELS.forEach(h => {
+    const btn = el('button', { class: 'btn sm', title: h.code }, displayHotel(h));
+    btn.addEventListener('click', () => showSketch(h));
+    list.append(btn);
+  });
+}
 
   /***** Clock + Status *****/
   function startClocks(){
@@ -1316,7 +1348,13 @@ q('#btnNew')?.addEventListener('click', ()=>{
   q('#newInfo') && (q('#newInfo').textContent='');
   openModal('modalNew');
 });
-
+  
+// Back-Button in der Hotelskizze
+document.querySelector('#sketchBack')?.addEventListener('click', () => {
+  document.querySelector('#sketchStateView')?.classList.add('hidden');
+  document.querySelector('#sketchStateList')?.classList.remove('hidden');
+});
+  
 (async function init(){
   startClocks();
   await refreshStatus(); setInterval(refreshStatus, 30000);
