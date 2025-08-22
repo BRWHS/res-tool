@@ -497,3 +497,55 @@ input[type="range"].hue{
 
 /* Bestehendes Grid im Einstellungsblock etwas luftiger */
 .set-grid{ gap: 12px; }
+
+/* Layout oben: Einstellungen links, Systeminfo rechts */
+.set-top{
+  display:grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap:12px;
+  align-items:start;
+}
+@media (max-width: 980px){
+  .set-top{ grid-template-columns:1fr; }
+}
+
+/* Kachel-Grid für die 5 Buttons */
+.set-tiles{
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap:12px;
+  margin-top:14px;
+}
+.btn.tile{
+  width:100%; height:56px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,.08);
+  background: rgba(255,255,255,.03);
+  display:flex; align-items:center; justify-content:center;
+  transition: transform .08s ease, box-shadow .08s ease, border-color .08s ease;
+}
+.btn.tile:hover{
+  transform: translateY(-1px);
+  border-color: var(--accent);
+  box-shadow: var(--glow);
+}
+
+/* Systeminfo: sauberes Spalten-Layout + harte Zeilenumbrüche für lange IPv6 */
+.set-sys{ max-width:100%; overflow:hidden; }
+.sys-grid{ display:grid; gap:6px; }
+.set-sys .settings-row{
+  display:grid;
+  grid-template-columns: 1fr 1.2fr;   /* Label | Wert */
+  align-items:start;
+  gap:12px;
+  padding:4px 0;
+  border-bottom:1px dashed rgba(255,255,255,.08);
+}
+.set-sys .settings-row:last-child{ border-bottom:0; }
+.set-sys label{ white-space:nowrap; opacity:.85; }
+.set-sys span{
+  justify-self:end;
+  text-align:right;
+  overflow-wrap:anywhere;            /* brich sehr lange Tokens (IPv6) */
+  word-break:break-word;
+}
