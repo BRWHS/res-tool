@@ -417,4 +417,60 @@ table.matrix{width:100%;border-collapse:collapse}
   justify-content: flex-end;
   margin-top: 16px;
 }
+/* Hotelskizze – Logo im Header */
+.sketch-logo{
+  display:inline-grid; place-items:center; width:28px; height:28px; margin-right:10px;
+  border-radius:50%;
+  background: conic-gradient(from 180deg, rgba(0,255,255,.9), rgba(0,255,255,.25));
+  box-shadow: 0 0 10px rgba(0,255,255,.35), inset 0 0 8px rgba(0,255,255,.2);
+  color: var(--accent); font-weight:800; font-size:16px; line-height:1;
+}
+.sketch-logo::before{ content:"✎"; } /* „Stift/Plan“-Anmutung */
+
+/* Hotelskizze – 2-Spalten-Layout */
+.sketch-wrap{
+  display:grid;
+  grid-template-columns: 240px 1fr;
+  gap: 12px;
+  align-items: start;
+}
+
+/* Linke Liste */
+.sketch-left{
+  position: sticky; top: 0; align-self: start;
+}
+.sketch-list{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  max-height: 60vh;
+  overflow:auto;
+  padding-right:4px;
+}
+.sketch-item{
+  display:flex; align-items:center; gap:8px;
+  width:100%;
+  height:36px;
+  padding:8px 10px;
+  border-radius:10px;
+  background:linear-gradient(180deg, rgba(0,255,255,.08), rgba(0,255,255,.03));
+  border:1px solid rgba(0,255,255,.18);
+  cursor:pointer; font-weight:700;
+}
+.sketch-item:hover{ border-color: rgba(0,255,255,.45); }
+.sketch-item.active{
+  background:linear-gradient(180deg, rgba(0,255,255,.28), rgba(0,255,255,.10));
+  border-color: rgba(0,255,255,.55);
+  box-shadow: var(--shadow);
+}
+
+/* Name/Badge in der Liste */
+.sketch-badge{
+  font-size:10px; opacity:.85; border:1px solid rgba(0,255,255,.25);
+  border-radius:6px; padding:2px 6px;
+}
+.sketch-name{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+/* Rechte Vorschau */
+.sketch-right .imgcard.wide{ max-height: 380px; }
 
