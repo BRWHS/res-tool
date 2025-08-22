@@ -629,33 +629,36 @@
   </div>
 </section>
 
-  <!-- NEU: Rateneinstellungen -->
+  <!-- Rateneinstellungen (mit Tabs & Listen) -->
 <section class="modal" id="modalRates" role="dialog" aria-labelledby="ratesTitle" aria-modal="true">
   <header>
-    <h3 id="ratesTitle" class="mono"><span class="set-logo"></span> Rateneinstellungen</h3>
+    <h3 id="ratesTitle" class="mono"><span class="set-logo" aria-hidden="true"></span> Rateneinstellungen</h3>
     <button class="btn" data-close>Schließen</button>
   </header>
   <div class="body">
-    <aside class="tabs">
+    <div class="tabs">
       <button class="tab active" data-tab="ratesDirect">Direct-Rate</button>
       <button class="tab" data-tab="ratesCorp">Corp-Rate</button>
       <button class="tab" data-tab="ratesIDS">IDS-Rate</button>
-    </aside>
+    </div>
+
     <div id="ratesDirect" class="tabpage">
-      <div id="listDirect"></div>
+      <div id="listDirect" class="sketch-list"></div>
     </div>
     <div id="ratesCorp" class="tabpage hidden">
-      <div id="listCorp"></div>
+      <div id="listCorp" class="sketch-list"></div>
     </div>
     <div id="ratesIDS" class="tabpage hidden">
-      <div id="listIDS"></div>
+      <div id="listIDS" class="sketch-list"></div>
     </div>
+
     <div class="right" style="margin-top:12px;">
       <button class="btn primary" id="btnNewRate">Neue Rate</button>
     </div>
   </div>
 </section>
 
+<!-- Rate bearbeiten / neu -->
 <section class="modal" id="modalRateEdit" role="dialog" aria-labelledby="rateEditTitle" aria-modal="true">
   <header>
     <h3 id="rateEditTitle" class="mono">Rate bearbeiten</h3>
@@ -663,7 +666,7 @@
   </header>
   <div class="body">
     <div class="grid-compact">
-      <label>Ratecode (Zahlen) <input id="rCode" type="number" class="input"/></label>
+      <label>Ratecode (Zahlen) <input id="rCode" type="number" class="input" /></label>
       <label>Ratentyp
         <select id="rType" class="input theme-select" required>
           <option value="direct">Direct</option>
@@ -674,12 +677,12 @@
       <label>Hotel
         <select id="rHotel" class="input theme-select"></select>
       </label>
-      <label>Kategorie
+      <label>Kategorie (mehrere)
         <select id="rCats" class="input theme-select" multiple></select>
       </label>
-      <label>Ratename <input id="rName" class="input"/></label>
-      <label>Stornobedingung <input id="rCancel" class="input"/></label>
-      <label>Preis (€) <input id="rPrice" type="number" step="1" class="input"/></label>
+      <label>Ratename <input id="rName" class="input" placeholder="z.B. Flex exkl. Frühstück" /></label>
+      <label>Stornobedingung <input id="rCancel" class="input" placeholder="z.B. bis 18:00 Uhr kostenfrei" /></label>
+      <label>Preis (€) <input id="rPrice" type="number" step="1" class="input" /></label>
     </div>
     <div class="set-footer">
       <button class="btn primary" id="btnSaveRate">Rate speichern</button>
@@ -687,7 +690,6 @@
     <p class="muted" id="rateInfo"></p>
   </div>
 </section>
-
 
 <!-- NEU: Hilfe & FAQ -->
 <section class="modal" id="modalHelp" role="dialog" aria-labelledby="helpTitle" aria-modal="true">
