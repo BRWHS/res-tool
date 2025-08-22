@@ -51,6 +51,39 @@
   };
   const displayHotel = (h) => h ? `${h.group} - ${hotelCity(h.name)}` : '—';
 
+  async function refreshWizardRates(){
+  const code = q('#newHotel')?.value;
+  const cat  = q('#newCat')?.value;
+  const sel  = q('#newRate');
+  if (!sel || !code || !cat){ return; }
+
+  try{
+    // nur gemappte Raten, wenn wir es später aktivieren wollen
+    let qry = supabase.from('rates').select('name,price,cancel_policy').eq('hotel_code', code).contains('categories', [cat]);
+    if (REQUIRE_MAPPING) qry = qry.eq('mapped', true);
+    const { data, error } = await qry.order('name', { ascending:true });
+
+    const list = (!error && (data||[]).length) ? data : (HOTEL_RATES['default'].map(r=>({ name:r.name, price:r.price, cancel_policy:'Test rate' })));
+
+    sel.innerHTML = list.map(r=>`<option value="${r.name}" data-price="${r.price}" data-policy="${r.cancel_policy||''}">${r.name} (${EUR.format(r.price)})</option>`).join('');
+    if (list.length){
+      q('#newPrice') && (q('#newPrice').value = list[0].price);
+      q('#ratePolicy') && (q('#ratePolicy').textContent = list[0].cancel_policy || '—');
+    }
+  }catch(e){
+    console.warn('refreshWizardRates', e);
+  }
+}
+
+// Policy + Preis live aktualisieren bei Auswahlwechsel
+q('#newRate')?.addEventListener('change', e=>{
+  const opt = e.target.selectedOptions[0];
+  if (!opt) return;
+  const p = opt.dataset.price, pol = opt.dataset.policy || '';
+  if (p && q('#newPrice')) q('#newPrice').value = p;
+  if (q('#ratePolicy')) q('#ratePolicy').textContent = pol || '—';
+});
+
   /* Alias-Keyword für Filter-Fallback per hotel_name */
   const HOTEL_KEYWORD = {
     'MA7-M-DOR':'Dornach','MA7-M-TRU':'Trudering','MA7-FRA':'Frankfurt','MA7-STR':'Stuttgart',
@@ -634,18 +667,31 @@ async function buildMiniAnalytics(){
   q('#nextPage')  ?.addEventListener('click', ()=>{ page = page+1; loadReservations(); });
 
   /***** Edit: Dropdowns *****/
-  function fillEditDropdowns(hotelCode, curCat, curRate){
-    const cats = HOTEL_CATEGORIES['default'];
-    const rates = HOTEL_RATES['default'];
+async function fillEditDropdowns(hotelCode, curCat, curRate){
+  const cats = HOTEL_CATEGORIES['default'];
+  const selCat = q('#eCat'); if (selCat) selCat.innerHTML = cats.map(c=>`<option ${c===curCat?'selected':''}>${c}</option>`).join('');
 
-    const selCat = q('#eCat'); if (selCat) selCat.innerHTML = cats.map(c=>`<option ${c===curCat?'selected':''}>${c}</option>`).join('');
-    const selRate= q('#eRate'); if (selRate) selRate.innerHTML= rates.map(r=>`<option value="${r.name}" data-price="${r.price}" ${r.name===curRate?'selected':''}>${r.name} (${EUR.format(r.price)})</option>`).join('');
+  try{
+    let { data, error } = await supabase
+      .from('rates')
+      .select('name,price')
+      .eq('hotel_code', hotelCode)
+      .contains('categories', [curCat])
+      .order('name', { ascending:true });
 
-    selRate?.addEventListener('change', e=>{
-      const p = e.target.selectedOptions[0]?.dataset.price;
-      if (p) q('#ePrice').value = p;
-    });
+    const list = (!error && (data||[]).length) ? data : HOTEL_RATES['default'];
+    const selRate= q('#eRate');
+    if (selRate){
+      selRate.innerHTML = list.map(r=>`<option value="${r.name}" data-price="${r.price}" ${r.name===curRate?'selected':''}>${r.name} (${EUR.format(r.price)})</option>`).join('');
+      selRate.addEventListener('change', e=>{
+        const p = e.target.selectedOptions[0]?.dataset.price;
+        if (p) q('#ePrice').value = p;
+      });
+    }
+  }catch(err){
+    console.warn('fillEditDropdowns', err);
   }
+}
 
   /***** Edit-Dialog *****/
   async function openEdit(id){
@@ -781,6 +827,9 @@ async function buildMiniAnalytics(){
     if (step==='1'){
       setHotelImage(HOTEL_IMG_SRC);
     }
+    if (step==='3'){ 
+      refreshWizardRates(); 
+    }
 
     validateStep(step);
     if (step==='4') updateSummary('#summaryFinal');
@@ -867,6 +916,9 @@ async function buildMiniAnalytics(){
     const rows = linesSummary().map(([k,v])=>`<div class="summary line"><span>${k}</span><span>${v}</span></div>`).join('');
     box.innerHTML = `<h4 class="mono">Zusammenfassung</h4>${rows}`;
   }
+  
+q('#newHotel')?.addEventListener('change', ()=>{ /* ...dein Code... */ refreshWizardRates(); });
+q('#newCat')  ?.addEventListener('change', ()=>{ /* ...dein Code... */ refreshWizardRates(); });
 
   /* Live Credit-Card mirroring */
   ;['ccHolder','ccNumber','ccExpiry'].forEach(id=>{
@@ -1342,7 +1394,7 @@ q('#btnSketch')?.addEventListener('click', ()=>{
   buildSketch(); 
   openModal('modalSketch'); 
 });
-  q('#btnRates')?.addEventListener('click', ()=> openModal('modalRates'));
+  q('#btnRates')?.addEventListener('click', openRatesModal);
   q('#btnHelp') ?.addEventListener('click', ()=> openModal('modalHelp'));
 
 q('#btnNew')?.addEventListener('click', ()=>{
