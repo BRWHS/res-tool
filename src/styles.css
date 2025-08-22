@@ -518,6 +518,44 @@ table.matrix{width:100%;border-collapse:collapse}
   max-height: none;  /* Begrenzung entfernen */
   display: flex;
 }
+/* Hotelskizze – Wrapper */
+.sketch-wrap {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 12px;
+  align-items: start;
+}
+
+/* Linke Liste */
+.sketch-left {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Rechte Vorschau orientiert sich an linker Höhe */
+.sketch-right {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.sketch-right .card {
+  height: 100%;
+}
+
+.sketch-right .imgcard.wide {
+  height: 100%;         /* volle Höhe der Karte */
+  max-height: none;     /* Begrenzung weg */
+  display: flex;
+}
+
+#sketchImage {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;  /* Proportionen bleiben */
+  border-radius: 12px;
+}
+
 
 
 
