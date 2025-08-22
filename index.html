@@ -53,7 +53,7 @@
   <!-- Mini-Charts (YoY) -->
   <aside class="analytics-dock" aria-label="Mini-Charts">
     <div class="dock-head">
-      <span class="mono">YoY</span>
+      <span class="mono">YoY - Daily</span>
       <button class="btn sm" id="dockToggle" title="Ein-/Ausblenden">–</button>
     </div>
     <div id="miniAnalyticsDock" class="dock-list"></div>
@@ -508,21 +508,66 @@
     </h3>
     <button class="btn" data-close>Schließen</button>
   </header>
-  <div class="body">
-    <div class="set-grid">
-      <label class="set-field">
-        <span class="set-label" data-i18n="settings.language">Sprache</span>
-        <select id="selLang" class="input theme-select">
-          <option value="de">Deutsch</option>
-          <option value="en">English</option>
-        </select>
-      </label>
+ <div class="body">
+  <!-- Oberer Bereich: Links Einstellungen, rechts Live-Systeminfo -->
+  <div class="set-top">
+    <div>
+      <div class="set-grid">
+        <label class="set-field">
+          <span class="set-label" data-i18n="settings.language">Sprache</span>
+          <select id="selLang" class="input theme-select">
+            <option value="de">Deutsch</option>
+            <option value="en">English</option>
+          </select>
+        </label>
 
-      <label class="set-field">
-        <span class="set-label" data-i18n="settings.hue">Farbton (Hue) <span id="hueVal" class="muted">180°</span></span>
-        <input id="rngHue" class="hue" type="range" min="0" max="359" step="1" />
-      </label>
+        <label class="set-field">
+          <span class="set-label" data-i18n="settings.hue">
+            Farbton (Hue) <span id="hueVal" class="muted">180°</span>
+          </span>
+          <input id="rngHue" class="hue" type="range" min="0" max="359" step="1" />
+        </label>
+      </div>
+
+      <!-- Nur noch: Speichern-Button -->
+      <div class="row set-actions" style="margin-top:8px;">
+        <div style="flex:1"></div>
+        <button class="btn primary" id="btnSaveSettings" data-i18n="settings.save">Einstellungen speichern</button>
+      </div>
     </div>
+
+    <!-- NEU: Live-Systeminfo (wird NICHT gespeichert) -->
+    <aside class="box set-sys" id="netBox">
+      <h4 class="mono section" style="margin:0 0 6px">Live-Systeminfo (nur für dich)</h4>
+      <div class="grid-compact">
+        <div class="settings-row">
+          <label>Öffentliche IP</label><span id="netIp">—</span>
+        </div>
+        <div class="settings-row">
+          <label>IPv4</label><span id="netIpv4">—</span>
+        </div>
+        <div class="settings-row">
+          <label>Standort</label><span id="netLoc">—</span>
+        </div>
+        <div class="settings-row">
+          <label>OS / Browser</label><span id="netOs">—</span>
+        </div>
+      </div>
+      <p class="muted tiny">Wird nur live angezeigt und nicht gespeichert.</p>
+    </aside>
+  </div>
+
+  <!-- Unterer Bereich: 5 Kacheln -->
+  <div class="set-tiles">
+    <button class="btn tile" id="btnUserPrefs">Benutzereinstellungen</button>
+    <button class="btn tile" id="btnChannel">Channel – Einstellungen</button>
+    <button class="btn tile" id="btnLog">Log Activity</button>
+    <button class="btn tile" id="btnRates">Rateneinstellungen</button>
+    <button class="btn tile" id="btnHelp">Hilfe & FAQ</button>
+  </div>
+
+  <p class="muted" id="setInfo"></p>
+</div>
 
     <div class="row wrap set-actions" style="margin-top:8px;">
       <button class="btn primary" id="btnSaveSettings" data-i18n="settings.save">Einstellungen speichern</button>
