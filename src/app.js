@@ -3,6 +3,10 @@
   if (window.__RESTOOL_APP_V2__) return;
   window.__RESTOOL_APP_V2__ = true;
 
+  // --- early helpers (müssen vor erster Nutzung verfügbar sein) ---
+const q  = (s) => document.querySelector(s);
+const qa = (s) => Array.from(document.querySelectorAll(s));
+
   /***** Supabase *****/
   const SB_URL = "https://kytuiodojfcaggkvizto.supabase.co";
   const SB_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt5dHVpb2RvamZjYWdna3ZpenRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ4MzA0NjgsImV4cCI6MjA3MDQwNjQ2OH0.YobQZnCQ7LihWtewynoCJ6ZTjqetkGwh82Nd2mmmhLU";
@@ -50,6 +54,8 @@
     return full;
   };
   const displayHotel = (h) => h ? `${h.group} - ${hotelCity(h.name)}` : '—';
+  const REQUIRE_MAPPING = false; // später true, wenn HNS-Mapping Pflicht wird
+
 
   async function refreshWizardRates(){
   const code = q('#newHotel')?.value;
@@ -114,8 +120,6 @@ q('#newRate')?.addEventListener('change', e=>{
   const pct  = v=>v==null?'—%':`${v}%`;
   const soD = d=>{const x=new Date(d); x.setHours(0,0,0,0); return x;};
   const isoDate = d => d.toISOString().slice(0,10);
-  const q = s=>document.querySelector(s);
-  const qa = s=>Array.from(document.querySelectorAll(s));
   function el(tag,attrs={},...kids){
     const e=document.createElement(tag);
     Object.entries(attrs).forEach(([k,v])=>{
