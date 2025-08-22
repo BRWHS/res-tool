@@ -411,3 +411,10 @@ table.matrix{width:100%;border-collapse:collapse}
 
 /* Inputs kompakter, damit alles stimmig wirkt */
 .set-grid .input{ padding:8px 10px; }
+
+.set-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
