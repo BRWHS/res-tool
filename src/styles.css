@@ -455,3 +455,45 @@ input[type="range"].hue{
 }
 /* Range width inside settings */
 #modalSettings input[type="range"]{ width:100%; }
+
+/* Settings Layout */
+.set-top {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 12px;
+  align-items: start;
+}
+@media (max-width: 980px){
+  .set-top { grid-template-columns: 1fr; }
+}
+
+.set-sys .settings-row{
+  display:flex; align-items:center; justify-content:space-between;
+  gap: 12px; padding: 6px 0;
+  border-bottom: 1px dashed rgba(255,255,255,.08);
+}
+.set-sys .settings-row:last-child{ border-bottom: 0; }
+.set-sys label{ min-width: 160px; opacity: .85; }
+
+/* Kacheln für die 5 Buttons */
+.set-tiles{
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px; margin-top: 14px;
+}
+.btn.tile{
+  width: 100%; height: 56px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.08);
+  background: rgba(255,255,255,.03);
+  display:flex; align-items:center; justify-content:center;
+  transition: transform .08s ease, box-shadow .08s ease, border-color .08s ease;
+}
+.btn.tile:hover{
+  transform: translateY(-1px);
+  border-color: var(--accent);
+  box-shadow: var(--glow);
+}
+
+/* Bestehendes Grid im Einstellungsblock etwas luftiger */
+.set-grid{ gap: 12px; }
