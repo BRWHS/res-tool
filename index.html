@@ -681,26 +681,40 @@
   </div>
 </section>
 
-  <!-- Hotelskizze -->
+ <!-- Hotelskizze -->
 <section class="modal" id="modalSketch" role="dialog" aria-labelledby="sketchTitle" aria-modal="true">
-    <header>
-      <h3 id="sketchTitle" class="mono">Hotelskizze</h3>
-      <button class="btn" data-close>Schließen</button>
-    </header>
-    <div class="body">
-      <!-- NEW: zwei Zustände – Buttonliste und Sketch-View -->
-      <div id="sketchStateList" class="row wrap"></div>
-      <div id="sketchStateView" class="hidden">
-        <div class="row wrap" style="margin-bottom:8px;">
-          <button class="btn" id="sketchBack">← Zurück zur Auswahl</button>
-          <div class="muted" id="sketchHotelLabel" style="margin-left:8px;"></div>
+  <header>
+    <h3 id="sketchTitle" class="mono">
+      <span class="sketch-logo" aria-hidden="true"></span> Hotelskizze
+    </h3>
+    <button class="btn" data-close>Schließen</button>
+  </header>
+
+  <div class="body">
+    <div class="sketch-wrap">
+      <!-- Linke Spalte: Hotel-Liste -->
+      <aside class="sketch-left">
+        <div class="mono muted tiny" style="margin-bottom:6px">Hotels</div>
+        <div id="sketchList" class="sketch-list"></div>
+      </aside>
+
+      <!-- Rechte Spalte: Vorschau -->
+      <section class="sketch-right">
+        <div class="card">
+          <div class="content">
+            <div class="card-head">
+              <h3 class="mono" id="sketchHotelLabel">Bitte Hotel wählen</h3>
+              <span class="pill">Skizze</span>
+            </div>
+            <div class="imgcard wide">
+              <img id="sketchImage" alt="Hotelskizze" />
+            </div>
+          </div>
         </div>
-        <div class="imgcard wide">
-          <img id="sketchImage" alt="Hotelskizze" />
-        </div>
-      </div>
+      </section>
     </div>
-  </section>
+  </div>
+</section>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.5/dist/umd/supabase.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
