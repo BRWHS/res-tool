@@ -472,5 +472,24 @@ table.matrix{width:100%;border-collapse:collapse}
 .sketch-name{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 
 /* Rechte Vorschau */
-.sketch-right .imgcard.wide{ max-height: 380px; }
+.sketch-right {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.sketch-right .imgcard.wide {
+  flex: 1;                  /* füllt den Platz */
+  height: 100%;             /* volle Höhe */
+  max-height: none;         /* Begrenzung weg */
+}
+
+#sketchImage {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;       /* Proportionen bewahren */
+  border-radius: 12px;
+  display: block;
+}
+
 
