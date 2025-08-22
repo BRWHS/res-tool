@@ -8,9 +8,6 @@
   const SB_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt5dHVpb2RvamZjYWdna3ZpenRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ4MzA0NjgsImV4cCI6MjA3MDQwNjQ2OH0.YobQZnCQ7LihWtewynoCJ6ZTjqetkGwh82Nd2mmmhLU";
   const supabase = window.supabase.createClient(SB_URL, SB_ANON_KEY);
 
-  /***** Feature Flags *****/
-  const REQUIRE_MAPPING = false; // Raten erst wählbar, wenn an HNS gemappt; derzeit aus
-
   /***** Bildquellen *****/
   const HOTEL_IMG_SRC  = "/assets/hotel-placeholder.png";
   const SKETCH_IMG_SRC = "/assets/sketch-placeholder.png";
@@ -54,6 +51,39 @@
   };
   const displayHotel = (h) => h ? `${h.group} - ${hotelCity(h.name)}` : '—';
 
+  async function refreshWizardRates(){
+  const code = q('#newHotel')?.value;
+  const cat  = q('#newCat')?.value;
+  const sel  = q('#newRate');
+  if (!sel || !code || !cat){ return; }
+
+  try{
+    // nur gemappte Raten, wenn wir es später aktivieren wollen
+    let qry = supabase.from('rates').select('name,price,cancel_policy').eq('hotel_code', code).contains('categories', [cat]);
+    if (REQUIRE_MAPPING) qry = qry.eq('mapped', true);
+    const { data, error } = await qry.order('name', { ascending:true });
+
+    const list = (!error && (data||[]).length) ? data : (HOTEL_RATES['default'].map(r=>({ name:r.name, price:r.price, cancel_policy:'Test rate' })));
+
+    sel.innerHTML = list.map(r=>`<option value="${r.name}" data-price="${r.price}" data-policy="${r.cancel_policy||''}">${r.name} (${EUR.format(r.price)})</option>`).join('');
+    if (list.length){
+      q('#newPrice') && (q('#newPrice').value = list[0].price);
+      q('#ratePolicy') && (q('#ratePolicy').textContent = list[0].cancel_policy || '—');
+    }
+  }catch(e){
+    console.warn('refreshWizardRates', e);
+  }
+}
+
+// Policy + Preis live aktualisieren bei Auswahlwechsel
+q('#newRate')?.addEventListener('change', e=>{
+  const opt = e.target.selectedOptions[0];
+  if (!opt) return;
+  const p = opt.dataset.price, pol = opt.dataset.policy || '';
+  if (p && q('#newPrice')) q('#newPrice').value = p;
+  if (q('#ratePolicy')) q('#ratePolicy').textContent = pol || '—';
+});
+
   /* Alias-Keyword für Filter-Fallback per hotel_name */
   const HOTEL_KEYWORD = {
     'MA7-M-DOR':'Dornach','MA7-M-TRU':'Trudering','MA7-FRA':'Frankfurt','MA7-STR':'Stuttgart',
@@ -91,7 +121,6 @@
     Object.entries(attrs).forEach(([k,v])=>{
       if (k==='class') e.className=v;
       else if (k==='html') e.innerHTML=v;
-      else if (k==='text') e.textContent=v;
       else e.setAttribute(k,v);
     });
     kids.forEach(k=>e.append(k));
@@ -111,13 +140,6 @@
     const firstThursday = new Date(Date.UTC(date.getUTCFullYear(),0,4));
     const diff = (date - firstThursday) / 86400000;
     return 1 + Math.round(diff / 7);
-  }
-  function safeDisplayFromRow(row){
-    if (!row) return '—';
-    if (row.hotel_name) return row.hotel_name;
-    const code = row.hotel_code || '';
-    const h    = HOTELS.find(x=>x.code===code);
-    return h ? displayHotel(h) : (code || '—');
   }
 
   /***** Bild-Helfer *****/
@@ -151,43 +173,64 @@
     safeSetImg(img, src || HOTEL_IMG_SRC);
   }
   function setCatImage(src){
-    const arr = ['#imgCatPreview', '#imgCatPreview2', '#imgCatPreview3'].map(sel => q(sel)).filter(Boolean);
-    if (arr.length === 0) { // Fallback falls alte Struktur
-      safeSetImg(q('#imgCatPreview'), src || SKETCH_IMG_SRC);
-      return;
-    }
-    arr.forEach(imgEl => safeSetImg(imgEl, src || SKETCH_IMG_SRC));
+  const arr = ['#imgCatPreview', '#imgCatPreview2', '#imgCatPreview3'].map(sel => q(sel)).filter(Boolean);
+  if (arr.length === 0) { // Fallback falls alte Struktur
+    safeSetImg(q('#imgCatPreview'), src || SKETCH_IMG_SRC);
+    return;
   }
+  arr.forEach(imgEl => safeSetImg(imgEl, src || SKETCH_IMG_SRC));
+}
+
   function setSketchImage(src){
     safeSetImg(q('#sketchImage'), src || SKETCH_IMG_SRC);
   }
+  
+/* ===== Hotelskizze (links Liste, rechts Vorschau) ===== */
+function showSketch(hotel){
+  // Label aktualisieren
+  const label = document.querySelector('#sketchHotelLabel');
+  if (label) label.textContent = `${hotel.group} - ${hotel.name.replace(/^.*? /,'')}`;
 
-  /***** Hotelskizze (kurz) *****/
-  function showSketch(hotel){
-    const label = document.querySelector('#sketchHotelLabel');
-    if (label) label.textContent = `${hotel.group} - ${hotel.name.replace(/^.*? /,'')}`;
-    setSketchImage(SKETCH_IMG_SRC);
-    document.querySelectorAll('.sketch-item').forEach(btn => {
-      btn.classList.toggle('active', btn.dataset.code === hotel.code);
-    });
+  // (Platzhalter) Bild setzen – später pro Hotel ersetzen
+  setSketchImage(SKETCH_IMG_SRC);
+
+  // Active-Status in der Liste markieren
+  document.querySelectorAll('.sketch-item').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.code === hotel.code);
+  });
+}
+
+function buildSketch(){
+  const listBox = document.querySelector('#sketchList');
+  if (!listBox) return;
+
+  listBox.innerHTML = '';
+
+  // Buttons je Hotel rendern
+  HOTELS.forEach(h => {
+    const btn = document.createElement('button');
+    btn.className = 'sketch-item';
+    btn.dataset.code = h.code;
+    btn.title = h.code;
+
+    const badge = document.createElement('span');
+    badge.className = 'sketch-badge';
+    badge.textContent = h.group;
+
+    const name = document.createElement('span');
+    name.className = 'sketch-name';
+    name.textContent = hotelCity(h.name); // nur Stadt/Shortname
+
+    btn.append(badge, name);
+    btn.addEventListener('click', () => showSketch(h));
+    listBox.append(btn);
+  });
+
+  // Default: erstes Hotel anzeigen
+  if (HOTELS.length){
+    showSketch(HOTELS[0]);
   }
-  function buildSketch(){
-    const listBox = document.querySelector('#sketchList');
-    if (!listBox) return;
-    listBox.innerHTML = '';
-    HOTELS.forEach(h => {
-      const btn = document.createElement('button');
-      btn.className = 'sketch-item';
-      btn.dataset.code = h.code;
-      btn.title = h.code;
-      const badge = document.createElement('span'); badge.className = 'sketch-badge'; badge.textContent = h.group;
-      const name  = document.createElement('span'); name.className  = 'sketch-name';  name.textContent = hotelCity(h.name);
-      btn.append(badge, name);
-      btn.addEventListener('click', () => showSketch(h));
-      listBox.append(btn);
-    });
-    if (HOTELS.length){ showSketch(HOTELS[0]); }
-  }
+}
 
   /***** Clock + Status *****/
   function startClocks(){
@@ -201,6 +244,7 @@
     const a = await supabase.from('reservations').select('id',{head:true,count:'exact'});
     const b = await supabase.from('availability').select('date',{head:true,count:'exact'});
     setChip(q('#chipSb'), !a.error && !b.error);
+    // HNS ist noch nicht verbunden → hart auf rot (lvl-2)
     const chipH = q('#chipHns');
     chipH?.classList.remove('lvl-0','lvl-1','lvl-2');
     chipH?.classList.add('lvl-2');
@@ -223,56 +267,74 @@
       .or('status.eq.active,status.eq.confirmed,status.is.null');
   }
 
-  /***** Mini-Analytics (kurz) *****/
-  async function buildMiniAnalytics(){
-    const list = q('#miniAnalyticsDock'); if (!list) return; list.innerHTML = '';
-    const today = soD(new Date());
-    const todayStartISO = today.toISOString();
-    const todayEnd = new Date(today); todayEnd.setDate(todayEnd.getDate() + 1);
-    const todayEndISO = todayEnd.toISOString();
-    const prev = new Date(today); prev.setFullYear(prev.getFullYear() - 1);
-    const prevStartISO = soD(prev).toISOString();
-    const prevEndISO = new Date(prevStartISO);
-    const cur = await supabase.from('reservations')
-      .select('hotel_code,created_at')
-      .gte('created_at', todayStartISO).lt('created_at', todayEndISO);
-    const prv = await supabase.from('reservations')
-      .select('hotel_code,created_at')
-      .gte('created_at', prevStartISO).lt('created_at', todayEndISO);
-    const countByHotel = (res) => {
-      const m = new Map();
-      (res?.data || []).forEach(r => m.set(r.hotel_code || '—', (m.get(r.hotel_code || '—') || 0) + 1));
-      return m;
-    };
-    const mCur = countByHotel(cur);
-    const mPrv = countByHotel(prv);
-    const SPARK_W = 60, SPARK_H = 22;
-    HOTELS.forEach(h => {
-      const c = mCur.get(h.code) || 0;
-      const p = mPrv.get(h.code) || 0;
-      const up = p === 0 ? c > 0 : c > p;
-      const pts = Array.from({ length: 7 }, () => Math.max(0, Math.round((c / 7) + (Math.random() * 2 - 1))));
-      const max = Math.max(1, ...pts), min = Math.min(...pts);
-      const path = pts.map((v, i) => {
-        const x = (i / (pts.length - 1)) * SPARK_W;
-        const y = SPARK_H - ((v - min) / (max - min || 1)) * (SPARK_H - 2) - 1;
-        return `${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`;
-      }).join(' ');
-      const brandAndHotel = `${h.group} ${hotelCity(h.name)}`;
-      const item = el('div', { class: 'dock-item', title: `${brandAndHotel}` },
-        el('div', { class: 'dock-name', text: brandAndHotel }),
-        (() => {
-          const svg = el('svg', { class: 'spark', viewBox: `0 0 ${SPARK_W} ${SPARK_H}`, xmlns: 'http://www.w3.org/2000/svg' });
-          svg.append(el('path', { d: path, fill: 'none', stroke: up ? '#35e08a' : '#ff4d6d', 'stroke-width': '2' }));
-          return svg;
-        })(),
-        el('div', { class: `dock-arrow ${up ? 'up' : 'down'}`, text: (up ? '↑' : '↓') })
-      );
-      list.append(item);
-    });
-  }
+ /***** Mini-Analytics — YoY (heute vs. heute vor 1 Jahr) *****/
+async function buildMiniAnalytics(){
+  const list = q('#miniAnalyticsDock'); if (!list) return; list.innerHTML = '';
 
-  /***** MODALS (generic) *****/
+  // Heute (Start/Ende)
+  const today = soD(new Date());                       // 00:00:00 heute
+  const todayStartISO = today.toISOString();
+  const todayEnd = new Date(today); todayEnd.setDate(todayEnd.getDate() + 1); // exklusiv
+  const todayEndISO = todayEnd.toISOString();
+
+  // Gleicher Kalendertag im Vorjahr
+  const prev = new Date(today);
+  prev.setFullYear(prev.getFullYear() - 1);
+  const prevStart = soD(prev);
+  const prevEnd = new Date(prevStart); prevEnd.setDate(prevEnd.getDate() + 1);
+  const prevStartISO = prevStart.toISOString();
+  const prevEndISO = prevEnd.toISOString();
+
+  // Buchungen (created_at) für heute / Vorjahr laden
+  const cur = await supabase.from('reservations')
+    .select('hotel_code,created_at')
+    .gte('created_at', todayStartISO).lt('created_at', todayEndISO);
+
+  const prv = await supabase.from('reservations')
+    .select('hotel_code,created_at')
+    .gte('created_at', prevStartISO).lt('created_at', prevEndISO);
+
+  const countByHotel = (res) => {
+    const m = new Map();
+    (res?.data || []).forEach(r => m.set(r.hotel_code || '—', (m.get(r.hotel_code || '—') || 0) + 1));
+    return m;
+  };
+
+  const mCur = countByHotel(cur);
+  const mPrv = countByHotel(prv);
+
+  // kleines SVG-Sparkline als Deko (7 zufällige Punkte, bis echte Tagesreihe kommt)
+  const SPARK_W = 60, SPARK_H = 22;
+
+  HOTELS.forEach(h => {
+    const c = mCur.get(h.code) || 0;
+    const p = mPrv.get(h.code) || 0;
+    const up = p === 0 ? c > 0 : c > p;
+
+    const pts = Array.from({ length: 7 }, () => Math.max(0, Math.round((c / 7) + (Math.random() * 2 - 1))));
+    const max = Math.max(1, ...pts), min = Math.min(...pts);
+    const path = pts.map((v, i) => {
+      const x = (i / (pts.length - 1)) * SPARK_W;
+      const y = SPARK_H - ((v - min) / (max - min || 1)) * (SPARK_H - 2) - 1;
+      return `${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`;
+    }).join(' ');
+
+    const brandAndHotel = `${h.group} ${hotelCity(h.name)}`;
+    const yoyPct = p ? Math.round(((c - p) / p) * 100) : (c > 0 ? '∞' : 0);
+
+    const item = el('div', { class: 'dock-item', title: `${brandAndHotel} · YoY ${yoyPct}%` },
+      el('div', { class: 'dock-name' }, brandAndHotel),
+      (() => {
+        const svg = el('svg', { class: 'spark', viewBox: `0 0 ${SPARK_W} ${SPARK_H}`, xmlns: 'http://www.w3.org/2000/svg' });
+        svg.append(el('path', { d: path, fill: 'none', stroke: up ? '#35e08a' : '#ff4d6d', 'stroke-width': '2' }));
+        return svg;
+      })(),
+      el('div', { class: `dock-arrow ${up ? 'up' : 'down'}` }, up ? '↑' : '↓')
+    );
+    list.append(item);
+  });
+}
+  /***** MODALS *****/
   const backdrop = q('#backdrop');
   function openModal(id){
     const sel = (id || '').toString();
@@ -325,6 +387,7 @@
       const bookingsToday = (rB.data || []).length;
 
       // (2) Heutige Aufenthalte (Nacht heute→morgen)
+      // A) arrival <= today AND departure >= today
       let qA = supabase.from('reservations')
         .select('id, rate_price, hotel_code, hotel_name, arrival, departure, status')
         .lte('arrival', tDate)
@@ -332,6 +395,7 @@
         .neq('status', 'canceled');
       if (hotel) qA = qA.eq('hotel_code', hotel.code);
 
+      // B) arrival <= today AND departure IS NULL (open-ended)
       let qB2 = supabase.from('reservations')
         .select('id, rate_price, hotel_code, hotel_name, arrival, departure, status')
         .lte('arrival', tDate)
@@ -357,9 +421,12 @@
       };
       const activeToday = Array.from(byId.values()).filter(isActiveToday);
 
+      // Umsatz = Summe der (pro-Nacht-)Rate der Buchungen, die die Nacht heute→morgen beinhalten
       const revenue = activeToday.reduce((s,r)=> s + Number(r.rate_price||0), 0);
+      // ADR (heute) = Umsatz / Anzahl Buchungen, die die Nacht heute→morgen bleiben
       const adr = activeToday.length ? Math.round((revenue/activeToday.length)*100)/100 : null;
 
+      // (3) Auslastung
       let occ = null;
       if (hotel){
         const r = await supabase.from('availability').select('capacity,booked').eq('hotel_code', hotel.code).eq('date', tDate);
@@ -395,6 +462,7 @@
       const start = new Date(today); start.setDate(start.getDate()+1);
       const end   = new Date(today); end.setDate(end.getDate()+7);
 
+      // KW-Label updaten (falls vorhanden)
       const kwFrom = isoWeek(start);
       const kwTo   = isoWeek(end);
       const kwNode = q('#kwLabel');
@@ -404,6 +472,7 @@
       const endDate   = isoDate(end);
       const endPlus1  = new Date(end); endPlus1.setDate(endPlus1.getDate()+1);
 
+      // Ohne "eq('departure','')" um 400er zu vermeiden
       let qA = supabase.from('reservations')
         .select('id, rate_price, hotel_code, arrival, departure, status')
         .neq('status','canceled')
@@ -426,20 +495,22 @@
       const rows = Array.from(byId.values());
 
       const DAY = 86400000;
-      let totalRevenue = 0;
+      let totalRevenue = 0, totalNights = 0;
 
       rows.forEach(r=>{
         const arr = soD(new Date(r.arrival));
-        const dep = r.departure ? soD(new Date(r.departure)) : null;
-        const stayEndExcl = dep ? dep : endPlus1;
+        const dep = r.departure ? soD(new Date(r.departure)) : null; // checkout (exklusiv)
+        const stayEndExcl = dep ? dep : endPlus1; // open-ended: bis Zeitraum-Ende
         const overlapStart = new Date(Math.max(arr.getTime(), start.getTime()));
         const overlapEndExcl = new Date(Math.min(stayEndExcl.getTime(), endPlus1.getTime()));
         const nights = Math.max(0, Math.round((overlapEndExcl - overlapStart)/DAY));
         if (nights > 0) {
+          totalNights += nights;
           totalRevenue += Number(r.rate_price || 0) * nights;
         }
       });
 
+      // Anzahl Buchungen mit mind. 1 Nacht im Fenster:
       const bookingsInWindow = rows.filter(r=>{
         const arr = soD(new Date(r.arrival));
         const dep = r.departure ? soD(new Date(r.departure)) : null;
@@ -450,8 +521,10 @@
         return nights > 0;
       }).length;
 
+      // ADR (Woche) = Umsatz / Buchungen (nicht / Nächte)
       const adr = bookingsInWindow ? Math.round((totalRevenue/bookingsInWindow)*100)/100 : null;
 
+      // Auslastung: Ø über Zeitraum
       let nOcc = null;
       if (hotel){
         const r = await supabase.from('availability').select('capacity,booked')
@@ -593,32 +666,32 @@
   q('#prevPage')  ?.addEventListener('click', ()=>{ page = Math.max(1, page-1); loadReservations(); });
   q('#nextPage')  ?.addEventListener('click', ()=>{ page = page+1; loadReservations(); });
 
-  /***** Edit: Dropdowns (mit Rates-Query) *****/
-  async function fillEditDropdowns(hotelCode, curCat, curRate){
-    const cats = HOTEL_CATEGORIES['default'];
-    const selCat = q('#eCat'); if (selCat) selCat.innerHTML = cats.map(c=>`<option ${c===curCat?'selected':''}>${c}</option>`).join('');
+  /***** Edit: Dropdowns *****/
+async function fillEditDropdowns(hotelCode, curCat, curRate){
+  const cats = HOTEL_CATEGORIES['default'];
+  const selCat = q('#eCat'); if (selCat) selCat.innerHTML = cats.map(c=>`<option ${c===curCat?'selected':''}>${c}</option>`).join('');
 
-    try{
-      let { data, error } = await supabase
-        .from('rates')
-        .select('name,price')
-        .eq('hotel_code', hotelCode)
-        .contains('categories', [curCat])
-        .order('name', { ascending:true });
+  try{
+    let { data, error } = await supabase
+      .from('rates')
+      .select('name,price')
+      .eq('hotel_code', hotelCode)
+      .contains('categories', [curCat])
+      .order('name', { ascending:true });
 
-      const list = (!error && (data||[]).length) ? data : HOTEL_RATES['default'];
-      const selRate= q('#eRate');
-      if (selRate){
-        selRate.innerHTML = list.map(r=>`<option value="${r.name}" data-price="${r.price}" ${r.name===curRate?'selected':''}>${r.name} (${EUR.format(r.price)})</option>`).join('');
-        selRate.addEventListener('change', e=>{
-          const p = e.target.selectedOptions[0]?.dataset.price;
-          if (p) q('#ePrice').value = p;
-        });
-      }
-    }catch(err){
-      console.warn('fillEditDropdowns', err);
+    const list = (!error && (data||[]).length) ? data : HOTEL_RATES['default'];
+    const selRate= q('#eRate');
+    if (selRate){
+      selRate.innerHTML = list.map(r=>`<option value="${r.name}" data-price="${r.price}" ${r.name===curRate?'selected':''}>${r.name} (${EUR.format(r.price)})</option>`).join('');
+      selRate.addEventListener('change', e=>{
+        const p = e.target.selectedOptions[0]?.dataset.price;
+        if (p) q('#ePrice').value = p;
+      });
     }
+  }catch(err){
+    console.warn('fillEditDropdowns', err);
   }
+}
 
   /***** Edit-Dialog *****/
   async function openEdit(id){
@@ -668,8 +741,8 @@
       const payload = {
         cc_holder: q('#eCcHolder').value || null,
         cc_last4:  q('#eCcLast4').value  || null,
-        cc_exp_month: q('#eCcExpM').value ? Number(q('#eCcM').value) : null,
-        cc_exp_year:  q('#eCcExpY').value ? Number(q('#eCcY').value) : null
+        cc_exp_month: q('#eCcExpM').value ? Number(q('#eCcExpM').value) : null,
+        cc_exp_year:  q('#eCcExpY').value ? Number(q('#eCcExpY').value) : null
       };
       const { error } = await supabase.from('reservations').update(payload).eq('id', id);
       q('#editInfo').textContent = error ? ('Fehler: '+error.message) : createdAtTxt;
@@ -711,11 +784,13 @@
       q('#newPrice') && (q('#newPrice').value = rates[0].price);
     }
     updateCatMeta();
-    const desc = q('#catDesc');
-    if (desc) {
-      desc.textContent = "das Zimmer hat eine größe von mehr oder weniger als 40m², Toaster, Mikrowelle und Balkon mit Ausblick. Dies ist ein Placeholder‑Text und soll einen visuellen Effekt erzeugen. Die Beschreibung soll dem Agent alle Infos zu der Zimmerkategorie liefern, um möglichst präziser arbeiten zu können.";
-    }
+    
+    // Platzhalter-Beschreibung unter dem Dropdown (später pro Hotel/Kategorie dynamisch)
+   const desc = q('#catDesc');
+  if (desc) {
+    desc.textContent = "das Zimmer hat eine größe von mehr oder weniger als 40m², Toaster, Mikrowelle und Balkon mit Ausblick. Dies ist ein Placeholder‑Text und soll einen visuellen Effekt erzeugen. Die Beschreibung soll dem Agent alle Infos zu der Zimmerkategorie liefern, um möglichst präziser arbeiten zu können.";
   }
+}
 
   function updateCatMeta(){
     const cat = q('#newCat')?.value || 'Standard';
@@ -729,38 +804,13 @@
     }
     const cap = q('#imgCatCaption');
     if (cap) cap.textContent = `${cat} – Beispielbild`;
-    const desc = q('#catDesc');
-    if (desc) {
-      desc.textContent = "das Zimmer hat eine größe von mehr oder weniger als 40m², Toaster, Mikrowelle und Balkon mit Ausblick. Dies ist ein Placeholder‑Text …";
+
+     // ▼ NEU: Platzhalter-Beschreibung unter dem Dropdown
+  const desc = q('#catDesc');
+  if (desc) {
+    desc.textContent = "das Zimmer hat eine größe von mehr oder weniger als 40m², Toaster, Mikrowelle und Balkon mit Ausblick. Dies ist ein Placeholder‑Text und soll einen visuellen Effekt erzeugen. Die Beschreibung soll dem Agent alle Infos zu der Zimmerkategorie liefern, um möglichst präziser arbeiten zu können";
     }
   }
-
-  async function refreshWizardRates(){
-    const code = q('#newHotel')?.value;
-    const cat  = q('#newCat')?.value;
-    const sel  = q('#newRate');
-    if (!sel || !code || !cat){ return; }
-    try{
-      let qry = supabase.from('rates').select('name,price,cancel_policy').eq('hotel_code', code).contains('categories', [cat]).order('name', { ascending:true });
-      if (REQUIRE_MAPPING) qry = qry.eq('mapped', true);
-      const { data, error } = await qry;
-      const list = (!error && (data||[]).length) ? data : (HOTEL_RATES['default'].map(r=>({ name:r.name, price:r.price, cancel_policy:'Test rate' })));
-      sel.innerHTML = list.map(r=>`<option value="${r.name}" data-price="${r.price}" data-policy="${r.cancel_policy||''}">${r.name} (${EUR.format(r.price)})</option>`).join('');
-      if (list.length){
-        q('#newPrice') && (q('#newPrice').value = list[0].price);
-        q('#ratePolicy') && (q('#ratePolicy').textContent = list[0].cancel_policy || '—');
-      }
-    }catch(e){ console.warn('refreshWizardRates', e); }
-  }
-
-  q('#newRate')?.addEventListener('change', e=>{
-    const opt = e.target.selectedOptions[0];
-    if (!opt) return;
-    const p = opt.dataset.price, pol = opt.dataset.policy || '';
-    if (p && q('#newPrice')) q('#newPrice').value = p;
-    if (q('#ratePolicy')) q('#ratePolicy').textContent = pol || '—';
-    validateStep('3'); updateSummary('#summaryFinal');
-  });
 
   function wizardSet(step){
     qa('.wstep').forEach(b=>b.classList.toggle('active', b.dataset.step==step));
@@ -774,8 +824,12 @@
       ensureCatRateOptions();
       setCatImage(SKETCH_IMG_SRC);
     }
-    if (step==='1'){ setHotelImage(HOTEL_IMG_SRC); }
-    if (step==='3'){ refreshWizardRates(); }
+    if (step==='1'){
+      setHotelImage(HOTEL_IMG_SRC);
+    }
+    if (step==='3'){ 
+      refreshWizardRates(); 
+    }
 
     validateStep(step);
     if (step==='4') updateSummary('#summaryFinal');
@@ -797,16 +851,19 @@
     sel.innerHTML='';
     sel.append(el('option',{value:''},'Bitte wählen'));
     HOTELS.forEach(h=> sel.append(el('option',{value:h.code}, displayHotel(h))));
+
     sel.addEventListener('change', ()=>{
       const cats  = HOTEL_CATEGORIES['default'];
       const rates = HOTEL_RATES['default'];
+
       q('#newCat')  && (q('#newCat').innerHTML  = cats.map((c,i)=>`<option value="${c}" ${i===0?'selected':''}>${c}</option>`).join(''));
       q('#newRate') && (q('#newRate').innerHTML = rates.map((r,i)=>`<option value="${r.name}" data-price="${r.price}" ${i===0?'selected':''}>${r.name} (${EUR.format(r.price)})</option>`).join(''));
       q('#newPrice') && (q('#newPrice').value = rates[0].price);
+
       setHotelImage(HOTEL_IMG_SRC);
       setCatImage(SKETCH_IMG_SRC);
+
       validateStep('1'); updateSummary('#summaryFinal'); updateCatMeta();
-      refreshWizardRates();
     });
   }
 
@@ -823,10 +880,15 @@
   });
 
   // Inputs → Live-Validation + Summary
+  q('#newRate')?.addEventListener('change', e=>{
+    const price=e.target.selectedOptions[0]?.dataset.price;
+    if(price && q('#newPrice')) q('#newPrice').value=price;
+    validateStep('3'); updateSummary('#summaryFinal');
+  });
   ['newArr','newDep','newAdults','newChildren','newHotel','newFname','newLname'].forEach(id=>{
     const n=q('#'+id); n?.addEventListener('input', ()=>{ validateStep('1'); updateSummary('#summaryFinal'); });
   });
-  q('#newCat')  ?.addEventListener('change', ()=>{ validateStep('2'); updateSummary('#summaryFinal'); setCatImage(SKETCH_IMG_SRC); updateCatMeta(); refreshWizardRates(); });
+  q('#newCat')  ?.addEventListener('change', ()=>{ validateStep('2'); updateSummary('#summaryFinal'); setCatImage(SKETCH_IMG_SRC); updateCatMeta(); });
   q('#newPrice')?.addEventListener('input',  ()=>{ validateStep('3'); updateSummary('#summaryFinal'); });
 
   /* Summary (Step 4) */
@@ -838,6 +900,7 @@
     const fname = q('#newFname')?.value || '';
     const lname = q('#newLname')?.value || '';
     const gast  = (lname || fname) ? `${lname}${fname ? ', '+fname : ''}` : '—';
+
     return [
       ['Hotel',    h ? displayHotel(h) : '—'],
       ['Gast',     gast],
@@ -853,6 +916,9 @@
     const rows = linesSummary().map(([k,v])=>`<div class="summary line"><span>${k}</span><span>${v}</span></div>`).join('');
     box.innerHTML = `<h4 class="mono">Zusammenfassung</h4>${rows}`;
   }
+  
+q('#newHotel')?.addEventListener('change', ()=>{ /* ...dein Code... */ refreshWizardRates(); });
+q('#newCat')  ?.addEventListener('change', ()=>{ /* ...dein Code... */ refreshWizardRates(); });
 
   /* Live Credit-Card mirroring */
   ;['ccHolder','ccNumber','ccExpiry'].forEach(id=>{
@@ -910,8 +976,9 @@
       guest_city: q('#newCity')?.value || null,
       company_name: q('#newCompany')?.value || null,
       company_vat: q('#newVat')?.value || null,
-      company_postal_code: q('#newCompanyZip')?.value || null,
-      company_address: q('#newAddress')?.value || null,
+      // Aus dem HTML: kombinierte Felder
+      company_postal_code: q('#newCompanyZipCity')?.value || null,
+      company_address: q('#newAddressStreet')?.value || null,
       cc_holder: cc.holder,
       cc_last4: cc.last4,
       cc_exp_month: cc.exp_m,
@@ -927,255 +994,693 @@
       await loadKpisToday();
       await loadKpisNext();
       await loadReservations();
-      setTimeout(()=>{ try{ closeModal('modalNew'); }catch(_){} }, 800);
+      setTimeout(()=>closeModal('modalNew'), 700);
     }
   }
   q('#btnCreate')?.addEventListener('click', createReservation);
 
-  /*****************************************************************
-   *            RATES MANAGEMENT (Direct / Corp / IDS)             *
-   *****************************************************************/
-  const RATE_TYPES = ['Direct','Corp','IDS'];
-  function ensureRatesModalDOM(){
-    let m = q('#modalRates');
-    if (m) return m;
-    m = el('section', { id:'modalRates', class:'modal', role:'dialog', 'aria-modal':'true' });
-    m.innerHTML = `
-      <header>
-        <h3 class="mono"><span class="set-logo" aria-hidden="true"></span> Ratenverwaltung</h3>
-        <button class="btn" data-close>Schließen</button>
-      </header>
-      <div class="body">
-        <div class="row wrap" style="gap:8px;align-items:center;margin-bottom:8px">
-          <button class="btn sm" data-ratetab="Direct">Direct-Rate</button>
-          <button class="btn sm" data-ratetab="Corp">Corp-Rate</button>
-          <button class="btn sm" data-ratetab="IDS">IDS-Rate</button>
-          <span style="flex:1"></span>
-          <button class="btn primary" id="btnNewRate">Neue Rate</button>
-        </div>
-        <div id="ratesList"></div>
-      </div>`;
-    document.body.append(m);
-    m.querySelector('[data-close]')?.addEventListener('click', ()=> closeModal('modalRates'));
-    m.querySelectorAll('[data-ratetab]').forEach(btn=> btn.addEventListener('click', ()=>{
-      state.ratesTab = btn.getAttribute('data-ratetab');
-      loadRates();
-    }));
-    m.querySelector('#btnNewRate')?.addEventListener('click', openRateCreate);
-    return m;
+  /***** Availability *****/
+  function datesFrom(startDate, days){
+    const ds=[]; const base = startDate? new Date(startDate) : soD(new Date());
+    base.setHours(0,0,0,0);
+    for(let i=0;i<days;i++){ const d=new Date(base); d.setDate(base.getDate()+i); ds.push(d); }
+    return ds;
   }
-  const state = { ratesTab:'Direct' };
+  function occClass(p){ if (p>=90) return 'occ-r'; if (p>=65) return 'occ-o'; return 'occ-g'; }
+  async function buildMatrix(){
+    const fromVal = q('#availFrom')?.value || isoDate(new Date());
+    const days = Number(q('#availDays')?.value||14);
+    const ds = datesFrom(fromVal, days);
 
-  function rateTypePill(type){
-    const map = { Direct:'pill lvl-0', Corp:'pill lvl-2', IDS:'pill lvl-1' };
-    return `<span class="${map[type]||'pill'}">${type}</span>`;
+    const head=q('#matrixTable thead tr'); head?.querySelectorAll('th:not(.sticky)')?.forEach(n=>n.remove());
+    ds.forEach(d=> head?.append(el('th',{}, Dm.format(d))));
+    const body=q('#matrixBody'); if (!body) return; body.innerHTML='';
+
+    const from = isoDate(ds[0]), to = isoDate(ds.at(-1));
+
+    for (const h of HOTELS){
+      const tr=el('tr'); tr.append(el('td',{class:'sticky'}, displayHotel(h)));
+      const { data } = await supabase.from('availability')
+        .select('date,capacity,booked')
+        .eq('hotel_code', h.code)
+        .gte('date', from).lte('date', to)
+        .order('date',{ascending:true});
+      const map={}; (data||[]).forEach(r=>map[r.date]=r);
+
+      ds.forEach(d=>{
+  const k   = isoDate(d);
+  const cap = map[k]?.capacity ?? 100;
+  const b   = map[k]?.booked ?? 0;
+  const p   = Math.min(100, Math.round((Number(b)/Math.max(1,Number(cap)))*100));
+  const avail = Math.max(0, Number(cap) - Number(b));
+
+  const pill = el('span', { class: `pill ${occClass(p)}` }, `${p}%`);
+
+  // Dummy-Kategorien nach Verfügbarkeit aufteilen
+  const split = splitDummyCategories(avail);
+
+  // Tooltip-Events
+  pill.addEventListener('mouseenter', (evt)=>{
+    const title = `${displayHotel(h)} · ${Dm.format(d)}`;
+    const lines = [
+      ['Standard', split.Standard],
+      ['Superior', split.Superior],
+      ['Suite',    split.Suite]
+    ];
+    showAvailTooltip(evt, title, lines);
+  });
+  pill.addEventListener('mousemove', moveAvailTooltip);
+  pill.addEventListener('mouseleave', hideAvailTooltip);
+
+  tr.append(el('td', {}, pill));
+});
+
+      // ---- Availability Tooltip Helpers ----
+let __availTT = null;
+function ensureAvailTooltip(){
+  if (__availTT) return __availTT;
+  __availTT = document.createElement('div');
+  __availTT.className = 'avail-tt';
+  __availTT.style.display = 'none';
+  document.body.appendChild(__availTT);
+  return __availTT;
+}
+function showAvailTooltip(evt, title, lines){
+  const tt = ensureAvailTooltip();
+  tt.innerHTML = `
+    <div class="tt-title">${title}</div>
+    ${lines.map(([label, val]) => `<div class="tt-line"><span>${label}</span><span>${val}</span></div>`).join('')}
+  `;
+  tt.style.display = 'block';
+  moveAvailTooltip(evt);
+}
+function moveAvailTooltip(evt){
+  const tt = ensureAvailTooltip();
+  const pad = 12;
+  const x = evt.clientX + pad;
+  const y = evt.clientY + pad;
+  tt.style.left = x + 'px';
+  tt.style.top  = y + 'px';
+}
+function hideAvailTooltip(){
+  const tt = ensureAvailTooltip();
+  tt.style.display = 'none';
+}
+function splitDummyCategories(avail){
+  // Verteile die Verfügbarkeit (cap - booked) grob auf Standard/Superior/Suite (50/30/20)
+  const a = Math.max(0, Number(avail)||0);
+  const std = Math.max(0, Math.floor(a * 0.5));
+  const sup = Math.max(0, Math.floor(a * 0.3));
+  const sui = Math.max(0, a - std - sup);
+  return { Standard: std, Superior: sup, Suite: sui };
+}
+      body.append(tr);
+    }
   }
+  q('#availRun')?.addEventListener('click', buildMatrix);
 
-  async function loadRates(){
-    const list = q('#ratesList'); if (!list) return;
-    list.innerHTML = '<p class="muted">Lade …</p>';
-    try{
-      const { data, error } = await supabase
-        .from('rates')
-        .select('id,hotel_code,rate_code,type,name,price,cancel_policy,categories,mapped,created_at')
-        .eq('type', state.ratesTab)
-        .order('hotel_code',{ascending:true})
-        .order('name',{ascending:true});
-      if (error) throw error;
+  /***** Reporting *****/
 
-      if (!data || !data.length){
-        list.innerHTML = `<div class="box"><p class="muted">Keine Raten im Tab <b>${state.ratesTab}</b> gefunden.</p></div>`;
-        return;
+// --- Reporting: Chart State ---
+let chartRevenue = null;
+let chartBookings = null;
+
+// zuletzt berechnete Zusammenfassung (für PDF-Export)
+let reportSummary = {
+  labels: [],
+  bookings: [],
+  revenue: [],
+  adr: [],
+  occPct: [] // Belegungsrate
+};
+
+// Charts zeichnen/aktualisieren
+function updateReportCharts() {
+  const labels   = reportSummary.labels;
+  const revenue  = reportSummary.revenue;
+  const bookings = reportSummary.bookings;
+
+  // Canvas-Kontexte holen
+  const ctxR = document.getElementById('chartRevenue')?.getContext('2d');
+  const ctxB = document.getElementById('chartBookings')?.getContext('2d');
+
+  // Revenue-Bar
+  if (ctxR) {
+    if (chartRevenue) chartRevenue.destroy();
+    chartRevenue = new Chart(ctxR, {
+      type: 'bar',
+      data: { labels, datasets: [{ label: 'Umsatz (€)', data: revenue }] },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true } }
       }
-      const groupByHotel = data.reduce((acc,r)=>{
-        (acc[r.hotel_code||'—'] ||= []).push(r); return acc;
-      },{});
+    });
+  }
 
-      const frag = document.createDocumentFragment();
-      Object.entries(groupByHotel).forEach(([code,items])=>{
-        const h = HOTELS.find(x=>x.code===code);
-        const card = el('article',{class:'card'});
-        const header = el('div',{class:'content'}, 
-          el('div',{class:'card-head'},
-            el('h3',{class:'mono'}, `${displayHotel(h)||code} — ${items.length} Rate(n)`),
-            el('span',{},'')
-          )
-        );
-        const body = el('div',{class:'content'});
-        const table = el('table',{class:'resv'});
-        table.innerHTML = `
-          <thead><tr>
-            <th>Ratecode</th><th>Typ</th><th>Name</th><th>Kategorien</th><th>Preis</th><th>Policy</th><th>Mapping</th><th></th>
-          </tr></thead>
-          <tbody></tbody>`;
-        const tb = table.querySelector('tbody');
-        items.forEach(r=>{
-          const tr = el('tr',{});
-          tr.innerHTML = `
-            <td>${r.rate_code||'—'}</td>
-            <td>${rateTypePill(r.type||'—')}</td>
-            <td>${r.name||'—'}</td>
-            <td>${(r.categories||[]).join(', ')||'—'}</td>
-            <td>${r.price!=null?EUR.format(r.price):'—'}</td>
-            <td class="muted">${r.cancel_policy||'—'}</td>
-            <td>${r.mapped?'<span class="pill lvl-0">gemappt</span>':'<span class="pill lvl-1">offen</span>'}</td>
-            <td><button class="btn sm" data-edit="${r.id}">Bearbeiten</button></td>`;
-          tb.append(tr);
-        });
-        body.append(table);
-        card.append(header, body);
-        frag.append(card);
-      });
-      list.innerHTML = '';
-      list.append(frag);
-      list.querySelectorAll('[data-edit]').forEach(btn=> btn.addEventListener('click', ()=> openRateEdit(btn.getAttribute('data-edit')) ));
-    }catch(e){
-      console.error(e);
-      list.innerHTML = `<div class="box"><p class="muted">Fehler beim Laden: ${e.message}</p></div>`;
+  // Bookings-Pie
+  if (ctxB) {
+    if (chartBookings) chartBookings.destroy();
+    chartBookings = new Chart(ctxB, {
+      type: 'pie',
+      data: { labels, datasets: [{ label: 'Buchungen', data: bookings }] },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom' } }
+      }
+    });
+  }
+}
+
+function setDefaultReportRange(){
+  const to=soD(new Date()); const from=soD(new Date(Date.now()-29*86400000));
+  q('#repFrom') && (q('#repFrom').value=isoDate(from));
+  q('#repTo')   && (q('#repTo').value=isoDate(to));
+}
+function fillRepHotel(){
+  const sel=q('#repHotel'); if (!sel) return;
+  sel.innerHTML='';
+  sel.append(el('option',{value:'all'},'Alle Hotels'));
+  HOTELS.forEach(h=> sel.append(el('option',{value:h.code}, displayHotel(h))));
+}
+
+async function runReport(){
+  const from = q('#repFrom')?.value;
+  const to   = q('#repTo')?.value;
+  const code = q('#repHotel')?.value || 'all';
+  if (!from || !to) return;
+
+  const body = q('#repBody'); if (!body) return;
+  body.innerHTML = '';
+
+  // (1) Reservierungen laden (Buchungen, Umsatz, ADR)
+  let qRes = supabase.from('reservations')
+    .select('hotel_name,hotel_code,rate_price,arrival,departure,status,channel,created_at')
+    .gte('arrival', from).lte('arrival', to)
+    .neq('status','canceled');
+  if (code !== 'all') qRes = qRes.eq('hotel_code', code);
+  const { data: resRows, error: resErr } = await qRes;
+  if (resErr){ body.append(el('tr',{}, el('td',{colspan:'5'}, 'Fehler beim Laden (Reservierungen)'))); return; }
+
+  // (2) Availability laden (Belegungsrate)
+  let qAv = supabase.from('availability')
+    .select('date,hotel_code,capacity,booked')
+    .gte('date', from).lte('date', to);
+  if (code !== 'all') qAv = qAv.eq('hotel_code', code);
+  const { data: avRows, error: avErr } = await qAv;
+  if (avErr){ body.append(el('tr',{}, el('td',{colspan:'5'}, 'Fehler beim Laden (Availability)'))); return; }
+
+  // (3) Aggregation
+  const byHotel = new Map();
+  (resRows||[]).forEach(r=>{
+    const key = r.hotel_code || r.hotel_name || '—';
+    const o = byHotel.get(key) || { hotel_code:r.hotel_code, hotel_name:r.hotel_name||r.hotel_code, bookings:0, revenue:0 };
+    o.bookings += 1;
+    o.revenue  += Number(r.rate_price||0);
+    byHotel.set(key, o);
+  });
+
+  const occMap = new Map(); // code -> {sum,n}
+  (avRows||[]).forEach(a=>{
+    const cap = Number(a.capacity||0), b = Number(a.booked||0);
+    if (cap>0){
+      const p = Math.min(100, Math.round((b/cap)*100));
+      const k = a.hotel_code || '—';
+      const o = occMap.get(k) || {sum:0,n:0};
+      o.sum += p; o.n += 1;
+      occMap.set(k,o);
+    }
+  });
+
+  const labels=[], bookings=[], revenue=[], adrArr=[], occPct=[];
+  const rows = [...byHotel.entries()].map(([key,o])=>{
+    const h   = HOTELS.find(x=>x.code===o.hotel_code);
+    const name= h ? `${h.group} - ${ (h.name||'').replace(/^.*? /,'') }` : (o.hotel_name || key);
+    const adr = o.bookings ? (o.revenue/o.bookings) : null;
+    const om  = occMap.get(o.hotel_code || key);
+    const occ = (om && om.n>0) ? Math.round(om.sum/om.n) : null;
+
+    labels.push(name);
+    bookings.push(o.bookings);
+    revenue.push(Math.round(o.revenue));
+    adrArr.push(adr);
+    occPct.push(occ);
+
+    return { name, bookings:o.bookings, revenue:o.revenue, adr, occ };
+  });
+
+  if (rows.length===0){
+    body.append(el('tr',{}, el('td',{colspan:'5'}, 'Keine Daten im Zeitraum')));
+    reportSummary = { labels:[], bookings:[], revenue:[], adr:[], occPct:[] };
+    updateReportCharts();
+    return;
+  }
+
+  // nach Umsatz sortieren
+  rows.sort((a,b)=> b.revenue - a.revenue);
+
+  // Tabelle rendern
+  rows.forEach(r=>{
+    body.append(el('tr',{},
+      el('td',{}, r.name),
+      el('td',{}, String(r.bookings)),
+      el('td',{}, EUR.format(r.revenue)),
+      el('td',{}, r.adr!=null ? EUR.format(r.adr) : '—'),
+      el('td',{}, r.occ!=null ? (r.occ + '%') : '—')
+    ));
+  });
+
+  // Charts refresh
+  reportSummary = { labels, bookings, revenue, adr: adrArr, occPct };
+  updateReportCharts();
+}
+
+// Buttons
+q('#repRun')?.addEventListener('click', runReport);
+
+q('#repCsv')?.addEventListener('click', ()=>{
+  const tbody = Array.from(document.querySelectorAll('#repBody tr'));
+  const rows = [['Hotel','Buchungen','Umsatz','ADR','Belegungsrate']];
+  tbody.forEach(tr=> rows.push([...tr.children].map(td=>td.textContent)));
+  download('report.csv','text/csv;charset=utf-8',
+    rows.map(r=>r.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(',')).join('\n')
+  );
+});
+
+q('#repXls')?.addEventListener('click', ()=>{
+  const tbody = Array.from(document.querySelectorAll('#repBody tr'));
+  const rows = [['Hotel','Buchungen','Umsatz','ADR','Belegungsrate']];
+  tbody.forEach(tr=> rows.push([...tr.children].map(td=>td.textContent)));
+  const header=`<?xml version="1.0"?>
+  <Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+    xmlns:o="urn:schemas-microsoft-com:office:office"
+    xmlns:x="urn:schemas-microsoft-com:office:excel"
+    xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+    <Worksheet ss:Name="Report"><Table>`;
+  const rowsXml = rows.map(r=>`<Row>`+r.map(c=>`<Cell><Data ss:Type="String">${String(c??'').replace(/&/g,'&amp;').replace(/</g,'&lt;')}</Data></Cell>`).join('')+`</Row>`).join('');
+  const xls = header+rowsXml+`</Table></Worksheet></Workbook>`;
+  download('report.xls','application/vnd.ms-excel', xls);
+});
+
+q('#repPdf')?.addEventListener('click', async ()=>{
+  const { jsPDF } = window.jspdf || {};
+  if (!jsPDF) return alert('PDF-Bibliothek nicht geladen.');
+
+  const doc = new jsPDF({ orientation: 'p', unit: 'pt', format: 'a4' });
+
+  const from = q('#repFrom')?.value || '';
+  const to   = q('#repTo')?.value || '';
+  const title = 'Report';
+  const subtitle = `Zeitraum: ${from} – ${to}`;
+  const ts = new Date().toLocaleString('de-DE');
+
+  // Header
+  doc.setFont('helvetica','bold'); doc.setFontSize(16);
+  doc.text(title, 40, 40);
+  doc.setFont('helvetica','normal'); doc.setFontSize(11);
+  doc.text(subtitle, 40, 60);
+  doc.setFontSize(9);
+  doc.text(`Erstellt: ${ts}`, 40, 76);
+
+  // Tabelle
+  const head = [['Hotel','Buchungen','Umsatz','ADR','Belegungsrate']];
+  const body = reportSummary.labels.map((label, i)=>[
+    label,
+    String(reportSummary.bookings[i] ?? ''),
+    (reportSummary.revenue[i]!=null ? EUR.format(reportSummary.revenue[i]) : '—'),
+    (reportSummary.adr[i]!=null ? EUR.format(reportSummary.adr[i]) : '—'),
+    (reportSummary.occPct[i]!=null ? (reportSummary.occPct[i] + '%') : '—')
+  ]);
+
+  doc.autoTable({
+    head, body,
+    startY: 96,
+    styles: { font: 'helvetica', fontSize: 9, cellPadding: 6 },
+    headStyles: { fillColor: [0, 180, 180] }
+  });
+
+  // Charts kompakt nebeneinander
+  const revCanvas = document.getElementById('chartRevenue');
+  const bokCanvas = document.getElementById('chartBookings');
+
+  const pageW = doc.internal.pageSize.getWidth();
+  const pageH = doc.internal.pageSize.getHeight();
+  const marginX = 40;
+  const gap = 20;
+
+  let y = (doc.lastAutoTable?.finalY || 96) + 30;
+
+  if (revCanvas || bokCanvas) {
+    const maxW = (pageW - marginX*2 - gap) / 2; // zwei Spalten
+
+    // Falls nur ein Chart existiert → volle Breite nutzen (kompakt in der Höhe)
+    const placeOne = (canvas, labelText) => {
+      const img = canvas.toDataURL('image/png', 1.0);
+      const w = pageW - marginX*2;
+      const h = (canvas.height/canvas.width) * w * 0.5;
+      if (y + 20 + h > pageH - 40) { doc.addPage(); y = 40; }
+      doc.setFont('helvetica','bold'); doc.setFontSize(11);
+      doc.text(labelText, marginX, y); y += 10;
+      doc.addImage(img, 'PNG', marginX, y, w, h); y += h;
+    };
+
+    if (revCanvas && bokCanvas) {
+      const imgR = revCanvas.toDataURL('image/png', 1.0);
+      const imgB = bokCanvas.toDataURL('image/png', 1.0);
+      const hR = (revCanvas.height/revCanvas.width) * maxW;
+      const hB = (bokCanvas.height/bokCanvas.width) * maxW;
+      const h = Math.min(220, Math.max(hR, hB)); // Deckelung für Kompaktheit
+
+      if (y + 30 + h > pageH - 40) { doc.addPage(); y = 40; }
+
+      doc.setFont('helvetica','bold'); doc.setFontSize(11);
+      doc.text('Umsatz pro Hotel', marginX, y);
+      doc.text('Buchungen pro Hotel', marginX + maxW + gap, y);
+      y += 10;
+
+      doc.addImage(imgR, 'PNG', marginX, y, maxW, h);
+      doc.addImage(imgB, 'PNG', marginX + maxW + gap, y, maxW, h);
+      y += h;
+    } else if (revCanvas) {
+      placeOne(revCanvas, 'Umsatz pro Hotel');
+    } else if (bokCanvas) {
+      placeOne(bokCanvas, 'Buchungen pro Hotel');
     }
   }
 
-  function rateForm(rate){
-    const isNew = !rate;
-    const r = rate || { rate_code:'', type: state.ratesTab, hotel_code:'', categories:[], name:'', cancel_policy:'', price: null, mapped:false };
-    const catsOptions = HOTEL_CATEGORIES.default.map(c=>`<option value="${c}" ${r.categories?.includes(c)?'selected':''}>${c}</option>`).join('');
-    const hotelOpts = HOTELS.map(h=>`<option value="${h.code}" ${r.hotel_code===h.code?'selected':''}>${displayHotel(h)}</option>`).join('');
-    const typeOpts  = ['Direct','Corp','IDS'].map(t=>`<option value="${t}" ${r.type===t?'selected':''}>${t}</option>`).join('');
-    return `
-      <div class="grid-compact">
-        <label>Ratecode (nur Zahlen)
-          <input id="rfCode" class="input" inputmode="numeric" pattern="\\d*" value="${r.rate_code||''}" placeholder="z.B. 1001"/>
-        </label>
-        <label>Ratentyp*
-          <select id="rfType" class="input theme-select">${typeOpts}</select>
-        </label>
-        <label style="grid-column:1 / -1">Hotel
-          <select id="rfHotel" class="input theme-select">${hotelOpts}</select>
-        </label>
-        <label style="grid-column:1 / -1">Kategorien (Mehrfachwahl mit Strg/Cmd)
-          <select id="rfCats" class="input theme-select" multiple size="3">${catsOptions}</select>
-        </label>
-        <label style="grid-column:1 / -1">Ratename
-          <input id="rfName" class="input" value="${r.name||''}" placeholder="Anzeigename der Rate"/>
-        </label>
-        <label style="grid-column:1 / -1">Stornobedingung
-          <textarea id="rfPol" class="input" rows="3" placeholder="Policy">${r.cancel_policy||''}</textarea>
-        </label>
-        <label>Preis pro Nacht
-          <input id="rfPrice" type="number" class="input" step="1" value="${r.price!=null?r.price:''}" placeholder="89"/>
-        </label>
-        <label>Mapping aktiv?
-          <select id="rfMapped" class="input theme-select">
-            <option value="false" ${!r.mapped?'selected':''}>Nein</option>
-            <option value="true"  ${r.mapped?'selected':''}>Ja</option>
-          </select>
-        </label>
-      </div>
-      <div class="right" style="margin-top:10px">
-        ${!isNew ? '<button class="btn danger" id="rfDelete">Löschen</button>' : ''}
-        <button class="btn primary" id="rfSave">Rate speichern</button>
-      </div>`;
-  }
+  doc.save('report.pdf');
+});
 
-  function openRatesModal(){
-    ensureRatesModalDOM();
-    openModal('modalRates');
-    loadRates();
-  }
-  window.openRatesModal = openRatesModal;
-
-  async function openRateEdit(id){
-    const { data, error } = await supabase.from('rates').select('*').eq('id', id).maybeSingle();
-    if (error || !data) return alert('Rate konnte nicht geladen werden.');
-    const box = el('div',{class:'modal', id:'modalRateEdit', role:'dialog','aria-modal':'true'});
-    box.innerHTML = `
-      <header><h3 class="mono">Rate bearbeiten</h3><button class="btn" data-close>Schließen</button></header>
-      <div class="body">${rateForm(data)}</div>`;
-    document.body.append(box);
-    box.querySelector('[data-close]')?.addEventListener('click', ()=> box.remove());
-    openModal('modalRateEdit');
-
-    box.querySelector('#rfDelete')?.addEventListener('click', async ()=>{
-      if (!confirm('Diese Rate wirklich löschen?')) return;
-      const { error } = await supabase.from('rates').delete().eq('id', id);
-      if (error) alert(error.message);
-      box.remove();
-      loadRates();
-    });
-    box.querySelector('#rfSave')?.addEventListener('click', async ()=>{
-      const payload = readRateForm(box);
-      const { error } = await supabase.from('rates').update(payload).eq('id', id);
-      if (error) return alert(error.message);
-      box.remove();
-      loadRates();
-    });
-  }
-
-  function readRateForm(scope=document){
-    const val = sel => scope.querySelector(sel)?.value ?? '';
-    const getCats = ()=> Array.from(scope.querySelector('#rfCats')?.selectedOptions || []).map(o=>o.value);
-    const rate_code = (val('#rfCode')||'').replace(/\\D/g,'');
-    const price = val('#rfPrice')!=='' ? Number(val('#rfPrice')) : null;
-    return {
-      rate_code,
-      type: val('#rfType') || 'Direct',
-      hotel_code: val('#rfHotel') || null,
-      categories: getCats(),
-      name: val('#rfName') || null,
-      cancel_policy: val('#rfPol') || null,
-      price,
-      mapped: (val('#rfMapped')||'false') === 'true'
-    };
-  }
-
-  function openRateCreate(){
-    const box = el('div',{class:'modal', id:'modalRateNew', role:'dialog','aria-modal':'true'});
-    box.innerHTML = `
-      <header><h3 class="mono">Neue Rate</h3><button class="btn" data-close>Schließen</button></header>
-      <div class="body">${rateForm()}</div>`;
-    document.body.append(box);
-    box.querySelector('[data-close]')?.addEventListener('click', ()=> box.remove());
-    openModal('modalRateNew');
-
-    box.querySelector('#rfSave')?.addEventListener('click', async ()=>{
-      const payload = readRateForm(box);
-      if (!payload.type) return alert('Ratentyp ist Pflicht.');
-      if (!payload.hotel_code) return alert('Bitte Hotel wählen.');
-      if (!payload.name) return alert('Bitte Ratename angeben.');
-      if (!payload.rate_code || !/^\\d+$/.test(payload.rate_code)) return alert('Ratecode nur Zahlen.');
-
-      const { error } = await supabase.from('rates').insert(payload);
-      if (error) return alert(error.message);
-      box.remove();
-      loadRates();
-    });
-  }
-
-  // Wire the Settings button "Rateneinstellungen"
+/***** EVENTS & INIT *****/
+q('#btnAvail')?.addEventListener('click', async ()=>{
+  q('#availFrom') && (q('#availFrom').value = isoDate(new Date()));
+  q('#availDays') && (q('#availDays').value = '14');
+  await buildMatrix();
+  openModal('modalAvail');
+});
+q('#btnReporting')?.addEventListener('click', async ()=>{
+  setDefaultReportRange(); 
+  fillRepHotel(); 
+  await runReport(); 
+  openModal('modalReporting');
+});
+q('#btnSettings')?.addEventListener('click', async ()=>{
+  await fetchNetworkInfo();           // NEU: live laden
+  openModal('modalSettings');
+});
+q('#btnSketch')?.addEventListener('click', ()=>{ 
+  buildSketch(); 
+  openModal('modalSketch'); 
+});
   q('#btnRates')?.addEventListener('click', openRatesModal);
+  q('#btnHelp') ?.addEventListener('click', ()=> openModal('modalHelp'));
 
-  /***** INIT *****/
-  function init(){
-    startClocks();
-    refreshStatus();
-    buildMiniAnalytics();
-    fillHotelFilter(q('#kpiFilterToday'));
-    fillHotelFilter(q('#kpiFilterNext'));
-    fillFilters();
-    loadKpisToday();
-    loadKpisNext();
-    loadReservations();
-    fillHotelSelect();
+q('#btnNew')?.addEventListener('click', ()=>{
+  // Reset
+  ['newArr','newDep','newAdults','newChildren','newCat','newRate','newPrice','newFname','newLname','newEmail','newPhone','newStreet','newZip','newCity','newCompany','newVat','newCompanyZipCity','newAddressStreet','newNotes','ccHolder','ccNumber','ccExpiry']
+    .forEach(id=>{ const n=q('#'+id); if(n){ n.value=''; } });
+  q('#newAdults') && (q('#newAdults').value=1);
+  q('#newChildren') && (q('#newChildren').value=0);
+  q('#btnNext') && (q('#btnNext').disabled=true);
 
-    // Toolbar modals
-    q('#btnNew')?.addEventListener('click', ()=> openModal('modalNew'));
-    q('#btnAvail')?.addEventListener('click', ()=> openModal('modalAvail'));
-    q('#btnReporting')?.addEventListener('click', ()=> openModal('modalReporting'));
-    q('#btnSettings')?.addEventListener('click', ()=> openModal('modalSettings'));
-    q('#btnSketch')?.addEventListener('click', ()=> openModal('modalSketch'));
+  // Live-Card reset
+  q('#ccNumLive')    && (q('#ccNumLive').textContent='•••• •••• •••• ••••');
+  q('#ccHolderLive') && (q('#ccHolderLive').textContent='NAME');
+  q('#ccExpLive')    && (q('#ccExpLive').textContent='MM/YY');
 
-    wizardSet('1');
+  // Selects + Bilder
+  fillHotelSelect();
+  ensureCatRateOptions();
+  setHotelImage(HOTEL_IMG_SRC);
+  setCatImage(SKETCH_IMG_SRC);
+
+  wizardSet('1');
+  q('#newInfo') && (q('#newInfo').textContent='');
+  openModal('modalNew');
+});
+  
+// Back-Button in der Hotelskizze
+document.querySelector('#sketchBack')?.addEventListener('click', () => {
+  document.querySelector('#sketchStateView')?.classList.add('hidden');
+  document.querySelector('#sketchStateList')?.classList.remove('hidden');
+});
+  
+(async function init(){
+  startClocks();
+  await refreshStatus(); setInterval(refreshStatus, 30000);
+  await autoRollPastToDone();
+  await buildMiniAnalytics();
+
+  fillHotelFilter(q('#kpiFilterToday'));
+  fillHotelFilter(q('#kpiFilterNext'));
+  q('#kpiFilterToday')?.addEventListener('change', loadKpisToday);
+  q('#kpiFilterNext')?.addEventListener('change', loadKpisNext);
+
+  fillFilters();
+  if (q('#filterStatus')) q('#filterStatus').value = 'active';
+
+  await loadKpisToday();
+  await loadKpisNext();
+  await loadReservations();
+})();
+
+  document.querySelector('#btnSketch')?.addEventListener('click', () => {
+  buildSketch();
+  openModal('modalSketch');
+});
+
+  // --- Einstellungen / Admin ---
+const ADMIN_PW = "325643";
+const SETTINGS_KEY = "resTool.settings";
+const LOG_KEY = "resTool.activityLog";
+
+const I18N = {
+  de: {
+    "settings.language": "Sprache",
+    "settings.hue": "Farbton",
+    "settings.save": "Einstellungen speichern",
+    // Beispieltexte (füge bei Bedarf weitere hinzu)
+    "ui.saved": "Einstellungen gespeichert",
+    "ui.wrongpw": "Falsches Admin‑Passwort",
+    "ui.needpw": "Bitte Admin‑Passwort eingeben"
+  },
+  en: {
+    "settings.language": "Language",
+    "settings.hue": "Hue",
+    "settings.save": "Save settings",
+    "ui.saved": "Settings saved",
+    "ui.wrongpw": "Wrong admin password",
+    "ui.needpw": "Please enter admin password"
+  }
+};
+
+function t(key){ 
+  const lang = (getSettings().lang || 'de');
+  return (I18N[lang] && I18N[lang][key]) || I18N['de'][key] || key; 
+}
+function translateAll(){
+  document.querySelectorAll('[data-i18n]').forEach(n=>{
+    n.textContent = t(n.getAttribute('data-i18n'));
+  });
+  // Beispiel: Platzhalter in Inputs
+  const s = getSettings().lang || 'de';
+  const phSearch = s === 'en' ? 'Search… (text/meta)' : 'Suche… (Text/Meta)';
+  const el = document.getElementById('logSearch'); if (el) el.placeholder = phSearch;
+}
+function getSettings(){
+  try{ return JSON.parse(localStorage.getItem(SETTINGS_KEY)) || { lang:'de', hue: 180 }; }
+  catch(e){ return { lang:'de', hue:180 }; }
+}
+function saveSettings(obj){
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(obj));
+  logActivity('settings','saved', {settings: obj});
+}
+function applySettings(){
+  const s = getSettings();
+  // Sprache – UI aktualisieren
+  translateAll();
+  // Hue → Theme Variablen (du kannst hier die Intensitäten tweaken)
+  const h = Number(s.hue||180);
+  const accent  = `hsl(${h} 100% 55%)`;
+  const accent2 = `hsl(${h} 80% 65%)`;
+  const glow    = `0 0 10px hsla(${h} 100% 60% / .35)`;
+  document.documentElement.style.setProperty('--accent', accent);
+  document.documentElement.style.setProperty('--accent-2', accent2);
+  document.documentElement.style.setProperty('--glow', glow);
+  // Controls spiegeln
+  const sel = document.getElementById('selLang'); if (sel) sel.value = s.lang || 'de';
+  const rng = document.getElementById('rngHue'); if (rng){ rng.value = h; const v=document.getElementById('hueVal'); if(v) v.textContent = h+'°'; }
+}
+function requireAdmin(onSuccess){
+  const pw = prompt(t('ui.needpw'));
+  if (pw === ADMIN_PW){ onSuccess && onSuccess(); }
+  else if (pw !== null){ alert(t('ui.wrongpw')); }
+}
+function logActivity(type, action, meta){
+  const row = {
+    ts: new Date().toISOString(),
+    type, action,
+    meta: meta || {}
+  };
+  const list = readLog(); list.push(row);
+  localStorage.setItem(LOG_KEY, JSON.stringify(list));
+}
+function readLog(){
+  try{ return JSON.parse(localStorage.getItem(LOG_KEY)) || []; }
+  catch(e){ return []; }
+}
+function filterLog({q='', type='', from='', to=''}){
+  const data = readLog();
+  const f = (d)=>{
+    if (type && d.type !== type) return false;
+    if (from && (new Date(d.ts) < new Date(from))) return false;
+    if (to   && (new Date(d.ts) > new Date(to+'T23:59:59'))) return false;
+    if (q){
+      const blob = (d.action + ' ' + JSON.stringify(d.meta||{})).toLowerCase();
+      if (!blob.includes(q.toLowerCase())) return false;
+    }
+    return true;
+  };
+  return data.filter(f).sort((a,b)=> new Date(b.ts) - new Date(a.ts));
+}
+function renderLogTable(rows){
+  const tbody = document.querySelector('#logTable tbody'); if (!tbody) return;
+  tbody.innerHTML = '';
+  rows.forEach(r=>{
+    const tr = document.createElement('tr');
+    const details = JSON.stringify(r.meta||{}, null, 0);
+    tr.innerHTML = `
+      <td>${new Date(r.ts).toLocaleString()}</td>
+      <td>${r.type}</td>
+      <td>${r.action}</td>
+      <td><code style="white-space:nowrap">${details.length>120? (details.slice(0,120)+'…'): details}</code></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+  async function fetchNetworkInfo(){
+  const setTxt = (id, v) => { const n = document.getElementById(id); if(n) n.textContent = v ?? '—'; };
+
+  // OS / Browser lokal ermitteln (nur Anzeige)
+  try{
+    const os = (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || '—';
+    const ua = navigator.userAgent || '';
+    const browser =
+      /Edg\//.test(ua) ? 'Edge' :
+      /Chrome\//.test(ua) ? 'Chrome' :
+      (/Safari\//.test(ua) && !/Chrome\//.test(ua)) ? 'Safari' :
+      /Firefox\//.test(ua) ? 'Firefox' : 'Browser';
+    setTxt('netOs', `${os} / ${browser}`);
+  }catch{ setTxt('netOs','—'); }
+
+  // Öffentliche IP (IPv6/IPv4) & IPv4 separat
+  try{ const r = await fetch('https://api64.ipify.org?format=json',{cache:'no-store'}); const j = await r.json(); setTxt('netIp', j.ip); }catch{ setTxt('netIp','—'); }
+  try{ const r = await fetch('https://api4.ipify.org?format=json',{cache:'no-store'});  const j = await r.json(); setTxt('netIpv4', j.ip);}catch{ setTxt('netIpv4','—'); }
+
+  // Grober Standort per IP (nur Anzeige, kein Storage)
+  try{
+    const r = await fetch('https://ipapi.co/json/',{cache:'no-store'});
+    const j = await r.json();
+    const loc = [j.city, j.region, j.country_name].filter(Boolean).join(', ');
+    setTxt('netLoc', loc || '—');
+  }catch{ setTxt('netLoc','—'); }
+}
+
+document.addEventListener('DOMContentLoaded', ()=>{
+  // Controls referenzieren
+  const selLang = document.getElementById('selLang');
+  const rngHue  = document.getElementById('rngHue');
+  const hueVal  = document.getElementById('hueVal');
+  const btnSave = document.getElementById('btnSaveSettings');
+  const btnChannel = document.getElementById('btnChannel');
+  const btnLog  = document.getElementById('btnLog');
+  const btnUserPrefs = document.getElementById('btnUserPrefs');
+
+  // Settings anwenden (lädt & setzt UI)
+  applySettings();
+
+  // Sprache ändern (live)
+  if (selLang){
+    selLang.addEventListener('change', ()=>{
+      const s = getSettings(); s.lang = selLang.value; saveSettings(s); applySettings();
+    });
+  }
+  // Hue Slider (live)
+  if (rngHue){
+    rngHue.addEventListener('input', ()=>{
+      const h = Number(rngHue.value||0);
+      if (hueVal) hueVal.textContent = h + '°';
+      const s = getSettings(); s.hue = h; saveSettings(s); applySettings();
+    });
+  }
+  // Speichern Button (extra „OK“-Feedback)
+  if (btnSave){
+    btnSave.addEventListener('click', ()=>{
+      const s = getSettings(); saveSettings(s); applySettings();
+      alert(t('ui.saved'));
+    });
+  }
+  // Channel – Einstellungen (admin)
+  if (btnChannel){
+    btnChannel.addEventListener('click', ()=>{
+      requireAdmin(()=> openModal('#modalChannel'));
+      logActivity('channel','open_settings');
+    });
+  }
+  // Log Activity (admin)
+  if (btnLog){
+    btnLog.addEventListener('click', ()=>{
+      requireAdmin(()=>{
+        // Filter reset + render
+        document.getElementById('logSearch').value = '';
+        document.getElementById('logType').value = '';
+        document.getElementById('logFrom').value = '';
+        document.getElementById('logTo').value = '';
+        renderLogTable(filterLog({}));
+        openModal('#modalLog');
+      });
+      logActivity('system','open_log');
+    });
   }
 
-  document.addEventListener('DOMContentLoaded', init);
+    // UserPrefs modal
+  if (btnUserPrefs){ btnUserPrefs.addEventListener('click', ()=> openModal('modalUserPrefs')); }
+
+  // Log Filter Events
+  const btnApply = document.getElementById('logApply');
+  const btnClear = document.getElementById('logClear');
+  if (btnApply){
+    btnApply.addEventListener('click', ()=>{
+      const q   = document.getElementById('logSearch').value.trim();
+      const type= document.getElementById('logType').value;
+      const from= document.getElementById('logFrom').value;
+      const to  = document.getElementById('logTo').value;
+      renderLogTable(filterLog({q,type,from,to}));
+    });
+  }
+  if (btnClear){
+    btnClear.addEventListener('click', ()=>{
+      document.getElementById('logSearch').value = '';
+      document.getElementById('logType').value   = '';
+      document.getElementById('logFrom').value   = '';
+      document.getElementById('logTo').value     = '';
+      renderLogTable(filterLog({}));
+    });
+  }
+});
+
+
+// ===== Hilfsfunktion aus Liste (wegen Scope) =====
+function safeDisplayFromRow(row){
+  const h = HOTELS.find(x=>x.code===row.hotel_code);
+  if (h) return displayHotel(h);
+  const raw = String(row.hotel_name||'').replace(/^[\s·•\-–—]+/,'').trim();
+  if (!raw) return row.hotel_code || '—';
+  for (const p of BRAND_PREFIXES){
+    if (raw.startsWith(p+' ')) return `${p} - ${raw.slice(p.length+1)}`;
+  }
+  return raw;
+}
 })();
