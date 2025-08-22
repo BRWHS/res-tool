@@ -152,36 +152,51 @@
     safeSetImg(q('#sketchImage'), src || SKETCH_IMG_SRC);
   }
   
-/* ===== Hotelskizze ===== */
+/* ===== Hotelskizze (links Liste, rechts Vorschau) ===== */
 function showSketch(hotel){
-  // Label setzen
+  // Label aktualisieren
   const label = document.querySelector('#sketchHotelLabel');
   if (label) label.textContent = `${hotel.group} - ${hotel.name.replace(/^.*? /,'')}`;
 
-  // Bild setzen (vorerst Platzhalter – echte Assets später per code-basiertem Pfad)
+  // (Platzhalter) Bild setzen – später pro Hotel ersetzen
   setSketchImage(SKETCH_IMG_SRC);
 
-  // Ansicht umschalten
-  document.querySelector('#sketchStateList')?.classList.add('hidden');
-  document.querySelector('#sketchStateView')?.classList.remove('hidden');
+  // Active-Status in der Liste markieren
+  document.querySelectorAll('.sketch-item').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.code === hotel.code);
+  });
 }
 
 function buildSketch(){
-  const list = document.querySelector('#sketchStateList');
-  const view = document.querySelector('#sketchStateView');
-  if (!list || !view) return;
+  const listBox = document.querySelector('#sketchList');
+  if (!listBox) return;
 
-  // Startzustand
-  view.classList.add('hidden');
-  list.classList.remove('hidden');
-  list.innerHTML = '';
+  listBox.innerHTML = '';
 
   // Buttons je Hotel rendern
   HOTELS.forEach(h => {
-    const btn = el('button', { class: 'btn sm', title: h.code }, displayHotel(h));
+    const btn = document.createElement('button');
+    btn.className = 'sketch-item';
+    btn.dataset.code = h.code;
+    btn.title = h.code;
+
+    const badge = document.createElement('span');
+    badge.className = 'sketch-badge';
+    badge.textContent = h.group;
+
+    const name = document.createElement('span');
+    name.className = 'sketch-name';
+    name.textContent = hotelCity(h.name); // nur Stadt/Shortname
+
+    btn.append(badge, name);
     btn.addEventListener('click', () => showSketch(h));
-    list.append(btn);
+    listBox.append(btn);
   });
+
+  // Default: erstes Hotel anzeigen
+  if (HOTELS.length){
+    showSketch(HOTELS[0]);
+  }
 }
 
   /***** Clock + Status *****/
@@ -1378,6 +1393,11 @@ document.querySelector('#sketchBack')?.addEventListener('click', () => {
   await loadKpisNext();
   await loadReservations();
 })();
+
+  document.querySelector('#btnSketch')?.addEventListener('click', () => {
+  buildSketch();
+  openModal('modalSketch');
+});
 
   // --- Einstellungen / Admin ---
 const ADMIN_PW = "325643";
