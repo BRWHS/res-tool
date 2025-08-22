@@ -1319,11 +1319,16 @@ q('#btnReporting')?.addEventListener('click', async ()=>{
   await runReport(); 
   openModal('modalReporting');
 });
-q('#btnSettings')?.addEventListener('click', ()=> openModal('modalSettings'));
+q('#btnSettings')?.addEventListener('click', async ()=>{
+  await fetchNetworkInfo();           // NEU: live laden
+  openModal('modalSettings');
+});
 q('#btnSketch')?.addEventListener('click', ()=>{ 
   buildSketch(); 
   openModal('modalSketch'); 
 });
+  q('#btnRates')?.addEventListener('click', ()=> openModal('modalRates'));
+  q('#btnHelp') ?.addEventListener('click', ()=> openModal('modalHelp'));
 
 q('#btnNew')?.addEventListener('click', ()=>{
   // Reset
@@ -1483,6 +1488,34 @@ function renderLogTable(rows){
     tbody.appendChild(tr);
   });
 }
+  async function fetchNetworkInfo(){
+  const setTxt = (id, v) => { const n = document.getElementById(id); if(n) n.textContent = v ?? '—'; };
+
+  // OS / Browser lokal ermitteln (nur Anzeige)
+  try{
+    const os = (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || '—';
+    const ua = navigator.userAgent || '';
+    const browser =
+      /Edg\//.test(ua) ? 'Edge' :
+      /Chrome\//.test(ua) ? 'Chrome' :
+      (/Safari\//.test(ua) && !/Chrome\//.test(ua)) ? 'Safari' :
+      /Firefox\//.test(ua) ? 'Firefox' : 'Browser';
+    setTxt('netOs', `${os} / ${browser}`);
+  }catch{ setTxt('netOs','—'); }
+
+  // Öffentliche IP (IPv6/IPv4) & IPv4 separat
+  try{ const r = await fetch('https://api64.ipify.org?format=json',{cache:'no-store'}); const j = await r.json(); setTxt('netIp', j.ip); }catch{ setTxt('netIp','—'); }
+  try{ const r = await fetch('https://api4.ipify.org?format=json',{cache:'no-store'});  const j = await r.json(); setTxt('netIpv4', j.ip);}catch{ setTxt('netIpv4','—'); }
+
+  // Grober Standort per IP (nur Anzeige, kein Storage)
+  try{
+    const r = await fetch('https://ipapi.co/json/',{cache:'no-store'});
+    const j = await r.json();
+    const loc = [j.city, j.region, j.country_name].filter(Boolean).join(', ');
+    setTxt('netLoc', loc || '—');
+  }catch{ setTxt('netLoc','—'); }
+}
+
 document.addEventListener('DOMContentLoaded', ()=>{
   // Controls referenzieren
   const selLang = document.getElementById('selLang');
