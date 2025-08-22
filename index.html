@@ -510,25 +510,26 @@
     </header>
     <div class="body">
       <!-- oben: links Form / rechts Live-Systeminfo -->
-      <div class="set-top">
-        <div>
-          <div class="set-grid">
-            <label class="set-field">
-              <span class="set-label">Sprache</span>
-              <select id="selLang" class="input theme-select">
-                <option value="de">Deutsch</option>
-                <option value="en">English</option>
-              </select>
-            </label>
+     <div class="set-top">
+  <!-- LINKER BLOCK: Sprache/Farbton + Buttons -->
+  <div class="set-left">
+    <div class="set-grid">
+      <label class="set-field">
+        <span class="set-label">Sprache</span>
+        <select id="selLang" class="input theme-select">
+          <option value="de">Deutsch</option>
+          <option value="en">English</option>
+        </select>
+      </label>
 
-            <label class="set-field">
-              <span class="set-label">Farbton (Hue) <span id="hueVal" class="muted">180°</span></span>
-              <input id="rngHue" class="hue" type="range" min="0" max="359" step="1" />
-            </label>
-          </div>
-        </div>
+      <label class="set-field">
+        <span class="set-label">Farbton (Hue) <span id="hueVal" class="muted">180°</span></span>
+        <input id="rngHue" class="hue" type="range" min="0" max="359" step="1" />
+      </label>
+    </div>
 
-           <div class="set-tiles">
+    <!-- Buttons direkt darunter, klein -->
+    <div class="set-tiles">
       <button class="btn tile" id="btnUserPrefs">Benutzereinstellungen</button>
       <button class="btn tile" id="btnChannel">Channel – Einstellungen</button>
       <button class="btn tile" id="btnLog">Log Activity</button>
@@ -537,23 +538,18 @@
     </div>
   </div>
 
-  <!-- Live-Systeminfo rechts -->
-  <aside class="box set-sys" id="netBox">…</aside>
+  <!-- RECHTER BLOCK: Live-Systeminfo (kleiner, transparenter) -->
+  <aside class="box set-sys" id="netBox">
+    <h4 class="mono section" style="margin:0 0 6px">Live‑Systeminfo</h4>
+    <div class="sys-grid">
+      <div class="settings-row"><label>Öffentliche IP</label><span id="netIp">—</span></div>
+      <div class="settings-row"><label>IPv4</label><span id="netIpv4">—</span></div>
+      <div class="settings-row"><label>Standort</label><span id="netLoc">—</span></div>
+      <div class="settings-row"><label>OS / Browser</label><span id="netOs">—</span></div>
+    </div>
+    <p class="muted tiny">Nur Anzeige, keine Speicherung.</p>
+  </aside>
 </div>
-
-        <!-- Live-Systeminfo (nur Anzeige) -->
-        <aside class="box set-sys" id="netBox">
-          <h4 class="mono section" style="margin:0 0 6px">Live-Systeminfo (nur für dich)</h4>
-          <div class="sys-grid">
-            <div class="settings-row"><label>Öffentliche IP</label><span id="netIp">—</span></div>
-            <div class="settings-row"><label>IPv4</label><span id="netIpv4">—</span></div>
-            <div class="settings-row"><label>Standort</label><span id="netLoc">—</span></div>
-            <div class="settings-row"><label>OS / Browser</label><span id="netOs">—</span></div>
-          </div>
-          <p class="muted tiny">Wird nur live angezeigt und nicht gespeichert.</p>
-        </aside>
-      </div>
-
 
       <!-- unten rechts: Speichern -->
       <div class="set-footer">
