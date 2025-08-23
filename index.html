@@ -296,8 +296,10 @@
             <input id="newPrice" type="number" step="1" value="89" class="input"/>
           </label>
         </div>
-        <div id="ratePolicyBox" class="box rate-policy" style="margin-top:8px">
-          <div class="mono muted tiny">Stornobedingung</div>
+        <div class="policy-box">
+      <div class="muted">Stornobedingung</div>
+        <p id="ratePolicyPreview">—</p>
+          </div>
           <div id="ratePolicy" class="tiny">Bis zum Anreisetag 18:00 Uhr kostenfrei stornierbar.</div>
         </div>
       </div>
@@ -636,37 +638,39 @@
     <button class="btn" data-close>Schließen</button>
   </header>
   <div class="body">
-    <div class="grid-compact">
-      <label>Ratecode (nur Zahlen)
-        <input id="rateCode" class="input" placeholder="z.B. 100123" inputmode="numeric" pattern="\d+">
-      </label>
-      <label>Ratentyp*
-        <select id="rateType" class="input theme-select">
-          <option value="">Bitte wählen</option>
-          <option value="Direct">Direct</option>
-          <option value="Corp">Corp</option>
-          <option value="IDS">IDS</option>
-        </select>
-      </label>
-      <label style="grid-column:1 / -1">Hotel*
-        <select id="rateHotel" class="input theme-select"></select>
-      </label>
-      <label style="grid-column:1 / -1">Kategorien (mehrere möglich)
-        <select id="rateCats" class="input theme-select" multiple size="3"></select>
-      </label>
-      <label style="grid-column:1 / -1">Ratename*
-        <input id="rateName" class="input" placeholder="z.B. Flex exkl. Frühstück">
-      </label>
-      <label style="grid-column:1 / -1">Stornobedingung
-        <textarea id="ratePolicy" class="input" rows="2" placeholder="z.B. Bis 18:00 Uhr am Anreisetag kostenfrei."></textarea>
-      </label>
-      <label>Preis pro Nacht (€)*
-        <input id="ratePrice" class="input" type="number" step="1" min="0" placeholder="z.B. 89">
-      </label>
-      <label style="align-self:end">
-        <input id="rateMapped" type="checkbox" style="transform:translateY(1px)"> HNS-Mapping aktiv
-      </label>
-    </div>
+  <div class="rates-wrap">
+    <aside class="rates-side">
+      <button class="btn tile" id="rsTabDirect">Direct-Rate</button>
+      <button class="btn tile" id="rsTabCorp">Corp-Rate</button>
+      <button class="btn tile" id="rsTabIds">IDS-Rate</button>
+      <div style="height:6px"></div>
+      <button class="btn primary tile" id="rsNewRate">Neue Rate</button>
+    </aside>
+
+    <section class="rates-main card">
+      <div class="content">
+        <div class="card-head">
+          <h3 class="mono" id="rsTitle">Raten – Direct</h3>
+        </div>
+        <div class="table-wrap">
+          <table class="resv">
+            <thead>
+              <tr>
+                <th>Ratecode</th>
+                <th>Name</th>
+                <th>Hotel</th>
+                <th>Kategorien</th>
+                <th>Preis</th>
+                <th>Mapped</th>
+              </tr>
+            </thead>
+            <tbody id="rsBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
 
     <div class="set-footer">
       <button class="btn primary" id="btnRateSave">Rate speichern</button>
