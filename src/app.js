@@ -362,6 +362,78 @@ async function buildMiniAnalytics(){
     if(!m) return;
     m.style.display='none'; backdrop.style.display='none'; document.body.classList.remove('modal-open');
   }
+
+  function fillHotelSelect(sel){
+  if (!sel) return;
+  sel.innerHTML='';
+  HOTELS.forEach(h => sel.append(el('option',{value:h.code}, `${h.group} - ${h.name.replace(/^.*? /,'')}`)));
+}
+
+function loadCatsIntoSelect(sel, hotelCode){
+  if (!sel) return;
+  const cats = catsForHotel(hotelCode);
+  sel.innerHTML = ['*', ...cats].map(c=>`<option value="${c}">${c==='*'?'Alle':c}</option>`).join('');
+  makeMultiSelectFriendly(sel);
+}
+
+function openRateCreate(){
+  // Felder befüllen/resetten
+  fillHotelSelect(q('#crHotel'));
+  q('#crCode').value = '';
+  q('#crType').value = '';
+  q('#crName').value = '';
+  q('#crPolicy').value = '';
+  q('#crPrice').value = 0;
+  q('#crMapped').value = 'false';
+  const cats = q('#crCats');
+  cats.innerHTML = '';
+  cats.disabled = true;
+
+  // Hotelwechsel -> Kategorien laden + aktivieren
+  q('#crHotel').onchange = ()=>{
+    const code = q('#crHotel').value;
+    cats.disabled = !code;
+    if (code){ loadCatsIntoSelect(cats, code); }
+  };
+
+  // Button (alte Listener entfernen, neu setzen)
+  const btn = q('#btnRateCreate');
+  btn.replaceWith(btn.cloneNode(true));
+  q('#btnRateCreate').addEventListener('click', ()=>{
+    const ratecode = (q('#crCode').value||'').trim();
+    const ratetype = q('#crType').value||'';
+    const hotel    = q('#crHotel').value||'';
+    const name     = (q('#crName').value||'').trim();
+    const policy   = (q('#crPolicy').value||'').trim();
+    const price    = Number(q('#crPrice').value||0);
+    const mapped   = (q('#crMapped').value==='true');
+    const catsSel  = Array.from(q('#crCats').selectedOptions||[]).map(o=>o.value);
+
+    if (!/^\d+$/.test(ratecode)) return alert('Ratecode: nur Zahlen.');
+    if (!ratetype) return alert('Ratentyp wählen.');
+    if (!hotel)    return alert('Hotel wählen.');
+    if (!name)     return alert('Ratename angeben.');
+
+    const exists = readRates().some(r => r.hotel_code===hotel && r.ratecode===ratecode);
+    if (exists) return alert('Ratecode existiert in diesem Hotel bereits.');
+
+    const now = new Date().toISOString();
+    upsertRate({
+      id: 'r_'+Date.now(),
+      ratecode, ratetype, hotel_code: hotel,
+      categories: catsSel.length?catsSel:['*'],
+      name, policy, price, mapped,
+      created_at: now, updated_at: now
+    });
+
+    rsRender();                 // Liste aktualisieren
+    refreshNewResRates?.();     // Wizard Step 3 aktualisieren
+    closeModal('modalRateCreate');
+  });
+
+  openModal('modalRateCreate');
+}
+  
   /* ===== Rateneinstellungen (neues Modal) ===== */
 function fillHotelSelectGeneric(sel){
   if (!sel) return;
@@ -383,27 +455,6 @@ function prepareRateFormReset(){
   if (q('#ratePrice')) q('#ratePrice').value = 89;
   if (q('#rateMapped')) q('#rateMapped').checked = true;
   if (q('#rateInfo')) q('#rateInfo').textContent = '';
-}
-  
-/* ===== Multi-Select ohne Strg/Cmd ===== */
-function makeMultiSelectFriendly(sel){
-  if (!sel || sel.__friendly) return;
-  sel.__friendly = true;
-  sel.addEventListener('mousedown', (e)=>{
-    const opt = e.target.closest('option');
-    if (!opt) return;
-    e.preventDefault();
-    opt.selected = !opt.selected;
-    // wenn "Alle" (*) gewählt wurde, alles andere abwählen
-    if (opt.value === '*'){
-      Array.from(sel.options).forEach(o=>{ if (o!==opt) o.selected = false; });
-    } else {
-      // wenn irgendeine andere gewählt ist, "*" abwählen
-      Array.from(sel.options).forEach(o=>{ if (o.value==='*') o.selected = false; });
-    }
-    // change-Event feuern, falls du darauf hörst
-    sel.dispatchEvent(new Event('change', {bubbles:true}));
-  });
 }
 
 // Beim Öffnen von Editor/Neuanlage aufrufen:
@@ -487,61 +538,77 @@ function rsFillHotelFilter(){
   sel.append(el('option',{value:'all'},'Alle Hotels'));
   HOTELS.forEach(h => sel.append(el('option',{value:h.code}, `${h.group} - ${h.name.replace(/^.*? /,'')}`)));
 }
-
 function rsSetType(type){
-  __rsType = type;
+  window.__rsType = type;
   if (q('#rsTitle')) q('#rsTitle').textContent = `Raten – ${type}`;
   rsRender();
 }
-
 function rsRender(){
   const tbody = q('#rsBody'); if (!tbody) return;
   const qStr = (q('#rsSearch')?.value || '').trim().toLowerCase();
-  const hCode = q('#rsHotelFilter')?.value || 'all';
+  const hCode= q('#rsHotelFilter')?.value || 'all';
 
-  const list = (readRates?.() || [])
-    .filter(r => r.ratetype === __rsType)
+  const list = readRates()
+    .filter(r => r.ratetype === window.__rsType)
     .filter(r => hCode==='all' ? true : r.hotel_code === hCode)
-    .filter(r => {
-      if (!qStr) return true;
-      const blob = [r.ratecode, r.name].join(' ').toLowerCase();
-      return blob.includes(qStr);
-    })
+    .filter(r => !qStr ? true : (`${r.ratecode} ${r.name}`.toLowerCase().includes(qStr)))
     .sort((a,b)=>(a.hotel_code+a.name).localeCompare(b.hotel_code+b.name));
 
-  tbody.innerHTML = '';
+  tbody.innerHTML='';
   if (!list.length){
     tbody.append(el('tr',{}, el('td',{colspan:'6'}, 'Keine Raten gefunden.')));
     return;
   }
-
   list.forEach(r=>{
     const h = HOTELS.find(x=>x.code===r.hotel_code);
     const tr = el('tr', {class:'row','data-id':r.id},
       el('td',{}, r.ratecode||'—'),
       el('td',{}, r.name||'—'),
       el('td',{}, h ? `${h.group} - ${h.name.replace(/^.*? /,'')}` : (r.hotel_code||'—')),
-      el('td',{}, (r.categories||[]).join(', ') || '—'),
+      el('td',{}, (r.categories||[]).join(', ')||'—'),
       el('td',{}, r.price!=null ? EUR.format(r.price) : '—'),
-      el('td',{}, r.mapped ? 'ja' : 'nein')
+      el('td',{}, r.mapped ? 'ja' : 'nein'),
     );
-    tr.addEventListener('click', ()=> openRateEditor(r.id)); // -> Editor öffnen (s.u.)
+    tr.addEventListener('click', ()=> openRateEditor(r.id)); // Edit-Flow
     tbody.append(tr);
+
+    function makeMultiSelectFriendly(sel){
+  if (!sel || sel.__friendly) return;
+  sel.__friendly = true;
+
+  const renderTicks = ()=>{
+    Array.from(sel.options).forEach(o=>{
+      const plain = o.textContent.replace(/^✓\s+/,'');
+      o.textContent = (o.selected ? '✓ ' : '') + plain;
+    });
+  };
+
+  sel.addEventListener('mousedown', (e)=>{
+    const opt = e.target.closest('option'); if (!opt) return;
+    e.preventDefault();
+    opt.selected = !opt.selected;
+    // '*' (Alle) exklusiv behandeln
+    if (opt.value === '*') Array.from(sel.options).forEach(o=>{ if(o!==opt) o.selected=false; });
+    else Array.from(sel.options).forEach(o=>{ if(o.value==='*') o.selected=false; });
+    renderTicks();
+    sel.dispatchEvent(new Event('change',{bubbles:true}));
+  });
+
+  sel.addEventListener('change', renderTicks);
+  renderTicks();
+}
+
   });
 }
 
-/* Öffner – ohne Adminpasswort */
+// Öffnen ohne Admin
 q('#btnRates')     ?.addEventListener('click', ()=>{ rsFillHotelFilter(); rsSetType('Direct'); openModal('modalRateSettings'); });
 q('#rsTabDirect')  ?.addEventListener('click', ()=> rsSetType('Direct'));
 q('#rsTabCorp')    ?.addEventListener('click', ()=> rsSetType('Corp'));
 q('#rsTabIds')     ?.addEventListener('click', ()=> rsSetType('IDS'));
 q('#rsSearch')     ?.addEventListener('input', rsRender);
 q('#rsHotelFilter')?.addEventListener('change', rsRender);
-
-/* "+ Neue Rate" unten links */
-q('#rsNewRate')?.addEventListener('click', ()=>{
-  openRateEditor(null, __rsType); // Editor in Neuanlage, Typ vorfüllen
-});
+q('#rsNewRate')    ?.addEventListener('click', ()=> openRateCreate()); // Create-Flow
 
   /* ===== Rate-Editor (neu/bearbeiten) =====
    Erwartete Felder:
@@ -553,7 +620,8 @@ function makeMultiSelectFriendly(sel){
   if (!sel || sel.__friendly) return;
   sel.__friendly = true;
   sel.addEventListener('mousedown', (e)=>{
-    const opt = e.target.closest('option'); if (!opt) return;
+    const opt = e.target.closest('option'); 
+    if (!opt) return;
     e.preventDefault();
     opt.selected = !opt.selected;
     if (opt.value === '*') Array.from(sel.options).forEach(o=>{ if(o!==opt) o.selected=false; });
@@ -583,88 +651,63 @@ function openRateEditor(id, presetType='Direct'){
 
   if (!data) return;
 
-  __rateEditId = id || null;
+let __rateEditId = null;
 
-  // Dropdowns & Felder
-  fillHotelSelectGeneric(q('#erHotel'));
-  fillCatsSelectGeneric(q('#erCats'));
+function openRateEditor(id){
+  const r = readRates().find(x=>x.id===id);
+  if (!r) return;
+  __rateEditId = id;
+
+  // Hotel & Cats
+  fillHotelSelect(q('#erHotel'));
+  q('#erHotel').value = r.hotel_code || '';
+  q('#erHotel').disabled = true;
+
+  loadCatsIntoSelect(q('#erCats'), r.hotel_code);
+  Array.from(q('#erCats').options).forEach(o=>{ o.selected = (r.categories||['*']).includes(o.value); });
   makeMultiSelectFriendly(q('#erCats'));
 
-  q('#erCode')  && (q('#erCode').value  = data.ratecode || '');
-  q('#erType')  && (q('#erType').value  = data.ratetype || 'Direct');
-  q('#erHotel') && (q('#erHotel').value = data.hotel_code || '');
-  q('#erName')  && (q('#erName').value  = data.name || '');
-  q('#erPolicy')&& (q('#erPolicy').value= data.policy || '');
-  q('#erPrice') && (q('#erPrice').value = data.price ?? 0);
-  q('#erMapped')&& (q('#erMapped').value = data.mapped ? 'true' : 'false');
+  // Felder
+  q('#erCode').value = r.ratecode || '';
+  q('#erType').value = r.ratetype || 'Direct';
+  q('#erType').disabled = true;       // Ratentyp fix
+  q('#erName').value = r.name || '';  // Ratename editierbar
+  q('#erPolicy').value = r.policy || '';
+  q('#erPrice').value = r.price ?? 0;
+  q('#erMapped').value = r.mapped ? 'true' : 'false';
 
+  // Buttons neu binden
+  const upd = q('#btnRateUpdate'); upd.replaceWith(upd.cloneNode(true));
+  const del = q('#btnRateDelete'); del.replaceWith(del.cloneNode(true));
 
-  // Mehrfachauswahl Kategorien
-  const sel = q('#erCats');
-  Array.from(sel.options).forEach(o => o.selected = (data.categories||['*']).includes(o.value));
-
-  // DISABLE: Hotel, Ratecode, Ratename
-  ['#erHotel','#erCode','#erName'].forEach(s => { const n=q(s); if(n) n.disabled = !isNew; });
-
-  // Buttons
-  q('#btnRateUpdate')?.replaceWith(q('#btnRateUpdate').cloneNode(true)); // alte Listener entfernen
-  q('#btnRateDelete')?.replaceWith(q('#btnRateDelete').cloneNode(true));
-
-  q('#btnRateUpdate')?.addEventListener('click', ()=>{
+  q('#btnRateUpdate').addEventListener('click', ()=>{
     const list = readRates();
-    if (isNew){
-      // Validierung für Neuanlage
-      const ratecode = (q('#erCode')?.value||'').trim();
-      const hotel_code = q('#erHotel')?.value || '';
-      const name = (q('#erName')?.value||'').trim();
-      if (!/^\d+$/.test(ratecode)) return alert('Ratecode: nur Zahlen.');
-      if (!hotel_code) return alert('Hotel wählen.');
-      if (!name) return alert('Ratename angeben.');
-      if (list.some(r => r.hotel_code===hotel_code && r.ratecode===ratecode))
-        return alert('Ratecode existiert in diesem Hotel bereits.');
+    const i = list.findIndex(x=>x.id===__rateEditId);
+    if (i<0) return;
 
-      const catsSel = Array.from(q('#erCats').selectedOptions).map(o=>o.value);
-      const now = new Date().toISOString();
-      const r = {
-        id: 'r_'+Date.now(),
-        ratecode,
-        ratetype: q('#erType')?.value || 'Direct',
-        hotel_code,
-        categories: catsSel.length?catsSel:['*'],
-        name,
-        policy: q('#erPolicy')?.value || '',
-        price: Number(q('#erPrice')?.value || 0),
-        mapped: !!q('#erMapped')?.checked,
-        created_at: now, updated_at: now
-      };
-      upsertRate(r);
-    } else {
-      const idx = list.findIndex(x=>x.id===__rateEditId);
-      if (idx<0) return;
-      const r = {...list[idx]};
-      // nur veränderbare Felder updaten
-      r.ratetype = q('#erType')?.value || r.ratetype;
-      r.categories = Array.from(q('#erCats').selectedOptions).map(o=>o.value);
-      r.policy = q('#erPolicy')?.value || '';
-      r.price  = Number(q('#erPrice')?.value || 0);
-      r.mapped = !!q('#erMapped')?.checked;
-      r.updated_at = new Date().toISOString();
-      list[idx] = r;
-      writeRates(list);
-    }
-    // Refresh Liste/Step3
+    const catsSel = Array.from(q('#erCats').selectedOptions||[]).map(o=>o.value);
+    list[i] = {
+      ...list[i],
+      // fix: ratecode/hotel/ratetype bleiben unverändert
+      name:   (q('#erName').value||'').trim(),
+      policy: (q('#erPolicy').value||'').trim(),
+      price:  Number(q('#erPrice').value||0),
+      mapped: (q('#erMapped').value==='true'),
+      categories: catsSel.length?catsSel:['*'],
+      updated_at: new Date().toISOString()
+    };
+    writeRates(list);
     rsRender();
-    refreshNewResRates();
+    refreshNewResRates?.();
     closeModal('modalRateEdit');
   });
 
-  q('#btnRateDelete')?.addEventListener('click', ()=>{
-    if (!__rateEditId) return;
+  q('#btnRateDelete').addEventListener('click', ()=>{
     if (!confirm('Rate wirklich löschen?')) return;
     deleteRate(__rateEditId);
     __rateEditId = null;
     rsRender();
-    refreshNewResRates();
+    refreshNewResRates?.();
     closeModal('modalRateEdit');
   });
 
