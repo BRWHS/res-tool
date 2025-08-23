@@ -637,13 +637,11 @@
   </header>
   <div class="body">
   <div class="rates-wrap">
-    <!-- Sidebar -->
+    <!-- Sidebar: Tabs -->
     <aside class="rates-side">
       <button class="btn tile" id="rsTabDirect">Direct-Rate</button>
       <button class="btn tile" id="rsTabCorp">Corp-Rate</button>
       <button class="btn tile" id="rsTabIds">IDS-Rate</button>
-      <div class="grow"></div>
-      <button class="btn primary tile" id="rsNewRate">+ Neue Rate</button>
     </aside>
 
     <!-- Hauptbereich -->
@@ -652,8 +650,9 @@
         <div class="card-head">
           <h3 class="mono" id="rsTitle">Raten – Direct</h3>
           <div class="rs-toolbar">
+            <button class="btn primary sm" id="rsNewRate">+ Neue Rate</button>
             <input id="rsSearch" class="input sm" placeholder="Suchen: Name oder Ratecode">
-            <select id="rsHotelFilter" class="input sm theme-select"></select>
+            <select id="rsHotelFilter" class="input sm theme-select" title="Hotel filtern"></select>
           </div>
         </div>
 
@@ -676,6 +675,7 @@
     </section>
   </div>
 </div>
+
 
   <section class="modal" id="modalRateEdit" role="dialog" aria-labelledby="rateEditTitle" aria-modal="true">
   <header>
