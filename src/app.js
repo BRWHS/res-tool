@@ -500,6 +500,7 @@ function rsSetType(type){
   if (q('#rsTitle')) q('#rsTitle').textContent = `Raten – ${type}`;
   rsRender();
 }
+
 function rsRender(){
   const tbody = q('#rsBody'); if (!tbody) return;
   const qStr  = (q('#rsSearch')?.value || '').trim().toLowerCase();
@@ -516,12 +517,22 @@ function rsRender(){
     tbody.append(el('tr', {}, el('td', { colspan:'6' }, 'Keine Raten gefunden.')));
     return;
   }
-/* removed stray forEach block */
-    writeRates(list);
-    rsRender();
-    refreshNewResRates();
-    closeModal('modalRateEdit');
+
+  list.forEach(r => {
+    const h = HOTELS.find(x => x.code === r.hotel_code);
+    const tr = el('tr', { class:'row', 'data-id': r.id },
+      el('td', {}, r.ratecode || '—'),
+      el('td', {}, r.name || '—'),
+      el('td', {}, h ? `${h.group} - ${h.name.replace(/^.*? /,'')}` : (r.hotel_code || '—')),
+      el('td', {}, (r.categories || []).join(', ') || '—'),
+      el('td', {}, r.price != null ? EUR.format(r.price) : '—'),
+      el('td', {}, r.mapped ? 'ja' : 'nein')
+    );
+    tr.addEventListener('click', () => openRateEditor(r.id));
+    tbody.append(tr);
   });
+}
+);
 
   q('#btnRateDelete')?.addEventListener('click', ()=>{
     if (!confirm('Rate wirklich löschen?')) return;
@@ -2234,48 +2245,47 @@ function rsRender(){
 
 // --- Edit flow (Ratename editierbar; Typ/Hotel/Ratecode fix) ---
 window.__rateEditId = window.__rateEditId || null;
+
 function openRateEditor(id){
   const r = readRates().find(x=>x.id===id);
   if (!r) return;
-  __rateEditId = id;
+  window.__rateEditId = id;
 
   fillHotelSelectOptions(q('#erHotel'));
   q('#erHotel').value = r.hotel_code || '';
   q('#erHotel').disabled = true;
 
-  loadCatsIntoSelect(q('#erCats'), r.hotel_code);
+  loadCatsForHotel(q('#erCats'), r.hotel_code);
   Array.from(q('#erCats').options).forEach(o=>{ o.selected = (r.categories||['*']).includes(o.value); });
-  q('#erCats').disabled = false;
+  makeMultiSelectFriendly(q('#erCats'));
 
   q('#erCode').value = r.ratecode || '';    q('#erCode').disabled = true;
   q('#erType').value = r.ratetype || 'Direct'; q('#erType').disabled = true;
-  q('#erName').value = r.name || '';        q('#erName').disabled = false; // editierbar
+  q('#erName').value = r.name || '';        q('#erName').disabled = false;
   q('#erPolicy').value = r.policy || '';
   q('#erPrice').value = r.price ?? 0;
-  q('#erMapped').value = r.mapped ? 'true' : 'false';
+  if (q('#erMapped').tagName==='SELECT') q('#erMapped').value = r.mapped ? 'true':'false';
+  else q('#erMapped').checked = !!r.mapped;
 
-  // Buttons: Update/Delete sichtbar, Create verstecken
+  q('#btnRateCreate') && (q('#btnRateCreate').style.display='none');
   q('#btnRateUpdate') && (q('#btnRateUpdate').style.display='');
   q('#btnRateDelete') && (q('#btnRateDelete').style.display='');
-  q('#btnRateCreate') && (q('#btnRateCreate').style.display='none');
 
-  // Re-bind
-  const upd = q('#btnRateUpdate'); upd.replaceWith(upd.cloneNode(true));
-  const del = q('#btnRateDelete'); del.replaceWith(del.cloneNode(true));
+  const upd = q('#btnRateUpdate'); if (upd) upd.replaceWith(upd.cloneNode(true));
+  const del = q('#btnRateDelete'); if (del) del.replaceWith(del.cloneNode(true));
 
   q('#btnRateUpdate')?.addEventListener('click', ()=>{
     const list = readRates();
-    const i = list.findIndex(x=>x.id===__rateEditId);
+    const i = list.findIndex(x=>x.id===window.__rateEditId);
     if (i<0) return;
 
     const cats = Array.from(q('#erCats').selectedOptions||[]).map(o=>o.value);
     list[i] = {
       ...list[i],
-      // fix bleiben: ratecode, ratetype, hotel_code
       name:   (q('#erName').value||'').trim(),
       policy: (q('#erPolicy').value||'').trim(),
       price:  Number(q('#erPrice').value||0),
-      mapped: (q('#erMapped').value==='true'),
+      mapped: (q('#erMapped').tagName==='SELECT') ? (q('#erMapped').value==='true') : !!q('#erMapped').checked,
       categories: cats.length?cats:['*'],
       updated_at: new Date().toISOString()
     };
@@ -2286,15 +2296,18 @@ function openRateEditor(id){
 
   q('#btnRateDelete')?.addEventListener('click', ()=>{
     if (!confirm('Rate wirklich löschen?')) return;
-    deleteRate(__rateEditId);
-    __rateEditId = null;
+    deleteRate(window.__rateEditId);
+    window.__rateEditId = null;
     rsRender(); refreshNewResRates();
     closeModal('modalRateEdit');
   });
 
-  q('#rateEditTitle') && (q('#rateEditTitle').textContent = 'Rate bearbeiten');
+  const title = document.getElementById('rateEditTitle');
+  if (title) title.textContent = 'Rate bearbeiten';
+  fitRateModals();
   openModal('modalRateEdit');
 }
+
 
 // --- Openers / bindings ---
 q('#btnRates')     ?.addEventListener('click', ()=>{
@@ -2377,19 +2390,6 @@ setTimeout(()=>{ try{ refreshNewResRates(); }catch(e){} }, 0);
     });
   }
 })();
-// pad
-// pad
-// pad
-// pad
-// pad
-// pad
-// pad
-// pad
-// pad
-// pad
-// pad
-// pad
-// pad
 // pad
 // pad
 // pad
