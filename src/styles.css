@@ -584,6 +584,21 @@ table.matrix{width:100%;border-collapse:collapse}
 /* (Optional) Policy-Absatz in Step 3 kompakt */
 #ratePolicyPreview{margin:.25rem 0 0 0
 }
+/* Rateneinstellungen */
+.rates-wrap{display:grid;grid-template-columns:220px 1fr;gap:12px}
+.rates-side{display:flex;flex-direction:column;gap:8px;min-height:360px}
+.rates-side .tile{justify-content:flex-start}
+.rs-toolbar{display:flex;gap:8px;align-items:center;margin-left:auto}
+.rs-toolbar .btn.sm{white-space:nowrap}
+.rates-main .row{cursor:pointer}
+@media (max-width:900px){
+  .rates-wrap{grid-template-columns:1fr}
+  .rates-side{flex-direction:row;align-items:stretch}
+}
+
+/* Multi-select Feedback */
+select[disabled]{opacity:.6; pointer-events:none
+}
 
 
 
