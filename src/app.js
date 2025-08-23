@@ -302,8 +302,9 @@ async function buildMiniAnalytics(){
   });
 }
   /***** MODALS *****/
-  const backdrop = q('#backdrop');
+  let backdrop = q('#backdrop');
   function openModal(id){
+    if(!backdrop){ backdrop = document.createElement('div'); backdrop.id='backdrop'; backdrop.className='backdrop'; document.body.appendChild(backdrop);}
     
   try {
     if (['modalRateEdit','modalRateSettings','modalRateCreate'].includes(id)) {
@@ -517,6 +518,20 @@ function rsRender(){
     tbody.append(el('tr', {}, el('td', { colspan:'6' }, 'Keine Raten gefunden.')));
     return;
   }
+
+list.forEach(r => {
+  const h = HOTELS.find(x => x.code === r.hotel_code);
+  const tr = el('tr', { class:'row', 'data-id': r.id },
+    el('td', {}, r.ratecode || '—'),
+    el('td', {}, r.name || '—'),
+    el('td', {}, h ? `${h.group} - ${h.name.replace(/^.*? /,'')}` : (r.hotel_code || '—')),
+    el('td', {}, (r.categories || []).join(', ') || '—'),
+    el('td', {}, r.price != null ? EUR.format(r.price) : '—'),
+    el('td', {}, r.mapped ? 'ja' : 'nein')
+  );
+  tr.addEventListener('click', () => openRateEditor && openRateEditor(r.id));
+  tbody.append(tr);
+});
 }
   
 // „Neue Rate“ nutzt modalRateEdit im Create-Modus
@@ -597,7 +612,7 @@ function openRateCreate(){
 
   const title = document.getElementById('rateEditTitle');
   if (title) title.textContent = 'Neue Rate';
-  fitRateModals();
+  try{fitRateModal("modalRateEdit");}catch(e){};
   openModal('modalRateEdit');
 }
   document.getElementById('rsNewRate')?.addEventListener('click', openRateCreate);
@@ -2099,6 +2114,8 @@ function rsSetType(type){
   rsRender();
 }
 function rsRender(){
+  if (window && window.rsRender && window.rsRender !== rsRender) { return window.rsRender(); }
+
   const tbody = q('#rsBody'); if (!tbody) return;
   const qStr  = (q('#rsSearch')?.value || '').trim().toLowerCase();
   const hCode = q('#rsHotelFilter')?.value || 'all';
@@ -2228,7 +2245,7 @@ function openRateEditor(id){
 
   const title = document.getElementById('rateEditTitle');
   if (title) title.textContent = 'Rate bearbeiten';
-  fitRateModals();
+  try{fitRateModal("modalRateEdit");}catch(e){};
   openModal('modalRateEdit');
 }
 
@@ -2496,8 +2513,8 @@ setTimeout(()=>{ try{ refreshNewResRates(); }catch(e){} }, 0);
     document.getElementById('rsTabDirect')?.addEventListener('click', ()=> rsSetType('Direct'));
     document.getElementById('rsTabCorp')?.addEventListener('click', ()=> rsSetType('Corp'));
     document.getElementById('rsTabIds')?.addEventListener('click', ()=> rsSetType('IDS'));
-    document.getElementById('rsSearch')?.addEventListener('input', rsRender);
-    document.getElementById('rsHotelFilter')?.addEventListener('change', rsRender);
+    document.getElementById('rsSearch')?.addEventListener('input', ()=>window.rsRender && window.rsRender());
+    document.getElementById('rsHotelFilter')?.addEventListener('change', ()=>window.rsRender && window.rsRender());
     document.getElementById('rsNewRate')?.addEventListener('click', ()=> openRateCreate());
     // Erstes Rendern sobald Modal offen
     document.getElementById('btnRates')?.addEventListener('click', ()=> setTimeout(rsRender, 0), {once:true});
