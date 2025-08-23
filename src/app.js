@@ -380,6 +380,74 @@ function prepareRateFormReset(){
   if (q('#rateMapped')) q('#rateMapped').checked = true;
   if (q('#rateInfo')) q('#rateInfo').textContent = '';
 }
+  /* ===== Rateneinstellungen: Listenansicht ===== */
+let __rsType = 'Direct';   // aktiver Tab
+
+function rsSetType(type){
+  __rsType = type;
+  const title = q('#rsTitle'); if (title) title.textContent = `Raten – ${type}`;
+  rsRender();
+}
+function rsRender(){
+  const tbody = q('#rsBody'); if (!tbody) return;
+  tbody.innerHTML = '';
+  const rows = (readRates?.() || []) // deine LocalStorage-Raten
+    .filter(r => r.ratetype === __rsType)
+    .sort((a,b)=>(a.hotel_code+a.name).localeCompare(b.hotel_code+b.name));
+  if (!rows.length){
+    tbody.append(el('tr',{}, el('td',{colspan:'6'}, 'Keine Raten vorhanden.')));
+    return;
+  }
+  rows.forEach(r=>{
+    const h = HOTELS.find(x=>x.code===r.hotel_code);
+    const tr = el('tr', {class:'row','data-id':r.id},
+      el('td',{}, r.ratecode||'—'),
+      el('td',{}, r.name||'—'),
+      el('td',{}, h ? `${h.group} - ${h.name.replace(/^.*? /,'')}` : (r.hotel_code||'—')),
+      el('td',{}, (r.categories||[]).join(', ') || '—'),
+      el('td',{}, r.price!=null ? EUR.format(r.price) : '—'),
+      el('td',{}, r.mapped ? 'ja' : 'nein'),
+    );
+    tr.addEventListener('click', ()=> openRateEditor?.(r.id)); // öffnet dein Editor-Modal
+    tbody.append(tr);
+  });
+}
+/* ===== Multi-Select ohne Strg/Cmd ===== */
+function makeMultiSelectFriendly(sel){
+  if (!sel || sel.__friendly) return;
+  sel.__friendly = true;
+  sel.addEventListener('mousedown', (e)=>{
+    const opt = e.target.closest('option');
+    if (!opt) return;
+    e.preventDefault();
+    opt.selected = !opt.selected;
+    // wenn "Alle" (*) gewählt wurde, alles andere abwählen
+    if (opt.value === '*'){
+      Array.from(sel.options).forEach(o=>{ if (o!==opt) o.selected = false; });
+    } else {
+      // wenn irgendeine andere gewählt ist, "*" abwählen
+      Array.from(sel.options).forEach(o=>{ if (o.value==='*') o.selected = false; });
+    }
+    // change-Event feuern, falls du darauf hörst
+    sel.dispatchEvent(new Event('change', {bubbles:true}));
+  });
+}
+
+// Beim Öffnen von Editor/Neuanlage aufrufen:
+makeMultiSelectFriendly(document.querySelector('#rtCats')); // Neuanlage
+makeMultiSelectFriendly(document.querySelector('#erCats')); // Bearbeiten
+
+  
+// Öffner für Rateneinstellungen (statt direkt „Neue Rate“)
+q('#btnRates')?.addEventListener('click', ()=>{
+  rsSetType('Direct');
+  openModal('modalRateSettings');
+});
+q('#rsTabDirect')?.addEventListener('click', ()=> rsSetType('Direct'));
+q('#rsTabCorp')  ?.addEventListener('click', ()=> rsSetType('Corp'));
+q('#rsTabIds')   ?.addEventListener('click', ()=> rsSetType('IDS'));
+q('#rsNewRate')  ?.addEventListener('click', ()=> openRateEditor?.(null)); // „Neue Rate“ → Editor in Neuanlage
+
 
 // Öffner: Rateneinstellungen (statt Channel)
 q('#navNewRate')?.addEventListener('click', ()=>{
@@ -948,7 +1016,54 @@ function refreshNewResRates(){
   }
   validateStep?.('3'); updateSummary?.('#summaryFinal');
 }
+// Hilfsfunktion: Policy-Text setzen (robust)
+function setSelectedRatePolicy(policy){
+  const targets = [
+    '#ratePolicyPreview',     // unsere empfohlene ID
+    '[data-rate-policy]',     // optionaler Daten-Hook
+  ];
+  let node = null;
+  for (const sel of targets){ node = document.querySelector(sel); if (node) break; }
+  if (!node){
+    // Notfall: versuche den nächsten <p> nach einer Überschrift "Stornobedingung"
+    const label = Array.from(document.querySelectorAll('#w3 *'))
+      .find(n => /stornobedingung/i.test(n.textContent||''));
+    node = label?.closest('.policy-box')?.querySelector('p') || label?.parentElement?.querySelector('p');
+  }
+  if (node) node.textContent = policy || '—';
+}
 
+// … in deiner Funktion, die die Raten lädt:
+function refreshNewResRates(){
+  const code = q('#newHotel')?.value || '';
+  const cat  = q('#newCat')?.value   || '';
+  const sel  = q('#newRate'); if (!sel) return;
+
+  const list = getMappedRatesFor(code, cat) || []; // kommt aus deinem Rates-Store
+  sel.innerHTML = list.map(r => `<option value="${r.name}" data-price="${r.price}" data-policy="${r.policy||''}">${r.name} (${EUR.format(r.price)})</option>`).join('');
+
+  if (list.length){
+    sel.value = list[0].name;
+    if (q('#newPrice')) q('#newPrice').value = list[0].price;
+    setSelectedRatePolicy(list[0].policy||'');
+  } else {
+    sel.innerHTML = `<option value="">— keine gemappte Rate —</option>`;
+    if (q('#newPrice')) q('#newPrice').value = 0;
+    setSelectedRatePolicy('');
+  }
+  validateStep?.('3'); updateSummary?.('#summaryFinal');
+}
+
+// Wenn die Rate im Dropdown geändert wird → Preis & Policy spiegeln
+q('#newRate')?.addEventListener('change', (e)=>{
+  const opt = e.target.selectedOptions[0];
+  if (!opt) return;
+  const p = opt.dataset.price;
+  const pol = opt.dataset.policy || '';
+  if (p && q('#newPrice')) q('#newPrice').value = p;
+  setSelectedRatePolicy(pol);
+});
+  
 // Bei Hotel/Kategorie-Wechsel neu befüllen
 q('#newHotel')?.addEventListener('change', refreshNewResRates);
 q('#newCat')  ?.addEventListener('change', refreshNewResRates);
