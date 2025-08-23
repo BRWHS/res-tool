@@ -639,29 +639,36 @@
   </header>
   <div class="body">
   <div class="rates-wrap">
+    <!-- Sidebar -->
     <aside class="rates-side">
       <button class="btn tile" id="rsTabDirect">Direct-Rate</button>
       <button class="btn tile" id="rsTabCorp">Corp-Rate</button>
       <button class="btn tile" id="rsTabIds">IDS-Rate</button>
-      <div style="height:6px"></div>
-      <button class="btn primary tile" id="rsNewRate">Neue Rate</button>
+      <div class="grow"></div>
+      <button class="btn primary tile" id="rsNewRate">+ Neue Rate</button>
     </aside>
 
+    <!-- Hauptbereich -->
     <section class="rates-main card">
       <div class="content">
         <div class="card-head">
           <h3 class="mono" id="rsTitle">Raten – Direct</h3>
+          <div class="rs-toolbar">
+            <input id="rsSearch" class="input sm" placeholder="Suchen: Name oder Ratecode">
+            <select id="rsHotelFilter" class="input sm theme-select"></select>
+          </div>
         </div>
+
         <div class="table-wrap">
           <table class="resv">
             <thead>
               <tr>
-                <th>Ratecode</th>
+                <th style="width:110px">Ratecode</th>
                 <th>Name</th>
                 <th>Hotel</th>
-                <th>Kategorien</th>
-                <th>Preis</th>
-                <th>Mapped</th>
+                <th style="width:180px">Kategorien</th>
+                <th style="width:110px">Preis</th>
+                <th style="width:90px">Mapped</th>
               </tr>
             </thead>
             <tbody id="rsBody"></tbody>
