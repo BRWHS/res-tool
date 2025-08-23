@@ -517,7 +517,8 @@ function rsRender(){
     tbody.append(el('tr', {}, el('td', { colspan:'6' }, 'Keine Raten gefunden.')));
     return;
   }
-
+}
+  
 // „Neue Rate“ nutzt modalRateEdit im Create-Modus
 function openRateCreate(){
   const modal = document.getElementById('modalRateEdit');
@@ -2295,4 +2296,7 @@ setTimeout(()=>{ try{ refreshNewResRates(); }catch(e){} }, 0);
 
   // Initial füllen
   setTimeout(()=>{ try{ window.refreshNewResRates(); }catch(e){} }, 0);
+})();
+
+ /* END: ResTool main wrapper */
 })();
