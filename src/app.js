@@ -363,7 +363,7 @@ async function buildMiniAnalytics(){
     m.style.display='none'; backdrop.style.display='none'; document.body.classList.remove('modal-open');
   }
 
-  function fillHotelSelect(sel){
+  function fillHotelSelectOptions(sel){
   if (!sel) return;
   sel.innerHTML='';
   HOTELS.forEach(h => sel.append(el('option',{value:h.code}, `${h.group} - ${h.name.replace(/^.*? /,'')}`)));
@@ -378,7 +378,7 @@ function loadCatsIntoSelect(sel, hotelCode){
 
 function openRateCreate(){
   // Felder befüllen/resetten
-  fillHotelSelect(q('#crHotel'));
+  fillHotelSelectOptions(q('#crHotel'));
   q('#crCode').value = '';
   q('#crType').value = '';
   q('#crName').value = '';
@@ -474,13 +474,9 @@ q('#rsNewRate')  ?.addEventListener('click', ()=> openRateEditor?.(null)); // �
 
 
 // Öffner: Rateneinstellungen (statt Channel)
-q('#navNewRate')?.addEventListener('click', ()=>{
-  requireAdmin(()=>{ prepareRateFormReset(); openModal('modalRateSettings'); });
-});
-q('#btnRates')?.addEventListener('click', ()=>{ // falls es den Button bereits gibt
-  requireAdmin(()=>{ prepareRateFormReset(); openModal('modalRateSettings'); });
-});
-
+q('#navNewRate')?.addEventListener('click', ()=>{ prepareRateFormReset(); openModal('modalRateSettings'); });
+q('#btnRates')?.addEventListener('click', ()=>{ prepareRateFormReset(); openModal('modalRateSettings'); });
+  
 // Speichern
 q('#btnRateSave')?.addEventListener('click', ()=>{
   const ratecode  = (q('#rateCode')?.value || '').trim();
@@ -1808,11 +1804,6 @@ document.querySelector('#sketchBack')?.addEventListener('click', () => {
 
   seedDefaultRatesIfEmpty();
 
-  document.querySelector('#btnSketch')?.addEventListener('click', () => {
-  buildSketch();
-  openModal('modalSketch');
-});
-
   // --- Einstellungen / Admin ---
 const ADMIN_PW = "325643";
 const SETTINGS_KEY = "resTool.settings";
@@ -2071,7 +2062,7 @@ function getMappedRatesFor(hotelCode, category=null, type=null){
 }
 
 // --- Tiny DOM utils relying on your q/qa/el ---
-function fillHotelSelect(sel){
+function fillHotelSelectOptions(sel){
   if (!sel) return;
   sel.innerHTML='';
   HOTELS.forEach(h => sel.append(el('option',{value:h.code}, `${h.group} - ${h.name.replace(/^.*? /,'')}`)));
@@ -2187,7 +2178,7 @@ function rsRender(){
 function openRateCreate(){
   // Wir benutzen modalRateEdit im Create-Modus:
   // Felder
-  fillHotelSelect(q('#erHotel'));
+  fillHotelSelectOptions(q('#erHotel'));
   q('#erHotel').disabled = false;
 
   q('#erCode').value = '';        q('#erCode').disabled = false;
@@ -2266,7 +2257,7 @@ function openRateEditor(id){
   if (!r) return;
   __rateEditId = id;
 
-  fillHotelSelect(q('#erHotel'));
+  fillHotelSelectOptions(q('#erHotel'));
   q('#erHotel').value = r.hotel_code || '';
   q('#erHotel').disabled = true;
 
