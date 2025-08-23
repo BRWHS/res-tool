@@ -571,7 +571,7 @@ function rsRender(){
     );
     tr.addEventListener('click', ()=> openRateEditor(r.id)); // Edit-Flow
     tbody.append(tr);
-  };
+  )};
 
   sel.addEventListener('mousedown', (e)=>{
     const opt = e.target.closest('option'); if (!opt) return;
