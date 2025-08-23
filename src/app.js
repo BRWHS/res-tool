@@ -575,20 +575,6 @@ function rsRender(){
   });
 }
 
-  list.forEach(r=>{
-    const h = HOTELS.find(x=>x.code===r.hotel_code);
-    const tr = el('tr', {class:'row','data-id':r.id},
-      el('td',{}, r.ratecode||'—'),
-      el('td',{}, r.name||'—'),
-      el('td',{}, h ? `${h.group} - ${h.name.replace(/^.*? /,'')}` : (r.hotel_code||'—')),
-      el('td',{}, (r.categories||[]).join(', ')||'—'),
-      el('td',{}, r.price!=null ? EUR.format(r.price) : '—'),
-      el('td',{}, r.mapped ? 'ja' : 'nein'),
-    );
-    tr.addEventListener('click', ()=> openRateEditor(r.id)); // Edit-Flow
-    tbody.append(tr);
-  };
-
 // Öffnen ohne Admin
 q('#btnRates')     ?.addEventListener('click', ()=>{ rsFillHotelFilter(); rsSetType('Direct'); openModal('modalRateSettings'); });
 q('#rsTabDirect')  ?.addEventListener('click', ()=> rsSetType('Direct'));
@@ -637,13 +623,12 @@ function openRateEditor(id){
 
   // Hotel & Cats
   fillHotelSelectGeneric(q('#erHotel'));
-  q('#erHotel').value = r.hotel_code || '';
-  q('#erHotel').disabled = true;
+q('#erHotel').value = r.hotel_code || '';
+q('#erHotel').disabled = true;
 
-  fillCatsSelectGeneric(q('#erCats')); // lädt Default-Kategorien
-// Auswahl der Kategorien setzen:
-Array.from(q('#erCats').options).forEach(o => { 
-  o.selected = (r.categories || ['*']).includes(o.value); 
+fillCatsSelectGeneric(q('#erCats'));
+Array.from(q('#erCats').options).forEach(o => {
+  o.selected = (r.categories || ['*']).includes(o.value);
 });
 makeMultiSelectFriendly(q('#erCats'));
 
