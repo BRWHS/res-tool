@@ -1,4 +1,8 @@
 (() => {
+  // === Canonical rates storage key (fixes undefined RATES_KEY / RKEY mismatch) ===
+  var RATES_KEY = (typeof window !== 'undefined' && window.RATES_KEY) ? window.RATES_KEY : 'resTool.rates';
+  if (typeof window !== 'undefined') window.RATES_KEY = RATES_KEY;
+
   // ===== Re-Init Guard (verhindert doppeltes Registrieren von Listenern) =====
   if (window.__RESTOOL_APP_V2__) return;
   window.__RESTOOL_APP_V2__ = true;
@@ -315,13 +319,13 @@ const sel = (id || '').toString();
     const m = q(sel.startsWith('#') ? sel : ('#' + sel));
     if(!m) return;
     document.body.classList.add('modal-open');
-    backdrop.style.display='flex'; m.style.display='block';
+    if (backdrop) backdrop.style.display='flex'; m.style.display='block';
   }
   function closeModal(id){
     const sel = (id || '').toString();
     const m = q(sel.startsWith('#') ? sel : ('#' + sel));
     if(!m) return;
-    m.style.display='none'; backdrop.style.display='none'; document.body.classList.remove('modal-open');
+    m.style.display='none'; if (backdrop) backdrop.style.display='none'; document.body.classList.remove('modal-open');
   }
 
   function fillHotelSelectOptions(sel){
