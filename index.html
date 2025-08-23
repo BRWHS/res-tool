@@ -300,8 +300,6 @@
       <div class="muted">Stornobedingung</div>
         <p id="ratePolicyPreview">—</p>
           </div>
-          <div id="ratePolicy" class="tiny">Bis zum Anreisetag 18:00 Uhr kostenfrei stornierbar.</div>
-        </div>
       </div>
 
       <!-- STEP 4 -->
@@ -679,12 +677,49 @@
   </div>
 </div>
 
+  <section class="modal" id="modalRateEdit" role="dialog" aria-labelledby="rateEditTitle" aria-modal="true">
+  <header>
+    <h3 id="rateEditTitle" class="mono"><span class="set-logo" aria-hidden="true"></span> Rate bearbeiten</h3>
+    <button class="btn" data-close>Schließen</button>
+  </header>
+  <div class="body">
+    <div class="grid2">
+      <label>Ratecode (fix)
+        <input id="erCode" class="input" disabled />
+      </label>
+      <label>Ratentyp*
+        <select id="erType" class="input theme-select">
+          <option>Direct</option><option>Corp</option><option>IDS</option>
+        </select>
+      </label>
+      <label>Hotel (fix)
+        <select id="erHotel" class="input theme-select" disabled></select>
+      </label>
+      <label>Ratename (fix)
+        <input id="erName" class="input" disabled />
+      </label>
+      <label style="grid-column:1 / -1">Kategorien (mehrfach)
+        <select id="erCats" class="input theme-select" multiple size="4"></select>
+      </label>
+      <label style="grid-column:1 / -1">Stornobedingung
+        <textarea id="erPolicy" class="input" rows="3" placeholder="z. B. Bis zum Anreisetag 18:00 Uhr kostenfrei stornierbar."></textarea>
+      </label>
+      <label>Preis/Nacht
+        <input id="erPrice" type="number" step="1" class="input" />
+      </label>
+      <label>Gemappt
+        <select id="erMapped" class="input theme-select">
+          <option value="true">ja</option>
+          <option value="false">nein</option>
+        </select>
+      </label>
+    </div>
     <div class="set-footer">
-  <button class="btn danger" id="btnRateDelete">Rate löschen</button>
-  <div style="flex:1"></div>
-  <button class="btn primary" id="btnRateUpdate">Änderungen speichern</button>
-</div>
-
+      <button class="btn danger" id="btnRateDelete">Rate löschen</button>
+      <div style="flex:1"></div>
+      <button class="btn primary" id="btnRateUpdate">Änderungen speichern</button>
+    </div>
+  </div>
 </section>
 
 <!-- NEU: Hilfe & FAQ -->
