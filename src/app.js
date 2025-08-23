@@ -150,6 +150,10 @@ function seedDefaultRatesIfEmpty(){
   });
   writeRates(seeded);
 }
+  function deleteRate(id){
+  const list = readRates();
+  writeRates(list.filter(r => r.id !== id));
+}
 
   /***** Bild-Helfer *****/
   function safeSetImg(imgEl, src){
@@ -380,38 +384,7 @@ function prepareRateFormReset(){
   if (q('#rateMapped')) q('#rateMapped').checked = true;
   if (q('#rateInfo')) q('#rateInfo').textContent = '';
 }
-  /* ===== Rateneinstellungen: Listenansicht ===== */
-let __rsType = 'Direct';   // aktiver Tab
-
-function rsSetType(type){
-  __rsType = type;
-  const title = q('#rsTitle'); if (title) title.textContent = `Raten – ${type}`;
-  rsRender();
-}
-function rsRender(){
-  const tbody = q('#rsBody'); if (!tbody) return;
-  tbody.innerHTML = '';
-  const rows = (readRates?.() || []) // deine LocalStorage-Raten
-    .filter(r => r.ratetype === __rsType)
-    .sort((a,b)=>(a.hotel_code+a.name).localeCompare(b.hotel_code+b.name));
-  if (!rows.length){
-    tbody.append(el('tr',{}, el('td',{colspan:'6'}, 'Keine Raten vorhanden.')));
-    return;
-  }
-  rows.forEach(r=>{
-    const h = HOTELS.find(x=>x.code===r.hotel_code);
-    const tr = el('tr', {class:'row','data-id':r.id},
-      el('td',{}, r.ratecode||'—'),
-      el('td',{}, r.name||'—'),
-      el('td',{}, h ? `${h.group} - ${h.name.replace(/^.*? /,'')}` : (r.hotel_code||'—')),
-      el('td',{}, (r.categories||[]).join(', ') || '—'),
-      el('td',{}, r.price!=null ? EUR.format(r.price) : '—'),
-      el('td',{}, r.mapped ? 'ja' : 'nein'),
-    );
-    tr.addEventListener('click', ()=> openRateEditor?.(r.id)); // öffnet dein Editor-Modal
-    tbody.append(tr);
-  });
-}
+  
 /* ===== Multi-Select ohne Strg/Cmd ===== */
 function makeMultiSelectFriendly(sel){
   if (!sel || sel.__friendly) return;
@@ -623,7 +596,8 @@ function openRateEditor(id, presetType='Direct'){
   q('#erName')  && (q('#erName').value  = data.name || '');
   q('#erPolicy')&& (q('#erPolicy').value= data.policy || '');
   q('#erPrice') && (q('#erPrice').value = data.price ?? 0);
-  q('#erMapped')&& (q('#erMapped').checked = !!data.mapped);
+  q('#erMapped')&& (q('#erMapped').value = data.mapped ? 'true' : 'false');
+
 
   // Mehrfachauswahl Kategorien
   const sel = q('#erCats');
@@ -1209,10 +1183,7 @@ function refreshNewResRates(){
   }
   validateStep?.('3'); updateSummary?.('#summaryFinal');
 }
-  // dort, wo du den Step umschaltest:
-if (nextStep === '3' || curStep === '2' && nextStep === '3') {
-  refreshNewResRates();
-}
+  
 /* === Step 3: Policy-Text robust setzen (ohne Duplikate) === */
 function setSelectedRatePolicy(policyText){
   const first = document.getElementById('ratePolicyPreview');
@@ -1233,41 +1204,6 @@ function setSelectedRatePolicy(policyText){
 }
 
 /* Wenn die Rate gewechselt wird → Preis & Policy spiegeln */
-q('#newRate')?.addEventListener('change', (e)=>{
-  const opt = e.target.selectedOptions[0];
-  if (!opt) return;
-  const p = opt.dataset.price;
-  const pol = opt.dataset.policy || '';
-  if (p && q('#newPrice')) q('#newPrice').value = p;
-  setSelectedRatePolicy(pol);
-});
-
-// … in deiner Funktion, die die Raten lädt:
-function refreshNewResRates(){
-  const code = q('#newHotel')?.value || '';
-  const cat  = q('#newCat')?.value   || '';
-  const sel  = q('#newRate'); if (!sel) return;
-
-  const list = getMappedRatesFor(code, cat) || [];
-  sel.innerHTML = list.map(r =>
-    `<option value="${r.name}" data-price="${r.price}" data-policy="${(r.policy||'').replace(/"/g,'&quot;')}">
-       ${r.name} (${EUR.format(r.price)})
-     </option>`
-  ).join('');
-
-  if (list.length){
-    sel.value = list[0].name;
-    if (q('#newPrice')) q('#newPrice').value = list[0].price;
-    setSelectedRatePolicy(list[0].policy||'');
-  } else {
-    sel.innerHTML = `<option value="">— keine gemappte Rate —</option>`;
-    if (q('#newPrice')) q('#newPrice').value = 0;
-    setSelectedRatePolicy('');
-  }
-  validateStep?.('3'); updateSummary?.('#summaryFinal');
-}
-
-// Wenn die Rate im Dropdown geändert wird → Preis & Policy spiegeln
 q('#newRate')?.addEventListener('change', (e)=>{
   const opt = e.target.selectedOptions[0];
   if (!opt) return;
