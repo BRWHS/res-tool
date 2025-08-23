@@ -571,16 +571,6 @@ function rsRender(){
     );
     tr.addEventListener('click', ()=> openRateEditor(r.id)); // Edit-Flow
     tbody.append(tr);
-
-    function makeMultiSelectFriendly(sel){
-  if (!sel || sel.__friendly) return;
-  sel.__friendly = true;
-
-  const renderTicks = ()=>{
-    Array.from(sel.options).forEach(o=>{
-      const plain = o.textContent.replace(/^✓\s+/,'');
-      o.textContent = (o.selected ? '✓ ' : '') + plain;
-    });
   };
 
   sel.addEventListener('mousedown', (e)=>{
@@ -640,17 +630,6 @@ function fillCatsSelectGeneric(sel){
   const cats = HOTEL_CATEGORIES['default'] || [];
   sel.innerHTML = ['*', ...cats].map(c => `<option value="${c}">${c==='*'?'Alle':c}</option>`).join('');
 }
-
-window.__rateEditId = window.__rateEditId || null;
-function openRateEditor(id, presetType='Direct'){
-  const isNew = !id;
-  const list = readRates?.() || [];
-  const data = isNew
-    ? { id:null, ratecode:'', ratetype:presetType||'Direct', hotel_code:HOTELS[0]?.code, categories:['*'], name:'', policy:'', price:0, mapped:true }
-    : list.find(r=>r.id===id);
-
-  if (!data) return;
-
 window.__rateEditId = window.__rateEditId || null;
 
 function openRateEditor(id){
@@ -2376,21 +2355,6 @@ q('#rsNewRate')    ?.addEventListener('click', ()=> openRateCreate());
 // --- Wizard: wenn du eine zentrale Step-Umschaltfunktion hast, ruf dort bei Step 3 refreshNewResRates() auf.
 // Fallback: einmal initial anstoßen
 setTimeout(()=>{ try{ refreshNewResRates(); }catch(e){} }, 0);
-
-  /* ==== RATES HOTFIX (no redeclarations) ==== */
-(function ratesHotfix(){
-  if (window.__ratesHotfixApplied) return;
-  window.__ratesHotfixApplied = true;
-
-  // Falls obige Suchen/Ersetzen noch nicht gemacht wurden:
-  window.__rateEditId = window.__rateEditId || null;
-  window.__rsType = window.__rsType || 'Direct';
-
-  // Policy-Text robust setzen (einmalig, ohne Doppel)
-  window.setSelectedRatePolicy = function(txt){
-    const el = document.getElementById('ratePolicyPreview');
-    if (el) el.textContent = (txt && String(txt).trim()) || '—';
-  };
 
   // Mapped Rates für Step 3 neu aufbauen (inkl. data-policy)
   window.refreshNewResRates = function(){
