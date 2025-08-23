@@ -560,6 +560,12 @@ table.matrix{width:100%;border-collapse:collapse}
 #ratesBoard .resv tr { cursor:pointer; }
 #ratesBoard.hidden { display:none; 
 }
+.rates-wrap{display:grid;grid-template-columns:220px 1fr;gap:12px}
+.rates-side{display:flex;flex-direction:column;gap:8px}
+.rates-side .tile{justify-content:flex-start}
+.rates-main .row{cursor:pointer}
+@media(max-width:900px){.rates-wrap{grid-template-columns:1fr}
+}
 
 
 
