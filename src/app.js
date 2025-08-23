@@ -108,53 +108,6 @@
     const diff = (date - firstThursday) / 86400000;
     return 1 + Math.round(diff / 7);
   }
-/* ===== RATES MODULE (LocalStorage) ===== */
-const RATES_KEY = "resTool.rates";
-
-function readRates(){ try { return JSON.parse(localStorage.getItem(RATES_KEY)) || []; } catch { return []; } }
-function writeRates(list){ localStorage.setItem(RATES_KEY, JSON.stringify(list||[])); }
-function upsertRate(rate){
-  const list = readRates();
-  const i = list.findIndex(r => r.id === rate.id);
-  if (i >= 0) list[i] = rate; else list.push(rate);
-  writeRates(list);
-}
-function getMappedRatesFor(hotelCode, category=null, type=null){
-  return readRates().filter(r =>
-    (!!r.mapped) &&
-    (!hotelCode || r.hotel_code === hotelCode) &&
-    (!type || r.ratetype === type) &&
-    (!category || (Array.isArray(r.categories) && (r.categories.includes(category) || r.categories.includes('*'))))
-  );
-}
-
-function seedDefaultRatesIfEmpty(){
-  const cur = readRates();
-  if (cur.length) return;
-  const cats = (HOTEL_CATEGORIES['default'] || []);
-  let seq = 100000;
-  const now = new Date().toISOString();
-  const seeded = [];
-  HOTELS.forEach(h => {
-    seeded.push({
-      id:'r_'+(++seq), ratecode:String(seq), ratetype:'Direct', hotel_code:h.code,
-      categories: cats, name:'Flex exkl. Frühstück',
-      policy:'Bis zum Anreisetag 18:00 Uhr kostenfrei stornierbar.', price:89,
-      mapped:true, created_at:now, updated_at:now
-    });
-    seeded.push({
-      id:'r_'+(++seq), ratecode:String(seq), ratetype:'Direct', hotel_code:h.code,
-      categories: cats, name:'Flex inkl. Frühstück',
-      policy:'Bis zum Anreisetag 18:00 Uhr kostenfrei stornierbar.', price:109,
-      mapped:true, created_at:now, updated_at:now
-    });
-  });
-  writeRates(seeded);
-}
-  function deleteRate(id){
-  const list = readRates();
-  writeRates(list.filter(r => r.id !== id));
-}
 
   /***** Bild-Helfer *****/
   function safeSetImg(imgEl, src){
@@ -772,64 +725,6 @@ function openRateCreate(){
   openModal('modalRateEdit');
 }
   document.getElementById('rsNewRate')?.addEventListener('click', openRateCreate);
-
-  // Hotel & Cats
-  fillHotelSelectGeneric(q('#erHotel'));
-q('#erHotel').value = r.hotel_code || '';
-q('#erHotel').disabled = true;
-
-fillCatsSelectGeneric(q('#erCats'));
-Array.from(q('#erCats').options).forEach(o => {
-  o.selected = (r.categories || ['*']).includes(o.value);
-});
-makeMultiSelectFriendly(q('#erCats'));
-
-  // Felder
-  q('#erCode').value = r.ratecode || '';
-  q('#erType').value = r.ratetype || 'Direct';
-  q('#erType').disabled = true;       // Ratentyp fix
-  q('#erName').value = r.name || '';  // Ratename editierbar
-  q('#erPolicy').value = r.policy || '';
-  q('#erPrice').value = r.price ?? 0;
-  q('#erMapped').value = r.mapped ? 'true' : 'false';
-
-  // Buttons neu binden
-  const upd = q('#btnRateUpdate'); upd.replaceWith(upd.cloneNode(true));
-  const del = q('#btnRateDelete'); del.replaceWith(del.cloneNode(true));
-
-  q('#btnRateUpdate').addEventListener('click', ()=>{
-    const list = readRates();
-    const i = list.findIndex(x=>x.id===__rateEditId);
-    if (i<0) return;
-
-    const catsSel = Array.from(q('#erCats').selectedOptions||[]).map(o=>o.value);
-    list[i] = {
-      ...list[i],
-      // fix: ratecode/hotel/ratetype bleiben unverändert
-      name:   (q('#erName').value||'').trim(),
-      policy: (q('#erPolicy').value||'').trim(),
-      price:  Number(q('#erPrice').value||0),
-      mapped: (q('#erMapped').value==='true'),
-      categories: catsSel.length?catsSel:['*'],
-      updated_at: new Date().toISOString()
-    };
-    writeRates(list);
-    rsRender();
-    refreshNewResRates?.();
-    closeModal('modalRateEdit');
-  });
-
-  q('#btnRateDelete').addEventListener('click', ()=>{
-    if (!confirm('Rate wirklich löschen?')) return;
-    deleteRate(__rateEditId);
-    __rateEditId = null;
-    rsRender();
-    refreshNewResRates?.();
-    closeModal('modalRateEdit');
-  });
-
-  openModal('modalRateEdit');
-}
 
   /***** KPI/Performance-Filter füllen *****/
   function fillHotelFilter(selectEl){
