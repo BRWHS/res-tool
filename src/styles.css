@@ -555,6 +555,12 @@ table.matrix{width:100%;border-collapse:collapse}
   object-fit: contain;  /* Proportionen bleiben */
   border-radius: 12px;
 }
+/* Rateneinstellungen/Rate-Board kleine Ergänzungen */
+#ratesBoard .resv th, #ratesBoard .resv td { font-size:12px; }
+#ratesBoard .resv tr { cursor:pointer; }
+#ratesBoard.hidden { display:none; 
+}
+
 
 
 
