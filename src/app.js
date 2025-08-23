@@ -2295,8 +2295,6 @@ setTimeout(()=>{ try{ refreshNewResRates(); }catch(e){} }, 0);
 
   // Beim Einstieg in Step 3 einmal initial füllen (falls noch nicht)
   setTimeout(()=>{ try{ window.refreshNewResRates(); }catch(e){} }, 0);
-})();
-
 
 (function ensureWizardRateListeners(){
   const h = document.querySelector('#newHotel');
