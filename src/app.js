@@ -2298,9 +2298,6 @@ setTimeout(()=>{ try{ refreshNewResRates(); }catch(e){} }, 0);
   setTimeout(()=>{ try{ window.refreshNewResRates(); }catch(e){} }, 0);
 })();
 
- /* END: ResTool main wrapper */
-})();
-
 /* ======== RESCUE PATCH – RATEN, WIZARD, SKIZZE, POPUPS ======== */
 (() => {
   // tiny helpers (ohne Abhängigkeit auf q/qa)
@@ -2565,3 +2562,151 @@ setTimeout(()=>{ try{ refreshNewResRates(); }catch(e){} }, 0);
   setTimeout(()=>{ try{ refreshNewResRates(); }catch(e){} }, 0);
 })();
 
+  /* === FINAL BINDERS & FAILSAFES (Rates + Sketch + Modals) === */
+(() => {
+  const $ = (s, r=document)=>r.querySelector(s);
+  const $$ = (s, r=document)=>Array.from(r.querySelectorAll(s));
+
+  // --------- minimal modal fallbacks (nur falls kaputt) ----------
+  if (typeof window.openModal !== 'function') {
+    window.openModal = (id) => {
+      const m = document.getElementById(id);
+      if (!m) return;
+      let b = document.getElementById('backdrop') || document.querySelector('.backdrop');
+      if (!b) { b = document.createElement('div'); b.id='backdrop'; b.className='backdrop'; document.body.appendChild(b); }
+      m.style.display = 'block';
+      b.style.display = 'block';
+      document.body.classList.add('modal-open');
+    };
+  }
+  if (typeof window.closeModal !== 'function') {
+    window.closeModal = (id) => {
+      const m = id ? document.getElementById(id) : document.querySelector('.modal[style*="block"]');
+      const b = document.getElementById('backdrop') || document.querySelector('.backdrop');
+      if (m) m.style.display = 'none';
+      if (b) b.style.display = 'none';
+      document.body.classList.remove('modal-open');
+    };
+  }
+  function fitModal(id){
+    const m = document.getElementById(id);
+    if (m) { m.style.maxWidth = '860px'; m.style.width = 'min(95vw, 860px)'; }
+  }
+
+  // --------- ensure "+ Neue Rate" exists in settings toolbar ----------
+  function ensureNewRateButton(){
+    const modal = document.getElementById('modalRateSettings');
+    if (!modal) return;
+    const tb = modal.querySelector('.rs-toolbar') || modal.querySelector('.card-head .rs-toolbar') || modal.querySelector('.card-head');
+    if (!tb) return;
+    let btn = document.getElementById('rsNewRate');
+    if (!btn) {
+      btn = document.createElement('button');
+      btn.id = 'rsNewRate';
+      btn.className = 'btn primary sm';
+      btn.textContent = '+ Neue Rate';
+      tb.prepend(btn);
+    }
+    // sauberes Re-Binding
+    const clone = btn.cloneNode(true);
+    btn.replaceWith(clone);
+    clone.addEventListener('click', (e)=>{
+      e.preventDefault();
+      try { window.openRateCreate && openRateCreate(); } catch(_) {}
+    });
+  }
+
+  // --------- Openers via Event-Delegation (robust, keine toten Listener) ----------
+  document.addEventListener('click', (e)=>{
+    const ratesBtn = e.target.closest('#btnRates, [data-open="modalRateSettings"]');
+    if (ratesBtn){
+      e.preventDefault();
+      try { window.rsFillHotelFilter && rsFillHotelFilter(); } catch(_) {}
+      try { window.rsSetType && rsSetType('Direct'); } catch(_) {}
+      fitModal('modalRateSettings');
+      ensureNewRateButton();
+      openModal('modalRateSettings');
+      // nach dem Öffnen rendern
+      setTimeout(()=>{ try { window.rsRender && rsRender(); } catch(_) {} }, 0);
+      return;
+    }
+
+    const sketchBtn = e.target.closest('#btnSketch, [data-open="modalSketch"]');
+    if (sketchBtn){
+      e.preventDefault();
+      try { typeof buildSketch==='function' && buildSketch(); } catch(_) {}
+      fitModal('modalSketch');
+      openModal('modalSketch');
+      return;
+    }
+
+    const closeBtn = e.target.closest('[data-close]');
+    if (closeBtn){
+      e.preventDefault();
+      const tgt = closeBtn.getAttribute('data-close') || closeBtn.closest('.modal')?.id;
+      closeModal(tgt);
+      return;
+    }
+  }, true);
+
+  // --------- Wizard Step 3 – robust refresh & listeners (keine Doppel) ----------
+  if (typeof window.refreshNewResRates !== 'function') {
+    window.refreshNewResRates = function(){
+      const code = $('#newHotel')?.value || '';
+      const cat  = $('#newCat')?.value || '';
+      const sel  = $('#newRate'); if (!sel) return;
+      const list = (typeof getMappedRatesFor==='function') ? (getMappedRatesFor(code, cat) || []) : [];
+
+      sel.innerHTML = list.map(r =>
+        `<option value="${r.name}" data-price="${r.price}" data-policy="${(r.policy||'').replace(/"/g,'&quot;')}">${r.name} (${(window.EUR || new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'})).format(r.price)})</option>`
+      ).join('');
+
+      if (list.length){
+        sel.value = list[0].name;
+        const p = $('#newPrice'); if (p) p.value = list[0].price;
+        if (typeof setSelectedRatePolicy==='function') setSelectedRatePolicy(list[0].policy||'');
+      } else {
+        sel.innerHTML = `<option value="">— keine gemappte Rate —</option>`;
+        const p = $('#newPrice'); if (p) p.value = 0;
+        if (typeof setSelectedRatePolicy==='function') setSelectedRatePolicy('');
+      }
+      try { typeof validateStep==='function' && validateStep('3'); } catch(_) {}
+      try { typeof updateSummary==='function' && updateSummary('#summaryFinal'); } catch(_) {}
+    };
+  }
+  (function bindWizardOnce(){
+    const h = $('#newHotel'); const c = $('#newCat'); const r = $('#newRate');
+    if (h){ h.addEventListener('change', refreshNewResRates, {once:false}); }
+    if (c){ c.addEventListener('change', refreshNewResRates, {once:false}); }
+    if (r){
+      r.addEventListener('change', (e)=>{
+        const o = e.target.selectedOptions[0]; if (!o) return;
+        const p = $('#newPrice'); if (p) p.value = o.dataset.price || 0;
+        if (typeof setSelectedRatePolicy==='function') setSelectedRatePolicy(o.dataset.policy || '');
+      }, {once:false});
+    }
+    setTimeout(()=>{ try { refreshNewResRates(); } catch(_) {} }, 0);
+  })();
+
+  // --------- Wildcard-Kategorien im Wizard berücksichtigen ----------
+  if (typeof window.getMappedRatesFor !== 'function') {
+    window.getMappedRatesFor = function(hotelCode, category=null, type=null){
+      const data = (typeof readRates==='function') ? readRates() : [];
+      return data.filter(r =>
+        (!!r.mapped) &&
+        (!hotelCode || r.hotel_code===hotelCode) &&
+        (!type || r.ratetype===type) &&
+        (!category || (Array.isArray(r.categories) && (r.categories.includes(category) || r.categories.includes('*'))))
+      );
+    };
+  }
+
+  // --------- letzte Sicherheitsleine: einmal rendern, falls Modal schon offen ----------
+  if ($('#modalRateSettings')?.style.display === 'block') {
+    ensureNewRateButton();
+    setTimeout(()=>{ try { rsRender(); } catch(_) {} }, 0);
+  }
+})();
+
+ /* END: ResTool main wrapper */
+})();
