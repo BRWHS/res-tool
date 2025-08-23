@@ -1095,8 +1095,8 @@ function openRateCreate(){
     });
   }
 
-  /\* Wizard Step 3 – nur gemappte Raten
-/\* === Step 3: Policy-Text robust setzen (ohne Duplikate) === */
+  /* Wizard Step 3 – nur gemappte Raten */
+/* === Step 3: Policy-Text robust setzen (ohne Duplikate) === */
 function setSelectedRatePolicy(policyText){
   const first = document.getElementById('ratePolicyPreview');
   if (first) {
