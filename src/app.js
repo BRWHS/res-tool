@@ -2251,13 +2251,14 @@ q('#rsNewRate')    ?.addEventListener('click', ()=> openRateCreate());
 // Fallback: einmal initial anstoßen
 setTimeout(()=>{ try{ refreshNewResRates(); }catch(e){} }, 0);
 
+ /* === Step 3: Rate/Preis/Policy-Handling, sauber gekapselt === */
+(function ratesStep3(){
   // Mapped Rates für Step 3 neu aufbauen (inkl. data-policy)
   window.refreshNewResRates = function(){
     const code = document.querySelector('#newHotel')?.value || '';
     const cat  = document.querySelector('#newCat')?.value   || '';
     const sel  = document.querySelector('#newRate'); if (!sel) return;
 
-    // getMappedRatesFor muss bereits existieren (aus deinem Rates-Modul)
     const list = (typeof getMappedRatesFor === 'function') ? (getMappedRatesFor(code, cat) || []) : [];
 
     sel.innerHTML = list.map(r =>
@@ -2270,44 +2271,28 @@ setTimeout(()=>{ try{ refreshNewResRates(); }catch(e){} }, 0);
       sel.value = list[0].name;
       const priceNode = document.querySelector('#newPrice');
       if (priceNode) priceNode.value = list[0].price;
-      window.setSelectedRatePolicy(list[0].policy||'');
+      (typeof setSelectedRatePolicy === 'function') && setSelectedRatePolicy(list[0].policy||'');
     } else {
       sel.innerHTML = `<option value="">— keine gemappte Rate —</option>`;
       const priceNode = document.querySelector('#newPrice');
       if (priceNode) priceNode.value = 0;
-      window.setSelectedRatePolicy('');
+      (typeof setSelectedRatePolicy === 'function') && setSelectedRatePolicy('');
     }
 
-    // Deine vorhandenen Helpers werden (falls vorhanden) sanft aufgerufen
     try { typeof validateStep === 'function' && validateStep('3'); } catch(e){}
     try { typeof updateSummary === 'function' && updateSummary('#summaryFinal'); } catch(e){}
   };
 
-  // Event-Hooks (erneut binden, ohne Duplikate zu erzeugen)
+  // Event-Hooks (ohne Duplikate)
   document.querySelector('#newHotel')?.addEventListener('change', window.refreshNewResRates);
   document.querySelector('#newCat')  ?.addEventListener('change', window.refreshNewResRates);
   document.querySelector('#newRate') ?.addEventListener('change', (e)=>{
     const opt = e.target.selectedOptions[0]; if (!opt) return;
     const priceNode = document.querySelector('#newPrice');
     if (priceNode) priceNode.value = opt.dataset.price || 0;
-    window.setSelectedRatePolicy(opt.dataset.policy || '');
+    (typeof setSelectedRatePolicy === 'function') && setSelectedRatePolicy(opt.dataset.policy || '');
   });
 
-  // Beim Einstieg in Step 3 einmal initial füllen (falls noch nicht)
+  // Initial füllen
   setTimeout(()=>{ try{ window.refreshNewResRates(); }catch(e){} }, 0);
-
-(function ensureWizardRateListeners(){
-  const h = document.querySelector('#newHotel');
-  const c = document.querySelector('#newCat');
-  const r = document.querySelector('#newRate');
-  if (h) { h.addEventListener('change', refreshNewResRates); }
-  if (c) { c.addEventListener('change', refreshNewResRates); }
-  if (r) {
-    r.addEventListener('change', (e)=>{
-      const o = e.target.selectedOptions[0]; if (!o) return;
-      const p = document.querySelector('#newPrice');
-      if (p) p.value = o.dataset.price || 0;
-      if (typeof setSelectedRatePolicy === 'function') setSelectedRatePolicy(o.dataset.policy || '');
-    });
-  }
 })();
