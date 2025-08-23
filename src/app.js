@@ -302,9 +302,8 @@ async function buildMiniAnalytics(){
   });
 }
   /***** MODALS *****/
-  let backdrop = q('#backdrop');
+  const backdrop = q('#backdrop');
   function openModal(id){
-    if(!backdrop){ backdrop = document.createElement('div'); backdrop.id='backdrop'; backdrop.className='backdrop'; document.body.appendChild(backdrop);}
     
   try {
     if (['modalRateEdit','modalRateSettings','modalRateCreate'].includes(id)) {
@@ -518,20 +517,6 @@ function rsRender(){
     tbody.append(el('tr', {}, el('td', { colspan:'6' }, 'Keine Raten gefunden.')));
     return;
   }
-
-list.forEach(r => {
-  const h = HOTELS.find(x => x.code === r.hotel_code);
-  const tr = el('tr', { class:'row', 'data-id': r.id },
-    el('td', {}, r.ratecode || '—'),
-    el('td', {}, r.name || '—'),
-    el('td', {}, h ? `${h.group} - ${h.name.replace(/^.*? /,'')}` : (r.hotel_code || '—')),
-    el('td', {}, (r.categories || []).join(', ') || '—'),
-    el('td', {}, r.price != null ? EUR.format(r.price) : '—'),
-    el('td', {}, r.mapped ? 'ja' : 'nein')
-  );
-  tr.addEventListener('click', () => openRateEditor && openRateEditor(r.id));
-  tbody.append(tr);
-});
 }
   
 // „Neue Rate“ nutzt modalRateEdit im Create-Modus
@@ -612,7 +597,7 @@ function openRateCreate(){
 
   const title = document.getElementById('rateEditTitle');
   if (title) title.textContent = 'Neue Rate';
-  try{fitRateModal("modalRateEdit");}catch(e){};
+  fitRateModals();
   openModal('modalRateEdit');
 }
   document.getElementById('rsNewRate')?.addEventListener('click', openRateCreate);
@@ -2114,8 +2099,6 @@ function rsSetType(type){
   rsRender();
 }
 function rsRender(){
-  if (window && window.rsRender && window.rsRender !== rsRender) { return window.rsRender(); }
-
   const tbody = q('#rsBody'); if (!tbody) return;
   const qStr  = (q('#rsSearch')?.value || '').trim().toLowerCase();
   const hCode = q('#rsHotelFilter')?.value || 'all';
@@ -2245,7 +2228,7 @@ function openRateEditor(id){
 
   const title = document.getElementById('rateEditTitle');
   if (title) title.textContent = 'Rate bearbeiten';
-  try{fitRateModal("modalRateEdit");}catch(e){};
+  fitRateModals();
   openModal('modalRateEdit');
 }
 
@@ -2513,8 +2496,8 @@ setTimeout(()=>{ try{ refreshNewResRates(); }catch(e){} }, 0);
     document.getElementById('rsTabDirect')?.addEventListener('click', ()=> rsSetType('Direct'));
     document.getElementById('rsTabCorp')?.addEventListener('click', ()=> rsSetType('Corp'));
     document.getElementById('rsTabIds')?.addEventListener('click', ()=> rsSetType('IDS'));
-    document.getElementById('rsSearch')?.addEventListener('input', ()=>window.rsRender && window.rsRender());
-    document.getElementById('rsHotelFilter')?.addEventListener('change', ()=>window.rsRender && window.rsRender());
+    document.getElementById('rsSearch')?.addEventListener('input', rsRender);
+    document.getElementById('rsHotelFilter')?.addEventListener('change', rsRender);
     document.getElementById('rsNewRate')?.addEventListener('click', ()=> openRateCreate());
     // Erstes Rendern sobald Modal offen
     document.getElementById('btnRates')?.addEventListener('click', ()=> setTimeout(rsRender, 0), {once:true});
@@ -2726,4 +2709,305 @@ setTimeout(()=>{ try{ refreshNewResRates(); }catch(e){} }, 0);
 })();
 
  /* END: ResTool main wrapper */
+})();
+
+
+/* ================= RESCUE V3 – Hotelskizze, Raten, Create-Button, Popups, Step3 ================= */
+(() => {
+  // Utilities
+  const $  = (s,r=document)=>r.querySelector(s);
+  const $$ = (s,r=document)=>Array.from(r.querySelectorAll(s));
+  const EUR = window.EUR || new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'});
+
+  // ---------- Modal fallbacks (do not override if already good) ----------
+  (function ensureModalFns(){
+    try {
+      const test = document.createElement('div');
+      if (typeof openModal !== 'function') throw 0;
+      // sanity: call shouldn't throw when id doesn't exist
+      try { openModal('__x__no__'); } catch { throw 0; }
+    } catch {
+      window.openModal = (id)=>{
+        const m = document.getElementById(id); if(!m) return;
+        let b = document.getElementById('backdrop') || document.querySelector('.backdrop');
+        if (!b){ b = document.createElement('div'); b.id='backdrop'; b.className='backdrop'; document.body.appendChild(b); }
+        m.style.display = 'block';
+        b.style.display = 'block';
+        document.body.classList.add('modal-open');
+      };
+    }
+    if (typeof closeModal !== 'function'){
+      window.closeModal = (id)=>{
+        const m = id ? document.getElementById(id) : document.querySelector('.modal[style*=\"block\"]');
+        const b = document.getElementById('backdrop') || document.querySelector('.backdrop');
+        if (m) m.style.display='none';
+        if (b) b.style.display='none';
+        document.body.classList.remove('modal-open');
+      };
+    }
+  })();
+
+  function fitModal(id){
+    const m = document.getElementById(id);
+    if (m){ m.style.maxWidth='860px'; m.style.width='min(95vw, 860px)'; }
+  }
+
+  // ---------- Rates storage + seed ----------
+  const RKEY = 'resTool.rates';
+  function readRatesSafely(){
+    try { return JSON.parse(localStorage.getItem(RKEY) || '[]'); } catch { return []; }
+  }
+  function writeRatesSafely(list){ localStorage.setItem(RKEY, JSON.stringify(list||[])); }
+  function upsertRateSafely(rate){
+    const L = readRatesSafely();
+    const i = L.findIndex(r=>r.id===rate.id);
+    if (i>=0) L[i]=rate; else L.push(rate);
+    writeRatesSafely(L);
+  }
+  function deleteRateSafely(id){
+    writeRatesSafely(readRatesSafely().filter(r=>r.id!==id));
+  }
+  (function seedIfEmpty(){
+    const cur = readRatesSafely();
+    if (Array.isArray(cur) && cur.length) return;
+    const now = new Date().toISOString();
+    const hotels = Array.isArray(window.HOTELS) ? window.HOTELS : [];
+    const seed=[];
+    hotels.forEach(h=>{
+      seed.push({id:'r_'+Date.now()+'_'+h.code+'_1', ratecode:'1001', ratetype:'Direct', hotel_code:h.code, categories:['*'], name:'Flex exkl. Frühstück', policy:'Bis 18:00 Uhr am Anreisetag kostenfrei.', price:89, mapped:true, created_at:now, updated_at:now});
+      seed.push({id:'r_'+(Date.now()+1)+'_'+h.code+'_2', ratecode:'1002', ratetype:'Direct', hotel_code:h.code, categories:['*'], name:'Flex inkl. Frühstück',  policy:'Bis 18:00 Uhr am Anreisetag kostenfrei.', price:109, mapped:true, created_at:now, updated_at:now});
+    });
+    writeRatesSafely(seed);
+  })();
+
+  // Make them available if the main module is broken
+  window.readRates  = window.readRates  || readRatesSafely;
+  window.writeRates = window.writeRates || writeRatesSafely;
+  window.upsertRate = window.upsertRate || upsertRateSafely;
+  window.deleteRate = window.deleteRate || deleteRateSafely;
+
+  function fillHotelSelectOptions(sel){
+    if (!sel) return;
+    sel.innerHTML='';
+    (window.HOTELS||[]).forEach(h=>{
+      const opt = document.createElement('option');
+      opt.value = h.code;
+      opt.textContent = `${h.group} - ${h.name.replace(/^.*? /,'')}`;
+      sel.appendChild(opt);
+    });
+  }
+  function catsForHotel(code){
+    return (window.HOTEL_CATEGORIES?.[code] || window.HOTEL_CATEGORIES?.default || []);
+  }
+  function loadCatsIntoSelect(sel, code){
+    if (!sel) return;
+    const cats = ['*', ...catsForHotel(code)];
+    sel.innerHTML = cats.map(c=>`<option value="${c}">${c==='*'?'Alle':c}</option>`).join('');
+    makeMultiSelectFriendly(sel);
+  }
+  function makeMultiSelectFriendly(sel){
+    if (!sel || sel.__friendly) return;
+    sel.__friendly = true;
+    sel.addEventListener('mousedown', (e)=>{
+      const opt = e.target.closest('option'); if (!opt) return;
+      e.preventDefault();
+      opt.selected = !opt.selected;
+      if (opt.value === '*') Array.from(sel.options).forEach(o=>{ if(o!==opt) o.selected=false; });
+      else Array.from(sel.options).forEach(o=>{ if(o.value==='*') o.selected=false; });
+      sel.dispatchEvent(new Event('change',{bubbles:true}));
+    });
+  }
+
+  // ---------- Render list in Rate Settings ----------
+  window.__rsType = window.__rsType || 'Direct';
+  window.rsRender = window.rsRender || function(){
+    const tbody = document.getElementById('rsBody'); if (!tbody) return;
+    const qStr  = (document.getElementById('rsSearch')?.value || '').trim().toLowerCase();
+    const hCode = document.getElementById('rsHotelFilter')?.value || 'all';
+
+    const list = readRates()
+      .filter(r => r.ratetype === window.__rsType)
+      .filter(r => hCode === 'all' ? true : r.hotel_code === hCode)
+      .filter(r => !qStr ? true : (`${r.ratecode} ${r.name}`.toLowerCase().includes(qStr)))
+      .sort((a,b) => (a.hotel_code + a.name).localeCompare(b.hotel_code + b.name));
+
+    tbody.innerHTML='';
+    if (!list.length){
+      const tr=document.createElement('tr'); const td=document.createElement('td'); td.colSpan=6; td.textContent='Keine Raten gefunden.'; tr.appendChild(td); tbody.appendChild(tr);
+      return;
+    }
+    list.forEach(r=>{
+      const h = (window.HOTELS||[]).find(x=>x.code===r.hotel_code);
+      const tr = document.createElement('tr'); tr.className='row'; tr.dataset.id = r.id;
+      const cells = [
+        r.ratecode||'—',
+        r.name||'—',
+        h ? `${h.group} - ${h.name.replace(/^.*? /,'')}` : (r.hotel_code||'—'),
+        (r.categories||[]).join(', ')||'—',
+        (r.price!=null ? EUR.format(r.price) : '—'),
+        (r.mapped ? 'ja' : 'nein')
+      ];
+      cells.forEach((txt)=>{ const td=document.createElement('td'); td.textContent = txt; tr.appendChild(td); });
+      tr.addEventListener('click', ()=>{ try{ window.openRateEditor && openRateEditor(r.id); }catch(e){} });
+      tbody.appendChild(tr);
+    });
+  };
+  window.rsFillHotelFilter = window.rsFillHotelFilter || function(){
+    const sel = document.getElementById('rsHotelFilter'); if (!sel) return;
+    sel.innerHTML='';
+    const all=document.createElement('option'); all.value='all'; all.textContent='Alle Hotels'; sel.appendChild(all);
+    (window.HOTELS||[]).forEach(h=>{
+      const o=document.createElement('option'); o.value=h.code; o.textContent=`${h.group} - ${h.name.replace(/^.*? /,'')}`; sel.appendChild(o);
+    });
+  };
+  window.rsSetType = window.rsSetType || function(type){
+    window.__rsType = type;
+    const t = document.getElementById('rsTitle'); if (t) t.textContent = `Raten – ${type}`;
+    window.rsRender();
+  };
+
+  // ---------- Create flow (uses modalRateEdit) ----------
+  window.openRateCreate = window.openRateCreate || function(){
+    fillHotelSelectOptions(document.getElementById('erHotel'));
+    const erHotel = document.getElementById('erHotel');
+    const erCode  = document.getElementById('erCode');
+    const erType  = document.getElementById('erType');
+    const erName  = document.getElementById('erName');
+    const erPolicy= document.getElementById('erPolicy');
+    const erPrice = document.getElementById('erPrice');
+    const erMapped= document.getElementById('erMapped');
+    const erCats  = document.getElementById('erCats');
+
+    if (erHotel){ erHotel.disabled=false; erHotel.onchange = ()=>{
+      const code = erHotel.value; if (!code) return;
+      if (erCats){ loadCatsIntoSelect(erCats, code); erCats.disabled=false; }
+    }; }
+    if (erCode){ erCode.value=''; erCode.disabled=false; }
+    if (erType){ erType.value = window.__rsType || 'Direct'; erType.disabled=false; }
+    if (erName){ erName.value=''; erName.disabled=false; }
+    if (erPolicy) erPolicy.value='';
+    if (erPrice)  erPrice.value = 0;
+    if (erMapped){
+      if (erMapped.tagName==='SELECT') erMapped.value='true'; else erMapped.checked = true;
+    }
+    if (erCats){ erCats.innerHTML=''; erCats.disabled=true; }
+
+    // Buttons
+    const upd=document.getElementById('btnRateUpdate'); if (upd) upd.style.display='none';
+    const del=document.getElementById('btnRateDelete'); if (del) del.style.display='none';
+    let crt=document.getElementById('btnRateCreate');
+    const footer = document.querySelector('#modalRateEdit .set-footer') || document.querySelector('#modalRateEdit .body') || document.getElementById('modalRateEdit');
+    if (!crt){
+      crt=document.createElement('button'); crt.id='btnRateCreate'; crt.className='btn primary'; crt.textContent='Rate erstellen';
+      if (footer) footer.appendChild(crt);
+    }
+    crt.style.display='';
+    crt.replaceWith(crt.cloneNode(true));
+    crt=document.getElementById('btnRateCreate');
+    crt.addEventListener('click', ()=>{
+      const ratecode = (erCode?.value||'').trim();
+      const ratetype = erType?.value||'';
+      const hotel    = erHotel?.value||'';
+      const name     = (erName?.value||'').trim();
+      const policy   = (erPolicy?.value||'').trim();
+      const price    = Number(erPrice?.value||0);
+      const mapped   = (erMapped?.tagName==='SELECT') ? (erMapped.value==='true') : !!erMapped?.checked;
+      const cats     = Array.from(erCats?.selectedOptions||[]).map(o=>o.value);
+
+      if (!/^\d+$/.test(ratecode)) return alert('Ratecode: nur Zahlen.');
+      if (!ratetype) return alert('Ratentyp wählen.');
+      if (!hotel)    return alert('Hotel wählen.');
+      if (!name)     return alert('Ratename angeben.');
+      if (readRates().some(r => r.hotel_code===hotel && r.ratecode===ratecode))
+        return alert('Ratecode existiert in diesem Hotel bereits.');
+
+      const now = new Date().toISOString();
+      upsertRate({
+        id:'r_'+Date.now(),
+        ratecode, ratetype, hotel_code:hotel,
+        categories: cats.length?cats:['*'],
+        name, policy, price, mapped,
+        created_at: now, updated_at: now
+      });
+      try { rsRender(); } catch(e){}
+      try { refreshNewResRates && refreshNewResRates(); } catch(e){}
+      try { closeModal('modalRateEdit'); } catch(e){}
+    });
+
+    const title = document.getElementById('rateEditTitle'); if (title) title.textContent='Neue Rate';
+    fitModal('modalRateEdit');
+    openModal('modalRateEdit');
+  };
+
+  // ---------- Hotelskizze & Rateneinstellungen: open via delegation ----------
+  document.addEventListener('click', (e)=>{
+    const btnRates  = e.target.closest('#btnRates, [data-open=\"modalRateSettings\"]');
+    const btnSketch = e.target.closest('#btnSketch, [data-open=\"modalSketch\"]');
+    if (btnRates){
+      e.preventDefault();
+      try { rsFillHotelFilter(); } catch(e){}
+      try { rsSetType('Direct'); } catch(e){}
+      // ensure new rate button exists
+      const modal = document.getElementById('modalRateSettings');
+      if (modal){
+        const tb = modal.querySelector('.rs-toolbar') || modal.querySelector('.card-head .rs-toolbar') || modal.querySelector('.card-head');
+        if (tb && !document.getElementById('rsNewRate')){
+          const b=document.createElement('button'); b.id='rsNewRate'; b.className='btn primary sm'; b.textContent='+ Neue Rate'; tb.prepend(b);
+          b.addEventListener('click', (ev)=>{ ev.preventDefault(); openRateCreate(); });
+        }
+      }
+      fitModal('modalRateSettings');
+      openModal('modalRateSettings');
+      setTimeout(()=>{ try { rsRender(); } catch(e){} }, 0);
+      return;
+    }
+    if (btnSketch){
+      e.preventDefault();
+      try { typeof buildSketch==='function' && buildSketch(); } catch(e){}
+      fitModal('modalSketch');
+      openModal('modalSketch');
+      return;
+    }
+  }, true);
+
+  // ---------- Wizard Step 3 ----------
+  window.setSelectedRatePolicy = window.setSelectedRatePolicy || function(txt){
+    const el = document.getElementById('ratePolicyPreview'); if (el) el.textContent = (txt && String(txt).trim()) || '—';
+  };
+  window.getMappedRatesFor = window.getMappedRatesFor || function(hotelCode, category=null, type=null){
+    return readRates().filter(r =>
+      (!!r.mapped) &&
+      (!hotelCode || r.hotel_code===hotelCode) &&
+      (!type || r.ratetype===type) &&
+      (!category || (Array.isArray(r.categories) && (r.categories.includes(category) || r.categories.includes('*'))))
+    );
+  };
+  window.refreshNewResRates = window.refreshNewResRates || function(){
+    const code = document.getElementById('newHotel')?.value || '';
+    const cat  = document.getElementById('newCat')?.value   || '';
+    const sel  = document.getElementById('newRate'); if (!sel) return;
+    const list = getMappedRatesFor(code, cat) || [];
+    sel.innerHTML = list.map(r =>
+      `<option value="${r.name}" data-price="${r.price}" data-policy="${(r.policy||'').replace(/\"/g,'&quot;')}">${r.name} (${EUR.format(r.price)})</option>`
+    ).join('');
+    if (list.length){
+      sel.value = list[0].name;
+      const pn = document.getElementById('newPrice'); if (pn) pn.value = list[0].price;
+      setSelectedRatePolicy(list[0].policy||'');
+    } else {
+      sel.innerHTML = `<option value="">— keine gemappte Rate —</option>`;
+      const pn = document.getElementById('newPrice'); if (pn) pn.value = 0;
+      setSelectedRatePolicy('');
+    }
+    try { typeof validateStep==='function' && validateStep('3'); } catch(e){}
+    try { typeof updateSummary==='function' && updateSummary('#summaryFinal'); } catch(e){}
+  };
+  document.getElementById('newHotel')?.addEventListener('change', refreshNewResRates);
+  document.getElementById('newCat')  ?.addEventListener('change', refreshNewResRates);
+  document.getElementById('newRate') ?.addEventListener('change', (e)=>{
+    const o=e.target.selectedOptions[0]; if (!o) return;
+    const p=document.getElementById('newPrice'); if (p) p.value = o.dataset.price || 0;
+    setSelectedRatePolicy(o.dataset.policy || '');
+  });
+  setTimeout(()=>{ try{ refreshNewResRates(); }catch(e){} }, 0);
 })();
