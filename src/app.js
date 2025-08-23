@@ -518,48 +518,6 @@ function rsRender(){
     return;
   }
 
-  list.forEach(r => {
-    const h = HOTELS.find(x => x.code === r.hotel_code);
-    const tr = el('tr', { class:'row', 'data-id': r.id },
-      el('td', {}, r.ratecode || '—'),
-      el('td', {}, r.name || '—'),
-      el('td', {}, h ? `${h.group} - ${h.name.replace(/^.*? /,'')}` : (r.hotel_code || '—')),
-      el('td', {}, (r.categories || []).join(', ') || '—'),
-      el('td', {}, r.price != null ? EUR.format(r.price) : '—'),
-      el('td', {}, r.mapped ? 'ja' : 'nein')
-    );
-    tr.addEventListener('click', () => openRateEditor(r.id));
-    tbody.append(tr);
-  });
-}
-);
-
-  q('#btnRateDelete')?.addEventListener('click', ()=>{
-    if (!confirm('Rate wirklich löschen?')) return;
-    deleteRate(window.__rateEditId);
-    window.__rateEditId = null;
-    rsRender(); refreshNewResRates();
-    closeModal('modalRateEdit');
-  });
-
-  const title = document.getElementById('rateEditTitle');
-  if (title) title.textContent = 'Rate bearbeiten';
-  fitRateModals();
-  openModal('modalRateEdit');
-}
-
-
-function catsForHotel(code){
-  return (HOTEL_CATEGORIES?.[code] || HOTEL_CATEGORIES?.default || []);
-}
-
-function loadCatsForHotel(sel, code){
-  if (!sel) return;
-  const cats = ['*', ...catsForHotel(code)];
-  sel.innerHTML = cats.map(c=>`<option value="${c}">${c==='*'?'Alle':c}</option>`).join('');
-  makeMultiSelectFriendly(sel);
-}
-
 // „Neue Rate“ nutzt modalRateEdit im Create-Modus
 function openRateCreate(){
   const modal = document.getElementById('modalRateEdit');
