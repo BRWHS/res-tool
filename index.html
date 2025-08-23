@@ -629,65 +629,50 @@
   </div>
 </section>
 
-  <!-- Rateneinstellungen (mit Tabs & Listen) -->
-<section class="modal" id="modalRates" role="dialog" aria-labelledby="ratesTitle" aria-modal="true">
+  <!-- Modal: Rateneinstellungen (Rate anlegen/bearbeiten) -->
+<section class="modal" id="modalRateSettings" role="dialog" aria-labelledby="rateSettingsTitle" aria-modal="true">
   <header>
-    <h3 id="ratesTitle" class="mono"><span class="set-logo" aria-hidden="true"></span> Rateneinstellungen</h3>
-    <button class="btn" data-close>Schließen</button>
-  </header>
-  <div class="body">
-    <div class="tabs">
-      <button class="tab active" data-tab="ratesDirect">Direct-Rate</button>
-      <button class="tab" data-tab="ratesCorp">Corp-Rate</button>
-      <button class="tab" data-tab="ratesIDS">IDS-Rate</button>
-    </div>
-
-    <div id="ratesDirect" class="tabpage">
-      <div id="listDirect" class="sketch-list"></div>
-    </div>
-    <div id="ratesCorp" class="tabpage hidden">
-      <div id="listCorp" class="sketch-list"></div>
-    </div>
-    <div id="ratesIDS" class="tabpage hidden">
-      <div id="listIDS" class="sketch-list"></div>
-    </div>
-
-    <div class="right" style="margin-top:12px;">
-      <button class="btn primary" id="btnNewRate">Neue Rate</button>
-    </div>
-  </div>
-</section>
-
-<!-- Rate bearbeiten / neu -->
-<section class="modal" id="modalRateEdit" role="dialog" aria-labelledby="rateEditTitle" aria-modal="true">
-  <header>
-    <h3 id="rateEditTitle" class="mono">Rate bearbeiten</h3>
+    <h3 id="rateSettingsTitle" class="mono"><span class="set-logo" aria-hidden="true"></span> Rateneinstellungen</h3>
     <button class="btn" data-close>Schließen</button>
   </header>
   <div class="body">
     <div class="grid-compact">
-      <label>Ratecode (Zahlen) <input id="rCode" type="number" class="input" /></label>
-      <label>Ratentyp
-        <select id="rType" class="input theme-select" required>
-          <option value="direct">Direct</option>
-          <option value="corp">Corp</option>
-          <option value="ids">IDS</option>
+      <label>Ratecode (nur Zahlen)
+        <input id="rateCode" class="input" placeholder="z.B. 100123" inputmode="numeric" pattern="\d+">
+      </label>
+      <label>Ratentyp*
+        <select id="rateType" class="input theme-select">
+          <option value="">Bitte wählen</option>
+          <option value="Direct">Direct</option>
+          <option value="Corp">Corp</option>
+          <option value="IDS">IDS</option>
         </select>
       </label>
-      <label>Hotel
-        <select id="rHotel" class="input theme-select"></select>
+      <label style="grid-column:1 / -1">Hotel*
+        <select id="rateHotel" class="input theme-select"></select>
       </label>
-      <label>Kategorie (mehrere)
-        <select id="rCats" class="input theme-select" multiple></select>
+      <label style="grid-column:1 / -1">Kategorien (mehrere möglich)
+        <select id="rateCats" class="input theme-select" multiple size="3"></select>
       </label>
-      <label>Ratename <input id="rName" class="input" placeholder="z.B. Flex exkl. Frühstück" /></label>
-      <label>Stornobedingung <input id="rCancel" class="input" placeholder="z.B. bis 18:00 Uhr kostenfrei" /></label>
-      <label>Preis (€) <input id="rPrice" type="number" step="1" class="input" /></label>
+      <label style="grid-column:1 / -1">Ratename*
+        <input id="rateName" class="input" placeholder="z.B. Flex exkl. Frühstück">
+      </label>
+      <label style="grid-column:1 / -1">Stornobedingung
+        <textarea id="ratePolicy" class="input" rows="2" placeholder="z.B. Bis 18:00 Uhr am Anreisetag kostenfrei."></textarea>
+      </label>
+      <label>Preis pro Nacht (€)*
+        <input id="ratePrice" class="input" type="number" step="1" min="0" placeholder="z.B. 89">
+      </label>
+      <label style="align-self:end">
+        <input id="rateMapped" type="checkbox" style="transform:translateY(1px)"> HNS-Mapping aktiv
+      </label>
     </div>
+
     <div class="set-footer">
-      <button class="btn primary" id="btnSaveRate">Rate speichern</button>
+      <button class="btn primary" id="btnRateSave">Rate speichern</button>
     </div>
-    <p class="muted" id="rateInfo"></p>
+
+    <p class="muted tiny" id="rateInfo"></p>
   </div>
 </section>
 
