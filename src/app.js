@@ -363,7 +363,6 @@ function openRateCreate(){
 
     rsRender();                 // Liste aktualisieren
     refreshNewResRates?.();     // Wizard Step 3 aktualisieren
-  }); 
 }
   
   /* ===== Rateneinstellungen (neues Modal) ===== */
