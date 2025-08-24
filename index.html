@@ -614,6 +614,28 @@
   </div>
 </section>
 
+  <!-- Modal: Hotelskizze -->
+<section class="modal" id="modalSketch" role="dialog" aria-labelledby="sketchTitle" aria-modal="true">
+  <header>
+    <h3 id="sketchTitle" class="mono"><span class="set-logo" aria-hidden="true"></span> Hotelskizzen</h3>
+    <button class="btn" data-close>Schließen</button>
+  </header>
+  <div class="body">
+    <div style="display:grid;grid-template-columns:260px 1fr;gap:12px;align-items:start">
+      <aside class="box" style="max-height:60vh;overflow:auto">
+        <div id="sketchList"></div>
+      </aside>
+      <section>
+        <div class="muted mono" id="sketchHotelLabel" style="margin:0 0 6px">—</div>
+        <div class="imgcard wide">
+          <img id="sketchImage" alt="Skizze"/>
+        </div>
+      </section>
+    </div>
+  </div>
+</section>
+
+
 <!-- Modal: Benutzereinstellungen (placeholder) -->
 <section class="modal" id="modalUserPrefs" role="dialog" aria-labelledby="userPrefsTitle" aria-modal="true">
   <header>
