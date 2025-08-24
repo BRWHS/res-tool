@@ -2113,20 +2113,41 @@ function rsSetType(type){
 }
 function rsRender(){
   const tbody = q('#rsBody'); if (!tbody) return;
+
   const qStr  = (q('#rsSearch')?.value || '').trim().toLowerCase();
   const hCode = q('#rsHotelFilter')?.value || 'all';
 
   const list = readRates()
     .filter(r => r.ratetype === window.__rsType)
-    .filter(r => hCode==='all' ? true : r.hotel_code === hCode)
+    .filter(r => hCode === 'all' ? true : r.hotel_code === hCode)
     .filter(r => !qStr ? true : (`${r.ratecode} ${r.name}`.toLowerCase().includes(qStr)))
-    .sort((a,b)=>(a.hotel_code+a.name).localeCompare(b.hotel_code+b.name));
+    .sort((a,b) => (a.hotel_code + a.name).localeCompare(b.hotel_code + b.name));
 
-  tbody.innerHTML='';
+  tbody.innerHTML = '';
   if (!list.length){
-    tbody.append(el('tr',{}, el('td',{colspan:'6'}, 'Keine Raten gefunden.')));
+    tbody.append(el('tr', {}, el('td', { colspan:'6' }, 'Keine Raten gefunden.')));
     return;
   }
+
+  list.forEach(r=>{
+    const hotel = HOTELS.find(h=>h.code===r.hotel_code);
+    const nameHotel = hotel ? `${hotel.group} - ${hotelCity(hotel.name)}` : r.hotel_code || '—';
+    const cats = (r.categories && r.categories.length ? r.categories : ['*']).join(', ');
+    const mappedTxt = r.mapped ? 'Ja' : 'Nein';
+
+    const tr = el('tr', { class:'row' },
+      el('td', {}, r.ratecode || '—'),
+      el('td', {}, r.name || '—'),
+      el('td', {}, nameHotel),
+      el('td', {}, cats),
+      el('td', {}, EUR.format(Number(r.price||0))),
+      el('td', {}, mappedTxt)
+    );
+    // (Optional) Klick zum Bearbeiten vorbereiten – falls du einen Editor‑Flow hast:
+    // tr.addEventListener('click', ()=> openRateEdit(r));
+    tbody.append(tr);
+  });
+}
 /* removed stray forEach block */
   // Buttons: Update/Delete ausblenden, Create anzeigen
   const footer = q('#modalRateEdit .set-footer');
