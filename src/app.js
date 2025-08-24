@@ -2721,10 +2721,6 @@ setTimeout(()=>{ try{ refreshNewResRates(); }catch(e){} }, 0);
   }
 })();
 
- /* END: ResTool main wrapper */
-})();
-
-
 /* ================= RESCUE V3 – Hotelskizze, Raten, Create-Button, Popups, Step3 ================= */
 (() => {
   // Utilities
