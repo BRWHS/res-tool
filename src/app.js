@@ -2176,7 +2176,6 @@ function rsRender(){
 
   q('#rateEditTitle') && (q('#rateEditTitle').textContent = 'Neue Rate');
   openModal('modalRateEdit');
-}
 
 // --- Edit flow (Ratename editierbar; Typ/Hotel/Ratecode fix) ---
 window.__rateEditId = window.__rateEditId || null;
