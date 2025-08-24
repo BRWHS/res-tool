@@ -342,38 +342,8 @@ function loadCatsIntoSelect(sel, hotelCode){
 }
 
 function openRateCreate(){
-  // Felder befüllen/resetten
-  fillHotelSelectOptions(q('#crHotel'));
-  q('#crCode').value = '';
-  q('#crType').value = '';
-  q('#crName').value = '';
-  q('#crPolicy').value = '';
-  q('#crPrice').value = 0;
-  q('#crMapped').value = 'false';
-  const cats = q('#crCats');
-  cats.innerHTML = '';
-  cats.disabled = true;
 
-  // Hotelwechsel -> Kategorien laden + aktivieren
-  q('#crHotel').onchange = ()=>{
-    const code = q('#crHotel').value;
-    cats.disabled = !code;
-    if (code){ loadCatsIntoSelect(cats, code); }
-  };
-
-  // Button (alte Listener entfernen, neu setzen)
-  const btn = q('#btnRateCreate');
-  btn.replaceWith(btn.cloneNode(true));
-  q('#btnRateCreate').addEventListener('click', ()=>{
-    const ratecode = (q('#crCode').value||'').trim();
-    const ratetype = q('#crType').value||'';
-    const hotel    = q('#crHotel').value||'';
-    const name     = (q('#crName').value||'').trim();
-    const policy   = (q('#crPolicy').value||'').trim();
-    const price    = Number(q('#crPrice').value||0);
-    const mapped   = (q('#crMapped').value==='true');
-    const catsSel  = Array.from(q('#crCats').selectedOptions||[]).map(o=>o.value);
-
+  
     if (!/^\d+$/.test(ratecode)) return alert('Ratecode: nur Zahlen.');
     if (!ratetype) return alert('Ratentyp wählen.');
     if (!hotel)    return alert('Hotel wählen.');
@@ -2071,33 +2041,41 @@ function setSelectedRatePolicy(txt){
   if (el) el.textContent = (txt && String(txt).trim()) || '—';
 }
 function refreshNewResRates(){
-  const code = q('#newHotel')?.value || '';
-  const cat  = q('#newCat')?.value   || '';
-  const sel  = q('#newRate'); if (!sel) return;
+  const selRate = q('#newRate'); if (!selRate) return;
+  const hotel   = q('#newHotel')?.value || '';
+  const cat     = q('#newCat')?.value || '';
 
-  const list = getMappedRatesFor(code, cat) || [];
-  sel.innerHTML = list.map(r =>
-    `<option value="${r.name}" data-price="${r.price}" data-policy="${(r.policy||'').replace(/"/g,'&quot;')}">${r.name} (${EUR.format(r.price)})</option>`
-  ).join('');
+  // Alle lokalen Raten lesen
+  const all = readRates();
 
-  if (list.length){
-    sel.value = list[0].name;
-    q('#newPrice') && (q('#newPrice').value = list[0].price);
-    setSelectedRatePolicy(list[0].policy||'');
-  } else {
-    sel.innerHTML = `<option value="">— keine gemappte Rate —</option>`;
-    q('#newPrice') && (q('#newPrice').value = 0);
-    setSelectedRatePolicy('');
-  }
-  validateStep?.('3'); updateSummary?.('#summaryFinal');
+  // Nur gemappte Raten, die zum Hotel passen und Kategorie "*"
+  // ODER die gewählte Kategorie enthalten
+  const filtered = all.filter(r=>{
+    if (!r.mapped) return false;
+    if (r.hotel_code !== hotel) return false;
+    const cats = Array.isArray(r.categories) ? r.categories : ['*'];
+    return cats.includes('*') || (cat && cats.includes(cat));
+  });
+
+  // Fallback: Dummy‑Raten, wenn noch nichts angelegt
+  const list = filtered.length ? filtered : (HOTEL_RATES['default']||[]).map((x,i)=>({
+    ratecode: `D${i+1}`,
+    name: x.name,
+    price: x.price,
+    policy: 'Bis 18:00 Uhr am Anreisetag kostenfrei stornierbar.'
+  }));
+
+  selRate.innerHTML = list.map(r=>{
+    const price = Number(r.price||0);
+    const pol   = r.policy || '';
+    return `<option value="${r.name}" data-price="${price}" data-policy="${pol}">${r.name} (${EUR.format(price)})</option>`;
+  }).join('');
+
+  // Preis + Policy spiegeln
+  const first = selRate.selectedOptions[0];
+  if (first && q('#newPrice')) q('#newPrice').value = first.dataset.price || 0;
+  setSelectedRatePolicy(first?.dataset.policy || '—');
 }
-q('#newHotel')?.addEventListener('change', refreshNewResRates);
-q('#newCat')  ?.addEventListener('change', refreshNewResRates);
-q('#newRate') ?.addEventListener('change', e=>{
-  const o = e.target.selectedOptions[0]; if (!o) return;
-  q('#newPrice') && (q('#newPrice').value = o.dataset.price || 0);
-  setSelectedRatePolicy(o.dataset.policy || '');
-});
 
 // --- Rate settings list (tabs/search/filter) ---
 function rsFillHotelFilter(){
@@ -2558,6 +2536,9 @@ setTimeout(()=>{ try{ refreshNewResRates(); }catch(e){} }, 0);
       (!category || (Array.isArray(r.categories) && (r.categories.includes(category) || r.categories.includes('*'))))
     );
   }
+  if (step==='3'){ refreshNewResRates(); 
+    }
+  
   window.setSelectedRatePolicy = function(txt){
     const el = document.getElementById('ratePolicyPreview');
     if (el) el.textContent = (txt && String(txt).trim()) || '—';
