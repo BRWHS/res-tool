@@ -1984,58 +1984,6 @@ function rsSetType(type){
   });
 }
 
-/* removed stray forEach block */
-  // Buttons: Update/Delete ausblenden, Create anzeigen
-  const footer = q('#modalRateEdit .set-footer');
-  let createBtn = q('#btnRateCreate');
-  if (!createBtn){
-    createBtn = el('button', {class:'btn primary', id:'btnRateCreate'}, 'Rate erstellen');
-    footer?.append(createBtn);
-  }
-  q('#btnRateUpdate') && (q('#btnRateUpdate').style.display='none');
-  q('#btnRateDelete') && (q('#btnRateDelete').style.display='none');
-  createBtn.style.display = '';
-
-  // Click neu binden
-  createBtn.replaceWith(createBtn.cloneNode(true));
-  createBtn = q('#btnRateCreate');
-  createBtn.addEventListener('click', ()=>{
-    const ratecode = (q('#erCode').value||'').trim();
-    const ratetype = q('#erType').value||'';
-    const hotel    = q('#erHotel').value||'';
-    const name     = (q('#erName').value||'').trim();
-    const policy   = (q('#erPolicy').value||'').trim();
-    const price    = Number(q('#erPrice').value||0);
-    const mapped   = (q('#erMapped').value==='true');
-    const cats     = Array.from(q('#erCats').selectedOptions||[]).map(o=>o.value);
-
-    if (!/^\d+$/.test(ratecode)) return alert('Ratecode: nur Zahlen.');
-    if (!ratetype) return alert('Ratentyp wählen.');
-    if (!hotel)    return alert('Hotel wählen.');
-    if (!name)     return alert('Ratename angeben.');
-    if (readRates().some(r => r.hotel_code===hotel && r.ratecode===ratecode))
-      return alert('Ratecode existiert in diesem Hotel bereits.');
-
-    const now = new Date().toISOString();
-    upsertRate({
-      id:'r_'+Date.now(),
-      ratecode, ratetype, hotel_code:hotel,
-      categories: cats.length?cats:['*'],
-      name, policy, price, mapped,
-      created_at: now, updated_at: now
-    });
-    // UI refresh
-    rsRender(); refreshNewResRates();
-    // Footer zurücksetzen
-    q('#btnRateUpdate') && (q('#btnRateUpdate').style.display='');
-    q('#btnRateDelete') && (q('#btnRateDelete').style.display='');
-    createBtn.style.display='none';
-    closeModal('modalRateEdit');
-  });
-
-  q('#rateEditTitle') && (q('#rateEditTitle').textContent = 'Neue Rate');
-  openModal('modalRateEdit');
-
 // --- Edit flow (Ratename editierbar; Typ/Hotel/Ratecode fix) ---
 window.__rateEditId = window.__rateEditId || null;
 
