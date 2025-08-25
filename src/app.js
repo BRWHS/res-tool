@@ -2329,7 +2329,7 @@ setTimeout(()=>{ try{ refreshNewResRates(); }catch(e){} }, 0);
 
   // ---------- UI helpers ----------
   window.__rsType = window.__rsType || 'Direct';
-  const EUR = window.EUR || new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'});
+  window.EUR = window.EUR || new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'});
   function fillHotelSelectOptions(sel){
     if(!sel) return; sel.innerHTML='';
     (window.HOTELS||[]).forEach(h=> sel.append(el('option',{value:h.code}, `${h.group} - ${h.name.replace(/^.*? /,'')}`)));
