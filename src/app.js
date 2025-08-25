@@ -981,17 +981,16 @@ q('#newRate') ?.addEventListener('change', (e)=>{
 });
 
 
-  // Wizard Buttons
-  q('#btnPrev')?.addEventListener('click', ()=>{
-    const cur = Number(qa('.wstep.active')[0].dataset.step);
-    wizardSet(String(Math.max(1,cur-1)));
-  });
-  q('#btnNext')?.addEventListener('click', ()=>{
-    const cur = String(qa('.wstep.active')[0].dataset.step);
-    if (!validateStep(cur)){ q('#newInfo') && (q('#newInfo').textContent='Bitte Pflichtfelder ausfüllen.'); return; }
-    const next = String(Math.min(4, Number(cur)+1));
-    wizardSet(next);
-  });
+ // Wizard Buttons
+q('#btnPrev')?.addEventListener('click', ()=>{
+  const cur = Number(qa('.wstep.active')[0]?.dataset.step || '1');
+  wizardSet(String(cur - 1));
+});
+  
+q('#btnNext')?.addEventListener('click', ()=>{
+  const cur = Number(qa('.wstep.active')[0]?.dataset.step || '1');
+  wizardSet(String(cur + 1));
+});
 
   // Inputs → Live-Validation + Summary
   q('#newRate')?.addEventListener('change', e=>{
