@@ -1947,22 +1947,23 @@ function rsSetType(type){
   q('#rsTitle') && (q('#rsTitle').textContent = `Raten – ${type}`);
   rsRender();
 }
+  function rsRender(){
+  const tbody = q('#rsBody'); if (!tbody) return;
 
-  list.forEach(r=>{
-    const h = (window.HOTELS||[]).find(x=>x.code===r.hotel_code);
-    const tr = el('tr', { class:'row', 'data-id': r.id },
-      el('td',{}, r.ratecode || '—'),
-      el('td',{}, r.name || '—'),
-      el('td',{}, h ? `${h.group} - ${h.name.replace(/^.*? /,'')}` : (r.hotel_code || '—')),
-      el('td',{}, (r.categories||[]).join(', ') || '—'),
-      el('td',{}, r.price!=null ? EUR.format(r.price) : '—'),
-      el('td',{}, r.mapped ? 'ja' : 'nein')
-    );
-    tr.addEventListener('click', ()=> openRateEditor && openRateEditor(r.id));
-    tbody.append(tr);
-  });
-}
+  const qStr  = (q('#rsSearch')?.value || '').trim().toLowerCase();
+  const hCode = q('#rsHotelFilter')?.value || 'all';
 
+  const list = readRates()
+    .filter(r => r.ratetype === window.__rsType)
+    .filter(r => hCode === 'all' ? true : r.hotel_code === hCode)
+    .filter(r => !qStr ? true : (`${r.ratecode} ${r.name}`.toLowerCase().includes(qStr)))
+    .sort((a,b) => (a.hotel_code + a.name).localeCompare(b.hotel_code + b.name));
+
+  tbody.innerHTML = '';
+  if (!list.length){
+    tbody.append(el('tr', {}, el('td', { colspan:'6' }, 'Keine Raten gefunden.')));
+    return;
+  }
 
   list.forEach(r=>{
     const hotel = HOTELS.find(h=>h.code===r.hotel_code);
@@ -1978,11 +1979,12 @@ function rsSetType(type){
       el('td', {}, EUR.format(Number(r.price||0))),
       el('td', {}, mappedTxt)
     );
-    // (Optional) Klick zum Bearbeiten vorbereiten – falls du einen Editor‑Flow hast:
-    // tr.addEventListener('click', ()=> openRateEdit(r));
+    // Optional: Klick zum Bearbeiten
+    // tr.addEventListener('click', ()=> openRateEditor(r.id));
     tbody.append(tr);
   });
 }
+
 /* removed stray forEach block */
   // Buttons: Update/Delete ausblenden, Create anzeigen
   const footer = q('#modalRateEdit .set-footer');
