@@ -925,9 +925,22 @@ window.closeModal = function(id){
 
   /* Wizard Step 3 – nur gemappte Raten */
 /* === Step 3: Policy-Text robust setzen (ohne Duplikate) === */
-// TODO: removed duplicate setSelectedRatePolicy
-    return;
+function setSelectedRatePolicy(policyText){
+  const first = document.getElementById('ratePolicyPreview');
+  if (first) {
+    first.textContent = policyText || '—';
+    // evtl. doppelte Absätze im selben Block verbergen
+    const box = first.closest('.policy-box') || document.getElementById('w3');
+    if (box){
+      const ps = Array.from(box.querySelectorAll('p')).filter(p=>p!==first);
+      ps.forEach(p => { 
+        if ((p.textContent||'').trim() === (first.textContent||'').trim()) 
+          p.style.display='none'; 
+      });
+    }
+    return; // <-- hier darf die Funktion enden
   }
+
   // Fallback: erstes Vorkommen "Stornobedingung" suchen
   const label = Array.from(document.querySelectorAll('#w3 *')).find(n => /stornobedingung/i.test(n.textContent||''));
   const p = label?.parentElement?.querySelector('p');
