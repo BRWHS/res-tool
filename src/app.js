@@ -394,11 +394,10 @@ makeMultiSelectFriendly(document.querySelector('#erCats')); // Bearbeiten
 
   
 // Öffner für Rateneinstellungen (statt direkt „Neue Rate“)
-});
 q('#rsTabDirect')?.addEventListener('click', ()=> rsSetType('Direct'));
 q('#rsTabCorp')  ?.addEventListener('click', ()=> rsSetType('Corp'));
 q('#rsTabIds')   ?.addEventListener('click', ()=> rsSetType('IDS'));
-q('#rsNewRate')?.addEventListener('click', ()=> openRateCreate()); // „Neue Rate“ → Editor in Neuanlage
+q('#rsNewRate')?.addEventListener('click', ()=> openRateCreate());
 
 
 // Öffner: Rateneinstellungen (statt Channel)
@@ -1913,7 +1912,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
   // Channel – Einstellungen (admin)
   if (btnChannel){
     btnChannel.addEventListener('click', ()=>{
-      requireAdmin(()=> openModal('#modalChannel'));
+      requireAdmin(()=> openModal('modalChannel'));
       logActivity('channel','open_settings');
     });
   }
@@ -1927,7 +1926,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
         document.getElementById('logFrom').value = '';
         document.getElementById('logTo').value = '';
         renderLogTable(filterLog({}));
-        openModal('#modalLog');
+        openModal('modalLog');
       });
       logActivity('system','open_log');
     });
@@ -2308,17 +2307,6 @@ setTimeout(()=>{ try{ refreshNewResRates(); }catch(e){} }, 0);
   setTimeout(()=>{ try{ window.refreshNewResRates(); }catch(e){} }, 0);
 })();
 
-/* ======== RESCUE PATCH – RATEN, WIZARD, SKIZZE, POPUPS ======== */
-(() => {
-  // tiny helpers (ohne Abhängigkeit auf q/qa)
-  const $ = (sel,root=document)=>root.querySelector(sel);
-  const el = (tag, attrs={}, ...kids) => {
-    const n=document.createElement(tag);
-    for(const k in attrs){ if(k==='class'||k==='className') n.className=attrs[k]; else n.setAttribute(k,attrs[k]); }
-    for(const k of kids){ if(k==null) continue; n.appendChild(k.nodeType ? k : document.createTextNode(k)); }
-    return n;
-  };
-
   // ---------- Storage + Seed ----------
   const KEY = 'resTool.rates';
   if (!window.readRates) window.readRates = () => { try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch { return []; } };
@@ -2575,11 +2563,6 @@ setTimeout(()=>{ try{ refreshNewResRates(); }catch(e){} }, 0);
   setTimeout(()=>{ try{ refreshNewResRates(); }catch(e){} }, 0);
 })();
 
-  /* === FINAL BINDERS & FAILSAFES (Rates + Sketch + Modals) === */
-(() => {
-  const $ = (s, r=document)=>r.querySelector(s);
-  const $$ = (s, r=document)=>Array.from(r.querySelectorAll(s));
-
   // --------- minimal modal fallbacks (nur falls kaputt) ----------
   if (typeof window.openModal !== 'function') {
     window.openModal = (id) => {
@@ -2720,13 +2703,6 @@ setTimeout(()=>{ try{ refreshNewResRates(); }catch(e){} }, 0);
     setTimeout(()=>{ try { rsRender(); } catch(_) {} }, 0);
   }
 })();
-
-/* ================= RESCUE V3 – Hotelskizze, Raten, Create-Button, Popups, Step3 ================= */
-(() => {
-  // Utilities
-  const $  = (s,r=document)=>r.querySelector(s);
-  const $$ = (s,r=document)=>Array.from(r.querySelectorAll(s));
-  const EUR = window.EUR || new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'});
 
   // ---------- Modal fallbacks (do not override if already good) ----------
   (function ensureModalFns(){
