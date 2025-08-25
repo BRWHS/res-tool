@@ -458,7 +458,22 @@ function rsRender(){
     tbody.append(el('tr', {}, el('td', { colspan:'6' }, 'Keine Raten gefunden.')));
     return;
   }
+
+  list.forEach(r=>{
+    const h = (window.HOTELS||[]).find(x=>x.code===r.hotel_code);
+    const tr = el('tr', { class:'row', 'data-id': r.id },
+      el('td',{}, r.ratecode || '—'),
+      el('td',{}, r.name || '—'),
+      el('td',{}, h ? `${h.group} - ${h.name.replace(/^.*? /,'')}` : (r.hotel_code || '—')),
+      el('td',{}, (r.categories||[]).join(', ') || '—'),
+      el('td',{}, r.price!=null ? EUR.format(r.price) : '—'),
+      el('td',{}, r.mapped ? 'ja' : 'nein')
+    );
+    tr.addEventListener('click', ()=> openRateEditor && openRateEditor(r.id));
+    tbody.append(tr);
+  });
 }
+
   
 // „Neue Rate“ nutzt modalRateEdit im Create-Modus
 function openRateCreate(){
@@ -2065,7 +2080,6 @@ function rsSetType(type){
 }
 function rsRender(){
   const tbody = q('#rsBody'); if (!tbody) return;
-
   const qStr  = (q('#rsSearch')?.value || '').trim().toLowerCase();
   const hCode = q('#rsHotelFilter')?.value || 'all';
 
@@ -2080,6 +2094,22 @@ function rsRender(){
     tbody.append(el('tr', {}, el('td', { colspan:'6' }, 'Keine Raten gefunden.')));
     return;
   }
+
+  list.forEach(r=>{
+    const h = (window.HOTELS||[]).find(x=>x.code===r.hotel_code);
+    const tr = el('tr', { class:'row', 'data-id': r.id },
+      el('td',{}, r.ratecode || '—'),
+      el('td',{}, r.name || '—'),
+      el('td',{}, h ? `${h.group} - ${h.name.replace(/^.*? /,'')}` : (r.hotel_code || '—')),
+      el('td',{}, (r.categories||[]).join(', ') || '—'),
+      el('td',{}, r.price!=null ? EUR.format(r.price) : '—'),
+      el('td',{}, r.mapped ? 'ja' : 'nein')
+    );
+    tr.addEventListener('click', ()=> openRateEditor && openRateEditor(r.id));
+    tbody.append(tr);
+  });
+}
+
 
   list.forEach(r=>{
     const hotel = HOTELS.find(h=>h.code===r.hotel_code);
