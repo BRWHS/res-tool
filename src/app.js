@@ -2478,8 +2478,6 @@ setTimeout(()=>{ try{ refreshNewResRates(); }catch(e){} }, 0);
       (!category || (Array.isArray(r.categories) && (r.categories.includes(category) || r.categories.includes('*'))))
     );
   }
-  if (step==='3'){ refreshNewResRates(); 
-    }
   
   window.setSelectedRatePolicy = function(txt){
     const el = document.getElementById('ratePolicyPreview');
