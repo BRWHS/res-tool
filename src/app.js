@@ -486,7 +486,7 @@ window.closeModal = function(id){
         .neq('status', 'canceled');
       if (hotel) qA = qA.eq('hotel_code', hotel.code);
 
-      // B) arrival <= today AND departure IS NULL (open-ended)
+      // B arrival <= today AND departure IS NULL (open-ended)
       let qB2 = supabase.from('reservations')
         .select('id, rate_price, hotel_code, hotel_name, arrival, departure, status')
         .lte('arrival', tDate)
@@ -1106,6 +1106,7 @@ q('#btnNext')?.addEventListener('click', ()=>{
       await loadReservations();
       setTimeout(()=>closeModal('modalNew'), 700);
     }
+  }
   q('#btnCreate')?.addEventListener('click', createReservation);
 
   /***** Availability *****/
