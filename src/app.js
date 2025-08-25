@@ -307,26 +307,7 @@ async function buildMiniAnalytics(){
 }
   /***** MODALS *****/
   const backdrop = q('#backdrop');
-  function openModal(id){
-    
-  try {
-    if (['modalRateEdit','modalRateSettings','modalRateCreate'].includes(id)) {
-      const m = document.getElementById(id);
-      if (m){ m.style.width = 'min(95vw, 860px)'; m.style.maxWidth = '860px'; }
-    }
-  } catch(e){} 
-const sel = (id || '').toString();
-    const m = q(sel.startsWith('#') ? sel : ('#' + sel));
-    if(!m) return;
-    document.body.classList.add('modal-open');
-    if (backdrop) backdrop.style.display='flex'; m.style.display='block';
-  }
-  function closeModal(id){
-    const sel = (id || '').toString();
-    const m = q(sel.startsWith('#') ? sel : ('#' + sel));
-    if(!m) return;
-    m.style.display='none'; if (backdrop) backdrop.style.display='none'; document.body.classList.remove('modal-open');
-  }
+  // TODO: removed duplicate openModal/closeModal
 
   function fillHotelSelectOptions(sel){
   if (!sel) return;
@@ -944,16 +925,7 @@ window.closeModal = function(id){
 
   /* Wizard Step 3 – nur gemappte Raten */
 /* === Step 3: Policy-Text robust setzen (ohne Duplikate) === */
-function setSelectedRatePolicy(policyText){
-  const first = document.getElementById('ratePolicyPreview');
-  if (first) {
-    first.textContent = policyText || '—';
-    // evtl. doppelte Absätze im selben Block verbergen
-    const box = first.closest('.policy-box') || document.getElementById('w3');
-    if (box){
-      const ps = Array.from(box.querySelectorAll('p')).filter(p=>p!==first);
-      ps.forEach(p => { if ((p.textContent||'').trim() === (first.textContent||'').trim()) p.style.display='none'; });
-    }
+// TODO: removed duplicate setSelectedRatePolicy
     return;
   }
   // Fallback: erstes Vorkommen "Stornobedingung" suchen
@@ -1897,42 +1869,7 @@ function setSelectedRatePolicy(txt){
   const el = document.getElementById('ratePolicyPreview');
   if (el) el.textContent = (txt && String(txt).trim()) || '—';
 }
-function refreshNewResRates(){
-  const selRate = q('#newRate'); if (!selRate) return;
-  const hotel   = q('#newHotel')?.value || '';
-  const cat     = q('#newCat')?.value || '';
-
-  // Alle lokalen Raten lesen
-  const all = readRates();
-
-  // Nur gemappte Raten, die zum Hotel passen und Kategorie "*"
-  // ODER die gewählte Kategorie enthalten
-  const filtered = all.filter(r=>{
-    if (!r.mapped) return false;
-    if (r.hotel_code !== hotel) return false;
-    const cats = Array.isArray(r.categories) ? r.categories : ['*'];
-    return cats.includes('*') || (cat && cats.includes(cat));
-  });
-
-  // Fallback: Dummy‑Raten, wenn noch nichts angelegt
-  const list = filtered.length ? filtered : (HOTEL_RATES['default']||[]).map((x,i)=>({
-    ratecode: `D${i+1}`,
-    name: x.name,
-    price: x.price,
-    policy: 'Bis 18:00 Uhr am Anreisetag kostenfrei stornierbar.'
-  }));
-
-  selRate.innerHTML = list.map(r=>{
-    const price = Number(r.price||0);
-    const pol   = r.policy || '';
-    return `<option value="${r.name}" data-price="${price}" data-policy="${pol}">${r.name} (${EUR.format(price)})</option>`;
-  }).join('');
-
-  // Preis + Policy spiegeln
-  const first = selRate.selectedOptions[0];
-  if (first && q('#newPrice')) q('#newPrice').value = first.dataset.price || 0;
-  setSelectedRatePolicy(first?.dataset.policy || '—');
-}
+// TODO: removed duplicate refreshNewResRates
 
 // --- Rate settings list (tabs/search/filter) ---
 function rsFillHotelFilter(){
