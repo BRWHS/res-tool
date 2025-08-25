@@ -2113,4 +2113,5 @@ setTimeout(()=>{ try{ refreshNewResRates(); }catch(e){} }, 0);
 
   // Initial füllen
   setTimeout(()=>{ try{ window.refreshNewResRates(); }catch(e){} }, 0);
+}
 })();
