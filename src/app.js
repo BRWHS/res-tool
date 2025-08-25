@@ -1106,7 +1106,6 @@ q('#btnNext')?.addEventListener('click', ()=>{
       await loadReservations();
       setTimeout(()=>closeModal('modalNew'), 700);
     }
-  }
   q('#btnCreate')?.addEventListener('click', createReservation);
 
   /***** Availability *****/
