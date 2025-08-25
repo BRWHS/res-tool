@@ -2396,21 +2396,28 @@ setTimeout(()=>{ try{ refreshNewResRates(); }catch(e){} }, 0);
         if (typeof setSelectedRatePolicy==='function') setSelectedRatePolicy(o.dataset.policy || '');
       }, {once:false});
     }
-    setTimeout(()=>{ try { refreshNewResRates(); } catch(_) {} }, 0);
-  })();
+   setTimeout(()=>{ try{ refreshNewResRates(); }catch(e){} }, 0);
 
-  // --------- Wildcard-Kategorien im Wizard berücksichtigen ----------
-  if (typeof window.getMappedRatesFor !== 'function') {
-    window.getMappedRatesFor = function(hotelCode, category=null, type=null){
-      const data = (typeof readRates==='function') ? readRates() : [];
-      return data.filter(r =>
-        (!!r.mapped) &&
-        (!hotelCode || r.hotel_code===hotelCode) &&
-        (!type || r.ratetype===type) &&
-        (!category || (Array.isArray(r.categories) && (r.categories.includes(category) || r.categories.includes('*'))))
-      );
-    };
-  }
+// --------- Wildcard-Kategorien im Wizard berücksichtigen ----------
+if (typeof window.getMappedRatesFor !== 'function') {
+  window.getMappedRatesFor = function(hotelCode, category=null, type=null){
+    const data = (typeof readRates==='function') ? readRates() : [];
+    return data.filter(r =>
+      (!!r.mapped) &&
+      (!hotelCode || r.hotel_code===hotelCode) &&
+      (!type || r.ratetype===type) &&
+      (!category || (Array.isArray(r.categories) && (r.categories.includes(category) || r.categories.includes('*'))))
+    );
+  };
+}
+
+// --------- letzte Sicherheitsleine ----------
+if ($('#modalRateSettings')?.style.display === 'block') {
+  ensureNewRateButton();
+  setTimeout(()=>{ try { rsRender(); } catch(_) {} }, 0);
+}
+})();
+
 
   // --------- letzte Sicherheitsleine: einmal rendern, falls Modal schon offen ----------
   if ($('#modalRateSettings')?.style.display === 'block') {
