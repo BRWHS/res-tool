@@ -367,6 +367,15 @@ table.matrix{width:100%;border-collapse:collapse}
 }
 #modalSettings input[type="range"]{ width:100%; }
 
+/* Settings – Live-Systeminfo: saubere Label/Value-Zeile */
+.set-sys .settings-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:8px;                 /* <- optischer Leerschritt */
+  padding:3px 0;
+}
+
 /* Settings: 2 Spalten, sauber zentriert */
 .set-top{
   display:flex;
