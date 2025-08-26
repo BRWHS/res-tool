@@ -492,7 +492,7 @@
       <button class="btn tile" id="btnUserPrefs">Benutzereinstellungen</button>
       <button class="btn tile" id="btnChannel">Channel – Einstellungen</button>
       <button class="btn tile" id="btnLog">Log Activity</button>
-      <button class="btn tile" id="btnRates">Rateneinstellungen</button>
+      <button class="btn tile" id="btnRates" data-modal="#modalRateCreate">Rateneinstellungen</button>
       <button class="btn tile" id="btnHelp">Hilfe & FAQ</button>
     </div>
   </div>
@@ -587,36 +587,105 @@
 </section>
 
   <!-- Modal: Rateneinstellungen (Rate anlegen/bearbeiten) -->
-  <!-- Rate – Neuanlage -->
-  <section class="modal" id="modalRateCreate" role="dialog" aria-labelledby="rateCreateTitle" aria-modal="true">
-    <header>
-      <h3 id="rateCreateTitle" class="mono"><span class="set-logo" aria-hidden="true"></span> Neue Rate</h3>
-      <button class="btn" data-close>Schließen</button>
-    </header>
-    <div class="body">
-      <div class="grid2">
-        <label>Ratecode (nur Zahlen) <input id="crCode" class="input" placeholder="z. B. 100123" inputmode="numeric" pattern="\d+"></label>
-        <label>Ratentyp* (fix nach Erstellung)
-          <select id="crType" class="input theme-select">
-            <option value="">Bitte wählen</option>
-            <option>Direct</option><option>Corp</option><option>IDS</option>
-          </select>
-        </label>
-        <label>Hotel* <select id="crHotel" class="input theme-select"></select></label>
-        <label>Ratename* <input id="crName" class="input" placeholder="z. B. Flex exkl. Frühstück"></label>
-        <label style="grid-column:1 / -1">Kategorien (mehrfach; erst nach Hotelauswahl)
-          <select id="crCats" class="input theme-select" multiple size="4" disabled></select>
-        </label>
-        <label style="grid-column:1 / -1">Stornobedingung
-          <textarea id="crPolicy" class="input" rows="3" placeholder="z. B. Bis zum Anreisetag 18:00 Uhr kostenfrei stornierbar."></textarea>
-        </label>
-        <label>Preis/Nacht (€) <input id="crPrice" type="number" step="1" min="0" class="input" value="0"></label>
-        <label>Gemappt
-          <select id="crMapped" class="input theme-select">
-            <option value="true">ja</option><option value="false" selected>nein</option>
-          </select>
-        </label>
-      </div>
+<section class="modal" id="modalRateCreate" role="dialog" aria-labelledby="rateCreateTitle" aria-modal="true">
+  <header>
+    <h3 id="rateCreateTitle" class="mono">
+      <span class="set-logo" aria-hidden="true"></span> Neue Rate
+    </h3>
+    <button class="btn" data-close>Schließen</button>
+  </header>
+
+  <div class="body">
+    <!-- Oberes Formular -->
+    <div class="grid2">
+      <label>Ratecode (nur Zahlen)
+        <input id="crCode" class="input" placeholder="z. B. 100123" inputmode="numeric" pattern="\d+">
+      </label>
+
+      <label>Ratentyp* (fix nach Erstellung)
+        <select id="crType" class="input theme-select">
+          <option value="">Bitte wählen</option>
+          <option>Direct</option>
+          <option>Corp</option>
+          <option>IDS</option>
+        </select>
+      </label>
+
+      <label>Hotel*
+        <select id="crHotel" class="input theme-select"></select>
+      </label>
+
+      <label>Ratename*
+        <input id="crName" class="input" placeholder="z. B. Flex exkl. Frühstück">
+      </label>
+
+      <label style="grid-column:1 / -1">Kategorien (mehrfach; erst nach Hotelauswahl)
+        <select id="crCats" class="input theme-select" multiple size="4" disabled></select>
+      </label>
+
+      <label style="grid-column:1 / -1">Stornobedingung
+        <textarea id="crPolicy" class="input" rows="3" placeholder="z. B. Bis zum Anreisetag 18:00 Uhr kostenfrei stornierbar."></textarea>
+      </label>
+
+      <label>Preis/Nacht (€)
+        <input id="crPrice" type="number" step="1" min="0" class="input" value="0">
+      </label>
+
+      <label>Gemappt
+        <select id="crMapped" class="input theme-select">
+          <option value="true">ja</option>
+          <option value="false" selected>nein</option>
+        </select>
+      </label>
+    </div>
+
+    <!-- Zwei-Spalten-Layout: links Tabs, rechts Tabelle -->
+    <div class="rates-layout">
+      <!-- Sidebar: Tabs -->
+      <aside class="rates-side">
+        <button class="btn tile" id="rsTabDirect">Direct-Rate</button>
+        <button class="btn tile" id="rsTabCorp">Corp-Rate</button>
+        <button class="btn tile" id="rsTabIds">IDS-Rate</button>
+      </aside>
+
+      <!-- Hauptbereich -->
+      <section class="rates-main card">
+        <div class="content">
+          <div class="card-head">
+            <h3 class="mono" id="rsTitle">Raten – Direct</h3>
+            <div class="rs-toolbar">
+              <button class="btn primary sm" id="rsNewRate">+ Neue Rate</button>
+              <input id="rsSearch" class="input sm" placeholder="Suchen: Name oder Ratecode">
+              <select id="rsHotelFilter" class="input sm theme-select" title="Hotel filtern"></select>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table class="resv">
+              <thead>
+                <tr>
+                  <th style="width:110px">Ratecode</th>
+                  <th>Name</th>
+                  <th>Hotel</th>
+                  <th style="width:180px">Kategorien</th>
+                  <th style="width:110px">Preis</th>
+                  <th style="width:90px">Mapped</th>
+                </tr>
+              </thead>
+              <tbody id="rsBody"></tbody>
+            </table>
+          </div>
+        </div> <!-- /.content -->
+
+        <div class="set-footer">
+          <div style="flex:1"></div>
+          <button class="btn primary" id="btnRateCreate">Rate erstellen</button>
+        </div>
+      </section> <!-- /.rates-main -->
+    </div> <!-- /.rates-layout -->
+  </div> <!-- /.body -->
+</section> <!-- /#modalRateCreate -->
+
       
     <!-- Sidebar: Tabs -->
     <aside class="rates-side">
