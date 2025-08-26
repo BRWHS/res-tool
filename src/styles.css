@@ -623,25 +623,5 @@ select[disabled]{opacity:.6; pointer-events:none
   .toolbar-right{ display:none; }
 }
 
-/* Grundzustand: Modals sind unsichtbar */
-.modal { 
-  display: none;
-  opacity: 0;
-  transform: translateY(8px);
-  transition: opacity .18s ease, transform .18s ease;
-}
-
-/* Sichtbar, wenn geöffnet */
-.modal.open {
-  display: block;
-  opacity: 1;
-  transform: translateY(0);
-  z-index: 1000; /* vor dem Blur/Backdrop */
-}
-
-/* Scroll-Lock bei offenem Modal */
-html.modal-open {
-  overflow: hidden;
-}
 
 
