@@ -7,7 +7,7 @@
   if (window.__RESTOOL_APP_V2__) return;
   window.__RESTOOL_APP_V2__ = true;
 
-// === Modal Bootstrap (single source of truth) ===
+  // === Modal Core: eine Quelle der Wahrheit ===
 (function(){
   function ensureBackdrop(){
     let b = document.getElementById('backdrop') || document.querySelector('.backdrop');
@@ -19,18 +19,25 @@
     }
     return b;
   }
+
   function _open(id){
-    // niemals verschachteln: erst alles zu
+    // immer zuerst alle schließen -> kein Popup im Popup
     document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
+
     const m = document.getElementById(id);
-    if (!m) return;
     const b = ensureBackdrop();
-    m.style.maxWidth = '860px';
-    m.style.width    = 'min(95vw, 860px)';
-    m.style.display  = 'block';
-    b.style.display  = 'flex';
+    if (!m) return;
+
+    // Einheitliche Größe (Rate-Dialoge etwas breiter)
+    const wide = ['modalRateEdit','modalRateSettings','modalRateCreate'].includes(id);
+    m.style.maxWidth = wide ? '860px' : '860px';
+    m.style.width    = wide ? 'min(95vw, 860px)' : 'min(95vw, 860px)';
+
+    m.style.display = 'block';
+    b.style.display = 'flex';
     document.body.classList.add('modal-open');
   }
+
   function _close(id){
     const m = id ? document.getElementById(id) : document.querySelector('.modal[style*="block"]');
     const b = document.getElementById('backdrop') || document.querySelector('.backdrop');
@@ -38,15 +45,18 @@
     if (b) b.style.display = 'none';
     document.body.classList.remove('modal-open');
   }
-  // global setzen (nur wenn nicht vorhanden)
-  if (typeof window.openModal  !== 'function') window.openModal  = _open;
-  if (typeof window.closeModal !== 'function') window.closeModal = _close;
-  // lokale Aliase für bestehende Listener
-  var openModal  = window.openModal;
-  var closeModal = window.closeModal;
-  // ESC schließt
-  window.addEventListener('keydown', e => { if (e.key === 'Escape') window.closeModal(); });
+
+  // global machen
+  window.openModal  = _open;
+  window.closeModal = _close;
 })();
+
+// Legacy-Alias, damit alle vorhandenen Listener weiter funktionieren
+var openModal  = window.openModal;
+var closeModal = window.closeModal;
+
+// ESC schließt immer
+window.addEventListener('keydown', (e)=>{ if (e.key === 'Escape') window.closeModal(); });
 
 
   /***** Supabase *****/
