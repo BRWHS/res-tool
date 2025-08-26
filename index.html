@@ -402,71 +402,171 @@
     </div>
   </section>
 
-  <!-- Reporting -->
-  <section class="modal" id="modalReporting" role="dialog" aria-labelledby="repTitle" aria-modal="true" aria-hidden="true">
-    <header>
-      <h3 id="repTitle" class="mono"><span class="rep-logo"></span> Reporting</h3>
-      <button class="btn" data-close>Schließen</button>
-    </header>
-    <div class="body">
-      <div class="row wrap">
-        <label>Datum von <input id="repFrom" type="date" class="input" style="width:170px;"></label>
-        <label>Datum bis <input id="repTo"   type="date" class="input" style="width:170px;"></label>
-        <label>Hotel <select id="repHotel" class="input theme-select" style="width:220px;"></select></label>
-        <div class="rep-tools" style="margin-left:auto">
-          <button class="btn" id="repRun">Generieren</button>
-          <button class="btn" id="repCsv">CSV</button>
-          <button class="btn" id="repXls">XLSX</button>
-          <button class="btn" id="repPdf">PDF</button>
-        </div>
-      </div>
+   <!-- Reporting -->
+<section class="modal" id="modalReporting" role="dialog" aria-labelledby="repTitle" aria-modal="true">
+ <header>
+  <h3 id="repTitle" class="mono">
+    <span class="rep-logo"></span> Reporting
+  </h3>
+  <button class="btn" data-close>Schließen</button>
+</header>
+  <div class="body">
+    <div class="row wrap">
+      <label>Von <input id="repFrom" type="date" class="input"></label>
+      <label>Bis <input id="repTo" type="date" class="input"></label>
+      <label>Hotel
+        <select id="repHotel" class="input theme-select" style="width:200px;"></select>
+      </label>
+      <button class="btn" id="repRun">Aktualisieren</button>
 
-      <div class="rep-charts">
-        <div class="chart-card"><h4>Buchungen</h4><div class="chart-box"><canvas id="chartBookings"></canvas></div></div>
-        <div class="chart-card"><h4>Umsatz</h4><div class="chart-box"><canvas id="chartRevenue"></canvas></div></div>
-      </div>
-
-      <div class="table-wrap">
-        <table class="resv" id="repTable">
-          <thead>
-            <tr>
-              <th>Datum</th><th>Hotel</th><th>Buchungen</th><th>Umsatz</th><th>ADR</th><th>Auslastung</th>
-            </tr>
-          </thead>
-          <tbody id="repBody"></tbody>
-        </table>
+      <!-- kompakte Export-Spalte rechts -->
+      <div class="rep-tools">
+        <button class="btn ghost" id="repXls">Export Excel</button>
+        <button class="btn ghost" id="repCsv">Export CSV</button>
+        <button class="btn ghost" id="repPdf">Export PDF</button>
       </div>
     </div>
-  </section>
+
+    <!-- kompakte, gleich hohe Charts -->
+    <div class="rep-charts">
+      <div class="chart-card">
+        <h4 class="mono">Umsatz pro Hotel</h4>
+        <div class="chart-box"><canvas id="chartRevenue"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h4 class="mono">Buchungen pro Hotel</h4>
+        <div class="chart-box"><canvas id="chartBookings"></canvas></div>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table class="resv">
+        <thead>
+          <tr>
+            <th>Hotel</th>
+            <th>Buchungen</th>
+            <th>Umsatz</th>
+            <th>ADR</th>
+            <th>Belegungsrate</th>
+          </tr>
+        </thead>
+        <tbody id="repBody"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
 
   <!-- Einstellungen -->
-  <section class="modal" id="modalSettings" role="dialog" aria-labelledby="setTitle" aria-modal="true" aria-hidden="true">
+  <section class="modal" id="modalSettings" role="dialog" aria-labelledby="setTitle" aria-modal="true">
     <header>
-      <h3 id="setTitle" class="mono"><span class="settings-logo"></span> Einstellungen</h3>
+      <h3 id="setTitle" class="mono">
+        <span class="set-logo" aria-hidden="true"></span> Einstellungen
+      </h3>
       <button class="btn" data-close>Schließen</button>
     </header>
     <div class="body">
-      <div class="grid2">
-        <label>Theme
-          <select id="setTheme" class="input theme-select">
-            <option value="dark" selected>Dark</option>
-            <option value="light" disabled>Light (später)</option>
-          </select>
-        </label>
+      <!-- oben: links Form / rechts Live-Systeminfo -->
+     <div class="set-top">
+  <!-- LINKER BLOCK: Sprache/Farbton + Buttons -->
+  <div class="set-left">
+    <div class="set-grid">
+      <label class="set-field">
+        <span class="set-label">Sprache</span>
+        <select id="selLang" class="input theme-select">
+          <option value="de">Deutsch</option>
+          <option value="en">English</option>
+        </select>
+      </label>
 
-        <label>Hotel-Filter (Default)
-          <select id="setHotelFilter" class="input theme-select"></select>
-        </label>
-      </div>
+      <label class="set-field">
+        <span class="set-label">Farbton (Hue) <span id="hueVal" class="muted">180°</span></span>
+        <input id="rngHue" class="hue" type="range" min="0" max="359" step="1" />
+      </label>
+    </div>
 
-      <div class="box" style="margin-top:10px">
-        <div class="mono muted">Hilfe & FAQ</div>
-        <button class="btn" id="openHelp" data-modal="#modalHelp">FAQ & Hilfe öffnen</button>
-      </div>
+    <!-- Buttons direkt darunter, klein -->
+    <div class="set-tiles">
+      <button class="btn tile" id="btnUserPrefs">Benutzereinstellungen</button>
+      <button class="btn tile" id="btnChannel">Channel – Einstellungen</button>
+      <button class="btn tile" id="btnLog">Log Activity</button>
+      <button class="btn tile" id="btnRates">Rateneinstellungen</button>
+      <button class="btn tile" id="btnHelp">Hilfe & FAQ</button>
+    </div>
+  </div>
+
+  <!-- RECHTER BLOCK: Live-Systeminfo (kleiner, transparenter) -->
+  <aside class="box set-sys" id="netBox">
+    <h4 class="mono section" style="margin:0 0 6px">Live‑Systeminfo</h4>
+    <div class="sys-grid">
+      <div class="settings-row"><label>Öffentliche IP</label><span id="netIp">—</span></div>
+      <div class="settings-row"><label>IPv4</label><span id="netIpv4">—</span></div>
+      <div class="settings-row"><label>Standort</label><span id="netLoc">—</span></div>
+      <div class="settings-row"><label>OS / Browser</label><span id="netOs">—</span></div>
+    </div>
+    <p class="muted tiny">Live Daten.</p>
+  </aside>
+</div>
+
+      <!-- unten rechts: Speichern -->
+      <div class="set-footer right">
+  <button class="btn primary" id="btnSaveSettings" data-i18n="settings.save">
+    Einstellungen speichern
+  </button>
+</div>
 
       <p class="muted" id="setInfo"></p>
     </div>
   </section>
+
+<!-- Modal: Channel Settings (admin) -->
+<section class="modal" id="modalChannel" role="dialog" aria-labelledby="channelTitle" aria-modal="true">
+  <header>
+    <h3 id="channelTitle" class="mono">
+      <span class="set-logo" aria-hidden="true"></span> Channel – Einstellungen
+    </h3>
+    <button class="btn" data-close>Schließen</button>
+  </header>
+  <div class="body">
+    <div class="box">
+      <p class="muted">Platzhalter für die API‑Verkabelung (HNS, PMS, Mapping, Secrets …).</p>
+      <p class="muted">Dieses Fenster ist mit Admin‑Passwort geschützt.</p>
+    </div>
+  </div>
+</section>
+
+<!-- Modal: Log Activity (admin) -->
+<section class="modal" id="modalLog" role="dialog" aria-labelledby="logTitle" aria-modal="true">
+  <header>
+    <h3 id="logTitle" class="mono">
+      <span class="set-logo" aria-hidden="true"></span> Log Activity
+    </h3>
+    <button class="btn" data-close>Schließen</button>
+  </header>
+  <div class="body">
+    <div class="row wrap" style="margin-bottom:8px;">
+      <input id="logSearch" class="input" placeholder="Suche… (Text/Meta)" style="width:220px;">
+      <select id="logType" class="input theme-select" style="width:180px;">
+        <option value="">Typ: Alle</option>
+        <option value="settings">settings</option>
+        <option value="reservation">reservation</option>
+        <option value="channel">channel</option>
+        <option value="system">system</option>
+      </select>
+      <label>Von <input id="logFrom" type="date" class="input" style="width:160px;"></label>
+      <label>Bis <input id="logTo" type="date" class="input" style="width:160px;"></label>
+      <button class="btn" id="logApply">Filter anwenden</button>
+      <button class="btn ghost" id="logClear">Zurücksetzen</button>
+    </div>
+    <div class="table-wrap">
+      <table class="table" id="logTable">
+        <thead>
+          <tr><th>Datum</th><th>Typ</th><th>Aktion</th><th>Details</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</section>
 
   <!-- Benutzereinstellungen -->
   <section class="modal" id="modalUserPrefs" role="dialog" aria-labelledby="userPrefsTitle" aria-modal="true" aria-hidden="true">
