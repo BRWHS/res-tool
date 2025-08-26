@@ -756,12 +756,31 @@
     }
 
     // Delegation: open via data-modal
+  <script>
+  (function () {
+    const $  = (s, c=document)=>c.querySelector(s);
+    const $$ = (s, c=document)=>Array.from(c.querySelectorAll(s));
+    const backdrop = $('#backdrop');
+
+    function anyOpen(){ return $$('.modal.open').length>0; }
+    function openModal(selOrEl){ /* unverändert – steht schon bei dir oben */ }
+    function closeModal(modal){  /* unverändert – steht schon bei dir oben */ }
+
+    // 🔧 NEU: Erst Eltern-Modal schließen, dann Ziel öffnen
     document.addEventListener('click', (e) => {
       const btn = e.target.closest('[data-modal]');
       if (!btn) return;
       const sel = btn.getAttribute('data-modal');
-      if (sel) {
-        e.preventDefault();
+      if (!sel) return;
+      e.preventDefault();
+
+      const parentModal = btn.closest('.modal');
+      if (parentModal && parentModal.id !== sel.replace('#','')) {
+        // Eltern-Modal schließen (z. B. #modalSettings)
+        closeModal(parentModal);
+        // Danach Ziel öffnen (nächster Tick verhindert Focus-Jump)
+        setTimeout(() => openModal(sel), 0);
+      } else {
         openModal(sel);
       }
     }, { passive: false });
