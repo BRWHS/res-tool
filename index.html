@@ -596,128 +596,151 @@
   </div>
 </section>
 
-  <!-- Modal: Rateneinstellungen -->
-  <div class="modal" id="modalRateSettings" role="dialog" aria-modal="true" aria-labelledby="rateSettingsTitle" hidden>
-    <div class="modal__card modal__card--xl">
-      <header class="modal__head">
-        <h2 id="rateSettingsTitle">Rateneinstellungen</h2>
-        <button class="icon-btn" data-close="modalRateSettings" aria-label="Schließen">✕</button>
-      </header>
+   <!-- Modal: Rateneinstellungen (Rate anlegen/bearbeiten) -->
+<section class="modal" id="modalRateSettings" role="dialog" aria-labelledby="rateSettingsTitle" aria-modal="true">
+  <header>
+    <h3 id="rateSettingsTitle" class="mono"><span class="set-logo" aria-hidden="true"></span> Rateneinstellungen</h3>
+    <button class="btn" data-close>Schließen</button>
+  </header>
+  <div class="body">
+  <div class="rates-wrap">
+    <!-- Sidebar: Tabs -->
+    <aside class="rates-side">
+      <button class="btn tile" id="rsTabDirect">Direct-Rate</button>
+      <button class="btn tile" id="rsTabCorp">Corp-Rate</button>
+      <button class="btn tile" id="rsTabIds">IDS-Rate</button>
+    </aside>
 
-      <div class="modal__body">
-        <div class="rate-actions">
-          <div class="rate-type-toggle" role="group" aria-label="Rate-Typen">
-            <button class="chip is-active" data-rate-type="direct">Direct</button>
-            <button class="chip" data-rate-type="corp">Corp</button>
-            <button class="chip" data-rate-type="ids">IDS</button>
+    <!-- Hauptbereich -->
+    <section class="rates-main card">
+      <div class="content">
+        <div class="card-head">
+          <h3 class="mono" id="rsTitle">Raten – Direct</h3>
+          <div class="rs-toolbar">
+            <button class="btn primary sm" id="rsNewRate">+ Neue Rate</button>
+            <input id="rsSearch" class="input sm" placeholder="Suchen: Name oder Ratecode">
+            <select id="rsHotelFilter" class="input sm theme-select" title="Hotel filtern"></select>
           </div>
-          <button class="btn-primary" id="btnOpenNewRate">+ Neue Rate</button>
-        </div>
-
-        <div class="filters">
-          <input type="search" id="rateSearch" placeholder="Suche nach Rate-/Raten-Code/Beschreibung…" />
-          <select id="hotelFilter">
-            <option value="">Alle Hotels</option>
-            <option value="MAS_STU">MASEVEN Stuttgart</option>
-            <option value="MAS_MUC">MASEVEN München</option>
-            <option value="FID_ANY">Fidelity Group</option>
-          </select>
-          <select id="statusFilter">
-            <option value="">Status: alle</option>
-            <option value="active">Aktiv</option>
-            <option value="inactive">Inaktiv</option>
-            <option value="archived">Archiviert</option>
-          </select>
-          <input type="date" id="validFrom" />
-          <input type="date" id="validTo" />
         </div>
 
         <div class="table-wrap">
-          <table class="table" id="rateTable" aria-describedby="rateTableCaption">
-            <caption id="rateTableCaption" class="sr-only">Liste aller Raten</caption>
+          <table class="resv">
             <thead>
               <tr>
-                <th>Rate-Name</th>
-                <th>Code</th>
-                <th>Typ</th>
+                <th style="width:110px">Ratecode</th>
+                <th>Name</th>
                 <th>Hotel</th>
-                <th>Gültig von</th>
-                <th>Gültig bis</th>
-                <th>Status</th>
-                <th class="right">Aktionen</th>
+                <th style="width:180px">Kategorien</th>
+                <th style="width:110px">Preis</th>
+                <th style="width:90px">Mapped</th>
               </tr>
             </thead>
-            <tbody></tbody>
+            <tbody id="rsBody"></tbody>
           </table>
         </div>
       </div>
+    </section>
+  </div>
+</div>
 
-      <footer class="modal__foot">
-        <div class="left"><span id="rateCountInfo">0 Raten</span></div>
-        <div class="right"><button class="btn-secondary" data-close="modalRateSettings">Schließen</button></div>
-      </footer>
+  
+
+
+  <section class="modal" id="modalRateEdit" role="dialog" aria-labelledby="rateEditTitle" aria-modal="true">
+  <header>
+    <h3 id="rateEditTitle" class="mono"><span class="set-logo" aria-hidden="true"></span> Rate bearbeiten</h3>
+    <button class="btn" data-close>Schließen</button>
+  </header>
+  <div class="body">
+    <div class="grid2">
+      <label>Ratecode (fix)
+        <input id="erCode" class="input" disabled />
+      </label>
+      <label>Ratentyp*
+        <select id="erType" class="input theme-select">
+          <option>Direct</option><option>Corp</option><option>IDS</option>
+        </select>
+      </label>
+      <label>Hotel (fix)
+        <select id="erHotel" class="input theme-select" disabled></select>
+      </label>
+      <label>Ratename (fix)
+        <input id="erName" class="input" disabled />
+      </label>
+      <label style="grid-column:1 / -1">Kategorien (mehrfach)
+        <select id="erCats" class="input theme-select" multiple size="4"></select>
+      </label>
+      <label style="grid-column:1 / -1">Stornobedingung
+        <textarea id="erPolicy" class="input" rows="3" placeholder="z. B. Bis zum Anreisetag 18:00 Uhr kostenfrei stornierbar."></textarea>
+      </label>
+      <label>Preis/Nacht
+        <input id="erPrice" type="number" step="1" class="input" />
+      </label>
+      <label>Gemappt
+        <select id="erMapped" class="input theme-select">
+          <option value="true">ja</option>
+          <option value="false">nein</option>
+        </select>
+      </label>
+    </div>
+    <div class="set-footer">
+      <button class="btn danger" id="btnRateDelete">Rate löschen</button>
+      <div style="flex:1"></div>
+      <button class="btn primary" id="btnRateUpdate">Änderungen speichern</button>
     </div>
   </div>
+</section>
 
-  <!-- Modal: Rate erstellen -->
-  <div class="modal" id="modalRateCreate" role="dialog" aria-modal="true" aria-labelledby="rateCreateTitle" hidden>
-    <div class="modal__card modal__card--lg">
-      <header class="modal__head">
-        <h2 id="rateCreateTitle">Neue Rate erstellen</h2>
-        <button class="icon-btn" data-close="modalRateCreate" aria-label="Schließen">✕</button>
-      </header>
+<section class="modal" id="modalRateCreate" role="dialog" aria-labelledby="rateCreateTitle" aria-modal="true">
+  <header>
+    <h3 id="rateCreateTitle" class="mono"><span class="set-logo" aria-hidden="true"></span> Neue Rate</h3>
+    <button class="btn" data-close>Schließen</button>
+  </header>
+  <div class="body">
+    <div class="grid2">
+      <label>Ratecode (nur Zahlen)
+        <input id="crCode" class="input" placeholder="z. B. 100123" inputmode="numeric" pattern="\d+">
+      </label>
+      <label>Ratentyp* (fix nach Erstellung)
+        <select id="crType" class="input theme-select">
+          <option value="">Bitte wählen</option>
+          <option>Direct</option><option>Corp</option><option>IDS</option>
+        </select>
+      </label>
 
-      <form class="modal__body" id="rateCreateForm">
-        <div class="grid">
-          <label class="field">
-            <span>Rate-Name</span>
-            <input type="text" name="name" required placeholder="z. B. Flex exkl. Frühstück" />
-          </label>
-          <label class="field">
-            <span>Rate-Code</span>
-            <input type="text" name="code" required placeholder="z. B. FLEX" />
-          </label>
-          <label class="field">
-            <span>Typ</span>
-            <select name="type" required>
-              <option value="direct">Direct</option>
-              <option value="corp">Corp</option>
-              <option value="ids">IDS</option>
-            </select>
-          </label>
-          <label class="field">
-            <span>Hotel</span>
-            <select name="hotel" required>
-              <option value="MAS_STU">MASEVEN Stuttgart</option>
-              <option value="MAS_MUC">MASEVEN München</option>
-              <option value="FID_ANY">Fidelity Group</option>
-            </select>
-          </label>
-          <label class="field">
-            <span>Gültig von</span>
-            <input type="date" name="valid_from" required />
-          </label>
-          <label class="field">
-            <span>Gültig bis</span>
-            <input type="date" name="valid_to" required />
-          </label>
-          <label class="field field--full">
-            <span>Beschreibung</span>
-            <textarea name="desc" rows="3" placeholder="Optionale Beschreibung…"></textarea>
-          </label>
-        </div>
-      </form>
+      <label>Hotel*
+        <select id="crHotel" class="input theme-select"></select>
+      </label>
+      <label>Ratename*
+        <input id="crName" class="input" placeholder="z. B. Flex exkl. Frühstück">
+      </label>
 
-      <footer class="modal__foot">
-        <button class="btn-secondary" data-cancel-create>Abbrechen</button>
-        <button class="btn-primary" form="rateCreateForm">Speichern</button>
-      </footer>
+      <label style="grid-column:1 / -1">Kategorien (mehrfach; erst nach Hotelauswahl)
+        <select id="crCats" class="input theme-select" multiple size="4" disabled></select>
+      </label>
+
+      <label style="grid-column:1 / -1">Stornobedingung
+        <textarea id="crPolicy" class="input" rows="3" placeholder="z. B. Bis zum Anreisetag 18:00 Uhr kostenfrei stornierbar."></textarea>
+      </label>
+
+      <label>Preis/Nacht (€)
+        <input id="crPrice" type="number" step="1" min="0" class="input" value="0">
+      </label>
+      <label>Gemappt
+        <select id="crMapped" class="input theme-select">
+          <option value="true">ja</option>
+          <option value="false" selected>nein</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="set-footer">
+      <div style="flex:1"></div>
+      <button class="btn primary" id="btnRateCreate">Rate erstellen</button>
     </div>
   </div>
+</section>
 
-  <script src="app.js" defer></script>
-</body>
-</html>
 
   <!-- Hilfe & FAQ -->
   <section class="modal" id="modalHelp" role="dialog" aria-labelledby="helpTitle" aria-modal="true" aria-hidden="true">
