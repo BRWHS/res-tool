@@ -363,6 +363,64 @@ function prepareRateFormReset(){
   if (q('#rateMapped')) q('#rateMapped').checked = true;
   if (q('#rateInfo')) q('#rateInfo').textContent = '';
 }
+  function openRateCreate(){
+  // Felder resetten
+  const code = (id)=>document.getElementById(id);
+  code('crCode').value = '';
+  code('crType').value = '';
+  code('crName').value = '';
+  code('crPolicy').value = 'Bis zum Anreisetag 18:00 Uhr kostenfrei stornierbar.';
+  code('crPrice').value = 0;
+  code('crMapped').value = 'false';
+
+  // Hotels füllen
+  fillHotelSelectOptions(code('crHotel'));
+
+  // Kategorien erst nach Hotelauswahl aktivieren
+  const selCats = code('crCats');
+  selCats.disabled = true;
+  selCats.innerHTML = '';
+  code('crHotel').addEventListener('change', ()=>{
+    loadCatsIntoSelect(selCats, code('crHotel').value);
+    selCats.disabled = false;
+  }, { once:true });
+
+  // Create-Button neu binden (Duplicate-Listener vermeiden)
+  const btn = code('btnRateCreate');
+  btn.replaceWith(btn.cloneNode(true));
+  document.getElementById('btnRateCreate').addEventListener('click', ()=>{
+    const ratecode = (code('crCode').value||'').trim();
+    const ratetype = code('crType').value;
+    const hotel_code = code('crHotel').value;
+    const name = (code('crName').value||'').trim();
+    const policy = (code('crPolicy').value||'').trim();
+    const price  = Number(code('crPrice').value||0);
+    const mapped = code('crMapped').value === 'true';
+    const catsSel = Array.from(code('crCats').selectedOptions||[]).map(o=>o.value);
+
+    if (!/^\d+$/.test(ratecode)) return alert('Ratecode muss nur Zahlen enthalten.');
+    if (!ratetype) return alert('Bitte Ratentyp wählen.');
+    if (!hotel_code) return alert('Bitte Hotel wählen.');
+    if (!name) return alert('Bitte Ratennamen angeben.');
+
+    const now = new Date().toISOString();
+    upsertRate({
+      id:'r_'+Date.now(),
+      ratecode, ratetype, hotel_code,
+      categories: catsSel.length? catsSel : ['*'],
+      name, policy, price, mapped,
+      created_at: now, updated_at: now
+    });
+
+    // UI aktualisieren
+    rsRender();
+    try{ refreshNewResRates(); }catch(e){}
+    closeModal('modalRateCreate');
+  });
+
+  openModal('modalRateCreate');
+}
+
 
 // Beim Öffnen von Editor/Neuanlage aufrufen:
 makeMultiSelectFriendly(document.querySelector('#rtCats')); // Neuanlage
@@ -440,14 +498,21 @@ function ensureBackdrop(){
   if (!b){ b = document.createElement('div'); b.id='backdrop'; b.className='backdrop'; document.body.appendChild(b); }
   return b;
 }
+function ensureBackdrop(){
+  let b = document.getElementById('backdrop') || document.querySelector('.backdrop');
+  if (!b){ b = document.createElement('div'); b.id='backdrop'; b.className='backdrop'; document.body.appendChild(b); }
+  return b;
+}
 window.openModal = function(id){
+  // zuerst alle anderen Modals schließen -> kein "im selben Fenster"-Gefühl
+  document.querySelectorAll('.modal').forEach(m => m.style.display='none');
   const m = document.getElementById(id); if(!m) return;
   const b = ensureBackdrop();
   m.style.display='block'; b.style.display='flex';
   document.body.classList.add('modal-open');
-  // optional: Breite wie bei Raten-Dialogen
   m.style.maxWidth='860px'; m.style.width='min(95vw, 860px)';
 };
+
 window.closeModal = function(id){
   const m = id ? document.getElementById(id) : document.querySelector('.modal[style*="block"]');
   const b = document.getElementById('backdrop') || document.querySelector('.backdrop');
@@ -1978,9 +2043,9 @@ function rsSetType(type){
       el('td', {}, EUR.format(Number(r.price||0))),
       el('td', {}, mappedTxt)
     );
-    // Optional: Klick zum Bearbeiten
-    // tr.addEventListener('click', ()=> openRateEditor(r.id));
+    tr.addEventListener('click', ()=> openRateEditor(r.id)); // <-- aktivieren
     tbody.append(tr);
+    
   });
 }
 
