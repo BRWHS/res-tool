@@ -799,36 +799,76 @@
  <!-- Hotelskizze -->
 <section class="modal" id="modalSketch" role="dialog" aria-labelledby="sketchTitle" aria-modal="true">
   <header>
-    <h3 id="sketchTitle" class="mono">
-      <span class="sketch-logo" aria-hidden="true"></span> Hotelskizze
-    </h3>
-    <button class="btn" data-close>Schließen</button>
+    <h3 id="sketchTitle" class="mono">Hotelskizze</h3>
   </header>
-
-  <div class="body">
-    <div class="sketch-wrap">
-      <!-- Linke Spalte: Hotel-Liste -->
-      <aside class="sketch-left">
-        <div class="mono muted tiny" style="margin-bottom:6px">Hotels</div>
-        <div id="sketchList" class="sketch-list"></div>
-      </aside>
-
-      <!-- Rechte Spalte: Vorschau -->
-      <section class="sketch-right">
-        <div class="card">
-          <div class="content">
-            <div class="card-head">
-              <h3 class="mono" id="sketchHotelLabel">Bitte Hotel wählen</h3>
-              <span class="pill">Skizze</span>
-            </div>
-            <div class="imgcard wide">
-              <img id="sketchImage" alt="Hotelskizze" />
-            </div>
-          </div>
-        </div>
-      </section>
+  <div class="content" style="display:flex;gap:20px;min-height:400px;">
+    <div id="sketchList" class="sketch-list" style="flex:1;overflow:auto;"></div>
+    <div class="sketch-preview" style="flex:2;text-align:center;">
+      <h4 id="sketchHotelLabel"></h4>
+      <img id="sketchImage" alt="Hotelskizze" style="max-width:100%;border-radius:12px;" />
     </div>
   </div>
+  <footer>
+    <button class="btn" onclick="closeModal('modalSketch')">Schließen</button>
+  </footer>
+</section>
+
+<!-- Hilfe & FAQ -->
+<section class="modal" id="modalHelpFaq" role="dialog" aria-labelledby="helpTitle" aria-modal="true">
+  <header>
+    <h3 id="helpTitle" class="mono">Hilfe & FAQ</h3>
+  </header>
+  <div class="content" style="max-height:400px;overflow:auto;">
+    <h4>Allgemeine Fragen</h4>
+    <p><strong>Frage:</strong> Wie füge ich eine neue Reservierung hinzu?<br>
+       <strong>Antwort:</strong> Über den Button <em>Neue Reservierung</em> oben links.</p>
+
+    <p><strong>Frage:</strong> Kann ich Daten exportieren?<br>
+       <strong>Antwort:</strong> Ja, über das Reporting-Menü lassen sich PDFs generieren.</p>
+
+    <p><strong>Frage:</strong> Wo werden die Daten gespeichert?<br>
+       <strong>Antwort:</strong> In unserer Supabase-Cloud.</p>
+  </div>
+  <footer>
+    <button class="btn" onclick="closeModal('modalHelpFaq')">Schließen</button>
+  </footer>
+</section>
+
+<!-- Neue Rate -->
+<section class="modal" id="modalRateCreate" role="dialog" aria-labelledby="rateTitle" aria-modal="true">
+  <header>
+    <h3 id="rateTitle" class="mono">+ Neue Rate</h3>
+  </header>
+  <div class="content">
+    <form id="rateForm" class="grid" style="gap:12px;">
+      <label>Hotel:
+        <select id="rateHotel" class="input"></select>
+      </label>
+      <label>Kategorie:
+        <select id="rateCats" class="input"></select>
+      </label>
+      <label>Rate Code:
+        <input id="rateCode" class="input" />
+      </label>
+      <label>Rate Name:
+        <input id="rateName" class="input" />
+      </label>
+      <label>Preis (€):
+        <input type="number" id="ratePrice" class="input" />
+      </label>
+      <label>Storno-Bedingungen:
+        <textarea id="ratePolicy" class="input"></textarea>
+      </label>
+      <label>
+        <input type="checkbox" id="rateMapped" checked /> Automatisch mit PMS abgleichen
+      </label>
+      <div id="rateInfo" class="muted"></div>
+    </form>
+  </div>
+  <footer>
+    <button class="btn primary" onclick="/* TODO: Save logic */">Speichern</button>
+    <button class="btn" onclick="closeModal('modalRateCreate')">Abbrechen</button>
+  </footer>
 </section>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.5/dist/umd/supabase.js" crossorigin="anonymous"></script>
