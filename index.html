@@ -300,13 +300,7 @@
       <div class="muted">Stornobedingung</div>
         <p id="ratePolicyPreview">—</p>
           </div>
-        
-        <label>Rate
-  <select id="reservationRateSelect">
-    <option value="">Bitte wählen…</option>
-      </select>
-    </label>
-          </div>
+      </div>
 
       <!-- STEP 4 -->
       <div class="wpage hidden" id="w4">
@@ -864,75 +858,6 @@
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
   <script src="/src/app.js"></script>
-
-  <!-- Help & FAQ Modal (standalone) -->
-<div id="helpFaqModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="helpFaqTitle">
-  <div class="modal-backdrop" data-close="#helpFaqModal"></div>
-  <div class="modal-card">
-    <div class="modal-header">
-      <h2 id="helpFaqTitle">Hilfe & FAQ</h2>
-      <button class="icon-btn" data-close="#helpFaqModal" aria-label="Schließen">✕</button>
-    </div>
-    <div class="modal-body">
-      <!-- Deinen FAQ-Content hier rein -->
-      <h3>Wie lege ich eine Rate an?</h3>
-      <p>…</p>
-      <h3>Wie funktionieren Stornobedingungen?</h3>
-      <p>…</p>
-    </div>
-    <div class="modal-footer">
-      <button class="btn" data-close="#helpFaqModal">Schließen</button>
-    </div>
-  </div>
-</div>
-
-  <!-- Beispiel im Raten-Einstellungen-Fenster -->
-<button id="btnAddRate" type="button" class="btn primary">+ Neue Rate</button>
-
-<!-- Help & FAQ außerhalb: Ein Button, der das neue, eigene Modal öffnet -->
-<button id="btnHelpFaq" type="button" class="btn ghost" data-open="#helpFaqModal">Hilfe & FAQ</button>
-
-  <form id="rateForm">
-  <input id="rateId" type="hidden" />
-  <input id="rateHotelCode" type="hidden" />
-  <input id="rateCategoryCode" type="hidden" />
-
-  <label>Ratenname
-    <input id="rateNameInput" type="text" required />
-  </label>
-
-  <label>Preis
-    <input id="ratePriceInput" type="number" step="0.01" min="0" required />
-  </label>
-
-  <label>Währung
-    <input id="rateCurrencyInput" type="text" value="EUR" maxlength="3" />
-  </label>
-
-  <label>Stornobedingung
-    <select id="ratePolicySelect">
-      <option value="flex">Flex (stornierbar)</option>
-      <option value="nonref">Non-Refundable</option>
-    </select>
-  </label>
-
-  <!-- Bereiche, die je nach Policy angezeigt werden -->
-  <div id="rateCancelFlexSection">
-    <label>Kostenfreie Storno bis (Stunden vor Anreise)
-      <input id="rateFlexHours" type="number" min="0" value="24" />
-    </label>
-  </div>
-
-  <div id="rateCancelNonrefSection" class="hidden">
-    <p>Non-Refundable: 100% Gebühr ab Buchung.</p>
-  </div>
-
-  <div class="form-actions">
-    <button id="btnSaveRate" type="submit" class="btn primary">Speichern</button>
-    <button type="button" class="btn" data-close="#rateSettingsModal">Abbrechen</button>
-  </div>
-</form>
-
 
 </body>
 </html>
