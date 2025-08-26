@@ -405,59 +405,42 @@
     </div>
   </section>
 
-   <!-- Reporting -->
-<section class="modal" id="modalReporting" role="dialog" aria-labelledby="repTitle" aria-modal="true">
- <header>
-  <h3 id="repTitle" class="mono">
-    <span class="rep-logo"></span> Reporting
-  </h3>
-  <button class="btn" data-close>Schließen</button>
-</header>
-  <div class="body">
-    <div class="row wrap">
-      <label>Von <input id="repFrom" type="date" class="input"></label>
-      <label>Bis <input id="repTo" type="date" class="input"></label>
-      <label>Hotel
-        <select id="repHotel" class="input theme-select" style="width:200px;"></select>
-      </label>
-      <button class="btn" id="repRun">Aktualisieren</button>
+  <!-- Reporting -->
+  <section class="modal" id="modalReporting" role="dialog" aria-labelledby="repTitle" aria-modal="true">
+    <header>
+      <h3 id="repTitle" class="mono"><span class="rep-logo"></span> Reporting</h3>
+      <button class="btn" data-close>Schließen</button>
+    </header>
+    <div class="body">
+      <div class="row wrap">
+        <label>Datum von <input id="repFrom" type="date" class="input" style="width:170px;"></label>
+        <label>Datum bis <input id="repTo"   type="date" class="input" style="width:170px;"></label>
+        <label>Hotel <select id="repHotel" class="input theme-select" style="width:220px;"></select></label>
+        <div class="rep-tools" style="margin-left:auto">
+          <button class="btn" id="repRun">Generieren</button>
+          <button class="btn" id="repCsv">CSV</button>
+          <button class="btn" id="repXls">XLSX</button>
+          <button class="btn" id="repPdf">PDF</button>
+        </div>
+      </div>
 
-      <!-- kompakte Export-Spalte rechts -->
-      <div class="rep-tools">
-        <button class="btn ghost" id="repXls">Export Excel</button>
-        <button class="btn ghost" id="repCsv">Export CSV</button>
-        <button class="btn ghost" id="repPdf">Export PDF</button>
+      <div class="rep-charts">
+        <div class="chart-card"><h4>Buchungen</h4><div class="chart-box"><canvas id="chartBookings"></canvas></div></div>
+        <div class="chart-card"><h4>Umsatz</h4><div class="chart-box"><canvas id="chartRevenue"></canvas></div></div>
+      </div>
+
+      <div class="table-wrap">
+        <table class="resv" id="repTable">
+          <thead>
+            <tr>
+              <th>Datum</th><th>Hotel</th><th>Buchungen</th><th>Umsatz</th><th>ADR</th><th>Auslastung</th>
+            </tr>
+          </thead>
+          <tbody id="repBody"></tbody>
+        </table>
       </div>
     </div>
-
-    <!-- kompakte, gleich hohe Charts -->
-    <div class="rep-charts">
-      <div class="chart-card">
-        <h4 class="mono">Umsatz pro Hotel</h4>
-        <div class="chart-box"><canvas id="chartRevenue"></canvas></div>
-      </div>
-      <div class="chart-card">
-        <h4 class="mono">Buchungen pro Hotel</h4>
-        <div class="chart-box"><canvas id="chartBookings"></canvas></div>
-      </div>
-    </div>
-
-    <div class="table-wrap">
-      <table class="resv">
-        <thead>
-          <tr>
-            <th>Hotel</th>
-            <th>Buchungen</th>
-            <th>Umsatz</th>
-            <th>ADR</th>
-            <th>Belegungsrate</th>
-          </tr>
-        </thead>
-        <tbody id="repBody"></tbody>
-      </table>
-    </div>
-  </div>
-</section>
+  </section>
 
    <!-- Einstellungen (bereinigt) -->
   <section class="modal" id="modalSettings" role="dialog" aria-labelledby="setTitle" aria-modal="true">
