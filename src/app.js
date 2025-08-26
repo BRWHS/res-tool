@@ -492,34 +492,6 @@ q('#btnRateSave')?.addEventListener('click', ()=>{
     selectEl.append(el('option',{value:'all'},'Gesamt'));
     HOTELS.forEach(h=> selectEl.append(el('option',{value:h.code}, displayHotel(h))));
   }
-// zentral in app.js platzieren
-function ensureBackdrop(){
-  let b = document.getElementById('backdrop') || document.querySelector('.backdrop');
-  if (!b){ b = document.createElement('div'); b.id='backdrop'; b.className='backdrop'; document.body.appendChild(b); }
-  return b;
-}
-function ensureBackdrop(){
-  let b = document.getElementById('backdrop') || document.querySelector('.backdrop');
-  if (!b){ b = document.createElement('div'); b.id='backdrop'; b.className='backdrop'; document.body.appendChild(b); }
-  return b;
-}
-window.openModal = function(id){
-  // zuerst alle anderen Modals schließen -> kein "im selben Fenster"-Gefühl
-  document.querySelectorAll('.modal').forEach(m => m.style.display='none');
-  const m = document.getElementById(id); if(!m) return;
-  const b = ensureBackdrop();
-  m.style.display='block'; b.style.display='flex';
-  document.body.classList.add('modal-open');
-  m.style.maxWidth='860px'; m.style.width='min(95vw, 860px)';
-};
-
-window.closeModal = function(id){
-  const m = id ? document.getElementById(id) : document.querySelector('.modal[style*="block"]');
-  const b = document.getElementById('backdrop') || document.querySelector('.backdrop');
-  if (m) m.style.display='none';
-  if (b) b.style.display='none';
-  document.body.classList.remove('modal-open');
-};
 
   /***** Performance — Heute *****/
   async function loadKpisToday(){
