@@ -614,6 +614,28 @@
   </div>
 </section>
 
+  <!-- Modal: Hotelskizze -->
+<section class="modal" id="modalSketch" role="dialog" aria-labelledby="sketchTitle" aria-modal="true">
+  <header>
+    <h3 id="sketchTitle" class="mono"><span class="set-logo" aria-hidden="true"></span> Hotelskizzen</h3>
+    <button class="btn" data-close>Schließen</button>
+  </header>
+  <div class="body">
+    <div style="display:grid;grid-template-columns:260px 1fr;gap:12px;align-items:start">
+      <aside class="box" style="max-height:60vh;overflow:auto">
+        <div id="sketchList"></div>
+      </aside>
+      <section>
+        <div class="muted mono" id="sketchHotelLabel" style="margin:0 0 6px">—</div>
+        <div class="imgcard wide">
+          <img id="sketchImage" alt="Skizze"/>
+        </div>
+      </section>
+    </div>
+  </div>
+</section>
+
+
 <!-- Modal: Benutzereinstellungen (placeholder) -->
 <section class="modal" id="modalUserPrefs" role="dialog" aria-labelledby="userPrefsTitle" aria-modal="true">
   <header>
@@ -799,20 +821,37 @@
  <!-- Hotelskizze -->
 <section class="modal" id="modalSketch" role="dialog" aria-labelledby="sketchTitle" aria-modal="true">
   <header>
-    <h3 id="sketchTitle" class="mono">Hotelskizze</h3>
+    <h3 id="sketchTitle" class="mono">
+      <span class="sketch-logo" aria-hidden="true"></span> Hotelskizze
+    </h3>
+    <button class="btn" data-close>Schließen</button>
   </header>
-  <div class="content" style="display:flex;gap:20px;min-height:400px;">
-    <div id="sketchList" class="sketch-list" style="flex:1;overflow:auto;"></div>
-    <div class="sketch-preview" style="flex:2;text-align:center;">
-      <h4 id="sketchHotelLabel"></h4>
-      <img id="sketchImage" alt="Hotelskizze" style="max-width:100%;border-radius:12px;" />
+
+  <div class="body">
+    <div class="sketch-wrap">
+      <!-- Linke Spalte: Hotel-Liste -->
+      <aside class="sketch-left">
+        <div class="mono muted tiny" style="margin-bottom:6px">Hotels</div>
+        <div id="sketchList" class="sketch-list"></div>
+      </aside>
+
+      <!-- Rechte Spalte: Vorschau -->
+      <section class="sketch-right">
+        <div class="card">
+          <div class="content">
+            <div class="card-head">
+              <h3 class="mono" id="sketchHotelLabel">Bitte Hotel wählen</h3>
+              <span class="pill">Skizze</span>
+            </div>
+            <div class="imgcard wide">
+              <img id="sketchImage" alt="Hotelskizze" />
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   </div>
-  <footer>
-    <button class="btn" onclick="closeModal('modalSketch')">Schließen</button>
-  </footer>
 </section>
-
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.5/dist/umd/supabase.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
