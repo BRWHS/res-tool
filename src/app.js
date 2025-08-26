@@ -40,7 +40,7 @@
 
   function _close(id){
     const m = id ? document.getElementById(id) : document.querySelector('.modal[style*="block"]');
-    const b = document.getElementById('backdrop') || document.querySelector('.backdrop');
+    const b = document.getElementById('backdrop') || document.querySelector('.modal-backdrop');
     if (m) m.style.display = 'none';
     if (b) b.style.display = 'none';
     document.body.classList.remove('modal-open');
