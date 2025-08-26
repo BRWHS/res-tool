@@ -1,10 +1,9 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  
-<link rel="preload" as="image" href="/assets/hotel-placeholder.png">
-<link rel="preload" as="image" href="/assets/sketch-placeholder.png">
-  
+  <link rel="preload" as="image" href="/assets/hotel-placeholder.png">
+  <link rel="preload" as="image" href="/assets/sketch-placeholder.png">
+
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>res-tool — Dashboard</title>
@@ -13,13 +12,14 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;600;800&display=swap" rel="stylesheet">
 
+  <!-- Build erwartet /src/styles.css -->
   <link rel="stylesheet" href="/src/styles.css" />
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
-<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.3/dist/jspdf.plugin.autotable.min.js"></script>
-
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.3/dist/jspdf.plugin.autotable.min.js"></script>
 </head>
+
 <body>
   <header class="topbar" role="banner">
     <div class="brand" aria-label="res-tool brand">
@@ -157,15 +157,13 @@
     <a class="btn sm" href="https://www.notion.so/11a5a3d6427580fbbb4ac3a0dcd1e209?v=35809356ec4245718f85f4a470e066d6" target="_blank" rel="noopener">Handbuch</a>
   </aside>
 
-  <!-- Backdrop + Modals -->
+  <!-- Backdrop (KONSISTENT) -->
   <div class="modal-backdrop" id="backdrop" aria-hidden="true"></div>
 
   <!-- Neue Reservierung -->
   <section class="modal" id="modalNew" role="dialog" aria-labelledby="newTitle" aria-modal="true">
     <header>
-       <h3 id="newTitle" class="mono">
-  <span class="newres-logo"></span> Neue Reservierung
-</h3>
+      <h3 id="newTitle" class="mono"><span class="newres-logo"></span> Neue Reservierung</h3>
       <button class="btn" data-close>Schließen</button>
     </header>
     <div class="body">
@@ -176,117 +174,86 @@
         <div class="wstep" data-step="4"><span>4</span><b>Gast & Zahlung</b></div>
       </div>
 
-  <!-- STEP 1 -->
-<div class="wpage compact" id="w1">
-  <div class="grid-compact-2" style="align-items:start">
-    <!-- Linke Spalte: Aufenthalts- & Gästedaten -->
-    <div class="form-col">
-      <h4 class="mono section" style="margin-top:0">Aufenthaltsdaten</h4>
-      <div class="grid-compact">
-        <label style="grid-column:1 / -1">Hotel
-          <select id="newHotel" class="input theme-select" style="width:100%"></select>
-        </label>
-        <label>Anreise
-          <input id="newArr" type="date" class="input"/>
-        </label>
-        <label>Abreise
-          <input id="newDep" type="date" class="input"/>
-        </label>
-        <label>Erwachsene
-          <input id="newAdults" type="number" min="1" value="1" class="input"/>
-        </label>
-        <label>Kinder
-          <input id="newChildren" type="number" min="0" value="0" class="input"/>
-        </label>
-      </div>
+      <!-- STEP 1 -->
+      <div class="wpage compact" id="w1">
+        <div class="grid-compact-2" style="align-items:start">
+          <div class="form-col">
+            <h4 class="mono section" style="margin-top:0">Aufenthaltsdaten</h4>
+            <div class="grid-compact">
+              <label style="grid-column:1 / -1">Hotel
+                <select id="newHotel" class="input theme-select" style="width:100%"></select>
+              </label>
+              <label>Anreise <input id="newArr" type="date" class="input"/></label>
+              <label>Abreise <input id="newDep" type="date" class="input"/></label>
+              <label>Erwachsene <input id="newAdults" type="number" min="1" value="1" class="input"/></label>
+              <label>Kinder <input id="newChildren" type="number" min="0" value="0" class="input"/></label>
+            </div>
 
-      <h4 class="mono section">Gästedaten</h4>
-      <div class="grid-compact">
-        <label>Vorname
-          <input id="newFname" class="input" placeholder="Max"/>
-        </label>
-        <label>Nachname*
-          <input id="newLname" class="input" placeholder="Mustermann" required/>
-        </label>
-        <label>PLZ
-          <input id="newZip" class="input" placeholder="80331"/>
-        </label>
-        <label>Straße
-          <input id="newStreet" class="input" placeholder="Musterstraße 1"/>
-        </label>
-        <label style="grid-column:1 / -1">Ort
-          <input id="newCity" class="input" placeholder="München"/>
-        </label>
-      </div>
-    </div>
+            <h4 class="mono section">Gästedaten</h4>
+            <div class="grid-compact">
+              <label>Vorname <input id="newFname" class="input" placeholder="Max"/></label>
+              <label>Nachname* <input id="newLname" class="input" placeholder="Mustermann" required/></label>
+              <label>PLZ <input id="newZip" class="input" placeholder="80331"/></label>
+              <label>Straße <input id="newStreet" class="input" placeholder="Musterstraße 1"/></label>
+              <label style="grid-column:1 / -1">Ort <input id="newCity" class="input" placeholder="München"/></label>
+            </div>
+          </div>
 
-    <!-- Rechte Spalte: Hotelbild + Kontaktdaten -->
-    <div class="preview-col">
-      <div class="imgcard hotel">
-        <img
-          id="hotelImg"
-          src="/assets/hotel-placeholder.png"
-          alt="Hotelbild"
-          style="width:100%;height:360px;object-fit:cover;border-radius:10px;display:block"
-          onerror="this.onerror=null;this.src='/assets/hotel-placeholder.png';"
-        />
-      </div>
+          <div class="preview-col">
+            <div class="imgcard hotel">
+              <img id="hotelImg" src="/assets/hotel-placeholder.png" alt="Hotelbild"
+                   style="width:100%;height:360px;object-fit:cover;border-radius:10px;display:block"
+                   onerror="this.onerror=null;this.src='/assets/hotel-placeholder.png';"/>
+            </div>
 
-      <div class="box" style="margin-top:12px">
-        <h4 class="mono section" style="margin:0 0 6px">Kontaktdaten</h4>
-        <div class="grid-compact">
-          <label style="grid-column:1 / -1">Telefon
-            <input id="newPhone" class="input" placeholder="+49 …"/>
-          </label>
-          <label style="grid-column:1 / -1">E‑Mail
-            <input id="newEmail" class="input" placeholder="max@example.com"/>
-          </label>
+            <div class="box" style="margin-top:12px">
+              <h4 class="mono section" style="margin:0 0 6px">Kontaktdaten</h4>
+              <div class="grid-compact">
+                <label style="grid-column:1 / -1">Telefon <input id="newPhone" class="input" placeholder="+49 …"/></label>
+                <label style="grid-column:1 / -1">E-Mail <input id="newEmail" class="input" placeholder="max@example.com"/></label>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
-  </div>
-</div>
 
-     <!-- STEP 2 -->
-<div class="wpage narrow" id="w2">
-  <div class="s2-top">
-    <!-- LINKS: Kategorie + Fakten -->
-    <div class="s2-left">
-      <label class="s2-label">Kategorie
-        <select id="newCat" class="input theme-select"></select>
-      </label>
+      <!-- STEP 2 -->
+      <div class="wpage narrow" id="w2">
+        <div class="s2-top">
+          <div class="s2-left">
+            <label class="s2-label">Kategorie
+              <select id="newCat" class="input theme-select"></select>
+            </label>
 
-      <div class="box s2-facts">
-        <div class="mono muted tiny" style="margin-bottom:4px">Fakten</div>
-        <div class="tiny">
-          Max Personen: 2<br/>
-          Haustiere erlaubt: Nein<br/>
-          Check In: 15:00<br/>
-          Check Out: 11:00
+            <div class="box s2-facts">
+              <div class="mono muted tiny" style="margin-bottom:4px">Fakten</div>
+              <div class="tiny">
+                Max Personen: 2<br/>
+                Haustiere erlaubt: Nein<br/>
+                Check In: 15:00<br/>
+                Check Out: 11:00
+              </div>
+            </div>
+          </div>
+
+          <div class="box s2-desc">
+            <div class="mono muted tiny" style="margin-bottom:4px">Beschreibung</div>
+            <div id="catDesc" class="tiny">
+              das Zimmer hat eine größe von mehr oder weniger als 40m², Toaster, Mikrowelle und Balkon mit Ausblick.
+              Dies ist ein Placeholder-Text und soll einen visuellen Effekt erzeugen. Die Beschreibung soll dem Agent
+              alle Infos zu der Zimmerkategorie liefern, um möglichst präziser arbeiten zu können.
+            </div>
+          </div>
+        </div>
+
+        <div class="s2-gallery">
+          <div class="imgcard"><img id="imgCatPreview"  alt="Kategorie Bild 1" /></div>
+          <div class="imgcard"><img id="imgCatPreview2" alt="Kategorie Bild 2" /></div>
+          <div class="imgcard"><img id="imgCatPreview3" alt="Kategorie Bild 3" /></div>
         </div>
       </div>
-    </div>
 
-    <!-- RECHTS: Beschreibung (hoch) -->
-    <div class="box s2-desc">
-      <div class="mono muted tiny" style="margin-bottom:4px">Beschreibung</div>
-      <div id="catDesc" class="tiny">
-        das Zimmer hat eine größe von mehr oder weniger als 40m², Toaster, Mikrowelle und Balkon mit Ausblick.
-        Dies ist ein Placeholder‑Text und soll einen visuellen Effekt erzeugen. Die Beschreibung soll dem Agent
-        alle Infos zu der Zimmerkategorie liefern, um möglichst präziser arbeiten zu können.
-      </div>
-    </div>
-  </div>
-
-  <!-- GALERIE: 3 Bilder (Placeholder) -->
-  <div class="s2-gallery">
-    <div class="imgcard"><img id="imgCatPreview"  alt="Kategorie Bild 1" /></div>
-    <div class="imgcard"><img id="imgCatPreview2" alt="Kategorie Bild 2" /></div>
-    <div class="imgcard"><img id="imgCatPreview3" alt="Kategorie Bild 3" /></div>
-  </div>
-</div>
-
-       <!-- STEP 3 -->
+      <!-- STEP 3 -->
       <div class="wpage narrow hidden" id="w3">
         <div class="row wrap" style="gap:12px;align-items:flex-start;">
           <label style="min-width:260px;flex:1">Rate
@@ -297,9 +264,9 @@
           </label>
         </div>
         <div class="policy-box">
-      <div class="muted">Stornobedingung</div>
-        <p id="ratePolicyPreview">—</p>
-          </div>
+          <div class="muted">Stornobedingung</div>
+          <p id="ratePolicyPreview">—</p>
+        </div>
       </div>
 
       <!-- STEP 4 -->
@@ -307,7 +274,6 @@
         <aside class="summary box" id="summaryFinal"></aside>
 
         <h4 class="mono section">Gastdaten</h4>
-
         <details class="box">
           <summary class="mono">Firma (optional)</summary>
           <div class="grid2">
@@ -378,16 +344,11 @@
           <label>Gast Nachname <input id="eLname" class="input"/></label>
           <label>Anreise <input id="eArr" type="date" class="input"/></label>
           <label>Abreise <input id="eDep" type="date" class="input"/></label>
-          <label>Kategorie
-            <select id="eCat" class="input theme-select"></select>
-          </label>
-          <label>Rate
-            <select id="eRate" class="input theme-select"></select>
-          </label>
-          <label>Preis <input id="ePrice" type="number" step="1" class="input"/></label>
-          <label>Notizen <input id="eNotes" class="input"/></label>
+          <label>Kategorie <input id="eCat" class="input"/></label>
+          <label>Rate <input id="eRate" class="input"/></label>
+          <label>Preis <input id="ePrice" type="number" class="input"/></label>
         </div>
-        <div class="right"><button class="btn" id="btnSaveEdit">Speichern</button></div>
+        <div class="right"><button class="btn" id="btnSaveDet">Speichern</button></div>
       </div>
 
       <div class="tabpage hidden" id="tabPay">
@@ -414,9 +375,7 @@
   <!-- Verfügbarkeit -->
   <section class="modal" id="modalAvail" role="dialog" aria-labelledby="availTitle" aria-modal="true">
     <header>
-      <h3 id="availTitle" class="mono">
-        <span class="rep-logo"></span> Verfügbarkeit
-      </h3>
+      <h3 id="availTitle" class="mono"><span class="rep-logo"></span> Verfügbarkeit</h3>
       <button class="btn" data-close>Schließen</button>
     </header>
     <div class="body">
@@ -447,394 +406,200 @@
   </section>
 
   <!-- Reporting -->
-<section class="modal" id="modalReporting" role="dialog" aria-labelledby="repTitle" aria-modal="true">
- <header>
-  <h3 id="repTitle" class="mono">
-    <span class="rep-logo"></span> Reporting
-  </h3>
-  <button class="btn" data-close>Schließen</button>
-</header>
-  <div class="body">
-    <div class="row wrap">
-      <label>Von <input id="repFrom" type="date" class="input"></label>
-      <label>Bis <input id="repTo" type="date" class="input"></label>
-      <label>Hotel
-        <select id="repHotel" class="input theme-select" style="width:200px;"></select>
-      </label>
-      <button class="btn" id="repRun">Aktualisieren</button>
-
-      <!-- kompakte Export-Spalte rechts -->
-      <div class="rep-tools">
-        <button class="btn ghost" id="repXls">Export Excel</button>
-        <button class="btn ghost" id="repCsv">Export CSV</button>
-        <button class="btn ghost" id="repPdf">Export PDF</button>
-      </div>
-    </div>
-
-    <!-- kompakte, gleich hohe Charts -->
-    <div class="rep-charts">
-      <div class="chart-card">
-        <h4 class="mono">Umsatz pro Hotel</h4>
-        <div class="chart-box"><canvas id="chartRevenue"></canvas></div>
-      </div>
-      <div class="chart-card">
-        <h4 class="mono">Buchungen pro Hotel</h4>
-        <div class="chart-box"><canvas id="chartBookings"></canvas></div>
-      </div>
-    </div>
-
-    <div class="table-wrap">
-      <table class="resv">
-        <thead>
-          <tr>
-            <th>Hotel</th>
-            <th>Buchungen</th>
-            <th>Umsatz</th>
-            <th>ADR</th>
-            <th>Belegungsrate</th>
-          </tr>
-        </thead>
-        <tbody id="repBody"></tbody>
-      </table>
-    </div>
-  </div>
-</section>
-
- <!-- Einstellungen (bereinigt) -->
-  <section class="modal" id="modalSettings" role="dialog" aria-labelledby="setTitle" aria-modal="true">
+  <section class="modal" id="modalReporting" role="dialog" aria-labelledby="repTitle" aria-modal="true">
     <header>
-      <h3 id="setTitle" class="mono">
-        <span class="set-logo" aria-hidden="true"></span> Einstellungen
-      </h3>
+      <h3 id="repTitle" class="mono"><span class="rep-logo"></span> Reporting</h3>
       <button class="btn" data-close>Schließen</button>
     </header>
     <div class="body">
-      <!-- oben: links Form / rechts Live-Systeminfo -->
-     <div class="set-top">
-  <!-- LINKER BLOCK: Sprache/Farbton + Buttons -->
-  <div class="set-left">
-    <div class="set-grid">
-      <label class="set-field">
-        <span class="set-label">Sprache</span>
-        <select id="selLang" class="input theme-select">
-          <option value="de">Deutsch</option>
-          <option value="en">English</option>
-        </select>
-      </label>
+      <div class="row wrap">
+        <label>Datum von <input id="repFrom" type="date" class="input" style="width:170px;"></label>
+        <label>Datum bis <input id="repTo"   type="date" class="input" style="width:170px;"></label>
+        <label>Hotel <select id="repHotel" class="input theme-select" style="width:220px;"></select></label>
+        <div class="rep-tools" style="margin-left:auto">
+          <button class="btn" id="repRun">Generieren</button>
+          <button class="btn" id="repCsv">CSV</button>
+          <button class="btn" id="repXls">XLSX</button>
+          <button class="btn" id="repPdf">PDF</button>
+        </div>
+      </div>
 
-      <label class="set-field">
-        <span class="set-label">Farbton (Hue) <span id="hueVal" class="muted">180°</span></span>
-        <input id="rngHue" class="hue" type="range" min="0" max="359" step="1" />
-      </label>
+      <div class="rep-charts">
+        <div class="chart-card"><h4>Buchungen</h4><div class="chart-box"><canvas id="chartBookings"></canvas></div></div>
+        <div class="chart-card"><h4>Umsatz</h4><div class="chart-box"><canvas id="chartRevenue"></canvas></div></div>
+      </div>
+
+      <div class="table-wrap">
+        <table class="resv" id="repTable">
+          <thead>
+            <tr>
+              <th>Datum</th><th>Hotel</th><th>Buchungen</th><th>Umsatz</th><th>ADR</th><th>Auslastung</th>
+            </tr>
+          </thead>
+          <tbody id="repBody"></tbody>
+        </table>
+      </div>
     </div>
+  </section>
 
-    <!-- Buttons direkt darunter, klein -->
-    <div class="set-tiles">
-      <button class="btn tile" id="btnUserPrefs">Benutzereinstellungen</button>
-      <button class="btn tile" id="btnChannel">Channel – Einstellungen</button>
-      <button class="btn tile" id="btnLog">Log Activity</button>
-      <button class="btn tile" id="btnRates">Rateneinstellungen</button>
-      <button class="btn tile" id="btnHelp">Hilfe & FAQ</button>
-    </div>
-  </div>
+  <!-- Einstellungen -->
+  <section class="modal" id="modalSettings" role="dialog" aria-labelledby="setTitle" aria-modal="true">
+    <header>
+      <h3 id="setTitle" class="mono"><span class="settings-logo"></span> Einstellungen</h3>
+      <button class="btn" data-close>Schließen</button>
+    </header>
+    <div class="body">
+      <div class="grid2">
+        <label>Theme
+          <select id="setTheme" class="input theme-select">
+            <option value="dark" selected>Dark</option>
+            <option value="light" disabled>Light (später)</option>
+          </select>
+        </label>
 
-  <!-- RECHTER BLOCK: Live-Systeminfo (kleiner, transparenter) -->
-  <aside class="box set-sys" id="netBox">
-    <h4 class="mono section" style="margin:0 0 6px">Live‑Systeminfo</h4>
-    <div class="sys-grid">
-      <div class="settings-row"><label>Öffentliche IP</label><span id="netIp">—</span></div>
-      <div class="settings-row"><label>IPv4</label><span id="netIpv4">—</span></div>
-      <div class="settings-row"><label>Standort</label><span id="netLoc">—</span></div>
-      <div class="settings-row"><label>OS / Browser</label><span id="netOs">—</span></div>
-    </div>
-    <p class="muted tiny">Live Daten.</p>
-  </aside>
-</div>
+        <label>Hotel-Filter (Default)
+          <select id="setHotelFilter" class="input theme-select"></select>
+        </label>
+      </div>
 
-      <!-- unten rechts: Speichern -->
-      <div class="set-footer right">
-  <button class="btn primary" id="btnSaveSettings" data-i18n="settings.save">
-    Einstellungen speichern
-  </button>
-</div>
+      <div class="box" style="margin-top:10px">
+        <div class="mono muted">Hilfe & FAQ</div>
+        <button class="btn" id="openHelp">FAQ & Hilfe öffnen</button>
+      </div>
 
       <p class="muted" id="setInfo"></p>
     </div>
   </section>
 
-<!-- Modal: Channel Settings (admin) -->
-<section class="modal" id="modalChannel" role="dialog" aria-labelledby="channelTitle" aria-modal="true">
-  <header>
-    <h3 id="channelTitle" class="mono">
-      <span class="set-logo" aria-hidden="true"></span> Channel – Einstellungen
-    </h3>
-    <button class="btn" data-close>Schließen</button>
-  </header>
-  <div class="body">
-    <div class="box">
-      <p class="muted">Platzhalter für die API‑Verkabelung (HNS, PMS, Mapping, Secrets …).</p>
-      <p class="muted">Dieses Fenster ist mit Admin‑Passwort geschützt.</p>
-    </div>
-  </div>
-</section>
-
-<!-- Modal: Log Activity (admin) -->
-<section class="modal" id="modalLog" role="dialog" aria-labelledby="logTitle" aria-modal="true">
-  <header>
-    <h3 id="logTitle" class="mono">
-      <span class="set-logo" aria-hidden="true"></span> Log Activity
-    </h3>
-    <button class="btn" data-close>Schließen</button>
-  </header>
-  <div class="body">
-    <div class="row wrap" style="margin-bottom:8px;">
-      <input id="logSearch" class="input" placeholder="Suche… (Text/Meta)" style="width:220px;">
-      <select id="logType" class="input theme-select" style="width:180px;">
-        <option value="">Typ: Alle</option>
-        <option value="settings">settings</option>
-        <option value="reservation">reservation</option>
-        <option value="channel">channel</option>
-        <option value="system">system</option>
-      </select>
-      <label>Von <input id="logFrom" type="date" class="input" style="width:160px;"></label>
-      <label>Bis <input id="logTo" type="date" class="input" style="width:160px;"></label>
-      <button class="btn" id="logApply">Filter anwenden</button>
-      <button class="btn ghost" id="logClear">Zurücksetzen</button>
-    </div>
-    <div class="table-wrap">
-      <table class="table" id="logTable">
-        <thead>
-          <tr><th>Datum</th><th>Typ</th><th>Aktion</th><th>Details</th></tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </div>
-  </div>
-</section>
-
-
-<!-- Modal: Benutzereinstellungen (placeholder) -->
-<section class="modal" id="modalUserPrefs" role="dialog" aria-labelledby="userPrefsTitle" aria-modal="true">
-  <header>
-    <h3 id="userPrefsTitle" class="mono">
-      <span class="set-logo" aria-hidden="true"></span> Benutzereinstellungen
-    </h3>
-    <button class="btn" data-close>Schließen</button>
-  </header>
-  <div class="body">
-    <div class="box">
-      <p class="muted">Platzhalter für persönliche Einstellungen (z. B. Standardhotel, Standardzeitraum, Shortcuts …).</p>
-    </div>
-  </div>
-</section>
-
-  <!-- Modal: Rateneinstellungen (Rate anlegen/bearbeiten) -->
-<section class="modal" id="modalRateSettings" role="dialog" aria-labelledby="rateSettingsTitle" aria-modal="true">
-  <header>
-    <h3 id="rateSettingsTitle" class="mono"><span class="set-logo" aria-hidden="true"></span> Rateneinstellungen</h3>
-    <button class="btn" data-close>Schließen</button>
-  </header>
-  <div class="body">
-  <div class="rates-wrap">
-    <!-- Sidebar: Tabs -->
-    <aside class="rates-side">
-      <button class="btn tile" id="rsTabDirect">Direct-Rate</button>
-      <button class="btn tile" id="rsTabCorp">Corp-Rate</button>
-      <button class="btn tile" id="rsTabIds">IDS-Rate</button>
-    </aside>
-
-    <!-- Hauptbereich -->
-    <section class="rates-main card">
-      <div class="content">
-        <div class="card-head">
-          <h3 class="mono" id="rsTitle">Raten – Direct</h3>
-          <div class="rs-toolbar">
-            <button class="btn primary sm" id="rsNewRate">+ Neue Rate</button>
-            <input id="rsSearch" class="input sm" placeholder="Suchen: Name oder Ratecode">
-            <select id="rsHotelFilter" class="input sm theme-select" title="Hotel filtern"></select>
-          </div>
-        </div>
-
-        <div class="table-wrap">
-          <table class="resv">
-            <thead>
-              <tr>
-                <th style="width:110px">Ratecode</th>
-                <th>Name</th>
-                <th>Hotel</th>
-                <th style="width:180px">Kategorien</th>
-                <th style="width:110px">Preis</th>
-                <th style="width:90px">Mapped</th>
-              </tr>
-            </thead>
-            <tbody id="rsBody"></tbody>
-          </table>
-        </div>
+  <!-- NEU: Rateneinstellungen (kompakt) -->
+  <section class="modal" id="modalRateSettings" role="dialog" aria-labelledby="rateSetTitle" aria-modal="true">
+    <header>
+      <h3 id="rateSetTitle" class="mono"><span class="set-logo" aria-hidden="true"></span> Rateneinstellungen</h3>
+      <button class="btn" data-close>Schließen</button>
+    </header>
+    <div class="body">
+      <div id="rateTabs" class="tabs">
+        <button class="tab active" id="rsTabDirect" data-ratetype="Direct">Direct</button>
+        <button class="tab" id="rsTabCorp" data-ratetype="Corp">Corp</button>
+        <button class="tab" id="rsTabIds" data-ratetype="IDS">IDS</button>
+        <div style="flex:1"></div>
+        <button class="btn sm" id="rsNewRate">Neue Rate</button>
       </div>
-    </section>
-  </div>
-</div>
 
-  
+      <div class="grid2">
+        <label>Hotel <select id="rateHotel" class="input theme-select"></select></label>
+        <label>Kategorie(n) <select id="rateCats" class="input theme-select" multiple size="4"></select></label>
+        <label>Ratentyp <select id="rateType" class="input theme-select"><option>Direct</option><option>Corp</option><option>IDS</option></select></label>
+        <label>Ratecode <input id="rateCode" class="input" placeholder="z. B. 100123" inputmode="numeric" pattern="\d+"></label>
+        <label>Ratename <input id="rateName" class="input" placeholder="z. B. Flex exkl. Frühstück"></label>
+        <label>Preis (€) <input id="ratePrice" type="number" step="1" min="0" class="input" value="89"></label>
+        <label style="grid-column:1 / -1">Stornobedingung
+          <textarea id="ratePolicy" class="input" rows="3">Bis zum Anreisetag 18:00 Uhr kostenfrei stornierbar.</textarea>
+        </label>
+        <label><input type="checkbox" id="rateMapped" checked> Gemappt</label>
+      </div>
 
-
-  <section class="modal" id="modalRateEdit" role="dialog" aria-labelledby="rateEditTitle" aria-modal="true">
-  <header>
-    <h3 id="rateEditTitle" class="mono"><span class="set-logo" aria-hidden="true"></span> Rate bearbeiten</h3>
-    <button class="btn" data-close>Schließen</button>
-  </header>
-  <div class="body">
-    <div class="grid2">
-      <label>Ratecode (fix)
-        <input id="erCode" class="input" disabled />
-      </label>
-      <label>Ratentyp*
-        <select id="erType" class="input theme-select">
-          <option>Direct</option><option>Corp</option><option>IDS</option>
-        </select>
-      </label>
-      <label>Hotel (fix)
-        <select id="erHotel" class="input theme-select" disabled></select>
-      </label>
-      <label>Ratename (fix)
-        <input id="erName" class="input" disabled />
-      </label>
-      <label style="grid-column:1 / -1">Kategorien (mehrfach)
-        <select id="erCats" class="input theme-select" multiple size="4"></select>
-      </label>
-      <label style="grid-column:1 / -1">Stornobedingung
-        <textarea id="erPolicy" class="input" rows="3" placeholder="z. B. Bis zum Anreisetag 18:00 Uhr kostenfrei stornierbar."></textarea>
-      </label>
-      <label>Preis/Nacht
-        <input id="erPrice" type="number" step="1" class="input" />
-      </label>
-      <label>Gemappt
-        <select id="erMapped" class="input theme-select">
-          <option value="true">ja</option>
-          <option value="false">nein</option>
-        </select>
-      </label>
+      <div class="right"><button class="btn" id="btnRateSave">Speichern</button></div>
+      <p class="muted" id="rateInfo"></p>
     </div>
-    <div class="set-footer">
-      <button class="btn danger" id="btnRateDelete">Rate löschen</button>
-      <div style="flex:1"></div>
-      <button class="btn primary" id="btnRateUpdate">Änderungen speichern</button>
+  </section>
+
+  <!-- Rate – Neuanlage -->
+  <section class="modal" id="modalRateCreate" role="dialog" aria-labelledby="rateCreateTitle" aria-modal="true">
+    <header>
+      <h3 id="rateCreateTitle" class="mono"><span class="set-logo" aria-hidden="true"></span> Neue Rate</h3>
+      <button class="btn" data-close>Schließen</button>
+    </header>
+    <div class="body">
+      <div class="grid2">
+        <label>Ratecode (nur Zahlen) <input id="crCode" class="input" placeholder="z. B. 100123" inputmode="numeric" pattern="\d+"></label>
+        <label>Ratentyp* (fix nach Erstellung)
+          <select id="crType" class="input theme-select">
+            <option value="">Bitte wählen</option>
+            <option>Direct</option><option>Corp</option><option>IDS</option>
+          </select>
+        </label>
+        <label>Hotel* <select id="crHotel" class="input theme-select"></select></label>
+        <label>Ratename* <input id="crName" class="input" placeholder="z. B. Flex exkl. Frühstück"></label>
+        <label style="grid-column:1 / -1">Kategorien (mehrfach; erst nach Hotelauswahl)
+          <select id="crCats" class="input theme-select" multiple size="4" disabled></select>
+        </label>
+        <label style="grid-column:1 / -1">Stornobedingung
+          <textarea id="crPolicy" class="input" rows="3" placeholder="z. B. Bis zum Anreisetag 18:00 Uhr kostenfrei stornierbar."></textarea>
+        </label>
+        <label>Preis/Nacht (€) <input id="crPrice" type="number" step="1" min="0" class="input" value="0"></label>
+        <label>Gemappt
+          <select id="crMapped" class="input theme-select">
+            <option value="true">ja</option><option value="false" selected>nein</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="set-footer">
+        <div style="flex:1"></div>
+        <button class="btn primary" id="btnRateCreate">Rate erstellen</button>
+      </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<section class="modal" id="modalRateCreate" role="dialog" aria-labelledby="rateCreateTitle" aria-modal="true">
-  <header>
-    <h3 id="rateCreateTitle" class="mono"><span class="set-logo" aria-hidden="true"></span> Neue Rate</h3>
-    <button class="btn" data-close>Schließen</button>
-  </header>
-  <div class="body">
-    <div class="grid2">
-      <label>Ratecode (nur Zahlen)
-        <input id="crCode" class="input" placeholder="z. B. 100123" inputmode="numeric" pattern="\d+">
-      </label>
-      <label>Ratentyp* (fix nach Erstellung)
-        <select id="crType" class="input theme-select">
-          <option value="">Bitte wählen</option>
-          <option>Direct</option><option>Corp</option><option>IDS</option>
-        </select>
-      </label>
-
-      <label>Hotel*
-        <select id="crHotel" class="input theme-select"></select>
-      </label>
-      <label>Ratename*
-        <input id="crName" class="input" placeholder="z. B. Flex exkl. Frühstück">
-      </label>
-
-      <label style="grid-column:1 / -1">Kategorien (mehrfach; erst nach Hotelauswahl)
-        <select id="crCats" class="input theme-select" multiple size="4" disabled></select>
-      </label>
-
-      <label style="grid-column:1 / -1">Stornobedingung
-        <textarea id="crPolicy" class="input" rows="3" placeholder="z. B. Bis zum Anreisetag 18:00 Uhr kostenfrei stornierbar."></textarea>
-      </label>
-
-      <label>Preis/Nacht (€)
-        <input id="crPrice" type="number" step="1" min="0" class="input" value="0">
-      </label>
-      <label>Gemappt
-        <select id="crMapped" class="input theme-select">
-          <option value="true">ja</option>
-          <option value="false" selected>nein</option>
-        </select>
-      </label>
+  <!-- Hilfe & FAQ (EXAKT EINE INSTANZ) -->
+  <section class="modal" id="modalHelp" role="dialog" aria-labelledby="helpTitle" aria-modal="true">
+    <header>
+      <h3 id="helpTitle" class="mono"><span class="set-logo" aria-hidden="true"></span> Hilfe & FAQ</h3>
+      <button class="btn" data-close>Schließen</button>
+    </header>
+    <div class="body">
+      <div class="box">
+        <h4 class="mono" style="margin:0 0 6px;">Schnelle Antworten</h4>
+        <details class="box"><summary class="mono">Wie lege ich eine neue Reservierung an?</summary>
+          <p class="tiny">Oben „Neue Reservierung“ → Schritt 1–4 durchklicken, dann „Reservierung abschicken“.</p>
+        </details>
+        <details class="box"><summary class="mono">Woher kommen Verfügbarkeiten?</summary>
+          <p class="tiny">Aus der Tabelle <code>availability</code> (Supabase). HNS-Anbindung folgt.</p>
+        </details>
+        <details class="box"><summary class="mono">Werden Systeminfos gespeichert?</summary>
+          <p class="tiny">Nein. IP/Standort/OS werden nur lokal angezeigt.</p>
+        </details>
+      </div>
     </div>
+  </section>
 
-    <div class="set-footer">
-      <div style="flex:1"></div>
-      <button class="btn primary" id="btnRateCreate">Rate erstellen</button>
-    </div>
-  </div>
-</section>
-
-<!-- NEU: Hilfe & FAQ -->
-<section class="modal" id="modalHelp" role="dialog" aria-labelledby="helpTitle" aria-modal="true">
-  <header>
-    <h3 id="helpTitle" class="mono"><span class="set-logo" aria-hidden="true"></span> Hilfe & FAQ</h3>
-    <button class="btn" data-close>Schließen</button>
-  </header>
-  <div class="body">
-    <div class="box">
-      <h4 class="mono" style="margin:0 0 6px;">Schnelle Antworten</h4>
-      <details class="box"><summary class="mono">Wie lege ich eine neue Reservierung an?</summary>
-        <p class="tiny">Oben „Neue Reservierung“ → Schritt 1–4 durchklicken, dann „Reservierung abschicken“.</p>
-      </details>
-      <details class="box"><summary class="mono">Woher kommen Verfügbarkeiten?</summary>
-        <p class="tiny">Aus der Tabelle <code>availability</code> (Supabase). HNS-Anbindung folgt.</p>
-      </details>
-      <details class="box"><summary class="mono">Werden Systeminfos gespeichert?</summary>
-        <p class="tiny">Nein. IP/Standort/OS werden nur lokal angezeigt.</p>
-      </details>
-    </div>
-  </div>
-</section>
-
- <!-- Hotelskizze -->
-<section class="modal" id="modalSketch" role="dialog" aria-labelledby="sketchTitle" aria-modal="true">
-  <header>
-    <h3 id="sketchTitle" class="mono">
-      <span class="sketch-logo" aria-hidden="true"></span> Hotelskizze
-    </h3>
-    <button class="btn" data-close>Schließen</button>
-  </header>
-
-  <div class="body">
-    <div class="sketch-wrap">
-      <!-- Linke Spalte: Hotel-Liste -->
-      <aside class="sketch-left">
-        <div class="mono muted tiny" style="margin-bottom:6px">Hotels</div>
-        <div id="sketchList" class="sketch-list"></div>
-      </aside>
-
-      <!-- Rechte Spalte: Vorschau -->
-      <section class="sketch-right">
-        <div class="card">
-          <div class="content">
-            <div class="card-head">
-              <h3 class="mono" id="sketchHotelLabel">Bitte Hotel wählen</h3>
-              <span class="pill">Skizze</span>
-            </div>
-            <div class="imgcard wide">
-              <img id="sketchImage" alt="Hotelskizze" />
+  <!-- Hotelskizze (EXAKT EINE INSTANZ) -->
+  <section class="modal" id="modalSketch" role="dialog" aria-labelledby="sketchTitle" aria-modal="true">
+    <header>
+      <h3 id="sketchTitle" class="mono"><span class="sketch-logo" aria-hidden="true"></span> Hotelskizze</h3>
+      <button class="btn" data-close>Schließen</button>
+    </header>
+    <div class="body">
+      <div class="sketch-wrap">
+        <aside class="sketch-left">
+          <div class="mono muted tiny" style="margin-bottom:6px">Hotels</div>
+          <div id="sketchList" class="sketch-list"></div>
+        </aside>
+        <section class="sketch-right">
+          <div class="card">
+            <div class="content">
+              <div class="card-head">
+                <h3 class="mono" id="sketchHotelLabel">Bitte Hotel wählen</h3>
+                <span class="pill">Skizze</span>
+              </div>
+              <div class="imgcard wide">
+                <img id="sketchImage" alt="Hotelskizze" />
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      </div>
     </div>
-  </div>
-</section>
+  </section>
 
+  <!-- Libraries + App -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.5/dist/umd/supabase.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
-  <script src="/src/app.js"></script>
 
+  <!-- Build erwartet /src/app.js -->
+  <script src="/src/app.js"></script>
 </body>
 </html>
