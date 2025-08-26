@@ -442,30 +442,63 @@
     </div>
   </section>
 
-  <!-- Einstellungen -->
+  <!-- Einstellungen (bereinigt) -->
   <section class="modal" id="modalSettings" role="dialog" aria-labelledby="setTitle" aria-modal="true">
     <header>
-      <h3 id="setTitle" class="mono"><span class="settings-logo"></span> Einstellungen</h3>
+      <h3 id="setTitle" class="mono">
+        <span class="set-logo" aria-hidden="true"></span> Einstellungen
+      </h3>
       <button class="btn" data-close>Schließen</button>
     </header>
     <div class="body">
-      <div class="grid2">
-        <label>Theme
-          <select id="setTheme" class="input theme-select">
-            <option value="dark" selected>Dark</option>
-            <option value="light" disabled>Light (später)</option>
-          </select>
-        </label>
+      <!-- oben: links Form / rechts Live-Systeminfo -->
+     <div class="set-top">
+  <!-- LINKER BLOCK: Sprache/Farbton + Buttons -->
+  <div class="set-left">
+    <div class="set-grid">
+      <label class="set-field">
+        <span class="set-label">Sprache</span>
+        <select id="selLang" class="input theme-select">
+          <option value="de">Deutsch</option>
+          <option value="en">English</option>
+        </select>
+      </label>
 
-        <label>Hotel-Filter (Default)
-          <select id="setHotelFilter" class="input theme-select"></select>
-        </label>
-      </div>
+      <label class="set-field">
+        <span class="set-label">Farbton (Hue) <span id="hueVal" class="muted">180°</span></span>
+        <input id="rngHue" class="hue" type="range" min="0" max="359" step="1" />
+      </label>
+    </div>
 
-      <div class="box" style="margin-top:10px">
-        <div class="mono muted">Hilfe & FAQ</div>
-        <button class="btn" id="openHelp">FAQ & Hilfe öffnen</button>
-      </div>
+    <!-- Buttons direkt darunter, klein -->
+    <div class="set-tiles">
+      <button class="btn tile" id="btnUserPrefs">Benutzereinstellungen</button>
+      <button class="btn tile" id="btnChannel">Channel – Einstellungen</button>
+      <button class="btn tile" id="btnLog">Log Activity</button>
+      <button class="btn tile" id="btnRates">Rateneinstellungen</button>
+      <button class="btn tile" id="btnHelp">Hilfe & FAQ</button>
+    </div>
+  </div>
+
+  <!-- RECHTER BLOCK: Live-Systeminfo (kleiner, transparenter) -->
+  <aside class="box set-sys" id="netBox">
+    <h4 class="mono section" style="margin:0 0 6px">Live‑Systeminfo</h4>
+    <div class="sys-grid">
+      <div class="settings-row"><label>Öffentliche IP</label><span id="netIp">—</span></div>
+      <div class="settings-row"><label>IPv4</label><span id="netIpv4">—</span></div>
+      <div class="settings-row"><label>Standort</label><span id="netLoc">—</span></div>
+      <div class="settings-row"><label>OS / Browser</label><span id="netOs">—</span></div>
+    </div>
+    <p class="muted tiny">Live Daten.</p>
+  </aside>
+</div>
+
+      <!-- unten rechts: Speichern -->
+      <div class="set-footer right">
+  <button class="btn primary" id="btnSaveSettings" data-i18n="settings.save">
+    Einstellungen speichern
+  </button>
+</div>
 
       <p class="muted" id="setInfo"></p>
     </div>
