@@ -484,6 +484,457 @@ q('#btnRateSave')?.addEventListener('click', ()=>{
   window.addEventListener('keydown',(e)=>{
     if(e.key==='Escape'){ qa('.modal').forEach(m=>m.style.display='none'); backdrop.style.display='none'; document.body.classList.remove('modal-open'); }
   });
+  // ==== RATES: einfache In-Memory + LocalStorage Verwaltung ====
+
+// Key für Persistenz
+const RATE_STORAGE_KEY = 'resTool.rates.v1';
+
+// Hilfsfunktionen Persistenz
+function loadRates() {
+  try {
+    const raw = localStorage.getItem(RATE_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+function saveRates(rates) {
+  localStorage.setItem(RATE_STORAGE_KEY, JSON.stringify(rates));
+}
+
+// Globale Rate-Liste im Speicher
+window._rates = loadRates(); // [{id, hotel_code, category_code, name, price, currency, policy, flex_hours}]
+
+// Utility: ID
+function uid() {
+  return Math.random().toString(36).slice(2, 10);
+}
+
+// ==== UI BINDINGS ====
+
+function $(sel){ return document.querySelector(sel); }
+function on(el, ev, fn) { if (el) el.addEventListener(ev, fn, false); }
+
+// Öffnen/Schließen generisch über data-open / data-close
+document.addEventListener('click', (e) => {
+  const openSel = e.target.closest('[data-open]');
+  if (openSel) {
+    const target = openSel.getAttribute('data-open');
+    const m = $(target);
+    if (m) m.classList.remove('hidden');
+  }
+  const closeSel = e.target.closest('[data-close]');
+  if (closeSel) {
+    const target = closeSel.getAttribute('data-close');
+    const m = $(target);
+    if (m) m.classList.add('hidden');
+  }
+});
+
+// ==== Raten Einstellungen ====
+
+const rateListEl = $('#rateList'); // UL/Container für Ratenzeilen im Rateneinstellungen-Fenster
+const btnAddRate = $('#btnAddRate');
+const rateForm = $('#rateForm');
+
+const rateId = $('#rateId');
+const rateHotelCode = $('#rateHotelCode');
+const rateCategoryCode = $('#rateCategoryCode');
+const rateNameInput = $('#rateNameInput');
+const ratePriceInput = $('#ratePriceInput');
+const rateCurrencyInput = $('#rateCurrencyInput');
+const ratePolicySelect = $('#ratePolicySelect');
+const rateCancelFlexSection = $('#rateCancelFlexSection');
+const rateCancelNonrefSection = $('#rateCancelNonrefSection');
+const btnSaveRate = $('#btnSaveRate');
+
+// Policy-Umschaltung (Stornobedingungen switchen)
+function updatePolicyUI() {
+  if (!ratePolicySelect) return;
+  const val = ratePolicySelect.value;
+  if (rateCancelFlexSection) rateCancelFlexSection.classList.toggle('hidden', val !== 'flex');
+  if (rateCancelNonrefSection) rateCancelNonrefSection.classList.toggle('hidden', val !== 'nonref');
+}
+on(ratePolicySelect, 'change', updatePolicyUI);
+
+// Neue Rate
+on(btnAddRate, 'click', () => {
+  if (!rateForm) return;
+  // Falls Hotel/Kategorie Kontext existiert (z. B. bei geöffnetem Hotel/Kat)
+  // diese Hidden-Felder ggf. vorher setzen (optional)
+  rateId.value = '';
+  rateNameInput && (rateNameInput.value = '');
+  ratePriceInput && (ratePriceInput.value = '');
+  rateCurrencyInput && (rateCurrencyInput.value = 'EUR');
+  if (ratePolicySelect) {
+    ratePolicySelect.value = 'flex';
+    updatePolicyUI();
+  }
+  const modal = document.querySelector('#rateEditorModal') || document.querySelector('#rateSettingsModal');
+  if (modal) modal.classList.remove('hidden');
+});
+
+// Rate speichern (neu oder bearbeiten)
+on(rateForm, 'submit', (e) => {
+  if (!rateForm) return;
+  e.preventDefault();
+
+  const id = rateId?.value || '';
+  const obj = {
+    id: id || uid(),
+    hotel_code: rateHotelCode?.value || ($('#hotelSelect')?.value || ''),     // Fallback: aktueller Hotel-Filter
+    category_code: rateCategoryCode?.value || ($('#categorySelect')?.value || ''), // Fallback: aktuelle Kategorie
+    name: rateNameInput?.value?.trim() || 'Unbenannte Rate',
+    price: Number(ratePriceInput?.value || 0),
+    currency: rateCurrencyInput?.value?.trim() || 'EUR',
+    policy: ratePolicySelect?.value || 'flex',
+    flex_hours: Number($('#rateFlexHours')?.value || 24),
+  };
+
+  const idx = window._rates.findIndex(r => r.id === obj.id);
+  if (idx >= 0) {
+    window._rates[idx] = obj;
+  } else {
+    window._rates.push(obj);
+  }
+  saveRates(window._rates);
+  renderRateList();
+  populateRatesForReservation(); // damit die neue/aktualisierte Rate direkt im Wizard sichtbar ist
+
+  // schließen
+  const modal = document.querySelector('#rateEditorModal') || document.querySelector('#rateSettingsModal');
+  modal && modal.classList.add('hidden');
+});
+
+// Ratenliste rendern
+function renderRateList(filter = {}) {
+  if (!rateListEl) return;
+  const { hotel_code, category_code } = filter;
+  const items = window._rates.filter(r =>
+    (!hotel_code || r.hotel_code === hotel_code) &&
+    (!category_code || r.category_code === category_code)
+  );
+
+  rateListEl.innerHTML = items.map(r => `
+    <div class="rate-row" data-id="${r.id}">
+      <div class="rate-main">
+        <strong>${r.name}</strong>
+        <span>${r.price.toFixed(2)} ${r.currency}</span>
+        <span class="muted">Policy: ${r.policy}${r.policy==='flex' ? ` (bis ${r.flex_hours}h vor Anreise)` : ''}</span>
+      </div>
+      <div class="rate-actions">
+        <button type="button" class="btn small" data-action="edit-rate">Bearbeiten</button>
+      </div>
+    </div>
+  `).join('') || `<div class="empty">Noch keine Raten angelegt.</div>`;
+}
+
+// Editieren via Delegation
+if (rateListEl) {
+  rateListEl.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-action="edit-rate"]');
+    if (!btn) return;
+    const row = btn.closest('.rate-row');
+    if (!row) return;
+    const id = row.getAttribute('data-id');
+    const r = window._rates.find(x => x.id === id);
+    if (!r || !rateForm) return;
+
+    // Felder füllen
+    rateId.value = r.id;
+    rateHotelCode && (rateHotelCode.value = r.hotel_code);
+    rateCategoryCode && (rateCategoryCode.value = r.category_code);
+    rateNameInput && (rateNameInput.value = r.name);
+    ratePriceInput && (ratePriceInput.value = r.price);
+    rateCurrencyInput && (rateCurrencyInput.value = r.currency);
+    if (ratePolicySelect) {
+      ratePolicySelect.value = r.policy || 'flex';
+      updatePolicyUI();
+    }
+    const flexHours = $('#rateFlexHours');
+    if (flexHours) flexHours.value = r.flex_hours ?? 24;
+
+    // Editor öffnen
+    const modal = document.querySelector('#rateEditorModal') || document.querySelector('#rateSettingsModal');
+    modal && modal.classList.remove('hidden');
+  });
+}
+
+// ==== Integration in "Neue Reservierung" ====
+
+const reservationRateSelect = $('#reservationRateSelect');
+const reservationHotelSelect = $('#reservationHotelSelect') || $('#hotelSelect');
+const reservationCategorySelect = $('#reservationCategorySelect') || $('#categorySelect');
+
+// Filtert Raten anhand der aktuellen Hotel-/Kategorieauswahl und füllt das Select
+function populateRatesForReservation() {
+  if (!reservationRateSelect) return;
+  const h = reservationHotelSelect?.value || '';
+  const c = reservationCategorySelect?.value || '';
+
+  const list = window._rates.filter(r =>
+    (!h || r.hotel_code === h) &&
+    (!c || r.category_code === c)
+  );
+
+  reservationRateSelect.innerHTML = `<option value="">Bitte wählen…</option>` +
+    list.map(r => `<option value="${r.id}">${r.name} – ${r.price.toFixed(2)} ${r.currency}</option>`).join('');
+}
+
+// Reagieren auf Wechsel von Hotel/Kategorie in der Reservierung
+on(reservationHotelSelect, 'change', populateRatesForReservation);
+on(reservationCategorySelect, 'change', populateRatesForReservation);
+
+// Falls der Wizard-Step geöffnet wird, einmal initial laden
+document.addEventListener('wizard:step:show', (e) => {
+  if (e.detail?.stepId === 'reservation-step-rate') {
+    populateRatesForReservation();
+  }
+});
+
+// ==== Hilfe & FAQ: sicherstellen, dass es NICHT im Ratenfenster hängt ====
+// Der Button #btnHelpFaq öffnet unser separates Modal
+const btnHelpFaq = $('#btnHelpFaq');
+on(btnHelpFaq, 'click', () => {
+  const m = $('#helpFaqModal');
+  m && m.classList.remove('hidden');
+});
+
+// ==== Initiales Rendern beim Öffnen der Raten-Einstellungen ====
+// Wenn du beim Öffnen des Raten-Fensters Hotel/Kategorie setzt, rufe:
+// renderRateList({ hotel_code: CURRENT_HOTEL, category_code: CURRENT_CAT });
+document.addEventListener('open:rate-settings', (e) => {
+  const { hotel_code, category_code } = e.detail || {};
+  renderRateList({ hotel_code, category_code });
+  // Editor-Policy-UI auf korrekten Zustand
+  updatePolicyUI();
+});
+// ==== RATES: einfache In-Memory + LocalStorage Verwaltung ====
+
+// Key für Persistenz
+const RATE_STORAGE_KEY = 'resTool.rates.v1';
+
+// Hilfsfunktionen Persistenz
+function loadRates() {
+  try {
+    const raw = localStorage.getItem(RATE_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+function saveRates(rates) {
+  localStorage.setItem(RATE_STORAGE_KEY, JSON.stringify(rates));
+}
+
+// Globale Rate-Liste im Speicher
+window._rates = loadRates(); // [{id, hotel_code, category_code, name, price, currency, policy, flex_hours}]
+
+// Utility: ID
+function uid() {
+  return Math.random().toString(36).slice(2, 10);
+}
+
+// ==== UI BINDINGS ====
+
+function $(sel){ return document.querySelector(sel); }
+function on(el, ev, fn) { if (el) el.addEventListener(ev, fn, false); }
+
+// Öffnen/Schließen generisch über data-open / data-close
+document.addEventListener('click', (e) => {
+  const openSel = e.target.closest('[data-open]');
+  if (openSel) {
+    const target = openSel.getAttribute('data-open');
+    const m = $(target);
+    if (m) m.classList.remove('hidden');
+  }
+  const closeSel = e.target.closest('[data-close]');
+  if (closeSel) {
+    const target = closeSel.getAttribute('data-close');
+    const m = $(target);
+    if (m) m.classList.add('hidden');
+  }
+});
+
+// ==== Raten Einstellungen ====
+
+const rateListEl = $('#rateList'); // UL/Container für Ratenzeilen im Rateneinstellungen-Fenster
+const btnAddRate = $('#btnAddRate');
+const rateForm = $('#rateForm');
+
+const rateId = $('#rateId');
+const rateHotelCode = $('#rateHotelCode');
+const rateCategoryCode = $('#rateCategoryCode');
+const rateNameInput = $('#rateNameInput');
+const ratePriceInput = $('#ratePriceInput');
+const rateCurrencyInput = $('#rateCurrencyInput');
+const ratePolicySelect = $('#ratePolicySelect');
+const rateCancelFlexSection = $('#rateCancelFlexSection');
+const rateCancelNonrefSection = $('#rateCancelNonrefSection');
+const btnSaveRate = $('#btnSaveRate');
+
+// Policy-Umschaltung (Stornobedingungen switchen)
+function updatePolicyUI() {
+  if (!ratePolicySelect) return;
+  const val = ratePolicySelect.value;
+  if (rateCancelFlexSection) rateCancelFlexSection.classList.toggle('hidden', val !== 'flex');
+  if (rateCancelNonrefSection) rateCancelNonrefSection.classList.toggle('hidden', val !== 'nonref');
+}
+on(ratePolicySelect, 'change', updatePolicyUI);
+
+// Neue Rate
+on(btnAddRate, 'click', () => {
+  if (!rateForm) return;
+  // Falls Hotel/Kategorie Kontext existiert (z. B. bei geöffnetem Hotel/Kat)
+  // diese Hidden-Felder ggf. vorher setzen (optional)
+  rateId.value = '';
+  rateNameInput && (rateNameInput.value = '');
+  ratePriceInput && (ratePriceInput.value = '');
+  rateCurrencyInput && (rateCurrencyInput.value = 'EUR');
+  if (ratePolicySelect) {
+    ratePolicySelect.value = 'flex';
+    updatePolicyUI();
+  }
+  const modal = document.querySelector('#rateEditorModal') || document.querySelector('#rateSettingsModal');
+  if (modal) modal.classList.remove('hidden');
+});
+
+// Rate speichern (neu oder bearbeiten)
+on(rateForm, 'submit', (e) => {
+  if (!rateForm) return;
+  e.preventDefault();
+
+  const id = rateId?.value || '';
+  const obj = {
+    id: id || uid(),
+    hotel_code: rateHotelCode?.value || ($('#hotelSelect')?.value || ''),     // Fallback: aktueller Hotel-Filter
+    category_code: rateCategoryCode?.value || ($('#categorySelect')?.value || ''), // Fallback: aktuelle Kategorie
+    name: rateNameInput?.value?.trim() || 'Unbenannte Rate',
+    price: Number(ratePriceInput?.value || 0),
+    currency: rateCurrencyInput?.value?.trim() || 'EUR',
+    policy: ratePolicySelect?.value || 'flex',
+    flex_hours: Number($('#rateFlexHours')?.value || 24),
+  };
+
+  const idx = window._rates.findIndex(r => r.id === obj.id);
+  if (idx >= 0) {
+    window._rates[idx] = obj;
+  } else {
+    window._rates.push(obj);
+  }
+  saveRates(window._rates);
+  renderRateList();
+  populateRatesForReservation(); // damit die neue/aktualisierte Rate direkt im Wizard sichtbar ist
+
+  // schließen
+  const modal = document.querySelector('#rateEditorModal') || document.querySelector('#rateSettingsModal');
+  modal && modal.classList.add('hidden');
+});
+
+// Ratenliste rendern
+function renderRateList(filter = {}) {
+  if (!rateListEl) return;
+  const { hotel_code, category_code } = filter;
+  const items = window._rates.filter(r =>
+    (!hotel_code || r.hotel_code === hotel_code) &&
+    (!category_code || r.category_code === category_code)
+  );
+
+  rateListEl.innerHTML = items.map(r => `
+    <div class="rate-row" data-id="${r.id}">
+      <div class="rate-main">
+        <strong>${r.name}</strong>
+        <span>${r.price.toFixed(2)} ${r.currency}</span>
+        <span class="muted">Policy: ${r.policy}${r.policy==='flex' ? ` (bis ${r.flex_hours}h vor Anreise)` : ''}</span>
+      </div>
+      <div class="rate-actions">
+        <button type="button" class="btn small" data-action="edit-rate">Bearbeiten</button>
+      </div>
+    </div>
+  `).join('') || `<div class="empty">Noch keine Raten angelegt.</div>`;
+}
+
+// Editieren via Delegation
+if (rateListEl) {
+  rateListEl.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-action="edit-rate"]');
+    if (!btn) return;
+    const row = btn.closest('.rate-row');
+    if (!row) return;
+    const id = row.getAttribute('data-id');
+    const r = window._rates.find(x => x.id === id);
+    if (!r || !rateForm) return;
+
+    // Felder füllen
+    rateId.value = r.id;
+    rateHotelCode && (rateHotelCode.value = r.hotel_code);
+    rateCategoryCode && (rateCategoryCode.value = r.category_code);
+    rateNameInput && (rateNameInput.value = r.name);
+    ratePriceInput && (ratePriceInput.value = r.price);
+    rateCurrencyInput && (rateCurrencyInput.value = r.currency);
+    if (ratePolicySelect) {
+      ratePolicySelect.value = r.policy || 'flex';
+      updatePolicyUI();
+    }
+    const flexHours = $('#rateFlexHours');
+    if (flexHours) flexHours.value = r.flex_hours ?? 24;
+
+    // Editor öffnen
+    const modal = document.querySelector('#rateEditorModal') || document.querySelector('#rateSettingsModal');
+    modal && modal.classList.remove('hidden');
+  });
+}
+
+// ==== Integration in "Neue Reservierung" ====
+
+const reservationRateSelect = $('#reservationRateSelect');
+const reservationHotelSelect = $('#reservationHotelSelect') || $('#hotelSelect');
+const reservationCategorySelect = $('#reservationCategorySelect') || $('#categorySelect');
+
+// Filtert Raten anhand der aktuellen Hotel-/Kategorieauswahl und füllt das Select
+function populateRatesForReservation() {
+  if (!reservationRateSelect) return;
+  const h = reservationHotelSelect?.value || '';
+  const c = reservationCategorySelect?.value || '';
+
+  const list = window._rates.filter(r =>
+    (!h || r.hotel_code === h) &&
+    (!c || r.category_code === c)
+  );
+
+  reservationRateSelect.innerHTML = `<option value="">Bitte wählen…</option>` +
+    list.map(r => `<option value="${r.id}">${r.name} – ${r.price.toFixed(2)} ${r.currency}</option>`).join('');
+}
+
+// Reagieren auf Wechsel von Hotel/Kategorie in der Reservierung
+on(reservationHotelSelect, 'change', populateRatesForReservation);
+on(reservationCategorySelect, 'change', populateRatesForReservation);
+
+// Falls der Wizard-Step geöffnet wird, einmal initial laden
+document.addEventListener('wizard:step:show', (e) => {
+  if (e.detail?.stepId === 'reservation-step-rate') {
+    populateRatesForReservation();
+  }
+});
+
+// ==== Hilfe & FAQ: sicherstellen, dass es NICHT im Ratenfenster hängt ====
+// Der Button #btnHelpFaq öffnet unser separates Modal
+const btnHelpFaq = $('#btnHelpFaq');
+on(btnHelpFaq, 'click', () => {
+  const m = $('#helpFaqModal');
+  m && m.classList.remove('hidden');
+});
+
+// ==== Initiales Rendern beim Öffnen der Raten-Einstellungen ====
+// Wenn du beim Öffnen des Raten-Fensters Hotel/Kategorie setzt, rufe:
+// renderRateList({ hotel_code: CURRENT_HOTEL, category_code: CURRENT_CAT });
+document.addEventListener('open:rate-settings', (e) => {
+  const { hotel_code, category_code } = e.detail || {};
+  renderRateList({ hotel_code, category_code });
+  // Editor-Policy-UI auf korrekten Zustand
+  updatePolicyUI();
+});
+
   
   /***** KPI/Performance-Filter füllen *****/
   function fillHotelFilter(selectEl){
