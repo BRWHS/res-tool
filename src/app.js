@@ -2111,6 +2111,8 @@ function openRateEditor(id){
     closeModal('modalRateEdit');
   });
 
+  document.getElementById('backdrop')?.addEventListener('click', () => closeModal());
+
   const title = document.getElementById('rateEditTitle');
   if (title) title.textContent = 'Rate bearbeiten';
   fitRateModals();
