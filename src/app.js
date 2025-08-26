@@ -2225,5 +2225,116 @@ setTimeout(()=>{ try{ refreshNewResRates(); }catch(e){} }, 0);
 
   // Initial füllen
   setTimeout(()=>{ try{ window.refreshNewResRates(); }catch(e){} }, 0);
+
+  /* === UNIVERSAL MODAL CONTROLLER (res-tool) ===========================
+   - Ein Controller für alle Modals (".modal") + Backdrop (#backdrop | .modal-backdrop)
+   - Arbeitet NUR mit Klassen (.open) – keine inline styles
+   - Delegation in Capture-Phase + stopImmediatePropagation => entkoppelt alte Handler
+===================================================================== */
+(function ModalCore(){
+  const $  = (s, c=document)=>c.querySelector(s);
+  const $$ = (s, c=document)=>Array.from(c.querySelectorAll(s));
+
+  // Backdrop sicherstellen
+  function ensureBackdrop(){
+    let b = $('#backdrop') || $('.modal-backdrop');
+    if (!b){
+      b = document.createElement('div');
+      b.id = 'backdrop';
+      b.className = 'modal-backdrop';
+      document.body.appendChild(b);
+    }
+    return b;
+  }
+  function resolve(selOrEl){
+    if (!selOrEl) return null;
+    if (typeof selOrEl === 'string'){
+      return selOrEl.startsWith('#') ? $(selOrEl) : document.getElementById(selOrEl);
+    }
+    return selOrEl;
+  }
+  function anyOpen(){ return !!$('.modal.open'); }
+
+  function openModal(selOrEl){
+    const m = resolve(selOrEl); if (!m) return;
+    const b = ensureBackdrop();
+    // Nur EIN Modal sichtbar halten
+    $$('.modal.open').forEach(x=>{ x.classList.remove('open'); x.setAttribute('aria-hidden','true'); });
+    m.classList.add('open');
+    m.setAttribute('aria-hidden','false');
+    b.classList.add('open');
+    document.documentElement.classList.add('modal-open');
+    // Fokus
+    const focusEl = m.querySelector('[data-close]') || m.querySelector('h3, h2, [tabindex]');
+    if (focusEl && focusEl.focus) focusEl.focus({ preventScroll:true });
+  }
+  function closeModal(selOrEl){
+    const m = selOrEl ? resolve(selOrEl) : $('.modal.open');
+    const b = $('#backdrop') || $('.modal-backdrop');
+    if (m){
+      m.classList.remove('open');
+      m.setAttribute('aria-hidden','true');
+    }
+    if (!anyOpen()){
+      b && b.classList.remove('open');
+      document.documentElement.classList.remove('modal-open');
+    }
+  }
+
+  // GLOBAL verfügbar machen (falls andere Teile es rufen)
+  window.openModal  = openModal;
+  window.closeModal = closeModal;
+
+  // --- Delegation: Öffnen via [data-modal] (Capture + Stop: verhindert Doppelhandler) ---
+  document.addEventListener('click', function (e){
+    const btn = e.target.closest('[data-modal]');
+    if (!btn) return;
+    e.preventDefault();
+    e.stopImmediatePropagation(); // killt andere (kaputte) Handler
+    const sel = btn.getAttribute('data-modal');
+    // Spezialfall: aus einem offenen Modal heraus öffnen -> erst Eltern schließen
+    const parent = btn.closest('.modal.open');
+    if (parent && (!sel || parent.id !== sel.replace('#',''))){
+      closeModal(parent);
+      setTimeout(()=>openModal(sel), 0);
+    } else {
+      openModal(sel);
+    }
+  }, true); // <= capture!
+
+  // --- Delegation: Schließen via [data-close] ---
+  document.addEventListener('click', function(e){
+    const btn = e.target.closest('[data-close]');
+    if (!btn) return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    const md = btn.closest('.modal');
+    closeModal(md);
+  }, true);
+
+  // Backdrop-Klick => oberstes Modal schließen
+  ensureBackdrop().addEventListener('click', function(){
+    const openList = $$('.modal.open');
+    if (openList.length) closeModal(openList[openList.length - 1]);
+  });
+
+  // ESC schließt oberstes Modal
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape'){
+      const openList = $$('.modal.open');
+      if (openList.length) closeModal(openList[openList.length - 1]);
+    }
+  });
+
+  // Safety: Duplikate gleicher IDs entfernen (lassen nur die erste Instanz)
+  ['modalNew','modalEdit','modalAvail','modalReporting','modalSettings','modalUserPrefs','modalRateCreate','modalHelp','modalSketch','modalChannel','modalLog']
+    .forEach(id=>{
+      const nodes = $$('#'+id);
+      if (nodes.length > 1){
+        nodes.slice(1).forEach(n=>n.parentNode && n.parentNode.removeChild(n));
+      }
+    });
+})();
+
 })();
 })();
