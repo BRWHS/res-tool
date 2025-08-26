@@ -581,18 +581,31 @@
     </div>
   </section>
 
-    <!-- Rateneinstellungen -->
-  <section class="modal" id="modalRateCreate" role="dialog" aria-labelledby="rateCreateTitle" aria-modal="true" aria-hidden="true">
+      <!-- Modal: Benutzereinstellungen (placeholder) -->
+<section class="modal" id="modalUserPrefs" role="dialog" aria-labelledby="userPrefsTitle" aria-modal="true">
+  <header>
+    <h3 id="userPrefsTitle" class="mono">
+      <span class="set-logo" aria-hidden="true"></span> Benutzereinstellungen
+    </h3>
+    <button class="btn" data-close>Schließen</button>
+  </header>
+  <div class="body">
+    <div class="box">
+      <p class="muted">Platzhalter für persönliche Einstellungen (z. B. Standardhotel, Standardzeitraum, Shortcuts …).</p>
+    </div>
+  </div>
+</section>
+
+  <!-- Modal: Rateneinstellungen (Rate anlegen/bearbeiten) -->
+  <!-- Rate – Neuanlage -->
+  <section class="modal" id="modalRateCreate" role="dialog" aria-labelledby="rateCreateTitle" aria-modal="true">
     <header>
       <h3 id="rateCreateTitle" class="mono"><span class="set-logo" aria-hidden="true"></span> Neue Rate</h3>
       <button class="btn" data-close>Schließen</button>
     </header>
-
     <div class="body">
       <div class="grid2">
-        <label>Ratecode (nur Zahlen)
-          <input id="crCode" class="input" placeholder="z. B. 100123" inputmode="numeric" pattern="\d+">
-        </label>
+        <label>Ratecode (nur Zahlen) <input id="crCode" class="input" placeholder="z. B. 100123" inputmode="numeric" pattern="\d+"></label>
         <label>Ratentyp* (fix nach Erstellung)
           <select id="crType" class="input theme-select">
             <option value="">Bitte wählen</option>
@@ -614,47 +627,47 @@
           </select>
         </label>
       </div>
+      
+    <!-- Sidebar: Tabs -->
+    <aside class="rates-side">
+      <button class="btn tile" id="rsTabDirect">Direct-Rate</button>
+      <button class="btn tile" id="rsTabCorp">Corp-Rate</button>
+      <button class="btn tile" id="rsTabIds">IDS-Rate</button>
+    </aside>
 
-      <div class="rates-layout">
-        <aside class="rates-side">
-          <button class="btn tile" id="rsTabDirect">Direct-Rate</button>
-          <button class="btn tile" id="rsTabCorp">Corp-Rate</button>
-          <button class="btn tile" id="rsTabIds">IDS-Rate</button>
-        </aside>
-
-        <section class="rates-main card">
-          <div class="content">
-            <div class="card-head">
-              <h3 class="mono" id="rsTitle">Raten – Direct</h3>
-              <div class="rs-toolbar">
-                <button class="btn primary sm" id="rsNewRate">+ Neue Rate</button>
-                <input id="rsSearch" class="input sm" placeholder="Suchen: Name oder Ratecode">
-                <select id="rsHotelFilter" class="input sm theme-select" title="Hotel filtern"></select>
-              </div>
-            </div>
-
-            <div class="table-wrap">
-              <table class="resv">
-                <thead>
-                  <tr>
-                    <th style="width:110px">Ratecode</th>
-                    <th>Name</th>
-                    <th>Hotel</th>
-                    <th style="width:180px">Kategorien</th>
-                    <th style="width:110px">Preis</th>
-                    <th style="width:90px">Mapped</th>
-                  </tr>
-                </thead>
-                <tbody id="rsBody"></tbody>
-              </table>
-            </div>
+    <!-- Hauptbereich -->
+    <section class="rates-main card">
+      <div class="content">
+        <div class="card-head">
+          <h3 class="mono" id="rsTitle">Raten – Direct</h3>
+          <div class="rs-toolbar">
+            <button class="btn primary sm" id="rsNewRate">+ Neue Rate</button>
+            <input id="rsSearch" class="input sm" placeholder="Suchen: Name oder Ratecode">
+            <select id="rsHotelFilter" class="input sm theme-select" title="Hotel filtern"></select>
           </div>
+        </div>
 
-          <div class="set-footer">
-            <div style="flex:1"></div>
-            <button class="btn primary" id="btnRateCreate">Rate erstellen</button>
-          </div>
-        </section>
+        <div class="table-wrap">
+          <table class="resv">
+            <thead>
+              <tr>
+                <th style="width:110px">Ratecode</th>
+                <th>Name</th>
+                <th>Hotel</th>
+                <th style="width:180px">Kategorien</th>
+                <th style="width:110px">Preis</th>
+                <th style="width:90px">Mapped</th>
+              </tr>
+            </thead>
+            <tbody id="rsBody"></tbody>
+          </table>
+        </div>
+      </div>
+    
+
+      <div class="set-footer">
+        <div style="flex:1"></div>
+        <button class="btn primary" id="btnRateCreate">Rate erstellen</button>
       </div>
     </div>
   </section>
