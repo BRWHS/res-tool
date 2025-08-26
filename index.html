@@ -442,101 +442,51 @@
     </div>
   </section>
 
-  <!-- Einstellungen (bereinigt) -->
+  <!-- Einstellungen -->
   <section class="modal" id="modalSettings" role="dialog" aria-labelledby="setTitle" aria-modal="true">
     <header>
-      <h3 id="setTitle" class="mono">
-        <span class="set-logo" aria-hidden="true"></span> Einstellungen
-      </h3>
+      <h3 id="setTitle" class="mono"><span class="settings-logo"></span> Einstellungen</h3>
       <button class="btn" data-close>Schließen</button>
     </header>
     <div class="body">
-      <!-- oben: links Form / rechts Live-Systeminfo -->
-     <div class="set-top">
-  <!-- LINKER BLOCK: Sprache/Farbton + Buttons -->
-  <div class="set-left">
-    <div class="set-grid">
-      <label class="set-field">
-        <span class="set-label">Sprache</span>
-        <select id="selLang" class="input theme-select">
-          <option value="de">Deutsch</option>
-          <option value="en">English</option>
-        </select>
-      </label>
+      <div class="grid2">
+        <label>Theme
+          <select id="setTheme" class="input theme-select">
+            <option value="dark" selected>Dark</option>
+            <option value="light" disabled>Light (später)</option>
+          </select>
+        </label>
 
-      <label class="set-field">
-        <span class="set-label">Farbton (Hue) <span id="hueVal" class="muted">180°</span></span>
-        <input id="rngHue" class="hue" type="range" min="0" max="359" step="1" />
-      </label>
-    </div>
+        <label>Hotel-Filter (Default)
+          <select id="setHotelFilter" class="input theme-select"></select>
+        </label>
+      </div>
 
-    <!-- Buttons direkt darunter, klein -->
-    <div class="set-tiles">
-      <button class="btn tile" id="btnUserPrefs">Benutzereinstellungen</button>
-      <button class="btn tile" id="btnChannel">Channel – Einstellungen</button>
-      <button class="btn tile" id="btnLog">Log Activity</button>
-      <button class="btn tile" id="btnRates">Rateneinstellungen</button>
-      <button class="btn tile" id="btnHelp">Hilfe & FAQ</button>
-    </div>
-  </div>
-
-  <!-- RECHTER BLOCK: Live-Systeminfo (kleiner, transparenter) -->
-  <aside class="box set-sys" id="netBox">
-    <h4 class="mono section" style="margin:0 0 6px">Live‑Systeminfo</h4>
-    <div class="sys-grid">
-      <div class="settings-row"><label>Öffentliche IP</label><span id="netIp">—</span></div>
-      <div class="settings-row"><label>IPv4</label><span id="netIpv4">—</span></div>
-      <div class="settings-row"><label>Standort</label><span id="netLoc">—</span></div>
-      <div class="settings-row"><label>OS / Browser</label><span id="netOs">—</span></div>
-    </div>
-    <p class="muted tiny">Live Daten.</p>
-  </aside>
-</div>
-
-      <!-- unten rechts: Speichern -->
-      <div class="set-footer right">
-  <button class="btn primary" id="btnSaveSettings" data-i18n="settings.save">
-    Einstellungen speichern
-  </button>
-</div>
+      <div class="box" style="margin-top:10px">
+        <div class="mono muted">Hilfe & FAQ</div>
+        <button class="btn" id="openHelp">FAQ & Hilfe öffnen</button>
+      </div>
 
       <p class="muted" id="setInfo"></p>
     </div>
   </section>
 
-  <!-- NEU: Rateneinstellungen (kompakt) -->
-  <section class="modal" id="modalRateSettings" role="dialog" aria-labelledby="rateSetTitle" aria-modal="true">
-    <header>
-      <h3 id="rateSetTitle" class="mono"><span class="set-logo" aria-hidden="true"></span> Rateneinstellungen</h3>
-      <button class="btn" data-close>Schließen</button>
-    </header>
-    <div class="body">
-      <div id="rateTabs" class="tabs">
-        <button class="tab active" id="rsTabDirect" data-ratetype="Direct">Direct</button>
-        <button class="tab" id="rsTabCorp" data-ratetype="Corp">Corp</button>
-        <button class="tab" id="rsTabIds" data-ratetype="IDS">IDS</button>
-        <div style="flex:1"></div>
-        <button class="btn sm" id="rsNewRate">Neue Rate</button>
-      </div>
-
-      <div class="grid2">
-        <label>Hotel <select id="rateHotel" class="input theme-select"></select></label>
-        <label>Kategorie(n) <select id="rateCats" class="input theme-select" multiple size="4"></select></label>
-        <label>Ratentyp <select id="rateType" class="input theme-select"><option>Direct</option><option>Corp</option><option>IDS</option></select></label>
-        <label>Ratecode <input id="rateCode" class="input" placeholder="z. B. 100123" inputmode="numeric" pattern="\d+"></label>
-        <label>Ratename <input id="rateName" class="input" placeholder="z. B. Flex exkl. Frühstück"></label>
-        <label>Preis (€) <input id="ratePrice" type="number" step="1" min="0" class="input" value="89"></label>
-        <label style="grid-column:1 / -1">Stornobedingung
-          <textarea id="ratePolicy" class="input" rows="3">Bis zum Anreisetag 18:00 Uhr kostenfrei stornierbar.</textarea>
-        </label>
-        <label><input type="checkbox" id="rateMapped" checked> Gemappt</label>
-      </div>
-
-      <div class="right"><button class="btn" id="btnRateSave">Speichern</button></div>
-      <p class="muted" id="rateInfo"></p>
+  <!-- Modal: Benutzereinstellungen (placeholder) -->
+<section class="modal" id="modalUserPrefs" role="dialog" aria-labelledby="userPrefsTitle" aria-modal="true">
+  <header>
+    <h3 id="userPrefsTitle" class="mono">
+      <span class="set-logo" aria-hidden="true"></span> Benutzereinstellungen
+    </h3>
+    <button class="btn" data-close>Schließen</button>
+  </header>
+  <div class="body">
+    <div class="box">
+      <p class="muted">Platzhalter für persönliche Einstellungen (z. B. Standardhotel, Standardzeitraum, Shortcuts …).</p>
     </div>
-  </section>
+  </div>
+</section>
 
+  <!-- Modal: Rateneinstellungen (Rate anlegen/bearbeiten) -->
   <!-- Rate – Neuanlage -->
   <section class="modal" id="modalRateCreate" role="dialog" aria-labelledby="rateCreateTitle" aria-modal="true">
     <header>
@@ -567,6 +517,43 @@
           </select>
         </label>
       </div>
+      
+    <!-- Sidebar: Tabs -->
+    <aside class="rates-side">
+      <button class="btn tile" id="rsTabDirect">Direct-Rate</button>
+      <button class="btn tile" id="rsTabCorp">Corp-Rate</button>
+      <button class="btn tile" id="rsTabIds">IDS-Rate</button>
+    </aside>
+
+    <!-- Hauptbereich -->
+    <section class="rates-main card">
+      <div class="content">
+        <div class="card-head">
+          <h3 class="mono" id="rsTitle">Raten – Direct</h3>
+          <div class="rs-toolbar">
+            <button class="btn primary sm" id="rsNewRate">+ Neue Rate</button>
+            <input id="rsSearch" class="input sm" placeholder="Suchen: Name oder Ratecode">
+            <select id="rsHotelFilter" class="input sm theme-select" title="Hotel filtern"></select>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table class="resv">
+            <thead>
+              <tr>
+                <th style="width:110px">Ratecode</th>
+                <th>Name</th>
+                <th>Hotel</th>
+                <th style="width:180px">Kategorien</th>
+                <th style="width:110px">Preis</th>
+                <th style="width:90px">Mapped</th>
+              </tr>
+            </thead>
+            <tbody id="rsBody"></tbody>
+          </table>
+        </div>
+      </div>
+    
 
       <div class="set-footer">
         <div style="flex:1"></div>
