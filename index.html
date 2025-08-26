@@ -1,12 +1,13 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <link rel="preload" as="image" href="/assets/hotel-placeholder.png">
-  <link rel="preload" as="image" href="/assets/sketch-placeholder.png">
-
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>res-tool — Dashboard</title>
+
+  <!-- Preloads -->
+  <link rel="preload" as="image" href="/assets/hotel-placeholder.png">
+  <link rel="preload" as="image" href="/assets/sketch-placeholder.png">
 
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -14,10 +15,6 @@
 
   <!-- Build erwartet /src/styles.css -->
   <link rel="stylesheet" href="/src/styles.css" />
-
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
-  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.3/dist/jspdf.plugin.autotable.min.js"></script>
 </head>
 
 <body>
@@ -29,11 +26,11 @@
 
     <nav class="toolbar" aria-label="Aktionen">
       <div class="toolbar-left">
-        <button class="btn primary" id="btnNew">Neue Reservierung</button>
-        <button class="btn ghost"   id="btnAvail">Verfügbarkeit</button>
-        <button class="btn ghost"   id="btnReporting">Reporting</button>
-        <button class="btn ghost"   id="btnSettings">Einstellungen</button>
-        <button class="btn ghost"   id="btnSketch">Hotelskizze</button>
+        <button class="btn primary" id="btnNew"        data-modal="#modalNew">Neue Reservierung</button>
+        <button class="btn ghost"   id="btnAvail"      data-modal="#modalAvail">Verfügbarkeit</button>
+        <button class="btn ghost"   id="btnReporting"  data-modal="#modalReporting">Reporting</button>
+        <button class="btn ghost"   id="btnSettings"   data-modal="#modalSettings">Einstellungen</button>
+        <button class="btn ghost"   id="btnSketch"     data-modal="#modalSketch">Hotelskizze</button>
       </div>
 
       <div class="toolbar-right mono">
@@ -157,11 +154,11 @@
     <a class="btn sm" href="https://www.notion.so/11a5a3d6427580fbbb4ac3a0dcd1e209?v=35809356ec4245718f85f4a470e066d6" target="_blank" rel="noopener">Handbuch</a>
   </aside>
 
-  <!-- Backdrop (KONSISTENT) -->
+  <!-- Backdrop -->
   <div class="modal-backdrop" id="backdrop" aria-hidden="true"></div>
 
   <!-- Neue Reservierung -->
-  <section class="modal" id="modalNew" role="dialog" aria-labelledby="newTitle" aria-modal="true">
+  <section class="modal" id="modalNew" role="dialog" aria-labelledby="newTitle" aria-modal="true" aria-hidden="true">
     <header>
       <h3 id="newTitle" class="mono"><span class="newres-logo"></span> Neue Reservierung</h3>
       <button class="btn" data-close>Schließen</button>
@@ -318,7 +315,7 @@
   </section>
 
   <!-- Reservierung bearbeiten -->
-  <section class="modal" id="modalEdit" role="dialog" aria-labelledby="editTitle" aria-modal="true">
+  <section class="modal" id="modalEdit" role="dialog" aria-labelledby="editTitle" aria-modal="true" aria-hidden="true">
     <header>
       <h3 id="editTitle" class="mono">Reservierung bearbeiten</h3>
       <button class="btn" data-close>Schließen</button>
@@ -373,7 +370,7 @@
   </section>
 
   <!-- Verfügbarkeit -->
-  <section class="modal" id="modalAvail" role="dialog" aria-labelledby="availTitle" aria-modal="true">
+  <section class="modal" id="modalAvail" role="dialog" aria-labelledby="availTitle" aria-modal="true" aria-hidden="true">
     <header>
       <h3 id="availTitle" class="mono"><span class="rep-logo"></span> Verfügbarkeit</h3>
       <button class="btn" data-close>Schließen</button>
@@ -406,7 +403,7 @@
   </section>
 
   <!-- Reporting -->
-  <section class="modal" id="modalReporting" role="dialog" aria-labelledby="repTitle" aria-modal="true">
+  <section class="modal" id="modalReporting" role="dialog" aria-labelledby="repTitle" aria-modal="true" aria-hidden="true">
     <header>
       <h3 id="repTitle" class="mono"><span class="rep-logo"></span> Reporting</h3>
       <button class="btn" data-close>Schließen</button>
@@ -443,7 +440,7 @@
   </section>
 
   <!-- Einstellungen -->
-  <section class="modal" id="modalSettings" role="dialog" aria-labelledby="setTitle" aria-modal="true">
+  <section class="modal" id="modalSettings" role="dialog" aria-labelledby="setTitle" aria-modal="true" aria-hidden="true">
     <header>
       <h3 id="setTitle" class="mono"><span class="settings-logo"></span> Einstellungen</h3>
       <button class="btn" data-close>Schließen</button>
@@ -464,55 +461,38 @@
 
       <div class="box" style="margin-top:10px">
         <div class="mono muted">Hilfe & FAQ</div>
-        <button class="btn" id="openHelp">FAQ & Hilfe öffnen</button>
+        <button class="btn" id="openHelp" data-modal="#modalHelp">FAQ & Hilfe öffnen</button>
       </div>
 
       <p class="muted" id="setInfo"></p>
     </div>
   </section>
 
-  <!-- NEU: Rateneinstellungen (kompakt) -->
-  <section class="modal" id="modalRateSettings" role="dialog" aria-labelledby="rateSetTitle" aria-modal="true">
+  <!-- Benutzereinstellungen -->
+  <section class="modal" id="modalUserPrefs" role="dialog" aria-labelledby="userPrefsTitle" aria-modal="true" aria-hidden="true">
     <header>
-      <h3 id="rateSetTitle" class="mono"><span class="set-logo" aria-hidden="true"></span> Rateneinstellungen</h3>
+      <h3 id="userPrefsTitle" class="mono"><span class="set-logo" aria-hidden="true"></span> Benutzereinstellungen</h3>
       <button class="btn" data-close>Schließen</button>
     </header>
     <div class="body">
-      <div id="rateTabs" class="tabs">
-        <button class="tab active" id="rsTabDirect" data-ratetype="Direct">Direct</button>
-        <button class="tab" id="rsTabCorp" data-ratetype="Corp">Corp</button>
-        <button class="tab" id="rsTabIds" data-ratetype="IDS">IDS</button>
-        <div style="flex:1"></div>
-        <button class="btn sm" id="rsNewRate">Neue Rate</button>
+      <div class="box">
+        <p class="muted">Platzhalter für persönliche Einstellungen (z. B. Standardhotel, Standardzeitraum, Shortcuts …).</p>
       </div>
-
-      <div class="grid2">
-        <label>Hotel <select id="rateHotel" class="input theme-select"></select></label>
-        <label>Kategorie(n) <select id="rateCats" class="input theme-select" multiple size="4"></select></label>
-        <label>Ratentyp <select id="rateType" class="input theme-select"><option>Direct</option><option>Corp</option><option>IDS</option></select></label>
-        <label>Ratecode <input id="rateCode" class="input" placeholder="z. B. 100123" inputmode="numeric" pattern="\d+"></label>
-        <label>Ratename <input id="rateName" class="input" placeholder="z. B. Flex exkl. Frühstück"></label>
-        <label>Preis (€) <input id="ratePrice" type="number" step="1" min="0" class="input" value="89"></label>
-        <label style="grid-column:1 / -1">Stornobedingung
-          <textarea id="ratePolicy" class="input" rows="3">Bis zum Anreisetag 18:00 Uhr kostenfrei stornierbar.</textarea>
-        </label>
-        <label><input type="checkbox" id="rateMapped" checked> Gemappt</label>
-      </div>
-
-      <div class="right"><button class="btn" id="btnRateSave">Speichern</button></div>
-      <p class="muted" id="rateInfo"></p>
     </div>
   </section>
 
-  <!-- Rate – Neuanlage -->
-  <section class="modal" id="modalRateCreate" role="dialog" aria-labelledby="rateCreateTitle" aria-modal="true">
+  <!-- Rateneinstellungen -->
+  <section class="modal" id="modalRateCreate" role="dialog" aria-labelledby="rateCreateTitle" aria-modal="true" aria-hidden="true">
     <header>
       <h3 id="rateCreateTitle" class="mono"><span class="set-logo" aria-hidden="true"></span> Neue Rate</h3>
       <button class="btn" data-close>Schließen</button>
     </header>
+
     <div class="body">
       <div class="grid2">
-        <label>Ratecode (nur Zahlen) <input id="crCode" class="input" placeholder="z. B. 100123" inputmode="numeric" pattern="\d+"></label>
+        <label>Ratecode (nur Zahlen)
+          <input id="crCode" class="input" placeholder="z. B. 100123" inputmode="numeric" pattern="\d+">
+        </label>
         <label>Ratentyp* (fix nach Erstellung)
           <select id="crType" class="input theme-select">
             <option value="">Bitte wählen</option>
@@ -535,15 +515,52 @@
         </label>
       </div>
 
-      <div class="set-footer">
-        <div style="flex:1"></div>
-        <button class="btn primary" id="btnRateCreate">Rate erstellen</button>
+      <div class="rates-layout">
+        <aside class="rates-side">
+          <button class="btn tile" id="rsTabDirect">Direct-Rate</button>
+          <button class="btn tile" id="rsTabCorp">Corp-Rate</button>
+          <button class="btn tile" id="rsTabIds">IDS-Rate</button>
+        </aside>
+
+        <section class="rates-main card">
+          <div class="content">
+            <div class="card-head">
+              <h3 class="mono" id="rsTitle">Raten – Direct</h3>
+              <div class="rs-toolbar">
+                <button class="btn primary sm" id="rsNewRate">+ Neue Rate</button>
+                <input id="rsSearch" class="input sm" placeholder="Suchen: Name oder Ratecode">
+                <select id="rsHotelFilter" class="input sm theme-select" title="Hotel filtern"></select>
+              </div>
+            </div>
+
+            <div class="table-wrap">
+              <table class="resv">
+                <thead>
+                  <tr>
+                    <th style="width:110px">Ratecode</th>
+                    <th>Name</th>
+                    <th>Hotel</th>
+                    <th style="width:180px">Kategorien</th>
+                    <th style="width:110px">Preis</th>
+                    <th style="width:90px">Mapped</th>
+                  </tr>
+                </thead>
+                <tbody id="rsBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="set-footer">
+            <div style="flex:1"></div>
+            <button class="btn primary" id="btnRateCreate">Rate erstellen</button>
+          </div>
+        </section>
       </div>
     </div>
   </section>
 
-  <!-- Hilfe & FAQ (EXAKT EINE INSTANZ) -->
-  <section class="modal" id="modalHelp" role="dialog" aria-labelledby="helpTitle" aria-modal="true">
+  <!-- Hilfe & FAQ -->
+  <section class="modal" id="modalHelp" role="dialog" aria-labelledby="helpTitle" aria-modal="true" aria-hidden="true">
     <header>
       <h3 id="helpTitle" class="mono"><span class="set-logo" aria-hidden="true"></span> Hilfe & FAQ</h3>
       <button class="btn" data-close>Schließen</button>
@@ -564,8 +581,8 @@
     </div>
   </section>
 
-  <!-- Hotelskizze (EXAKT EINE INSTANZ) -->
-  <section class="modal" id="modalSketch" role="dialog" aria-labelledby="sketchTitle" aria-modal="true">
+  <!-- Hotelskizze -->
+  <section class="modal" id="modalSketch" role="dialog" aria-labelledby="sketchTitle" aria-modal="true" aria-hidden="true">
     <header>
       <h3 id="sketchTitle" class="mono"><span class="sketch-logo" aria-hidden="true"></span> Hotelskizze</h3>
       <button class="btn" data-close>Schließen</button>
@@ -601,5 +618,89 @@
 
   <!-- Build erwartet /src/app.js -->
   <script src="/src/app.js"></script>
+
+  <!-- Hardening: Modal-Fallback (arbeitet NUR mit .modal, #backdrop, [data-modal], [data-close]) -->
+  <script>
+  (function () {
+    const $ = (s, ctx=document) => ctx.querySelector(s);
+    const $$ = (s, ctx=document) => Array.from(ctx.querySelectorAll(s));
+    const backdrop = $('#backdrop');
+
+    function anyOpen() { return $$('.modal.open').length > 0; }
+
+    function openModal(selOrEl) {
+      const modal = typeof selOrEl === 'string' ? $(selOrEl) : selOrEl;
+      if (!modal) return;
+      modal.classList.add('open');
+      modal.setAttribute('aria-hidden', 'false');
+      document.documentElement.classList.add('modal-open');
+      if (backdrop) {
+        backdrop.classList.add('open');
+        backdrop.setAttribute('aria-hidden', 'false');
+      }
+      const focusEl = modal.querySelector('[data-close]') || modal.querySelector('h3, h2, [tabindex]');
+      if (focusEl && focusEl.focus) focusEl.focus({ preventScroll: true });
+    }
+
+    function closeModal(modal) {
+      if (!modal) return;
+      modal.classList.remove('open');
+      modal.setAttribute('aria-hidden', 'true');
+      if (!anyOpen()) {
+        document.documentElement.classList.remove('modal-open');
+        if (backdrop) {
+          backdrop.classList.remove('open');
+          backdrop.setAttribute('aria-hidden', 'true');
+        }
+      }
+    }
+
+    // Delegation: open via data-modal
+    document.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-modal]');
+      if (!btn) return;
+      const sel = btn.getAttribute('data-modal');
+      if (sel) {
+        e.preventDefault();
+        openModal(sel);
+      }
+    }, { passive: false });
+
+    // Delegation: close via data-close
+    document.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-close]');
+      if (!btn) return;
+      e.preventDefault();
+      closeModal(btn.closest('.modal'));
+    }, { passive: false });
+
+    // Backdrop click schließt oberstes Modal
+    if (backdrop) {
+      backdrop.addEventListener('click', () => {
+        const open = $$('.modal.open');
+        if (open.length) closeModal(open[open.length - 1]);
+      });
+    }
+
+    // ESC schließt oberstes Modal
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        const open = $$('.modal.open');
+        if (open.length) closeModal(open[open.length - 1]);
+      }
+    });
+
+    // Safety: Stelle sicher, dass genau 1 Instanz pro Modal-ID existiert
+    ['modalNew','modalEdit','modalAvail','modalReporting','modalSettings','modalUserPrefs','modalRateCreate','modalHelp','modalSketch']
+      .forEach(id => {
+        const nodes = $$('#' + id);
+        if (nodes.length > 1) {
+          // Nur die erste behalten, Rest verstecken, um Chaos zu vermeiden
+          nodes.slice(1).forEach(n => n.parentNode && n.parentNode.removeChild(n));
+        }
+      });
+
+  })();
+  </script>
 </body>
 </html>
