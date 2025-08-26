@@ -7,6 +7,58 @@
   if (window.__RESTOOL_APP_V2__) return;
   window.__RESTOOL_APP_V2__ = true;
 
+  // === Modal Core: eine Quelle der Wahrheit ===
+(function(){
+  function ensureBackdrop(){
+    let b = document.getElementById('backdrop') || document.querySelector('.backdrop');
+    if (!b){
+      b = document.createElement('div');
+      b.id = 'backdrop';
+      b.className = 'backdrop';
+      document.body.appendChild(b);
+    }
+    return b;
+  }
+
+  function _open(id){
+    // immer zuerst alle schließen -> kein Popup im Popup
+    document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
+
+    const m = document.getElementById(id);
+    const b = ensureBackdrop();
+    if (!m) return;
+
+    // Einheitliche Größe (Rate-Dialoge etwas breiter)
+    const wide = ['modalRateEdit','modalRateSettings','modalRateCreate'].includes(id);
+    m.style.maxWidth = wide ? '860px' : '860px';
+    m.style.width    = wide ? 'min(95vw, 860px)' : 'min(95vw, 860px)';
+
+    m.style.display = 'block';
+    b.style.display = 'flex';
+    document.body.classList.add('modal-open');
+  }
+
+  function _close(id){
+    const m = id ? document.getElementById(id) : document.querySelector('.modal[style*="block"]');
+    const b = document.getElementById('backdrop') || document.querySelector('.backdrop');
+    if (m) m.style.display = 'none';
+    if (b) b.style.display = 'none';
+    document.body.classList.remove('modal-open');
+  }
+
+  // global machen
+  window.openModal  = _open;
+  window.closeModal = _close;
+})();
+
+// Legacy-Alias, damit alle vorhandenen Listener weiter funktionieren
+var openModal  = window.openModal;
+var closeModal = window.closeModal;
+
+// ESC schließt immer
+window.addEventListener('keydown', (e)=>{ if (e.key === 'Escape') window.closeModal(); });
+
+
   /***** Supabase *****/
   const SB_URL = "https://kytuiodojfcaggkvizto.supabase.co";
   const SB_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt5dHVpb2RvamZjYWdna3ZpenRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ4MzA0NjgsImV4cCI6MjA3MDQwNjQ2OH0.YobQZnCQ7LihWtewynoCJ6ZTjqetkGwh82Nd2mmmhLU";
@@ -306,27 +358,6 @@ async function buildMiniAnalytics(){
   });
 }
   /***** MODALS *****/
-  const backdrop = q('#backdrop');
-  function openModal(id){
-    
-  try {
-    if (['modalRateEdit','modalRateSettings','modalRateCreate'].includes(id)) {
-      const m = document.getElementById(id);
-      if (m){ m.style.width = 'min(95vw, 860px)'; m.style.maxWidth = '860px'; }
-    }
-  } catch(e){} 
-const sel = (id || '').toString();
-    const m = q(sel.startsWith('#') ? sel : ('#' + sel));
-    if(!m) return;
-    document.body.classList.add('modal-open');
-    if (backdrop) backdrop.style.display='flex'; m.style.display='block';
-  }
-  function closeModal(id){
-    const sel = (id || '').toString();
-    const m = q(sel.startsWith('#') ? sel : ('#' + sel));
-    if(!m) return;
-    m.style.display='none'; if (backdrop) backdrop.style.display='none'; document.body.classList.remove('modal-open');
-  }
 
   function fillHotelSelectOptions(sel){
   if (!sel) return;
@@ -492,55 +523,7 @@ q('#btnRateSave')?.addEventListener('click', ()=>{
     selectEl.append(el('option',{value:'all'},'Gesamt'));
     HOTELS.forEach(h=> selectEl.append(el('option',{value:h.code}, displayHotel(h))));
   }
-// ===== Unified Modal API (prevents nested modals) =====
-function ensureBackdrop(){
-  let b = document.getElementById('backdrop') || document.querySelector('.backdrop');
-  if (!b){ b = document.createElement('div'); b.id='backdrop'; b.className='backdrop'; document.body.appendChild(b); }
-  return b;
-}
-
-window.openModal = function(id){
-  // Schließe ALLE existierenden Modals, damit nichts „im Popup“ geöffnet wird
-  document.querySelectorAll('.modal').forEach(m => m.style.display='none');
-
-  const m = document.getElementById(id);
-  const b = ensureBackdrop();
-  if (!m) return;
-
-  // Einheitliche Größe für alle Modals
-  m.style.maxWidth = '860px';
-  m.style.width    = 'min(95vw, 860px)';
-  m.style.display  = 'block';
-  b.style.display  = 'flex';
-  document.body.classList.add('modal-open');
-};
-
-window.closeModal = function(id){
-  const m = id ? document.getElementById(id) : document.querySelector('.modal[style*="block"]');
-  const b = document.getElementById('backdrop') || document.querySelector('.backdrop');
-  if (m) m.style.display='none';
-  if (b) b.style.display='none';
-  document.body.classList.remove('modal-open');
-};
-
-// Wichtig: alte Funktions-Referenzen im Scope auf die neue API biegen
-// (damit bereits registrierte Listener NICHT die alte Variante verwenden)
-var openModal  = window.openModal;
-var closeModal = window.closeModal;
-
-// ESC schließt immer sauber
-window.addEventListener('keydown',(e)=>{
-  if(e.key==='Escape'){ window.closeModal(); }
-});
-
-// Globale [data-close]-Buttons
-document.querySelectorAll('[data-close]').forEach(b=>{
-  b.addEventListener('click',()=>{
-    const tgt = b.getAttribute('data-close');
-    window.closeModal(tgt);
-  });
-});
-
+  
   /***** Performance — Heute *****/
   async function loadKpisToday(){
     try {
