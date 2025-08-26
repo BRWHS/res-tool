@@ -614,6 +614,65 @@ q('#btnRateSave')?.addEventListener('click', ()=>{
   setTimeout(() => _open('#modalRateCreate'), 0);
 }, { passive: false });
 
+  // Modal-IDs
+const MODALS = {
+  rateSettings: 'modalRateSettings',
+  rateCreate:   'modalRateCreate',
+};
+
+// Helper zum Öffnen/Schließen (nutzt deine bestehenden Funktionen, falls vorhanden)
+function open(id){ return (typeof openModal==='function') ? openModal(id) : document.getElementById(id)?.removeAttribute('hidden'); }
+function close(id){
+  if (typeof closeModal==='function') return closeModal(id);
+  const el = document.getElementById(id); if (el) el.setAttribute('hidden','');
+}
+
+// „+ Neue Rate“ in Rateneinstellungen → eigenes Create-Modal
+const newRateBtn = document.querySelector('#rsNewRate, #btnOpenNewRate, [data-open="rate-create"]');
+newRateBtn?.addEventListener('click', () => {
+  close(MODALS.rateSettings);
+  // Reset des Formulars (optional)
+  document.getElementById('rateCreateForm')?.reset();
+  open(MODALS.rateCreate);
+});
+
+// Abbrechen/X im Create → zurück zu Rateneinstellungen
+document.querySelector('[data-cancel-create]')?.addEventListener('click', () => {
+  close(MODALS.rateCreate);
+  open(MODALS.rateSettings);
+});
+document.querySelectorAll('[data-close="modalRateCreate"]').forEach(btn=>{
+  btn.addEventListener('click', () => {
+    close(MODALS.rateCreate);
+    open(MODALS.rateSettings);
+  });
+});
+
+// Submit im Create → speichern (deine Logik) → zurück zur Liste
+document.getElementById('rateCreateForm')?.addEventListener('submit', (e) => {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const newRate = {
+    name: (fd.get('name')||'').toString().trim(),
+    code: (fd.get('code')||'').toString().trim().toUpperCase(),
+    type: fd.get('type'),
+    hotel: fd.get('hotel'),
+    valid_from: fd.get('valid_from'),
+    valid_to: fd.get('valid_to'),
+    desc: (fd.get('desc')||'').toString().trim(),
+    status: 'active'
+  };
+
+  // TODO: hier deine persistente Speicherung (Supabase/HNS/LocalStorage)
+  // z.B.: demoRates.unshift(newRate);
+
+  // zurück zur Liste + refresh
+  close(MODALS.rateCreate);
+  open(MODALS.rateSettings);
+  if (typeof applyRateFilters === 'function') applyRateFilters();
+});
+
+
   
   /***** KPI/Performance-Filter füllen *****/
   function fillHotelFilter(selectEl){
