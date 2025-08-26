@@ -492,6 +492,54 @@ q('#btnRateSave')?.addEventListener('click', ()=>{
     selectEl.append(el('option',{value:'all'},'Gesamt'));
     HOTELS.forEach(h=> selectEl.append(el('option',{value:h.code}, displayHotel(h))));
   }
+// ===== Unified Modal API (prevents nested modals) =====
+function ensureBackdrop(){
+  let b = document.getElementById('backdrop') || document.querySelector('.backdrop');
+  if (!b){ b = document.createElement('div'); b.id='backdrop'; b.className='backdrop'; document.body.appendChild(b); }
+  return b;
+}
+
+window.openModal = function(id){
+  // Schließe ALLE existierenden Modals, damit nichts „im Popup“ geöffnet wird
+  document.querySelectorAll('.modal').forEach(m => m.style.display='none');
+
+  const m = document.getElementById(id);
+  const b = ensureBackdrop();
+  if (!m) return;
+
+  // Einheitliche Größe für alle Modals
+  m.style.maxWidth = '860px';
+  m.style.width    = 'min(95vw, 860px)';
+  m.style.display  = 'block';
+  b.style.display  = 'flex';
+  document.body.classList.add('modal-open');
+};
+
+window.closeModal = function(id){
+  const m = id ? document.getElementById(id) : document.querySelector('.modal[style*="block"]');
+  const b = document.getElementById('backdrop') || document.querySelector('.backdrop');
+  if (m) m.style.display='none';
+  if (b) b.style.display='none';
+  document.body.classList.remove('modal-open');
+};
+
+// Wichtig: alte Funktions-Referenzen im Scope auf die neue API biegen
+// (damit bereits registrierte Listener NICHT die alte Variante verwenden)
+var openModal  = window.openModal;
+var closeModal = window.closeModal;
+
+// ESC schließt immer sauber
+window.addEventListener('keydown',(e)=>{
+  if(e.key==='Escape'){ window.closeModal(); }
+});
+
+// Globale [data-close]-Buttons
+document.querySelectorAll('[data-close]').forEach(b=>{
+  b.addEventListener('click',()=>{
+    const tgt = b.getAttribute('data-close');
+    window.closeModal(tgt);
+  });
+});
 
   /***** Performance — Heute *****/
   async function loadKpisToday(){
