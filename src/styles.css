@@ -618,31 +618,8 @@ select[disabled]{opacity:.6; pointer-events:none
   .quick-links{ display:none; }
 }
 
-/* Rechte Schaltfläche bei kleineren Displays ausblenden */
-@media (max-width: 1024px) {
-  .hide-on-sm-right,
-  <button class="fab hide-on-sm-right">+</button>
-  .sticky-right {
-    display: none !important;
-  }
+/* Rechte Toolbar (Status/Clock) auf sehr kleinen Screens ausblenden */
+@media (max-width: 720px){
+  .toolbar-right{ display:none; }
 }
-
-.modal.hidden { display: none; }
-.modal { position: fixed; inset: 0; z-index: 1000; }
-.modal-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.5); }
-.modal-card {
-  position: relative; margin: 5vh auto; max-width: 720px;
-  background: #111; color: #eee; border-radius: 12px; padding: 16px;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.6);
-}
-.modal-header,.modal-footer { display:flex; align-items:center; justify-content:space-between; gap:12px; }
-.modal-body { max-height: 65vh; overflow:auto; }
-
-/* Utility */
-.hidden { display: none !important; }
-.muted { opacity: .7; }
-.rate-row { display:flex; align-items:center; justify-content:space-between; padding:8px 0; border-bottom:1px solid rgba(255,255,255,.07);}
-.rate-actions .btn.small { padding: 4px 8px; font-size: 12px; }
-.empty { opacity:.6; font-style: italic; padding: 12px 0; }
-
 
