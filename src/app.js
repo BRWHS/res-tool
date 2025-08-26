@@ -7,49 +7,54 @@
   if (window.__RESTOOL_APP_V2__) return;
   window.__RESTOOL_APP_V2__ = true;
 
-  // === Modal Core: eine Quelle der Wahrheit ===
+  // === Modal Core (einheitlich, nutzt .open Klassen) ===
 (function(){
   function ensureBackdrop(){
-  let b = document.getElementById('backdrop') || document.querySelector('.modal-backdrop');
-  if (!b){
-    b = document.createElement('div');
-    b.id = 'backdrop';
-    b.className = 'modal-backdrop';
-    document.body.appendChild(b);
+    let b = document.getElementById('backdrop') || document.querySelector('.modal-backdrop');
+    if (!b){
+      b = document.createElement('div');
+      b.id = 'backdrop';
+      b.className = 'modal-backdrop';
+      document.body.appendChild(b);
+    }
+    return b;
   }
-  return b;
-}
-
-  function _open(id){
-    // immer zuerst alle schließen -> kein Popup im Popup
-    document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
-
-    const m = document.getElementById(id);
+  function resolve(selOrEl){
+    if (!selOrEl) return null;
+    if (typeof selOrEl === 'string'){
+      return selOrEl.startsWith('#') ? document.querySelector(selOrEl)
+                                     : document.getElementById(selOrEl);
+    }
+    return selOrEl;
+  }
+  function _open(selOrEl){
+    const m = resolve(selOrEl); if (!m) return;
     const b = ensureBackdrop();
-    if (!m) return;
-
-    // Einheitliche Größe (Rate-Dialoge etwas breiter)
-    const wide = ['modalRateEdit','modalRateSettings','modalRateCreate'].includes(id);
-    m.style.maxWidth = wide ? '860px' : '860px';
-    m.style.width    = wide ? 'min(95vw, 860px)' : 'min(95vw, 860px)';
-
-    m.style.display = 'block';
-    b.style.display = 'flex';
-    document.body.classList.add('modal-open');
+    // Nur EIN Modal offen halten
+    document.querySelectorAll('.modal.open').forEach(x=>{
+      x.classList.remove('open'); x.setAttribute('aria-hidden','true');
+    });
+    m.classList.add('open');
+    m.setAttribute('aria-hidden','false');
+    b.classList.add('open');
+    document.documentElement.classList.add('modal-open');
   }
-
-  function _close(id){
-    const m = id ? document.getElementById(id) : document.querySelector('.modal[style*="block"]');
+  function _close(selOrEl){
+    const m = selOrEl ? resolve(selOrEl) : document.querySelector('.modal.open');
     const b = document.getElementById('backdrop') || document.querySelector('.modal-backdrop');
-    if (m) m.style.display = 'none';
-    if (b) b.style.display = 'none';
-    document.body.classList.remove('modal-open');
+    if (m){
+      m.classList.remove('open');
+      m.setAttribute('aria-hidden','true');
+    }
+    if (!document.querySelector('.modal.open')){
+      b && b.classList.remove('open');
+      document.documentElement.classList.remove('modal-open');
+    }
   }
-
-  // global machen
   window.openModal  = _open;
   window.closeModal = _close;
 })();
+
 
 // Legacy-Alias, damit alle vorhandenen Listener weiter funktionieren
 var openModal  = window.openModal;
@@ -516,10 +521,15 @@ q('#btnRateSave')?.addEventListener('click', ()=>{
     if(e.key==='Escape'){ qa('.modal').forEach(m=>m.style.display='none'); backdrop.style.display='none'; document.body.classList.remove('modal-open'); }
   });
   
-  document.addEventListener('click', function (e) {
+  document.addEventListener('click', (e) => {
   const btn = e.target.closest('#btnRates, [data-modal="#modalRateCreate"]');
   if (!btn) return;
   e.preventDefault();
+  const parent = btn.closest('.modal');
+  if (parent) closeModal(parent);
+  setTimeout(() => openModal('#modalRateCreate'), 0);
+}, { passive:false });
+
 
   // Hilfsfunktionen (verwenden bestehende, falls vorhanden)
   const $ = (s, c=document) => c.querySelector(s);
