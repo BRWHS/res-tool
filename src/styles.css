@@ -609,13 +609,17 @@ table.matrix{width:100%;border-collapse:collapse}
 select[disabled]{opacity:.6; pointer-events:none
 }
 
-
-
-
-
-
-
-
 /* --- Fix: Smaller 'Neue Rate' editor modal & backdrop alias --- */
 #modalRateEdit{ max-width:860px; width:min(95vw,860px); }
 .backdrop{ position:fixed; inset:0; background:rgba(0,8,10,.35); display:none; align-items:center; justify-content:center; z-index:40; }
+
+/* Quick-Links auf kleinen Screens ausblenden */
+@media (max-width: 900px){
+  .quick-links{ display:none; }
+}
+
+/* Rechte Toolbar (Status/Clock) auf sehr kleinen Screens ausblenden */
+@media (max-width: 720px){
+  .toolbar-right{ display:none; }
+}
+
