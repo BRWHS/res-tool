@@ -7,49 +7,106 @@
   if (window.__RESTOOL_APP_V2__) return;
   window.__RESTOOL_APP_V2__ = true;
 
-  // === Modal Core: eine Quelle der Wahrheit ===
-(function(){
+  // ===== Modal Manager (vereinheitlicht: Klassen-basiert, eine Quelle der Wahrheit) =====
+(function () {
+  // Nur einmal initialisieren
+  if (window.__RESTOOL_MODAL_CORE__) return;
+  window.__RESTOOL_MODAL_CORE__ = true;
+
   function ensureBackdrop(){
-  let b = document.getElementById('backdrop') || document.querySelector('.modal-backdrop');
-  if (!b){
-    b = document.createElement('div');
-    b.id = 'backdrop';
-    b.className = 'modal-backdrop';
-    document.body.appendChild(b);
+    let b = document.getElementById('backdrop') || document.querySelector('.modal-backdrop');
+    if (!b){
+      b = document.createElement('div');
+      b.id = 'backdrop';
+      b.className = 'modal-backdrop';
+      document.body.appendChild(b);
+    }
+    return b;
   }
-  return b;
-}
 
-  function _open(id){
-    // immer zuerst alle schließen -> kein Popup im Popup
-    document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
+  function asEl(target){
+    if (!target) return null;
+    if (typeof target === 'string') {
+      const id = target.replace(/^#/,'');
+      return document.getElementById(id);
+    }
+    return target.nodeType ? target : null;
+  }
 
-    const m = document.getElementById(id);
+  function anyOpen(){ return document.querySelectorAll('.modal.open').length > 0; }
+
+  function openModal(target){
+    const el = asEl(target);
+    if (!el) return;
+
+    // andere Modals schließen (kein Popup im Popup)
+    document.querySelectorAll('.modal.open').forEach(m=>{
+      m.classList.remove('open');
+      m.setAttribute('aria-hidden','true');
+    });
+
+    // dieses Modal öffnen
+    el.classList.add('open');
+    el.setAttribute('aria-hidden','false');
+
+    // Backdrop + Body-State
     const b = ensureBackdrop();
-    if (!m) return;
+    b.classList.add('open');
+    b.style.display = 'block';
+    b.setAttribute('aria-hidden','false');
+    document.documentElement.classList.add('modal-open');
 
-    // Einheitliche Größe (Rate-Dialoge etwas breiter)
-    const wide = ['modalRateEdit','modalRateSettings','modalRateCreate'].includes(id);
-    m.style.maxWidth = wide ? '860px' : '860px';
-    m.style.width    = wide ? 'min(95vw, 860px)' : 'min(95vw, 860px)';
-
-    m.style.display = 'block';
-    b.style.display = 'flex';
-    document.body.classList.add('modal-open');
+    // Fokus
+    const focusEl = el.querySelector('[data-close]') || el.querySelector('h3, h2, [tabindex], button, input, select, textarea');
+    if (focusEl && focusEl.focus) focusEl.focus({ preventScroll: true });
   }
 
-  function _close(id){
-    const m = id ? document.getElementById(id) : document.querySelector('.modal[style*="block"]');
-    const b = document.getElementById('backdrop') || document.querySelector('.modal-backdrop');
-    if (m) m.style.display = 'none';
-    if (b) b.style.display = 'none';
-    document.body.classList.remove('modal-open');
+  function closeModal(target){
+    const b = ensureBackdrop();
+
+    if (target){
+      const el = asEl(target);
+      if (el){
+        el.classList.remove('open');
+        el.setAttribute('aria-hidden','true');
+      }
+    } else {
+      // oberstes offenes Modal schließen
+      const open = Array.from(document.querySelectorAll('.modal.open'));
+      if (open.length){
+        const top = open[open.length - 1];
+        top.classList.remove('open');
+        top.setAttribute('aria-hidden','true');
+      }
+    }
+
+    if (!anyOpen()){
+      b.classList.remove('open');
+      b.style.display = 'none';
+      b.setAttribute('aria-hidden','true');
+      document.documentElement.classList.remove('modal-open');
+    }
   }
 
-  // global machen
-  window.openModal  = _open;
-  window.closeModal = _close;
+  // Public API
+  window.openModal  = openModal;
+  window.closeModal = closeModal;
+
+  // ESC → oberstes Modal zu
+  document.addEventListener('keydown', (e)=>{ if (e.key === 'Escape') closeModal(); });
+
+  // Backdrop-Klick → oberstes Modal zu
+  ensureBackdrop().addEventListener('click', ()=> closeModal());
+
+  // [data-close] Buttons (Fallback, zusätzlich zu bestehendem Code ok)
+  document.addEventListener('click', (e)=>{
+    const btn = e.target.closest('[data-close]');
+    if (!btn) return;
+    e.preventDefault();
+    closeModal(btn.closest('.modal'));
+  }, { passive:false });
 })();
+
 
 // Legacy-Alias, damit alle vorhandenen Listener weiter funktionieren
 var openModal  = window.openModal;
