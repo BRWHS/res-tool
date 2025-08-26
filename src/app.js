@@ -10,15 +10,15 @@
   // === Modal Core: eine Quelle der Wahrheit ===
 (function(){
   function ensureBackdrop(){
-    let b = document.getElementById('backdrop') || document.querySelector('.backdrop');
-    if (!b){
-      b = document.createElement('div');
-      b.id = 'backdrop';
-      b.className = 'backdrop';
-      document.body.appendChild(b);
-    }
-    return b;
+  let b = document.getElementById('backdrop') || document.querySelector('.modal-backdrop');
+  if (!b){
+    b = document.createElement('div');
+    b.id = 'backdrop';
+    b.className = 'modal-backdrop';
+    document.body.appendChild(b);
   }
+  return b;
+}
 
   function _open(id){
     // immer zuerst alle schließen -> kein Popup im Popup
