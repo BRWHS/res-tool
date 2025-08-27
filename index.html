@@ -616,7 +616,7 @@
     </div>
   </section>
 
-<!-- Modal: Channel Settings (admin) -->
+<!-- Modal: Channel Settings (admin) – NEU -->
 <section class="modal" id="modalChannel" role="dialog" aria-labelledby="channelTitle" aria-modal="true">
   <header>
     <h3 id="channelTitle" class="mono">
@@ -624,13 +624,146 @@
     </h3>
     <button class="btn" data-close>Schließen</button>
   </header>
-  <div class="body">
-    <div class="box">
-      <p class="muted">Platzhalter für die API‑Verkabelung (HNS, PMS, Mapping, Secrets …).</p>
-      <p class="muted">Dieses Fenster ist mit Admin‑Passwort geschützt.</p>
+
+  <div class="body" style="min-width:920px; max-width:96vw;">
+    <div class="channel-wrap" style="display:flex; gap:12px; align-items:stretch;">
+      <!-- Linke Tabs -->
+      <aside class="box" style="width:260px; padding:10px;">
+        <div class="mono muted tiny" style="margin-bottom:6px">Bereiche</div>
+        <div class="channel-tabs" id="channelTabs" style="display:flex; flex-direction:column; gap:6px;">
+          <button class="btn tile channel-tab active" data-channel-tab="api">Api – Einstellungen</button>
+          <button class="btn tile channel-tab" data-channel-tab="property">Property – Mapping</button>
+          <button class="btn tile channel-tab" data-channel-tab="monitor">Monitoring</button>
+          <button class="btn tile channel-tab" data-channel-tab="system">System – Technik</button>
+          <button class="btn tile channel-tab" data-channel-tab="admin">Admin</button>
+        </div>
+      </aside>
+
+      <!-- Rechte Contentfläche -->
+      <section class="card" style="flex:1;">
+        <div class="content" id="channelContent" style="min-height:480px;">
+          <!-- Page: API -->
+          <div class="channel-page" id="chPage_api">
+            <div class="card-head"><h3 class="mono" style="margin:0">API – Einstellungen</h3></div>
+            <div class="grid2">
+              <label>API-Key (versteckt)
+                <input id="chApiKey" type="password" class="input" autocomplete="off" placeholder="••••••••" />
+              </label>
+              <label>API-Secret (versteckt)
+                <input id="chApiSecret" type="password" class="input" autocomplete="off" placeholder="••••••••" />
+              </label>
+              <label>HNS Endpoint – PROD
+                <input id="chHnsProd" class="input" placeholder="https://api.hns.example/v1" />
+              </label>
+              <label>HNS Endpoint – TEST
+                <input id="chHnsTest" class="input" placeholder="https://sandbox.hns.example/v1" />
+              </label>
+              <label>Timeout (ms)
+                <input id="chTimeout" type="number" class="input" value="15000" min="1000" step="500" />
+              </label>
+              <label>Retry-Versuche
+                <input id="chRetry" type="number" class="input" value="2" min="0" max="5" />
+              </label>
+              <label style="grid-column:1 / -1">Hotel-Mapping (JSON: unsere <code>hotel_code</code> → HNS-Code)
+                <textarea id="chHotelMap" class="input" rows="4" placeholder='{"MA7-STR":"HNS_123","TAL-SON":"HNS_987"}'></textarea>
+              </label>
+            </div>
+          </div>
+
+          <!-- Page: Property -->
+          <div class="channel-page hidden" id="chPage_property">
+            <div class="card-head"><h3 class="mono" style="margin:0">Property – Mapping</h3></div>
+            <div class="box">
+              <div class="mono muted tiny" style="margin-bottom:6px">Hotels aktiv</div>
+              <div id="chHotelActiveList" class="grid-compact" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:8px;"></div>
+            </div>
+            <div class="grid2" style="margin-top:8px">
+              <label style="grid-column:1 / -1">Kategorien-Mapping (JSON: unsere Kategorie → HNS)
+                <textarea id="chCatMap" class="input" rows="3" placeholder='{"Standard":"STD","Superior":"SUP","Suite":"STE"}'></textarea>
+              </label>
+              <label style="grid-column:1 / -1">Raten-Mapping (JSON: unser Ratecode → HNS-Ratecode)
+                <textarea id="chRateMap" class="input" rows="3" placeholder='{"1001":"BAR","1002":"BAR_BB"}'></textarea>
+              </label>
+            </div>
+          </div>
+
+          <!-- Page: Monitoring -->
+          <div class="channel-page hidden" id="chPage_monitor">
+            <div class="card-head"><h3 class="mono" style="margin:0">Monitoring</h3></div>
+            <div class="row" style="gap:8px; align-items:center;">
+              <span class="mono muted tiny">Status:</span>
+              <span class="pill" id="chChipHns">HNS</span>
+              <span class="pill" id="chChipSb">SB</span>
+            </div>
+            <div class="grid2" style="margin-top:10px">
+              <div>
+                <h4 class="mono section">Error-Log (letzte 10)</h4>
+                <ul id="chErrorList" class="tiny" style="margin:6px 0 0 16px; line-height:1.4"></ul>
+              </div>
+              <div>
+                <h4 class="mono section">Mapping-Übersicht</h4>
+                <div id="chMappingSummary" class="tiny">—</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Page: System -->
+          <div class="channel-page hidden" id="chPage_system">
+            <div class="card-head"><h3 class="mono" style="margin:0">System – Technik</h3></div>
+            <div class="grid2">
+              <label>Modus
+                <select id="chMode" class="input theme-select">
+                  <option value="sandbox">Sandbox</option>
+                  <option value="live">Live</option>
+                </select>
+              </label>
+              <div class="row" style="align-items:end; gap:8px;">
+                <button class="btn" id="chExport">Export Settings (JSON)</button>
+                <label class="btn ghost" for="chImportFile">Import JSON</label>
+                <input id="chImportFile" type="file" accept="application/json" style="display:none;">
+              </div>
+              <div style="grid-column:1 / -1" class="box">
+                <div class="mono muted tiny" style="margin-bottom:6px">Hotel hinzufügen (on-the-fly)</div>
+                <div class="grid-compact">
+                  <label>Code <input id="chNewHotelCode" class="input" placeholder="VV-HH"></label>
+                  <label>Name <input id="chNewHotelName" class="input" placeholder="Villa Viva Hamburg"></label>
+                  <label>Gruppe <input id="chNewHotelGroup" class="input" placeholder="Villa Viva"></label>
+                  <label>Bild-URL <input id="chNewHotelImg" class="input" placeholder="/assets/hotel-placeholder.png"></label>
+                  <button class="btn" id="chAddHotel">Hotel hinzufügen</button>
+                </div>
+              </div>
+              <label style="grid-column:1 / -1">Stornierungsbedingungen (Default, Markdown/Plain)
+                <textarea id="chCancelPolicy" class="input" rows="3" placeholder="Bis 18:00 Uhr am Anreisetag kostenfrei stornierbar."></textarea>
+              </label>
+            </div>
+          </div>
+
+          <!-- Page: Admin -->
+          <div class="channel-page hidden" id="chPage_admin">
+            <div class="card-head"><h3 class="mono" style="margin:0">Admin</h3></div>
+            <div class="grid2">
+              <div class="box">
+                <div class="settings-row"><label>Passwortschutz</label><span class="muted tiny">ist aktiv (Prompt)</span></div>
+                <div class="settings-row"><label>Letzter Sync</label><span id="chLastSync">—</span></div>
+              </div>
+              <div class="box">
+                <p class="tiny muted">„Jetzt synchronisieren“ simuliert einen HNS-Sync und schreibt ins Log.</p>
+                <button class="btn primary" id="btnSyncNow">Jetzt synchronisieren</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="set-footer right">
+          <button class="btn primary" id="btnSaveChannel">Einstellungen speichern</button>
+        </div>
+      </section>
     </div>
+    <p class="muted tiny" id="channelInfo" style="margin-top:6px;"></p>
   </div>
 </section>
+
 
 <!-- Modal: Log Activity (admin) -->
 <section class="modal" id="modalLog" role="dialog" aria-labelledby="logTitle" aria-modal="true">
