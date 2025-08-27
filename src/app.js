@@ -2280,16 +2280,16 @@ function openRateEditor(id){
 
   const title = document.getElementById('rateEditTitle');
   if (title) title.textContent = 'Rate bearbeiten';
-  fitRateModals();
+  if (typeof fitRateModals === 'function') fitRateModals();
   openModal('modalRateEdit');
 }
 
 
 // --- Openers / bindings ---
 q('#btnRates')     ?.addEventListener('click', ()=>{
-  rsFillHotelFilter(); rsSetType('Direct'); openModal('modalRateSettings');
+  rsFillHotelFilter(); rsSetType('Direct'); openModal('modalRates');
   // Button „Neue Rate“ nach oben in die Toolbar ziehen (sichtbar ohne Scroll)
-  const tb = document.querySelector('#modalRateSettings .rs-toolbar');
+  const tb = document.querySelector('#modalRates .rs-toolbar');
   const nb = document.getElementById('rsNewRate');
   if (tb && nb && !tb.contains(nb)) tb.prepend(nb);
 });
