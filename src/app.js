@@ -1733,6 +1733,148 @@ document.querySelector('#sketchBack')?.addEventListener('click', () => {
   document.querySelector('#sketchStateView')?.classList.add('hidden');
   document.querySelector('#sketchStateList')?.classList.remove('hidden');
 });
+
+  // ===== Kategorieverwaltung (LocalStorage + UI) =====
+const CATS_KEY = 'resTool.categories';
+
+// Map lesen/schreiben
+function readCatsMap(){
+  try { return JSON.parse(localStorage.getItem(CATS_KEY)) || {}; }
+  catch { return {}; }
+}
+function writeCatsMap(map){
+  localStorage.setItem(CATS_KEY, JSON.stringify(map||{}));
+  // live in globale Struktur spiegeln (für alle bestehenden Stellen)
+  window.HOTEL_CATEGORIES = window.HOTEL_CATEGORIES || { default: ['Standard','Superior','Suite'] };
+  Object.entries(map||{}).forEach(([code, list])=>{
+    window.HOTEL_CATEGORIES[code] = Array.isArray(list) ? list.slice() : [];
+  });
+}
+
+// Erstbefüllung: für alle Hotels Default übernehmen (falls leer)
+function ensureCatsSeed(){
+  const cur = readCatsMap();
+  if (Object.keys(cur).length === 0){
+    const seed = {};
+    (window.HOTELS||[]).forEach(h => { seed[h.code] = (window.HOTEL_CATEGORIES?.default || ['Standard','Superior','Suite']).slice(); });
+    writeCatsMap(seed);
+  } else {
+    // sicherstellen, dass jedes Hotel einen Eintrag besitzt
+    (window.HOTELS||[]).forEach(h=>{
+      if (!Array.isArray(cur[h.code])) cur[h.code] = (window.HOTEL_CATEGORIES?.default || []).slice();
+    });
+    writeCatsMap(cur);
+  }
+}
+ensureCatsSeed();
+
+// UI-Rendering
+function renderCatsUI(){
+  const sel = document.getElementById('catsHotel');
+  const body = document.getElementById('catsBody');
+  const info = document.getElementById('catsInfo');
+  const h3   = document.getElementById('catsTitleHotel');
+  if (!sel || !body) return;
+
+  // Hotels füllen (einmalig)
+  if (!sel.options.length){
+    (window.HOTELS||[]).forEach(h=>{
+      const opt = document.createElement('option');
+      opt.value = h.code; opt.textContent = `${h.group} - ${h.name.replace(/^.*? /,'')}`;
+      sel.append(opt);
+    });
+    sel.value = sel.value || (window.HOTELS?.[0]?.code || '');
+    sel.addEventListener('change', renderCatsUI);
+  }
+
+  const code = sel.value;
+  const hotel = (window.HOTELS||[]).find(h=>h.code===code);
+  if (h3 && hotel) h3.textContent = `Kategorien – ${hotel.group} ${hotel.name.replace(/^.*? /,'')}`;
+
+  const map  = readCatsMap();
+  const list = map[code] || [];
+
+  body.innerHTML = '';
+  list.forEach((name, i)=>{
+    const tr = document.createElement('tr');
+    tr.className = 'row';
+    tr.innerHTML = `
+      <td class="mono tiny">${i+1}</td>
+      <td>
+        <input class="input sm" value="${name}" data-idx="${i}" />
+      </td>
+      <td>
+        <div class="row wrap" style="justify-content:flex-end;gap:6px">
+          <button class="btn sm" data-act="save" data-idx="${i}">Speichern</button>
+          <button class="btn sm danger" data-act="del" data-idx="${i}">Löschen</button>
+        </div>
+      </td>`;
+    body.append(tr);
+  });
+
+  body.onclick = (e)=>{
+    const btn = e.target.closest('button[data-act]'); if (!btn) return;
+    const idx = Number(btn.dataset.idx);
+    const act = btn.dataset.act;
+
+    const cur = readCatsMap(); const arr = (cur[code]||[]).slice();
+    if (act==='del'){
+      arr.splice(idx,1);
+    } else if (act==='save'){
+      const inp = body.querySelector(`input[data-idx="${idx}"]`);
+      const val = (inp?.value || '').trim();
+      if (!val){ info.textContent = 'Name darf nicht leer sein.'; return; }
+      arr[idx] = val;
+    }
+    cur[code] = arr;
+    writeCatsMap(cur);
+    info.textContent = 'Gespeichert.';
+    renderCatsUI();
+    refreshCategoryDependents(code);
+  };
+
+  document.getElementById('btnCatAdd')?.addEventListener('click', ()=>{
+    const inp = document.getElementById('catNewName');
+    const name = (inp?.value || '').trim();
+    if (!name){ info.textContent = 'Bitte einen Kategorienamen eingeben.'; return; }
+    const cur = readCatsMap();
+    const arr = (cur[code]||[]).slice();
+    if (arr.includes(name)){ info.textContent = 'Kategorie existiert bereits.'; return; }
+    arr.push(name);
+    cur[code] = arr;
+    writeCatsMap(cur);
+    inp.value = '';
+    info.textContent = 'Hinzugefügt.';
+    renderCatsUI();
+    refreshCategoryDependents(code);
+  });
+}
+
+// Hilfsfunktion: abhängige Selects aktualisieren (z. B. Rateneinstellungen)
+function refreshCategoryDependents(code){
+  // 1) Multi-Select im Rate-Create/-Edit (falls vorhanden)
+  const rateCats = document.getElementById('rateCats');
+  if (rateCats){
+    const map = readCatsMap();
+    const list = map[code] || (window.HOTEL_CATEGORIES?.default || []);
+    rateCats.innerHTML = list.map(c => `<option value="${c}">${c}</option>`).join('');
+  }
+  // 2) Wizard Step 2 – Dropdown (wenn aktiv & Hotel gesetzt)
+  const wizardHotelSel = document.getElementById('newHotel');
+  const wizardCatSel   = document.getElementById('newCat');
+  if (wizardHotelSel && wizardCatSel && wizardHotelSel.value === code){
+    const map = readCatsMap();
+    const list = map[code] || (window.HOTEL_CATEGORIES?.default || []);
+    wizardCatSel.innerHTML = list.map(c=>`<option value="${c}">${c}</option>`).join('');
+  }
+}
+
+// Öffner in den Einstellungen
+document.getElementById('btnCats')?.addEventListener('click', ()=>{
+  renderCatsUI();
+  openModal('modalCats');
+});
+
   
 (async function init(){
   startClocks();
