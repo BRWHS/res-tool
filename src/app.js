@@ -163,6 +163,7 @@ window.addEventListener('keydown', (e)=>{ if (e.key === 'Escape') window.closeMo
     return full;
   };
   const displayHotel = (h) => h ? `${h.group} - ${hotelCity(h.name)}` : '—';
+  window.HOTELS = HOTELS;
 
   /* Alias-Keyword für Filter-Fallback per hotel_name */
   const HOTEL_KEYWORD = {
