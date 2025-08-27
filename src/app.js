@@ -1734,121 +1734,96 @@ document.querySelector('#sketchBack')?.addEventListener('click', () => {
   document.querySelector('#sketchStateList')?.classList.remove('hidden');
 });
 
-  // ===== Kategorieverwaltung (LocalStorage + UI) =====
+// ===== Kategorieverwaltung (LocalStorage + UI) =====
 const CATS_KEY = 'resTool.categories';
 
-// Map lesen/schreiben
-function readCatsMap(){
-  try { return JSON.parse(localStorage.getItem(CATS_KEY)) || {}; }
-  catch { return {}; }
-}
-function writeCatsMap(map){
-  localStorage.setItem(CATS_KEY, JSON.stringify(map||{}));
-  // live in globale Struktur spiegeln (für alle bestehenden Stellen)
-  window.HOTEL_CATEGORIES = window.HOTEL_CATEGORIES || { default: ['Standard','Superior','Suite'] };
-  Object.entries(map||{}).forEach(([code, list])=>{
-    window.HOTEL_CATEGORIES[code] = Array.isArray(list) ? list.slice() : [];
-  });
-}
+function readCats(){ try { return JSON.parse(localStorage.getItem(CATS_KEY)) || {}; } catch { return {}; } }
+function writeCats(map){ localStorage.setItem(CATS_KEY, JSON.stringify(map || {})); }
 
-// Erstbefüllung: für alle Hotels Default übernehmen (falls leer)
+// Seed: wenn noch nichts gespeichert ist → pro Hotel mit Defaults füllen
 function ensureCatsSeed(){
-  const cur = readCatsMap();
-  if (Object.keys(cur).length === 0){
-    const seed = {};
-    (window.HOTELS||[]).forEach(h => { seed[h.code] = (window.HOTEL_CATEGORIES?.default || ['Standard','Superior','Suite']).slice(); });
-    writeCatsMap(seed);
-  } else {
-    // sicherstellen, dass jedes Hotel einen Eintrag besitzt
-    (window.HOTELS||[]).forEach(h=>{
-      if (!Array.isArray(cur[h.code])) cur[h.code] = (window.HOTEL_CATEGORIES?.default || []).slice();
-    });
-    writeCatsMap(cur);
+  const map = readCats();
+  if (Object.keys(map).length === 0){
+    const base = (HOTEL_CATEGORIES && HOTEL_CATEGORIES.default) || ['Standard','Superior','Suite'];
+    (Array.isArray(HOTELS) ? HOTELS : []).forEach(h => { map[h.code] = [...base]; });
+    writeCats(map);
   }
+  // in Runtime-Objekt spiegeln (const-Objekt ist mutierbar)
+  Object.entries(readCats()).forEach(([code, arr]) => { HOTEL_CATEGORIES[code] = arr; });
 }
 ensureCatsSeed();
 
-// UI-Rendering
 function renderCatsUI(){
-  const sel = document.getElementById('catsHotel');
-  const body = document.getElementById('catsBody');
-  const info = document.getElementById('catsInfo');
-  const h3   = document.getElementById('catsTitleHotel');
-  if (!sel || !body) return;
+  ensureCatsSeed();
 
-  // Hotels füllen (einmalig)
-  if (!sel.options.length){
-    (window.HOTELS||[]).forEach(h=>{
-      const opt = document.createElement('option');
-      opt.value = h.code; opt.textContent = `${h.group} - ${h.name.replace(/^.*? /,'')}`;
-      sel.append(opt);
-    });
-    sel.value = sel.value || (window.HOTELS?.[0]?.code || '');
-    sel.addEventListener('change', renderCatsUI);
-  }
+  const sel  = document.getElementById('catHotel') || document.getElementById('catsHotel');
+  const list = document.getElementById('catList');
+  const info = document.getElementById('catInfo');
+  if (!sel || !list) return;
 
-  const code = sel.value;
-  const hotel = (window.HOTELS||[]).find(h=>h.code===code);
-  if (h3 && hotel) h3.textContent = `Kategorien – ${hotel.group} ${hotel.name.replace(/^.*? /,'')}`;
+  // Hotels befüllen
+  sel.innerHTML = (Array.isArray(HOTELS)?HOTELS:[])
+    .map(h => `<option value="${h.code}">${h.group} - ${h.name.replace(/^.*? /,'')}</option>`).join('');
+  if (!sel.value && HOTELS[0]) sel.value = HOTELS[0].code;
 
-  const map  = readCatsMap();
-  const list = map[code] || [];
+  const map  = readCats();
+  const cats = map[sel.value] || HOTEL_CATEGORIES.default || [];
+  list.innerHTML = cats.length ? cats.map((c,i)=>`
+    <div class="row">
+      <input class="input sm" value="${c}" data-idx="${i}">
+      <button class="btn sm" data-act="up"   data-idx="${i}">↑</button>
+      <button class="btn sm" data-act="down" data-idx="${i}">↓</button>
+      <button class="btn sm danger" data-act="del" data-idx="${i}">Löschen</button>
+    </div>
+  `).join('') : `<p class="muted tiny">Noch keine Kategorien.</p>`;
+  if (info) info.textContent = `Hotel: ${sel.value} · ${cats.length} Kategorien`;
 
-  body.innerHTML = '';
-  list.forEach((name, i)=>{
-    const tr = document.createElement('tr');
-    tr.className = 'row';
-    tr.innerHTML = `
-      <td class="mono tiny">${i+1}</td>
-      <td>
-        <input class="input sm" value="${name}" data-idx="${i}" />
-      </td>
-      <td>
-        <div class="row wrap" style="justify-content:flex-end;gap:6px">
-          <button class="btn sm" data-act="save" data-idx="${i}">Speichern</button>
-          <button class="btn sm danger" data-act="del" data-idx="${i}">Löschen</button>
-        </div>
-      </td>`;
-    body.append(tr);
-  });
+  sel.onchange = ()=> renderCatsUI();
 
-  body.onclick = (e)=>{
-    const btn = e.target.closest('button[data-act]'); if (!btn) return;
-    const idx = Number(btn.dataset.idx);
-    const act = btn.dataset.act;
-
-    const cur = readCatsMap(); const arr = (cur[code]||[]).slice();
-    if (act==='del'){
-      arr.splice(idx,1);
-    } else if (act==='save'){
-      const inp = body.querySelector(`input[data-idx="${idx}"]`);
-      const val = (inp?.value || '').trim();
-      if (!val){ info.textContent = 'Name darf nicht leer sein.'; return; }
-      arr[idx] = val;
-    }
-    cur[code] = arr;
-    writeCatsMap(cur);
-    info.textContent = 'Gespeichert.';
+  // Buttons (löschen/verschieben)
+  list.onclick = (e)=>{
+    const b = e.target.closest('button[data-act]'); if(!b) return;
+    const act=b.dataset.act; const idx=Number(b.dataset.idx);
+    const cur = readCats(); const arr = cur[sel.value] || [];
+    if (act==='del') arr.splice(idx,1);
+    if (act==='up' && idx>0){ [arr[idx-1],arr[idx]] = [arr[idx],arr[idx-1]]; }
+    if (act==='down' && idx<arr.length-1){ [arr[idx+1],arr[idx]] = [arr[idx],arr[idx+1]]; }
+    cur[sel.value]=arr; writeCats(cur); HOTEL_CATEGORIES[sel.value]=arr;
     renderCatsUI();
-    refreshCategoryDependents(code);
+    // Wizard Step 3 aktualisieren (falls sichtbar)
+    if (typeof refreshNewResRates === 'function') refreshNewResRates();
   };
 
-  document.getElementById('btnCatAdd')?.addEventListener('click', ()=>{
-    const inp = document.getElementById('catNewName');
-    const name = (inp?.value || '').trim();
-    if (!name){ info.textContent = 'Bitte einen Kategorienamen eingeben.'; return; }
-    const cur = readCatsMap();
-    const arr = (cur[code]||[]).slice();
-    if (arr.includes(name)){ info.textContent = 'Kategorie existiert bereits.'; return; }
-    arr.push(name);
-    cur[code] = arr;
-    writeCatsMap(cur);
-    inp.value = '';
-    info.textContent = 'Hinzugefügt.';
-    renderCatsUI();
-    refreshCategoryDependents(code);
-  });
+  // Inline-Edit
+  list.oninput = (e)=>{
+    const inp = e.target.closest('input[data-idx]'); if(!inp) return;
+    const idx = Number(inp.dataset.idx);
+    const cur = readCats(); const arr = cur[sel.value] || [];
+    arr[idx] = inp.value.trim();
+    cur[sel.value]=arr; writeCats(cur); HOTEL_CATEGORIES[sel.value]=arr;
+  };
+
+  // Neue Kategorie
+  const addBtn = document.getElementById('btnCatAdd');
+  if (addBtn && !addBtn.__catsBound){
+    addBtn.__catsBound = true;
+    addBtn.addEventListener('click', ()=>{
+      const inp = document.getElementById('catNewName');
+      const name = (inp?.value || '').trim(); if (!name) return;
+      const cur = readCats(); const arr = cur[sel.value] || [];
+      arr.push(name); cur[sel.value]=arr; writeCats(cur); HOTEL_CATEGORIES[sel.value]=arr;
+      inp.value=''; renderCatsUI();
+      if (typeof refreshNewResRates === 'function') refreshNewResRates();
+    });
+  }
 }
+
+// Öffner (Einstellungen → Kategorieverwaltung)
+document.getElementById('btnCats')?.addEventListener('click', ()=>{
+  renderCatsUI();
+  openModal('modalCats');
+});
+
 
 // Hilfsfunktion: abhängige Selects aktualisieren (z. B. Rateneinstellungen)
 function refreshCategoryDependents(code){
