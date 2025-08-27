@@ -443,7 +443,17 @@ function fillCatsSelectGeneric(sel){
 }
 function prepareRateFormReset(){
   fillHotelSelectGeneric(q('#rateHotel'));
-  fillCatsSelectGeneric(q('#rateCats'));
+
+  // Hotelabhängige Kategorien direkt befüllen
+  const code = q('#rateHotel')?.value || (HOTELS[0]?.code || '');
+  refreshCategoryDependents(code); // baut #rateCats korrekt aus V2
+
+  // onChange erneut befüllen
+  q('#rateHotel')?.addEventListener('change', (e)=>{
+    refreshCategoryDependents(e.target.value);
+  }, { once: true });
+
+  // Rest wie gehabt:
   if (q('#rateType')) q('#rateType').value = '';
   if (q('#rateCode')) q('#rateCode').value = '';
   if (q('#rateName')) q('#rateName').value = '';
@@ -452,6 +462,7 @@ function prepareRateFormReset(){
   if (q('#rateMapped')) q('#rateMapped').checked = true;
   if (q('#rateInfo')) q('#rateInfo').textContent = '';
 }
+
 
 // Beim Öffnen von Editor/Neuanlage aufrufen:
 makeMultiSelectFriendly(document.querySelector('#crCats')); // Neuanlage
@@ -1011,14 +1022,17 @@ document.getElementById('rateCreateForm')?.addEventListener('submit', (e) => {
 
   /***** Wizard *****/
   function ensureCatRateOptions(){
-    const cats  = HOTEL_CATEGORIES['default'];
+    const hotelCode = q('#newHotel')?.value || '';
+    const cats = hotelCode ? getCategoriesForHotel(hotelCode) : DEFAULT_CATS;
     const rates = HOTEL_RATES['default'];
     const selCat  = q('#newCat');
     const selRate = q('#newRate');
 
-    if (selCat && !selCat.options.length){
-      selCat.innerHTML = cats.map(c => `<option value="${c}">${c}</option>`).join('');
-      selCat.value = cats[0];
+      if (selCat && !selCat.options.length){
+      selCat.innerHTML = cats.map(c => `<option value="${c.name}" data-code="${c.code}" data-max="${c.maxPax}">
+      ${c.name} (${c.code} · max ${c.maxPax})
+      </option>`).join('');
+      selCat.value = cats[0]?.name || '';
     }
     if (selRate && !selRate.options.length){
       selRate.innerHTML = rates.map(r => `<option value="${r.name}" data-price="${r.price}">${r.name} (${EUR.format(r.price)})</option>`).join('');
@@ -1095,9 +1109,11 @@ document.getElementById('rateCreateForm')?.addEventListener('submit', (e) => {
       const cats  = HOTEL_CATEGORIES['default'];
       const rates = HOTEL_RATES['default'];
 
-      q('#newCat')  && (q('#newCat').innerHTML  = cats.map((c,i)=>`<option value="${c}" ${i===0?'selected':''}>${c}</option>`).join(''));
-      q('#newRate') && (q('#newRate').innerHTML = rates.map((r,i)=>`<option value="${r.name}" data-price="${r.price}" ${i===0?'selected':''}>${r.name} (${EUR.format(r.price)})</option>`).join(''));
-      q('#newPrice') && (q('#newPrice').value = rates[0].price);
+      refreshCategoryDependents(sel.value);   // setzt #newCat anhand getCategoriesForHotel()
+      refreshNewResRates();                   // mapped Rates neu (Step 3)
+      setHotelImage(HOTEL_IMG_SRC);
+      setCatImage(SKETCH_IMG_SRC);
+      validateStep('1'); updateSummary('#summaryFinal'); updateCatMeta();
 
       setHotelImage(HOTEL_IMG_SRC);
       setCatImage(SKETCH_IMG_SRC);
@@ -1987,33 +2003,6 @@ document.getElementById('btnCats')?.addEventListener('click', ()=>{
   renderCatsV2();
   openModal('modalCats');
 });
-
-
-// Hilfsfunktion: abhängige Selects aktualisieren (z. B. Rateneinstellungen)
-function refreshCategoryDependents(code){
-  // 1) Multi-Select im Rate-Create/-Edit (falls vorhanden)
-  const rateCats = document.getElementById('rateCats');
-  if (rateCats){
-    const map = readCatsMap();
-    const list = map[code] || (window.HOTEL_CATEGORIES?.default || []);
-    rateCats.innerHTML = list.map(c => `<option value="${c}">${c}</option>`).join('');
-  }
-  // 2) Wizard Step 2 – Dropdown (wenn aktiv & Hotel gesetzt)
-  const wizardHotelSel = document.getElementById('newHotel');
-  const wizardCatSel   = document.getElementById('newCat');
-  if (wizardHotelSel && wizardCatSel && wizardHotelSel.value === code){
-    const map = readCatsMap();
-    const list = map[code] || (window.HOTEL_CATEGORIES?.default || []);
-    wizardCatSel.innerHTML = list.map(c=>`<option value="${c}">${c}</option>`).join('');
-  }
-}
-
-// Öffner in den Einstellungen
-document.getElementById('btnCats')?.addEventListener('click', ()=>{
-  renderCatsUI();
-  openModal('modalCats');
-});
-
   
 (async function init(){
   startClocks();
