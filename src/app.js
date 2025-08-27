@@ -686,21 +686,18 @@ function close(id){
 // „+ Neue Rate“ in Rateneinstellungen → eigenes Create-Modal
 const newRateBtn = document.querySelector('#rsNewRate, #btnOpenNewRate, [data-open="rate-create"]');
 newRateBtn?.addEventListener('click', () => {
-  close(MODALS.rateSettings);
-  // Reset des Formulars (optional)
+  // close(MODALS.rateSettings);   // <- RAUS
   document.getElementById('rateCreateForm')?.reset();
-  open(MODALS.rateCreate);
+  open('modalRateCreate');         // <- draufstapeln
 });
 
 // Abbrechen/X im Create → zurück zu Rateneinstellungen
 document.querySelector('[data-cancel-create]')?.addEventListener('click', () => {
-  close(MODALS.rateCreate);
-  open('modalRates');
+  close('modalRateCreate'); // kein open('modalRates') mehr
 });
 document.querySelectorAll('[data-close="modalRateCreate"]').forEach(btn=>{
   btn.addEventListener('click', () => {
-    close(MODALS.rateCreate);
-    open('modalRates');
+    close('modalRateCreate'); // kein open('modalRates') mehr
   });
 });
 
