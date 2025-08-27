@@ -452,10 +452,6 @@ function prepareRateFormReset(){
   if (q('#rateInfo')) q('#rateInfo').textContent = '';
 }
 
-  openModal('modalRateCreate');
-}
-
-
 // Beim Öffnen von Editor/Neuanlage aufrufen:
 makeMultiSelectFriendly(document.querySelector('#crCats')); // Neuanlage
 makeMultiSelectFriendly(document.querySelector('#erCats')); // Bearbeiten
