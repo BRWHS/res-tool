@@ -100,14 +100,12 @@
   ensureBackdrop().addEventListener('click', ()=> closeModal());
 
   // [data-close] Buttons
-document.addEventListener('click', (e)=>{
-  const btn = e.target.closest('[data-close]');
-  if (!btn) return;
-  e.preventDefault();
-  // schließt NUR das oberste Modal und ent-blurrt den Rest korrekt
-  closeModal();
-}, { passive:false });
-
+  document.addEventListener('click', (e)=>{
+    const btn = e.target.closest('[data-close]');
+    if (!btn) return;
+    e.preventDefault();
+    closeModal(btn.closest('.modal'));
+  }, { passive:false });
 })();
 
 // Legacy-Alias, damit alle vorhandenen Listener weiter funktionieren
@@ -2284,6 +2282,54 @@ function openRateEditor(id){
   if (typeof fitRateModals === 'function') fitRateModals();
   openModal('modalRateEdit');
 }
+function openRateCreate(){
+  // Felder resetten
+  const code = (id)=>document.getElementById(id);
+  code('crCode').value = '';
+  code('crType').value = '';
+  code('crName').value = '';
+  code('crPolicy').value = 'Bis zum Anreisetag 18:00 Uhr kostenfrei stornierbar.';
+  code('crPrice').value = 0;
+  code('crMapped').value = 'false';
+
+  // Hotels füllen
+  fillHotelSelectOptions(code('crHotel'));
+
+  // Kategorien erst nach Hotelauswahl aktivieren
+  const selCats = code('crCats');
+  selCats.disabled = true;
+  selCats.innerHTML = '';
+  code('crHotel').addEventListener('change', ()=>{
+    loadCatsIntoSelect(selCats, code('crHotel').value);
+    selCats.disabled = false;
+  }, { once:true });
+
+  // Create-Button neu binden (Duplicate-Listener vermeiden)
+  const btn = code('btnRateCreate');
+  btn.replaceWith(btn.cloneNode(true));
+  document.getElementById('btnRateCreate').addEventListener('click', ()=>{
+    const ratecode = (code('crCode').value||'').trim();
+    const ratetype = code('crType').value;
+    const hotel_code = code('crHotel').value;
+    const name = (code('crName').value||'').trim();
+    const policy = (code('crPolicy').value||'').trim();
+    const price  = Number(code('crPrice').value||0);
+    const mapped = code('crMapped').value === 'true';
+    const catsSel = Array.from(code('crCats').selectedOptions||[]).map(o=>o.value);
+
+    if (!/^\d+$/.test(ratecode)) return alert('Ratecode muss nur Zahlen enthalten.');
+    if (!ratetype) return alert('Bitte Ratentyp wählen.');
+    if (!hotel_code) return alert('Bitte Hotel wählen.');
+    if (!name) return alert('Bitte Ratennamen angeben.');
+
+    const now = new Date().toISOString();
+    upsertRate({
+      id:'r_'+Date.now(),
+      ratecode, ratetype, hotel_code,
+      categories: catsSel.length ? catsSel : ['*'],
+      name, policy, price, mapped,
+      created_at: now, updated_at: now
+    });
 
     // UI aktualisieren
     rsRender();
