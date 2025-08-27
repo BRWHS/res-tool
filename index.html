@@ -489,7 +489,7 @@
       <button class="btn tile" id="btnUserPrefs">Benutzereinstellungen</button>
       <button class="btn tile" id="btnChannel">Channel – Einstellungen</button>
       <button class="btn tile" id="btnLog">Log Activity</button>
-      <button class="btn tile" id="btnRates" data-modal="#modalRateCreate">Rateneinstellungen</button>
+      <button class="btn tile" id="btnRates" data-modal="#modalRates">Rateneinstellungen</button>
       <button class="btn tile" id="btnHelp">Hilfe & FAQ</button>
     </div>
   </div>
@@ -596,92 +596,13 @@
   </div>
 </section>
 
-  <!-- Modal: Rateneinstellungen (Rate anlegen/bearbeiten) -->
-  <!-- Rate – Neuanlage -->
-  <section class="modal" id="modalRateCreate" role="dialog" aria-labelledby="rateCreateTitle" aria-modal="true">
-    <header>
-      <h3 id="rateCreateTitle" class="mono"><span class="set-logo" aria-hidden="true"></span> Neue Rate</h3>
-      <button class="btn" data-close>Schließen</button>
-    </header>
-    <div class="body">
-      <div class="grid2">
-        <label>Ratecode (nur Zahlen) <input id="crCode" class="input" placeholder="z. B. 100123" inputmode="numeric" pattern="\d+"></label>
-        <label>Ratentyp* (fix nach Erstellung)
-          <select id="crType" class="input theme-select">
-            <option value="">Bitte wählen</option>
-            <option>Direct</option><option>Corp</option><option>IDS</option>
-          </select>
-        </label>
-        <label>Hotel* <select id="crHotel" class="input theme-select"></select></label>
-        <label>Ratename* <input id="crName" class="input" placeholder="z. B. Flex exkl. Frühstück"></label>
-        <label style="grid-column:1 / -1">Kategorien (mehrfach; erst nach Hotelauswahl)
-          <select id="crCats" class="input theme-select" multiple size="4" disabled></select>
-        </label>
-        <label style="grid-column:1 / -1">Stornobedingung
-          <textarea id="crPolicy" class="input" rows="3" placeholder="z. B. Bis zum Anreisetag 18:00 Uhr kostenfrei stornierbar."></textarea>
-        </label>
-        <label>Preis/Nacht (€) <input id="crPrice" type="number" step="1" min="0" class="input" value="0"></label>
-        <label>Gemappt
-          <select id="crMapped" class="input theme-select">
-            <option value="true">ja</option><option value="false" selected>nein</option>
-          </select>
-        </label>
-      </div>
-
-      <!-- Modal: Neue Rate (separat von Rateneinstellungen) -->
-<div class="modal" id="modalRateCreate" role="dialog" aria-modal="true" aria-labelledby="rateCreateTitle" hidden>
-  <div class="modal__card modal__card--lg">
-    <header class="modal__head">
-      <h2 id="rateCreateTitle">Neue Rate erstellen</h2>
-      <button class="icon-btn" data-close="modalRateCreate" aria-label="Schließen">✕</button>
-    </header>
-
-    <form class="modal__body" id="rateCreateForm">
-      <div class="grid">
-        <label class="field">
-          <span>Rate-Name</span>
-          <input type="text" name="name" required placeholder="z. B. Flex exkl. Frühstück" />
-        </label>
-        <label class="field">
-          <span>Rate-Code</span>
-          <input type="text" name="code" required placeholder="z. B. 1001 oder FLEX" />
-        </label>
-        <label class="field">
-          <span>Typ</span>
-          <select name="type" required>
-            <option value="direct">Direct</option>
-            <option value="corp">Corp</option>
-            <option value="ids">IDS</option>
-          </select>
-        </label>
-        <label class="field">
-          <span>Hotel</span>
-          <select name="hotel" required>
-            <!-- deine Hotel-Optionen -->
-          </select>
-        </label>
-        <label class="field">
-          <span>Gültig von</span>
-          <input type="date" name="valid_from" required />
-        </label>
-        <label class="field">
-          <span>Gültig bis</span>
-          <input type="date" name="valid_to" required />
-        </label>
-        <label class="field field--full">
-          <span>Beschreibung</span>
-          <textarea name="desc" rows="3" placeholder="Optionale Beschreibung…"></textarea>
-        </label>
-      </div>
-    </form>
-
-    <footer class="modal__foot">
-      <button class="btn-secondary" data-cancel-create>Abbrechen</button>
-      <button class="btn-primary" form="rateCreateForm">Speichern</button>
-    </footer>
-  </div>
-</div>
-      
+<!-- Rateneinstellungen (nur Verwaltung/Liste – ohne "Neue Rate") -->
+<section class="modal" id="modalRates" role="dialog" aria-labelledby="ratesTitle" aria-modal="true">
+  <header>
+    <h3 id="ratesTitle" class="mono"><span class="set-logo" aria-hidden="true"></span> Rateneinstellungen</h3>
+    <button class="btn" data-close>Schließen</button>
+  </header>
+  <div class="body">
     <!-- Sidebar: Tabs -->
     <aside class="rates-side">
       <button class="btn tile" id="rsTabDirect">Direct-Rate</button>
@@ -695,7 +616,8 @@
         <div class="card-head">
           <h3 class="mono" id="rsTitle">Raten – Direct</h3>
           <div class="rs-toolbar">
-            <button class="btn primary sm" id="rsNewRate">+ Neue Rate</button>
+            <!-- "+ Neue Rate" wird später als eigener Schritt/Modal wieder aktiviert -->
+            <!-- <button class="btn primary sm" id="rsNewRate">+ Neue Rate</button> -->
             <input id="rsSearch" class="input sm" placeholder="Suchen: Name oder Ratecode">
             <select id="rsHotelFilter" class="input sm theme-select" title="Hotel filtern"></select>
           </div>
@@ -717,14 +639,16 @@
           </table>
         </div>
       </div>
-    
 
       <div class="set-footer">
         <div style="flex:1"></div>
-        <button class="btn primary" id="btnRateCreate">Rate erstellen</button>
+        <!-- "Rate erstellen" wird im nächsten Step als eigenes Modal nachgerüstet -->
+        <!-- <button class="btn primary" id="btnRateCreate">Rate erstellen</button> -->
       </div>
-    </div>
-  </section>
+    </section>
+  </div>
+</section>
+
 
   <!-- Hilfe & FAQ -->
   <section class="modal" id="modalHelp" role="dialog" aria-labelledby="helpTitle" aria-modal="true" aria-hidden="true">
