@@ -672,6 +672,13 @@ html.modal-open { overflow: hidden; }
 .modal { z-index: 1001; }
 .modal-backdrop { z-index: 1000; pointer-events: none; } /* oder sicherstellen, dass die Modal über der Backdrop liegt */
 
+/* Kategorieverwaltung */
+.cats-wrap{display:grid;grid-template-columns:260px 1fr;gap:12px}
+.cats-side{display:flex;flex-direction:column;gap:10px}
+.cats-main .row{align-items:center}
+.cats-main .btn.sm{height:34px}
+@media(max-width:900px){ .cats-wrap{grid-template-columns:1fr} }
+
 
 
 
