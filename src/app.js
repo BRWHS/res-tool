@@ -1734,89 +1734,252 @@ document.querySelector('#sketchBack')?.addEventListener('click', () => {
   document.querySelector('#sketchStateList')?.classList.remove('hidden');
 });
 
-// ===== Kategorieverwaltung (LocalStorage + UI) =====
-const CATS_KEY = 'resTool.categories';
+/* =========================
+   CATEGORY MODULE v2 (per Hotel: code, name, maxPax)
+   ========================= */
+const CATS_V2_KEY = 'resTool.categoriesV2';
+const LEGACY_CATS_KEY = 'resTool.categories'; // alte Liste: nur Namen[]
+const CAT_CODE_RE = /^[A-Z0-9]{2,12}$/;
+const CAT_PAGE_SIZE = 50;
 
-function readCats(){ try { return JSON.parse(localStorage.getItem(CATS_KEY)) || {}; } catch { return {}; } }
-function writeCats(map){ localStorage.setItem(CATS_KEY, JSON.stringify(map || {})); }
+const DEFAULT_CATS = [
+  { code:'STD', name:'Standard', maxPax:2 },
+  { code:'SUP', name:'Superior', maxPax:2 },
+  { code:'STE', name:'Suite',    maxPax:4 },
+];
 
-// Seed: wenn noch nichts gespeichert ist → pro Hotel mit Defaults füllen
-function ensureCatsSeed(){
-  const map = readCats();
-  if (Object.keys(map).length === 0){
-    const base = (HOTEL_CATEGORIES && HOTEL_CATEGORIES.default) || ['Standard','Superior','Suite'];
-    (Array.isArray(HOTELS) ? HOTELS : []).forEach(h => { map[h.code] = [...base]; });
-    writeCats(map);
-  }
-  // in Runtime-Objekt spiegeln (const-Objekt ist mutierbar)
-  Object.entries(readCats()).forEach(([code, arr]) => { HOTEL_CATEGORIES[code] = arr; });
+// --- Storage helpers ---
+function readCatsV2(){
+  try { return JSON.parse(localStorage.getItem(CATS_V2_KEY)) || {}; }
+  catch { return {}; }
 }
-ensureCatsSeed();
+function writeCatsV2(map){
+  localStorage.setItem(CATS_V2_KEY, JSON.stringify(map||{}));
+  // Sync für Legacy-Kompatibilität (HOTEL_CATEGORIES → Namen[])
+  window.HOTEL_CATEGORIES = window.HOTEL_CATEGORIES || { default: ['Standard','Superior','Suite'] };
+  Object.entries(map||{}).forEach(([code, list])=>{
+    window.HOTEL_CATEGORIES[code] = (list||[]).map(x=>x.name);
+  });
+}
+function hotelsList(){ return Array.isArray(window.HOTELS) ? window.HOTELS : []; } // HOTELS existiert bereits. :contentReference[oaicite:2]{index=2}
 
-function renderCatsUI(){
-  ensureCatsSeed();
+// --- Migration / Seed ---
+(function migrateCats(){
+  const v2 = readCatsV2();
+  if (Object.keys(v2).length) { writeCatsV2(v2); return; } // schon V2
+  // Legacy vorhanden?
+  let legacy = {};
+  try { legacy = JSON.parse(localStorage.getItem(LEGACY_CATS_KEY)) || {}; } catch {}
+  if (Object.keys(legacy).length){
+    const map = {};
+    for (const h of hotelsList()){
+      const names = legacy[h.code] || window.HOTEL_CATEGORIES?.default || [];
+      // simple Ableitung: erste 3 Bes. + Laufnummer, falls doppelt
+      const used = new Set();
+      map[h.code] = names.map((n,i)=>{
+        let base = (n||'').normalize('NFD').replace(/[^\w]/g,'').toUpperCase().slice(0,3);
+        if (!base || base.length<2) base = 'CAT';
+        let code = base; let k=1;
+        while (used.has(code)) { code = base + (++k); }
+        used.add(code);
+        return { code, name:n, maxPax:2 };
+      });
+    }
+    writeCatsV2(map);
+  } else {
+    // Erstbefüllung: Defaults je Hotel
+    const map = {};
+    for (const h of hotelsList()){ map[h.code] = DEFAULT_CATS.map(x=>({...x})); }
+    writeCatsV2(map);
+  }
+})();
 
-  const sel  = document.getElementById('catHotel') || document.getElementById('catsHotel');
-  const list = document.getElementById('catList');
-  const info = document.getElementById('catInfo');
-  if (!sel || !list) return;
+// --- Public helpers ---
+function getCategoriesForHotel(hotelCode){
+  const map = readCatsV2();
+  return (map[hotelCode] || []).slice();
+}
+function upsertCategory(hotelCode, cat){ // {code,name,maxPax}
+  const map = readCatsV2();
+  const list = (map[hotelCode]||[]).slice();
+  const i = list.findIndex(x=>x.code===cat.code);
+  if (i>=0) list[i] = {...list[i], name:cat.name, maxPax:cat.maxPax};
+  else list.push({code:cat.code, name:cat.name, maxPax:cat.maxPax});
+  map[hotelCode]=list; writeCatsV2(map);
+  refreshCategoryDependents(hotelCode);
+}
+function deleteCategory(hotelCode, code){
+  const map = readCatsV2();
+  map[hotelCode] = (map[hotelCode]||[]).filter(x=>x.code!==code);
+  writeCatsV2(map);
+  refreshCategoryDependents(hotelCode);
+}
+function findCatByName(hotelCode, name){
+  return getCategoriesForHotel(hotelCode).find(x=>x.name===name);
+}
+function findCatByCode(hotelCode, code){
+  return getCategoriesForHotel(hotelCode).find(x=>x.code===code);
+}
 
-  // Hotels befüllen
-  sel.innerHTML = (Array.isArray(HOTELS)?HOTELS:[])
-    .map(h => `<option value="${h.code}">${h.group} - ${h.name.replace(/^.*? /,'')}</option>`).join('');
-  if (!sel.value && HOTELS[0]) sel.value = HOTELS[0].code;
+// --- Mapping in bestehende UIs (Neue Rate, Wizard) ---
+function refreshCategoryDependents(hotelCode){
+  // 1) Ratenformular (multi): #rateCats – Werte bleiben die NAMEN (Kompatibilität),
+  //    Anzeige enthält Code/Max. Pers. als Text.
+  const rateCats = document.getElementById('rateCats');
+  if (rateCats){
+    const cats = getCategoriesForHotel(hotelCode);
+    rateCats.innerHTML = ['*', ...cats.map(c=>c.name)]
+      .map(n => {
+        if (n==='*') return `<option value="*">Alle</option>`;
+        const c = findCatByName(hotelCode, n);
+        return `<option value="${n}" data-code="${c?.code||''}" data-max="${c?.maxPax||''}">${n} (${c?.code||'—'} · max ${c?.maxPax||'—'})</option>`;
+      }).join('');
+    try { makeMultiSelectFriendly(rateCats); } catch(e){}
+  }
 
-  const map  = readCats();
-  const cats = map[sel.value] || HOTEL_CATEGORIES.default || [];
-  list.innerHTML = cats.length ? cats.map((c,i)=>`
-    <div class="row">
-      <input class="input sm" value="${c}" data-idx="${i}">
-      <button class="btn sm" data-act="up"   data-idx="${i}">↑</button>
-      <button class="btn sm" data-act="down" data-idx="${i}">↓</button>
-      <button class="btn sm danger" data-act="del" data-idx="${i}">Löschen</button>
-    </div>
-  `).join('') : `<p class="muted tiny">Noch keine Kategorien.</p>`;
-  if (info) info.textContent = `Hotel: ${sel.value} · ${cats.length} Kategorien`;
+  // 2) Wizard Step „Neue Buchung“ – #newCat (single)
+  const wizardHotelSel = document.getElementById('newHotel');
+  const wizardCatSel   = document.getElementById('newCat');
+  if (wizardHotelSel && wizardCatSel && (wizardHotelSel.value || hotelCode)){
+    const code = wizardHotelSel.value || hotelCode;
+    const cats = getCategoriesForHotel(code);
+    wizardCatSel.innerHTML = cats.map(c=>`<option value="${c.name}" data-code="${c.code}" data-max="${c.maxPax}">${c.name} (${c.code} · max ${c.maxPax})</option>`).join('');
+  }
+}
 
-  sel.onchange = ()=> renderCatsUI();
+// --- UI Rendering (Suche + Pagination) ---
+window.__catsState = window.__catsState || { page:1, q:'' };
 
-  // Buttons (löschen/verschieben)
-  list.onclick = (e)=>{
-    const b = e.target.closest('button[data-act]'); if(!b) return;
-    const act=b.dataset.act; const idx=Number(b.dataset.idx);
-    const cur = readCats(); const arr = cur[sel.value] || [];
-    if (act==='del') arr.splice(idx,1);
-    if (act==='up' && idx>0){ [arr[idx-1],arr[idx]] = [arr[idx],arr[idx-1]]; }
-    if (act==='down' && idx<arr.length-1){ [arr[idx+1],arr[idx]] = [arr[idx],arr[idx+1]]; }
-    cur[sel.value]=arr; writeCats(cur); HOTEL_CATEGORIES[sel.value]=arr;
-    renderCatsUI();
-    // Wizard Step 3 aktualisieren (falls sichtbar)
-    if (typeof refreshNewResRates === 'function') refreshNewResRates();
-  };
+function renderCatsV2(){
+  const sel = document.getElementById('catsHotel');
+  const qIn = document.getElementById('catsSearch');
+  const body= document.getElementById('catsTbody');
+  const title = document.getElementById('catsTitleHotel');
+  const count = document.getElementById('catsCount');
+  if (!sel || !body) return;
 
-  // Inline-Edit
-  list.oninput = (e)=>{
-    const inp = e.target.closest('input[data-idx]'); if(!inp) return;
-    const idx = Number(inp.dataset.idx);
-    const cur = readCats(); const arr = cur[sel.value] || [];
-    arr[idx] = inp.value.trim();
-    cur[sel.value]=arr; writeCats(cur); HOTEL_CATEGORIES[sel.value]=arr;
-  };
-
-  // Neue Kategorie
-  const addBtn = document.getElementById('btnCatAdd');
-  if (addBtn && !addBtn.__catsBound){
-    addBtn.__catsBound = true;
-    addBtn.addEventListener('click', ()=>{
-      const inp = document.getElementById('catNewName');
-      const name = (inp?.value || '').trim(); if (!name) return;
-      const cur = readCats(); const arr = cur[sel.value] || [];
-      arr.push(name); cur[sel.value]=arr; writeCats(cur); HOTEL_CATEGORIES[sel.value]=arr;
-      inp.value=''; renderCatsUI();
-      if (typeof refreshNewResRates === 'function') refreshNewResRates();
+  // Hotels einmalig füllen
+  if (!sel.options.length){
+    hotelsList().forEach(h=>{
+      const opt = document.createElement('option');
+      opt.value = h.code; opt.textContent = `${h.group} - ${h.name.replace(/^.*? /,'')}`;
+      sel.append(opt);
     });
+    sel.value = sel.value || (hotelsList()[0]?.code || '');
+    sel.addEventListener('change', ()=>{ window.__catsState.page=1; renderCatsV2(); });
   }
+
+  // Titel
+  const h = hotelsList().find(x=>x.code===sel.value);
+  if (title && h) title.textContent = `Kategorien – ${h.group} ${h.name.replace(/^.*? /,'')}`;
+
+  // Filter
+  const term = (window.__catsState.q || '').trim().toUpperCase();
+  if (qIn && !qIn.__bound){
+    qIn.__bound=true;
+    qIn.addEventListener('input', (e)=>{ window.__catsState.q=e.target.value; window.__catsState.page=1; renderCatsV2(); });
+  }
+
+  // Daten holen + filtern
+  const all = getCategoriesForHotel(sel.value);
+  const filtered = term ? all.filter(c =>
+    c.code.toUpperCase().includes(term) || c.name.toUpperCase().includes(term)
+  ) : all;
+
+  // Pagination
+  const total = filtered.length;
+  const pages = Math.max(1, Math.ceil(total / CAT_PAGE_SIZE));
+  const page  = Math.min(window.__catsState.page, pages);
+  const start = (page-1) * CAT_PAGE_SIZE;
+  const rows  = filtered.slice(start, start+CAT_PAGE_SIZE);
+
+  // Tabelle rendern (Code & Hotel nicht editierbar, Name/MaxPax editierbar)
+  body.innerHTML = rows.map(c=>`
+    <tr class="row" data-code="${c.code}">
+      <td><input class="input sm" value="${c.code}" disabled></td>
+      <td><input class="input sm" value="${c.name}" data-f="name"></td>
+      <td><input class="input sm" type="number" min="1" max="12" value="${c.maxPax}" data-f="max"></td>
+      <td class="right">
+        <button class="btn sm" data-act="save">Speichern</button>
+        <button class="btn sm danger" data-act="del">Löschen</button>
+      </td>
+    </tr>
+  `).join('') || `<tr><td colspan="4" class="muted tiny">Keine Kategorien gefunden.</td></tr>`;
+
+  // Zähler + Paging UI
+  const info = document.getElementById('catsPageInfo');
+  const btnPrev = document.getElementById('catsPrev');
+  const btnNext = document.getElementById('catsNext');
+  if (info) info.textContent = `Seite ${page} / ${pages}`;
+  if (count) count.textContent = `${total} Einträge`;
+
+  if (btnPrev && !btnPrev.__bound){
+    btnPrev.__bound = true;
+    btnPrev.addEventListener('click', ()=>{ if (window.__catsState.page>1){ window.__catsState.page--; renderCatsV2(); }});
+  }
+  if (btnNext && !btnNext.__bound){
+    btnNext.__bound = true;
+    btnNext.addEventListener('click', ()=>{ if (window.__catsState.page<pages){ window.__catsState.page++; renderCatsV2(); }});
+  }
+
+  // Row actions
+  body.onclick = (e)=>{
+    const tr = e.target.closest('tr.row'); if (!tr) return;
+    const act= e.target.closest('button[data-act]')?.dataset.act;
+    const code = tr.dataset.code;
+    if (!act || !code) return;
+
+    const hotel = sel.value;
+    if (act==='del'){
+      deleteCategory(hotel, code); renderCatsV2();
+      return;
+    }
+    if (act==='save'){
+      const name = tr.querySelector('input[data-f="name"]')?.value.trim();
+      const max  = Number(tr.querySelector('input[data-f="max"]')?.value || 2);
+      if (!name){ setCatsInfo('Name darf nicht leer sein.'); return; }
+      if (!(max>=1 && max<=12)){ setCatsInfo('Max. Personen zwischen 1–12.'); return; }
+      upsertCategory(hotel, {code, name, maxPax:max});
+      setCatsInfo('Gespeichert.');
+    }
+  };
 }
+
+function setCatsInfo(txt){ const el = document.getElementById('catsInfo'); if (el) el.textContent = txt||''; }
+
+// --- Anlage neue Kategorie ---
+(function bindCatCreate(){
+  const btn = document.getElementById('btnCatCreate');
+  if (!btn) return;
+  btn.addEventListener('click', ()=>{
+    const hotel = document.getElementById('catsHotel')?.value || '';
+    const code  = (document.getElementById('catCodeNew')?.value || '').toUpperCase().trim();
+    const name  = (document.getElementById('catNameNew')?.value || '').trim();
+    const max   = Number(document.getElementById('catMaxNew')?.value || 2);
+
+    if (!hotel) return setCatsInfo('Bitte Hotel wählen.');
+    if (!CAT_CODE_RE.test(code)) return setCatsInfo('Ungültiger Code (nur A-Z/0-9, 2–12 Zeichen).');
+    if (!name) return setCatsInfo('Bitte einen Namen angeben.');
+    if (!(max>=1 && max<=12)) return setCatsInfo('Max. Personen zwischen 1–12.');
+
+    const exists = !!findCatByCode(hotel, code);
+    if (exists) return setCatsInfo('Code existiert bereits für dieses Hotel.');
+
+    upsertCategory(hotel, {code, name, maxPax:max});
+    document.getElementById('catCodeNew').value='';
+    document.getElementById('catNameNew').value='';
+    document.getElementById('catMaxNew').value='2';
+    setCatsInfo('Hinzugefügt.');
+    renderCatsV2();
+  });
+})();
+
+// --- Öffner (ersetze ggf. alten Listener) ---
+(function wireCatsOpener(){
+  const btn = document.getElementById('btnCats');
+  if (!btn) return;
+  btn.addEventListener('click', ()=>{ renderCatsV2(); openModal('modalCats'); });
+})();
 
 // Öffner (Einstellungen → Kategorieverwaltung)
 document.getElementById('btnCats')?.addEventListener('click', ()=>{
