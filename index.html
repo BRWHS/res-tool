@@ -154,6 +154,57 @@
     <a class="btn sm" href="https://www.notion.so/11a5a3d6427580fbbb4ac3a0dcd1e209?v=35809356ec4245718f85f4a470e066d6" target="_blank" rel="noopener">Handbuch</a>
   </aside>
 
+  <!-- Rate bearbeiten -->
+<section class="modal" id="modalRateEdit" role="dialog" aria-labelledby="rateEditTitle" aria-modal="true" aria-hidden="true">
+  <header>
+    <h3 id="rateEditTitle" class="mono"><span class="set-logo" aria-hidden="true"></span> Rate bearbeiten</h3>
+    <button class="btn" data-close>Schließen</button>
+  </header>
+  <div class="body">
+    <div class="grid2">
+      <label>Hotel
+        <select id="erHotel" class="input theme-select" disabled></select>
+      </label>
+      <label>Ratecode
+        <input id="erCode" class="input" disabled />
+      </label>
+      <label>Ratentyp
+        <select id="erType" class="input theme-select" disabled>
+          <option>Direct</option>
+          <option>Corp</option>
+          <option>IDS</option>
+        </select>
+      </label>
+      <label>Ratename
+        <input id="erName" class="input" placeholder="z. B. Flex exkl. Frühstück" />
+      </label>
+      <label style="grid-column:1 / -1">Kategorien
+        <select id="erCats" class="input theme-select" multiple size="4"></select>
+      </label>
+      <label style="grid-column:1 / -1">Stornobedingung
+        <textarea id="erPolicy" class="input" rows="3" placeholder="z. B. Bis zum Anreisetag 18:00 Uhr kostenfrei stornierbar."></textarea>
+      </label>
+      <label>Preis/Nacht (€)
+        <input id="erPrice" type="number" step="1" min="0" class="input" />
+      </label>
+      <label>Gemappt
+        <select id="erMapped" class="input theme-select">
+          <option value="true">ja</option>
+          <option value="false">nein</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="set-footer" style="gap:8px; justify-content:flex-end">
+      <button class="btn danger" id="btnRateDelete">Rate löschen</button>
+      <button class="btn primary" id="btnRateUpdate">Änderungen speichern</button>
+    </div>
+
+    <p class="muted tiny" style="margin-top:6px">Hotel, Ratecode und Ratentyp sind fix und nicht änderbar.</p>
+  </div>
+</section>
+
+
   <!-- Backdrop -->
   <div class="modal-backdrop" id="backdrop" aria-hidden="true"></div>
 
