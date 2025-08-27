@@ -39,67 +39,84 @@
     const el = asEl(target);
     if (!el) return;
 
-     const STACK = (window.__MODAL_STACK__ ||= []);
+    // ===== REPLACE openModal & closeModal =====
+const STACK = (window.__MODAL_STACK__ ||= []);
 
-  function anyOpen(){ return STACK.length > 0; }
+function openModal(target){
+  const el = typeof target === 'string'
+    ? document.getElementById(target.replace(/^#/, ''))
+    : target;
+  if (!el) return;
 
-  function openModal(target){
-    const el = asEl(target);
-    if (!el) return;
+  // Aktuelles Top ermitteln (Default 60 wie in CSS)
+  const prevTop = STACK[STACK.length - 1];
+  const prevTopZ = prevTop
+    ? parseInt(prevTop.style.zIndex || getComputedStyle(prevTop).zIndex || '60', 10)
+    : 60;
 
-    // NICHT mehr andere Modals schließen – wir stacken!
-    const prevTop = STACK[STACK.length - 1];
-    if (prevTop && prevTop !== el) {
-      prevTop.classList.add('blurred');
-      prevTop.style.pointerEvents = 'none';
-    }
-
-    el.classList.add('open');
-    el.setAttribute('aria-hidden','false');
-
-    // z-index nach Stackhöhe staffeln
-    const baseZ = 1001;
-    el.style.zIndex = baseZ + STACK.length + 1;
-
-    STACK.push(el);
-
-    const b = ensureBackdrop();
-    b.classList.add('open');
-    b.style.display = 'block';
-    b.setAttribute('aria-hidden','false');
-    document.documentElement.classList.add('modal-open');
-
-    const focusEl = el.querySelector('[data-close]') || el.querySelector('h3, h2, [tabindex], button, input, select, textarea');
-    if (focusEl && focusEl.focus) focusEl.focus({ preventScroll: true });
+  // Vorheriges Modal weich "deaktivieren"
+  if (prevTop && prevTop !== el){
+    prevTop.classList.add('blurred');
+    prevTop.style.pointerEvents = 'none';
   }
 
-  function closeModal(target){
-    const b = ensureBackdrop();
-    let el = target ? asEl(target) : STACK[STACK.length - 1];
-    if (!el) return;
+  // Backdrop zwischen Alt & Neu
+  const b = ensureBackdrop();             // deine vorhandene Helper-Funktion
+  b.classList.add('open');
+  b.style.display = 'block';
+  b.setAttribute('aria-hidden','false');
+  // WICHTIG: Backdrop liegt ÜBER dem alten Modal, aber UNTER dem neuen
+  b.style.zIndex = prevTopZ + 1;
 
-    // aus dem Stack entfernen
-    const idx = STACK.lastIndexOf(el);
-    if (idx >= 0) STACK.splice(idx, 1);
+  // Neues Modal darüber
+  el.classList.add('open');
+  el.setAttribute('aria-hidden','false');
+  el.style.zIndex = (prevTopZ + 2).toString();
 
-    el.classList.remove('open','blurred');
-    el.style.pointerEvents = '';
-    el.style.zIndex = '';
-    el.setAttribute('aria-hidden','true');
+  STACK.push(el);
+  document.documentElement.classList.add('modal-open');
 
-    // Top wieder aktivieren/ent-blurren
-    const newTop = STACK[STACK.length - 1];
-    if (newTop){
-      newTop.classList.remove('blurred');
-      newTop.style.pointerEvents = '';
-      newTop.focus?.({ preventScroll: true });
-    } else {
-      b.classList.remove('open');
-      b.style.display = 'none';
-      b.setAttribute('aria-hidden','true');
-      document.documentElement.classList.remove('modal-open');
-    }
+  // Fokus auf Close-Button oder erstes focusbares Element
+  const focusEl = el.querySelector('[data-close]') || el.querySelector('h3, h2, [tabindex], button, input, select, textarea');
+  focusEl?.focus?.({ preventScroll: true });
+}
+
+function closeModal(target){
+  const b = ensureBackdrop();
+  const el = typeof target === 'string'
+    ? document.getElementById(target.replace(/^#/, ''))
+    : (target || STACK[STACK.length - 1]);
+  if (!el) return;
+
+  // aus Stack entfernen
+  const idx = STACK.lastIndexOf(el);
+  if (idx >= 0) STACK.splice(idx, 1);
+
+  // aktuelles Modal schließen
+  el.classList.remove('open','blurred');
+  el.style.pointerEvents = '';
+  el.style.zIndex = '';
+  el.setAttribute('aria-hidden','true');
+
+  // neues Top ermitteln
+  const newTop = STACK[STACK.length - 1];
+  if (newTop){
+    // Backdrop eins unter dem neuen Top
+    const newTopZ = parseInt(newTop.style.zIndex || getComputedStyle(newTop).zIndex || '60', 10);
+    b.style.zIndex = (newTopZ - 1).toString();
+    newTop.classList.remove('blurred');
+    newTop.style.pointerEvents = '';
+    newTop.focus?.({ preventScroll: true });
+  } else {
+    // Kein Modal mehr offen → Backdrop weg
+    b.classList.remove('open');
+    b.style.display = 'none';
+    b.setAttribute('aria-hidden','true');
+    document.documentElement.classList.remove('modal-open');
   }
+}
+// ===== END REPLACE =====
+
 
     // dieses Modal öffnen
     el.classList.add('open');
