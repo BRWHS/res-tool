@@ -663,6 +663,13 @@ html.modal-open { overflow: hidden; }
 
 .rs-toolbar #rsNewRate { display:inline-flex; } /* Sichtbar in der Kopfzeile */
 
+/* Stacking-Blur für unterliegende Modals */
+.modal.blurred {
+  filter: blur(4px) saturate(.95) brightness(.9);
+  transition: filter .15s ease;
+}
+
+
 
 
 
