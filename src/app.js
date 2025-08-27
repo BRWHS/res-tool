@@ -2080,7 +2080,13 @@ function getMappedRatesFor(hotelCode, category=null, type=null){
     (!category || (Array.isArray(r.categories) && (r.categories.includes(category) || r.categories.includes('*'))))
   );
 }
-
+  
+document.getElementById('rsBody')?.addEventListener('click', (e) => {
+  const tr = e.target.closest('tr.row');
+  if (!tr) return;
+  const id = tr.dataset.rateId;
+  if (id) openRateEditor(id);
+});
 
 // --- Tiny DOM utils relying on your q/qa/el ---
 function fillHotelSelectOptions(sel){
@@ -2204,7 +2210,8 @@ function rsSetType(type){
       el('td', {}, EUR.format(Number(r.price||0))),
       el('td', {}, mappedTxt)
     );
-    tr.addEventListener('click', ()=> openRateEditor(r.id)); // <-- aktivieren
+      tr.dataset.rateId = r.id;                    // ID an die Zeile hängen
+      tr.addEventListener('click', () => openRateEditor(r.id));  // Editor öffnen
     tbody.append(tr);
     
   });
