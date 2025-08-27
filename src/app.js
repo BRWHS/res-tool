@@ -100,13 +100,14 @@
   ensureBackdrop().addEventListener('click', ()=> closeModal());
 
   // [data-close] Buttons
-  document.addEventListener('click', (e)=>{
+document.addEventListener('click', (e)=>{
   const btn = e.target.closest('[data-close]');
   if (!btn) return;
   e.preventDefault();
   // schließt NUR das oberste Modal und ent-blurrt den Rest korrekt
   closeModal();
 }, { passive:false });
+
 })();
 
 // Legacy-Alias, damit alle vorhandenen Listener weiter funktionieren
@@ -474,8 +475,8 @@ function prepareRateFormReset(){
     selCats.disabled = false;
   }, { once:true });
 
- // Create-Button neu binden (Duplicate-Listener vermeiden)
-const btn = code('btnRateCreate');
+  // Create-Button neu binden (Duplicate-Listener vermeiden)
+  const btn = code('btnRateCreate');
   btn.replaceWith(btn.cloneNode(true));
   document.getElementById('btnRateCreate').addEventListener('click', ()=>{
     const ratecode = (code('crCode').value||'').trim();
@@ -509,8 +510,6 @@ const btn = code('btnRateCreate');
 
   openModal('modalRateCreate');
 }
-
-
 
 
 // Beim Öffnen von Editor/Neuanlage aufrufen:
@@ -2307,22 +2306,18 @@ function openRateCreate(){
     selCats.disabled = false;
   }, { once:true });
 
- // Create-Button neu binden (Duplicate-Listener vermeiden)
-const btnOld = document.getElementById('btnRateCreate');
-if (btnOld) {
-  const btnNew = btnOld.cloneNode(true);
-  btnOld.parentNode.replaceChild(btnNew, btnOld);
-  btnNew.addEventListener('click', () => {
-    const code = (id)=>document.getElementById(id);
-
-    const ratecode  = (code('crCode').value||'').trim();
-    const ratetype  = code('crType').value;
-    const hotel_code= code('crHotel').value;
-    const name      = (code('crName').value||'').trim();
-    const policy    = (code('crPolicy').value||'').trim();
-    const price     = Number(code('crPrice').value||0);
-    const mapped    = code('crMapped').value === 'true';
-    const catsSel   = Array.from(code('crCats').selectedOptions||[]).map(o=>o.value);
+  // Create-Button neu binden (Duplicate-Listener vermeiden)
+  const btn = code('btnRateCreate');
+  btn.replaceWith(btn.cloneNode(true));
+  document.getElementById('btnRateCreate').addEventListener('click', ()=>{
+    const ratecode = (code('crCode').value||'').trim();
+    const ratetype = code('crType').value;
+    const hotel_code = code('crHotel').value;
+    const name = (code('crName').value||'').trim();
+    const policy = (code('crPolicy').value||'').trim();
+    const price  = Number(code('crPrice').value||0);
+    const mapped = code('crMapped').value === 'true';
+    const catsSel = Array.from(code('crCats').selectedOptions||[]).map(o=>o.value);
 
     if (!/^\d+$/.test(ratecode)) return alert('Ratecode muss nur Zahlen enthalten.');
     if (!ratetype) return alert('Bitte Ratentyp wählen.');
@@ -2338,13 +2333,14 @@ if (btnOld) {
       created_at: now, updated_at: now
     });
 
-    try { refreshRates(); } catch(e){}
-    closeModal(); // nur das oberste (Create) schließen → List-Modal ent-blurrt automatisch
+    // UI aktualisieren
+    rsRender();
+    try{ refreshNewResRates(); }catch(e){}
+    closeModal('modalRateCreate');
   });
+
+  openModal('modalRateCreate');
 }
-
-openModal('modalRateCreate');
-
 
 // --- Openers / bindings ---
 q('#btnRates')     ?.addEventListener('click', ()=>{
