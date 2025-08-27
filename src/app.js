@@ -39,11 +39,67 @@
     const el = asEl(target);
     if (!el) return;
 
-    // andere Modals schließen (kein Popup im Popup)
-    document.querySelectorAll('.modal.open').forEach(m=>{
-      m.classList.remove('open');
-      m.setAttribute('aria-hidden','true');
-    });
+     const STACK = (window.__MODAL_STACK__ ||= []);
+
+  function anyOpen(){ return STACK.length > 0; }
+
+  function openModal(target){
+    const el = asEl(target);
+    if (!el) return;
+
+    // NICHT mehr andere Modals schließen – wir stacken!
+    const prevTop = STACK[STACK.length - 1];
+    if (prevTop && prevTop !== el) {
+      prevTop.classList.add('blurred');
+      prevTop.style.pointerEvents = 'none';
+    }
+
+    el.classList.add('open');
+    el.setAttribute('aria-hidden','false');
+
+    // z-index nach Stackhöhe staffeln
+    const baseZ = 1001;
+    el.style.zIndex = baseZ + STACK.length + 1;
+
+    STACK.push(el);
+
+    const b = ensureBackdrop();
+    b.classList.add('open');
+    b.style.display = 'block';
+    b.setAttribute('aria-hidden','false');
+    document.documentElement.classList.add('modal-open');
+
+    const focusEl = el.querySelector('[data-close]') || el.querySelector('h3, h2, [tabindex], button, input, select, textarea');
+    if (focusEl && focusEl.focus) focusEl.focus({ preventScroll: true });
+  }
+
+  function closeModal(target){
+    const b = ensureBackdrop();
+    let el = target ? asEl(target) : STACK[STACK.length - 1];
+    if (!el) return;
+
+    // aus dem Stack entfernen
+    const idx = STACK.lastIndexOf(el);
+    if (idx >= 0) STACK.splice(idx, 1);
+
+    el.classList.remove('open','blurred');
+    el.style.pointerEvents = '';
+    el.style.zIndex = '';
+    el.setAttribute('aria-hidden','true');
+
+    // Top wieder aktivieren/ent-blurren
+    const newTop = STACK[STACK.length - 1];
+    if (newTop){
+      newTop.classList.remove('blurred');
+      newTop.style.pointerEvents = '';
+      newTop.focus?.({ preventScroll: true });
+    } else {
+      b.classList.remove('open');
+      b.style.display = 'none';
+      b.setAttribute('aria-hidden','true');
+      document.documentElement.classList.remove('modal-open');
+    }
+  }
 
     // dieses Modal öffnen
     el.classList.add('open');
