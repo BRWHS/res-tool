@@ -807,25 +807,82 @@
   </div>
 </section>
 
-  <section class="modal" id="modalCats" role="dialog" aria-labelledby="catsTitle" aria-modal="true" aria-hidden="true">
+<!-- Kategorieverwaltung -->
+<section class="modal" id="modalCats" role="dialog" aria-labelledby="catsTitle" aria-modal="true" aria-hidden="true">
   <header>
     <h3 id="catsTitle" class="mono"><span class="set-logo" aria-hidden="true"></span> Kategorieverwaltung</h3>
     <button class="btn" data-close>Schließen</button>
   </header>
+
   <div class="body">
     <div class="cats-wrap">
+      <!-- Linke Spalte: Filter + Anlage -->
       <aside class="cats-side">
-        <label>Hotel
-          <select id="catHotel" class="input theme-select"></select>
+        <label class="set-field">
+          <span class="set-label">Hotel</span>
+          <select id="catsHotel" class="input theme-select"></select>
         </label>
-        <div class="row">
-          <input id="catNewName" class="input" placeholder="Neue Kategorie…">
-          <button class="btn sm" id="btnCatAdd">Hinzufügen</button>
+
+        <label class="set-field">
+          <span class="set-label">Suche</span>
+          <input id="catsSearch" class="input sm" placeholder="Suche: Code/Name">
+        </label>
+
+        <hr class="rates-sep"/>
+
+        <div class="box">
+          <h4 class="mono" style="margin:0 0 6px;">Neue Kategorie</h4>
+          <div class="grid2">
+            <label>Code
+              <input id="catCodeNew" class="input sm" placeholder="z. B. STD" maxlength="12">
+            </label>
+            <label>Max. Pers.
+              <input id="catMaxNew" type="number" min="1" max="12" class="input sm" value="2">
+            </label>
+          </div>
+          <label style="margin-top:6px">Name
+            <input id="catNameNew" class="input sm" placeholder="z. B. Standard">
+          </label>
+          <p class="muted tiny" style="margin:6px 0 0;">
+            Code: nur Großbuchstaben/Zahlen, fix nach Anlage. Hotel & Code sind später nicht änderbar.
+          </p>
+          <div class="right" style="margin-top:8px">
+            <button class="btn sm" id="btnCatCreate">Hinzufügen</button>
+          </div>
+          <p class="muted tiny" id="catsInfo" style="margin-top:6px"></p>
         </div>
-        <p class="muted tiny" id="catInfo"></p>
       </aside>
-      <section class="cats-main">
-        <div id="catList"></div>
+
+      <!-- Rechte Spalte: Tabelle -->
+      <section class="cats-main card">
+        <div class="content">
+          <div class="card-head">
+            <h3 class="mono" id="catsTitleHotel">Kategorien</h3>
+            <div class="muted tiny" id="catsCount"></div>
+          </div>
+
+          <div class="table-wrap">
+            <table class="resv" id="catsTable">
+              <thead>
+                <tr>
+                  <th style="width:120px">Code</th>
+                  <th>Name</th>
+                  <th style="width:140px">Max. Pers.</th>
+                  <th style="width:160px">Aktionen</th>
+                </tr>
+              </thead>
+              <tbody id="catsTbody"></tbody>
+            </table>
+          </div>
+
+          <div class="pagination">
+            <button class="btn" id="catsPrev">Zurück</button>
+            <span class="muted" id="catsPageInfo">Seite 1</span>
+            <button class="btn" id="catsNext">Weiter</button>
+          </div>
+
+          <p class="muted tiny" style="margin-top:6px">Max. 50 Einträge pro Seite.</p>
+        </div>
       </section>
     </div>
   </div>
