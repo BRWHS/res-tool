@@ -878,6 +878,48 @@
 </div>
 </section>
 
+  <section class="modal" id="modalCats" role="dialog" aria-labelledby="catsTitle" aria-modal="true" aria-hidden="true">
+  <header>
+    <h3 id="catsTitle" class="mono"><span class="set-logo" aria-hidden="true"></span> Kategorieverwaltung</h3>
+    <button class="btn" data-close>Schließen</button>
+  </header>
+  <div class="body">
+    <div class="cats-wrap">
+      <aside class="cats-side">
+        <label class="set-field">
+          <span class="set-label">Hotel</span>
+          <select id="catsHotel" class="input theme-select"></select>
+        </label>
+        <p class="muted tiny">Wähle ein Hotel um dessen Kategorien zu bearbeiten.</p>
+      </aside>
+
+      <section class="cats-main card">
+        <div class="content">
+          <div class="card-head">
+            <h3 class="mono" id="catsTitleHotel">Kategorien</h3>
+            <div class="row wrap" style="gap:8px">
+              <input id="catNewName" class="input sm" placeholder="+ neue Kategorie (Name)"/>
+              <button class="btn sm" id="btnCatAdd">Hinzufügen</button>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table class="resv">
+              <thead>
+                <tr><th style="width:42px">#</th><th>Name</th><th style="width:180px">Aktionen</th></tr>
+              </thead>
+              <tbody id="catsBody"></tbody>
+            </table>
+          </div>
+
+          <p class="muted tiny" id="catsInfo" style="margin-top:6px"></p>
+        </div>
+      </section>
+    </div>
+  </div>
+</section>
+
+<button class="btn tile" id="btnCats">Kategorieverwaltung</button>
 
   <!-- Hilfe & FAQ -->
   <section class="modal" id="modalHelp" role="dialog" aria-labelledby="helpTitle" aria-modal="true" aria-hidden="true">
