@@ -1218,29 +1218,18 @@ q('#btnNext')?.addEventListener('click', ()=>{
   }
   function genResNo(){ return 'R' + Date.now().toString(36).toUpperCase(); }
   async function createReservation(){
-    // Nach erfolgreichem Insert:
-if (!error){
-  // >>> HNS PUSH (nicht blocking fürs UI)
   try {
-    // Wir verwenden das gleiche Payload-Objekt, das du gespeichert hast:
-    await (async ()=>{ 
-      try { await pushReservationToHns(payload); }
-      catch (e) { logActivity('channel','push_fail', { err: String(e), res_no: payload.reservation_number }); }
-    })();
-  } catch(e) { /* already logged */ }
+    // 1) Pflichtfelder (Step 4 ist immer ok – hier ggf. später echte Checks ergänzen)
+    if (!validateStep('4')){
+      if (q('#newInfo')) q('#newInfo').textContent = 'Bitte Pflichtfelder ausfüllen.';
+      return;
+    }
 
-  await autoRollPastToDone();
-  await loadKpisToday();
-  await loadKpisNext();
-  await loadReservations();
-  setTimeout(()=>closeModal('modalNew'), 700);
-}
-    if (!validateStep('4')){ q('#newInfo') && (q('#newInfo').textContent='Bitte Pflichtfelder ausfüllen.'); return; }
+    // 2) Daten einsammeln
     const code = q('#newHotel')?.value;
-    const hUI  = HOTELS.find(h=>h.code===code);
-
-    const adults   = Number(q('#newAdults')?.value||1);
-    const children = Number(q('#newChildren')?.value||0);
+    const hUI  = HOTELS.find(h => h.code === code);
+    const adults   = Number(q('#newAdults')?.value || 1);
+    const children = Number(q('#newChildren')?.value || 0);
     const guests   = adults + children;
     const cc = parseCc();
 
@@ -1248,7 +1237,7 @@ if (!error){
       reservation_number: genResNo(),
       status: 'active',
       hotel_code: code || null,
-      hotel_name: (hUI ? displayHotel(hUI) : (code||null)),
+      hotel_name: (hUI ? displayHotel(hUI) : (code || null)),
       arrival: q('#newArr')?.value || null,
       departure: q('#newDep')?.value || null,
       guests,
@@ -1256,38 +1245,58 @@ if (!error){
       guests_children: children,
       category: q('#newCat')?.value || null,
       rate_name: q('#newRate')?.value || null,
-      rate_price: Number(q('#newPrice')?.value||0),
+      rate_price: Number(q('#newPrice')?.value || 0),
+
       guest_first_name: q('#newFname')?.value || null,
-      guest_last_name: q('#newLname')?.value || null,
-      guest_email: q('#newEmail')?.value || null,
-      guest_phone: q('#newPhone')?.value || null,
-      guest_street: q('#newStreet')?.value || null,
-      guest_postal_code: q('#newZip')?.value || null,
-      guest_city: q('#newCity')?.value || null,
+      guest_last_name:  q('#newLname')?.value || null,
+      guest_email:      q('#newEmail')?.value || null,
+      guest_phone:      q('#newPhone')?.value || null,
+      guest_street:     q('#newStreet')?.value || null,
+      guest_postal_code:q('#newZip')?.value || null,
+      guest_city:       q('#newCity')?.value || null,
+
       company_name: q('#newCompany')?.value || null,
-      company_vat: q('#newVat')?.value || null,
-      // Aus dem HTML: kombinierte Felder
-      company_postal_code: q('#newCompanyZipCity')?.value || null,
-      company_address: q('#newAddressStreet')?.value || null,
+      company_vat:  q('#newVat')?.value || null,
+      // IDs gemäß HTML:
+      company_postal_code: q('#newCompanyZip')?.value || null,   // statt newCompanyZipCity
+      company_address:     q('#newAddress')?.value || null,      // statt newAddressStreet
+
       cc_holder: cc.holder,
-      cc_last4: cc.last4,
+      cc_last4:  cc.last4,
       cc_exp_month: cc.exp_m,
-      cc_exp_year: cc.exp_y,
+      cc_exp_year:  cc.exp_y,
+
       channel: 'Direct',
       notes: q('#newNotes')?.value || null
     };
 
+    // 3) Speichern
     const { error } = await supabase.from('reservations').insert(payload);
-    q('#newInfo') && (q('#newInfo').textContent = error ? ('Fehler: ' + error.message) : 'Reservierung gespeichert.');
-    if (!error){
-      await autoRollPastToDone();
-      await loadKpisToday();
-      await loadKpisNext();
-      await loadReservations();
-      setTimeout(()=>closeModal('modalNew'), 700);
-    }
+    if (q('#newInfo')) q('#newInfo').textContent = error ? ('Fehler: ' + error.message) : 'Reservierung gespeichert.';
+    if (error) return;
+
+    // 4) Optional: non-blocking Push an HNS (wenn Channel konfiguriert)
+    (async ()=>{
+      try { await pushReservationToHns(payload); }
+      catch(e){ logActivity('channel','push_fail', { err: String(e), res_no: payload.reservation_number }); }
+    })();
+
+    // 5) UI refresh + Modal schließen
+    await autoRollPastToDone();
+    await loadKpisToday();
+    await loadKpisNext();
+    await loadReservations();
+    setTimeout(()=> closeModal('modalNew'), 700);
+
+  } catch (err) {
+    console.error('createReservation fatal', err);
+    if (q('#newInfo')) q('#newInfo').textContent = 'Fehler: ' + err.message;
   }
-  q('#btnCreate')?.addEventListener('click', createReservation);
+}
+
+// Click-Handler (so lassen)
+q('#btnCreate')?.addEventListener('click', createReservation);
+
 
   /***** Availability *****/
   function datesFrom(startDate, days){
