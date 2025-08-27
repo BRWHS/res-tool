@@ -657,6 +657,12 @@ html.modal-open { overflow: hidden; }
   border-top: 1px solid rgba(0,255,255,.25);
   margin: 6px 0 10px;
 }
+/* Neutralisierung falls Sidebar-Stile noch greifen */
+.rates-side #rsNewRate { all: unset; }
+.rates-side #rsNewRate { display:none; } /* Safety: der Button liegt jetzt in der Toolbar */
+
+.rs-toolbar #rsNewRate { display:inline-flex; } /* Sichtbar in der Kopfzeile */
+
 
 
 
