@@ -1984,7 +1984,7 @@ function setCatsInfo(txt){ const el = document.getElementById('catsInfo'); if (e
 
 // Öffner (Einstellungen → Kategorieverwaltung)
 document.getElementById('btnCats')?.addEventListener('click', ()=>{
-  renderCatsUI();
+  renderCatsV2();
   openModal('modalCats');
 });
 
