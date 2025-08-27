@@ -204,6 +204,53 @@
   </div>
 </section>
 
+  <!-- Neue Rate anlegen -->
+<section class="modal" id="modalRateCreate" role="dialog" aria-labelledby="rateCreateTitle" aria-modal="true" aria-hidden="true">
+  <header>
+    <h3 id="rateCreateTitle" class="mono"><span class="set-logo" aria-hidden="true"></span> Neue Rate</h3>
+    <button class="btn" data-close>Schließen</button>
+  </header>
+  <div class="body">
+    <div class="grid2">
+      <label>Ratecode (nur Zahlen)
+        <input id="crCode" class="input" inputmode="numeric" pattern="\d+" placeholder="z. B. 100123">
+      </label>
+      <label>Ratentyp*
+        <select id="crType" class="input theme-select">
+          <option value="">Bitte wählen</option>
+          <option>Direct</option><option>Corp</option><option>IDS</option>
+        </select>
+      </label>
+      <label>Hotel*
+        <select id="crHotel" class="input theme-select"></select>
+      </label>
+      <label>Ratename*
+        <input id="crName" class="input" placeholder="z. B. Flex exkl. Frühstück">
+      </label>
+      <label style="grid-column:1 / -1">Kategorien
+        <select id="crCats" class="input theme-select" multiple size="4" disabled></select>
+      </label>
+      <label style="grid-column:1 / -1">Stornobedingung
+        <textarea id="crPolicy" class="input" rows="3" placeholder="Bis 18:00 Uhr am Anreisetag kostenfrei stornierbar."></textarea>
+      </label>
+      <label>Preis/Nacht (€)
+        <input id="crPrice" type="number" step="1" min="0" class="input" value="0">
+      </label>
+      <label>Gemappt
+        <select id="crMapped" class="input theme-select">
+          <option value="true">ja</option>
+          <option value="false" selected>nein</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="set-footer" style="gap:8px; justify-content:flex-end">
+      <button class="btn primary" id="btnRateCreate">Rate erstellen</button>
+    </div>
+  </div>
+</section>
+
+
 
   <!-- Backdrop -->
   <div class="modal-backdrop" id="backdrop" aria-hidden="true"></div>
@@ -643,7 +690,9 @@
   <div class="rates-wrap">
     <!-- Linke Listener-Leiste -->
    <aside class="rates-side">
-  <button class="btn primary highlight" id="rsNewRate">+ Neue Rate</button>
+  <button class="btn primary sm" id="rsNewRate">+ Neue Rate</button>
+  <input id="rsSearch" class="input sm" placeholder="Suchen: Name oder Ratecode">
+  <select id="rsHotelFilter" class="input sm theme-select" title="Hotel filtern"></select>
   <hr class="rates-sep"/>
   <button class="btn tile active" id="rsTabDirect" data-rates-tab="direct">Direct-Rate</button>
   <button class="btn tile" id="rsTabCorp"   data-rates-tab="corp">Corp-Rate</button>
