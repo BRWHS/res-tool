@@ -635,6 +635,29 @@ html.modal-open { overflow: hidden; }
   border-color: rgba(0,255,255,.5);
   box-shadow: var(--shadow);
 }
+/* "Neue Rate" Button hervorheben */
+.rates-side #rsNewRate {
+  margin-bottom: 8px;
+  padding: 10px 12px;
+  font-weight: 800;
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(0,255,255,.45), rgba(0,255,255,.18));
+  border: 1px solid rgba(0,255,255,.55);
+  color: var(--accent);
+  box-shadow: 0 0 12px rgba(0,255,255,.35);
+}
+.rates-side #rsNewRate:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0 16px rgba(0,255,255,.55);
+}
+
+/* optische Trennung unter "Neue Rate" */
+.rates-side .rates-sep {
+  border: 0;
+  border-top: 1px solid rgba(0,255,255,.25);
+  margin: 6px 0 10px;
+}
+
 
 
 
