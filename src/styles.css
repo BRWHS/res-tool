@@ -628,5 +628,14 @@ select[disabled]{opacity:.6; pointer-events:none
 .modal-backdrop.open { display: block; }
 html.modal-open { overflow: hidden; }
 
+/* Rateneinstellungen – linke Listener-Leiste Feinschliff */
+.rates-side .btn.tile { width: 100%; }
+.rates-side .btn.tile.active{
+  background: linear-gradient(180deg, rgba(0,255,255,.28), rgba(0,255,255,.12));
+  border-color: rgba(0,255,255,.5);
+  box-shadow: var(--shadow);
+}
+
+
 
 
