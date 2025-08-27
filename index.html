@@ -587,6 +587,7 @@
       <button class="btn tile" id="btnUserPrefs">Benutzereinstellungen</button>
       <button class="btn tile" id="btnChannel">Channel – Einstellungen</button>
       <button class="btn tile" id="btnLog">Log Activity</button>
+      <button class="btn tile" id="btnCats">Kategorieverwaltung</button>
       <button class="btn tile" id="btnRates" data-modal="#modalRates">Rateneinstellungen</button>
       <button class="btn tile" id="btnHelp">Hilfe & FAQ</button>
     </div>
@@ -805,6 +806,31 @@
     </div>
   </div>
 </section>
+
+  <section class="modal" id="modalCats" role="dialog" aria-labelledby="catsTitle" aria-modal="true" aria-hidden="true">
+  <header>
+    <h3 id="catsTitle" class="mono"><span class="set-logo" aria-hidden="true"></span> Kategorieverwaltung</h3>
+    <button class="btn" data-close>Schließen</button>
+  </header>
+  <div class="body">
+    <div class="cats-wrap">
+      <aside class="cats-side">
+        <label>Hotel
+          <select id="catHotel" class="input theme-select"></select>
+        </label>
+        <div class="row">
+          <input id="catNewName" class="input" placeholder="Neue Kategorie…">
+          <button class="btn sm" id="btnCatAdd">Hinzufügen</button>
+        </div>
+        <p class="muted tiny" id="catInfo"></p>
+      </aside>
+      <section class="cats-main">
+        <div id="catList"></div>
+      </section>
+    </div>
+  </div>
+</section>
+
 
   <!-- Benutzereinstellungen -->
   <section class="modal" id="modalUserPrefs" role="dialog" aria-labelledby="userPrefsTitle" aria-modal="true" aria-hidden="true">
