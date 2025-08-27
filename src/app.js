@@ -7,9 +7,8 @@
   if (window.__RESTOOL_APP_V2__) return;
   window.__RESTOOL_APP_V2__ = true;
 
-  // ===== Modal Manager (vereinheitlicht: Klassen-basiert, eine Quelle der Wahrheit) =====
+  // ===== Modal Manager (Stacking) =====
 (function () {
-  // Nur einmal initialisieren
   if (window.__RESTOOL_MODAL_CORE__) return;
   window.__RESTOOL_MODAL_CORE__ = true;
 
@@ -23,100 +22,91 @@
     }
     return b;
   }
-
   function asEl(target){
     if (!target) return null;
-    if (typeof target === 'string') {
-      const id = target.replace(/^#/,'');
-      return document.getElementById(id);
-    }
+    if (typeof target === 'string') return document.getElementById(target.replace(/^#/,''));
     return target.nodeType ? target : null;
   }
 
-  function anyOpen(){ return document.querySelectorAll('.modal.open').length > 0; }
+  const STACK = (window.__MODAL_STACK__ ||= []);
 
   function openModal(target){
     const el = asEl(target);
     if (!el) return;
 
-    // ===== REPLACE openModal & closeModal =====
-const STACK = (window.__MODAL_STACK__ ||= []);
+    const prevTop = STACK[STACK.length - 1];
+    const prevTopZ = prevTop
+      ? parseInt(prevTop.style.zIndex || getComputedStyle(prevTop).zIndex || '60', 10)
+      : 60;
 
-function openModal(target){
-  const el = typeof target === 'string'
-    ? document.getElementById(target.replace(/^#/, ''))
-    : target;
-  if (!el) return;
+    if (prevTop && prevTop !== el){
+      prevTop.classList.add('blurred');
+      prevTop.style.pointerEvents = 'none';
+    }
 
-  // Aktuelles Top ermitteln (Default 60 wie in CSS)
-  const prevTop = STACK[STACK.length - 1];
-  const prevTopZ = prevTop
-    ? parseInt(prevTop.style.zIndex || getComputedStyle(prevTop).zIndex || '60', 10)
-    : 60;
+    const b = ensureBackdrop();
+    b.classList.add('open');
+    b.style.display = 'block';
+    b.setAttribute('aria-hidden','false');
+    // Backdrop zwischen alt (prevTop) und neu (el)
+    b.style.zIndex = String(prevTopZ + 1);
 
-  // Vorheriges Modal weich "deaktivieren"
-  if (prevTop && prevTop !== el){
-    prevTop.classList.add('blurred');
-    prevTop.style.pointerEvents = 'none';
+    el.classList.add('open');
+    el.setAttribute('aria-hidden','false');
+    el.style.zIndex = String(prevTopZ + 2);
+
+    STACK.push(el);
+    document.documentElement.classList.add('modal-open');
+
+    const focusEl = el.querySelector('[data-close]') || el.querySelector('h3, h2, [tabindex], button, input, select, textarea');
+    focusEl?.focus?.({ preventScroll: true });
   }
 
-  // Backdrop zwischen Alt & Neu
-  const b = ensureBackdrop();             // deine vorhandene Helper-Funktion
-  b.classList.add('open');
-  b.style.display = 'block';
-  b.setAttribute('aria-hidden','false');
-  // WICHTIG: Backdrop liegt ÜBER dem alten Modal, aber UNTER dem neuen
-  b.style.zIndex = prevTopZ + 1;
+  function closeModal(target){
+    const b = ensureBackdrop();
+    const el = asEl(target) || STACK[STACK.length - 1];
+    if (!el) return;
 
-  // Neues Modal darüber
-  el.classList.add('open');
-  el.setAttribute('aria-hidden','false');
-  el.style.zIndex = (prevTopZ + 2).toString();
+    const idx = STACK.lastIndexOf(el);
+    if (idx >= 0) STACK.splice(idx, 1);
 
-  STACK.push(el);
-  document.documentElement.classList.add('modal-open');
+    el.classList.remove('open','blurred');
+    el.style.pointerEvents = '';
+    el.style.zIndex = '';
+    el.setAttribute('aria-hidden','true');
 
-  // Fokus auf Close-Button oder erstes focusbares Element
-  const focusEl = el.querySelector('[data-close]') || el.querySelector('h3, h2, [tabindex], button, input, select, textarea');
-  focusEl?.focus?.({ preventScroll: true });
-}
-
-function closeModal(target){
-  const b = ensureBackdrop();
-  const el = typeof target === 'string'
-    ? document.getElementById(target.replace(/^#/, ''))
-    : (target || STACK[STACK.length - 1]);
-  if (!el) return;
-
-  // aus Stack entfernen
-  const idx = STACK.lastIndexOf(el);
-  if (idx >= 0) STACK.splice(idx, 1);
-
-  // aktuelles Modal schließen
-  el.classList.remove('open','blurred');
-  el.style.pointerEvents = '';
-  el.style.zIndex = '';
-  el.setAttribute('aria-hidden','true');
-
-  // neues Top ermitteln
-  const newTop = STACK[STACK.length - 1];
-  if (newTop){
-    // Backdrop eins unter dem neuen Top
-    const newTopZ = parseInt(newTop.style.zIndex || getComputedStyle(newTop).zIndex || '60', 10);
-    b.style.zIndex = (newTopZ - 1).toString();
-    newTop.classList.remove('blurred');
-    newTop.style.pointerEvents = '';
-    newTop.focus?.({ preventScroll: true });
-  } else {
-    // Kein Modal mehr offen → Backdrop weg
-    b.classList.remove('open');
-    b.style.display = 'none';
-    b.setAttribute('aria-hidden','true');
-    document.documentElement.classList.remove('modal-open');
+    const newTop = STACK[STACK.length - 1];
+    if (newTop){
+      const newTopZ = parseInt(newTop.style.zIndex || getComputedStyle(newTop).zIndex || '60', 10);
+      b.style.zIndex = String(newTopZ - 1);
+      newTop.classList.remove('blurred');
+      newTop.style.pointerEvents = '';
+      newTop.focus?.({ preventScroll: true });
+    } else {
+      b.classList.remove('open');
+      b.style.display = 'none';
+      b.setAttribute('aria-hidden','true');
+      document.documentElement.classList.remove('modal-open');
+    }
   }
-}
-// ===== END REPLACE =====
 
+  window.openModal  = openModal;
+  window.closeModal = closeModal;
+
+  // ESC → nur oberstes Modal schließen
+  document.addEventListener('keydown', (e)=>{ if (e.key === 'Escape') closeModal(); });
+
+  // Backdrop-Klick → nur oberstes Modal schließen
+  ensureBackdrop().addEventListener('click', ()=> closeModal());
+
+  // [data-close] Buttons
+  document.addEventListener('click', (e)=>{
+    const btn = e.target.closest('[data-close]');
+    if (!btn) return;
+    e.preventDefault();
+    closeModal(btn.closest('.modal'));
+  }, { passive:false });
+})();
 
     // dieses Modal öffnen
     el.classList.add('open');
@@ -642,9 +632,7 @@ q('#btnRateSave')?.addEventListener('click', ()=>{
     const tgt = b.getAttribute('data-close');
     if (tgt) closeModal(tgt); else closeModal(b.closest('.modal').id);
   }));
-  window.addEventListener('keydown',(e)=>{
-    if(e.key==='Escape'){ qa('.modal').forEach(m=>m.style.display='none'); backdrop.style.display='none'; document.body.classList.remove('modal-open'); }
-  });
+
   
   document.addEventListener('click', function (e) {
   const btn = e.target.closest('#btnRates, [data-modal="#modalRates"]');
