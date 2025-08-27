@@ -574,7 +574,7 @@ q('#btnRateSave')?.addEventListener('click', ()=>{
   });
   
   document.addEventListener('click', function (e) {
-  const btn = e.target.closest('#btnRates, [data-modal="#modalRateCreate"]');
+  const btn = e.target.closest('#btnRates, [data-modal="#modalRates"]');
   if (!btn) return;
   e.preventDefault();
 
@@ -611,7 +611,7 @@ q('#btnRateSave')?.addEventListener('click', ()=>{
   if (parentModal) _close(parentModal);
 
   // 2) … und im nächsten Tick Rateneinstellungen öffnen
-  setTimeout(() => _open('#modalRateCreate'), 0);
+  setTimeout(() => _open('#modalRates'), 0);
 }, { passive: false });
 
   // Modal-IDs
