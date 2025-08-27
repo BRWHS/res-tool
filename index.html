@@ -1014,6 +1014,22 @@
     </div>
   </section>
 
+<!-- Modal: Kategoriebeschreibung -->
+<section class="modal" id="modalCatDesc" role="dialog" aria-labelledby="catDescTitle" aria-modal="true" aria-hidden="true">
+  <header>
+    <h3 id="catDescTitle" class="mono"><span class="set-logo" aria-hidden="true"></span> Kategoriebeschreibung</h3>
+    <button class="btn" data-close>Schließen</button>
+  </header>
+  <div class="body">
+    <label class="mono muted tiny" style="margin-bottom:6px;display:block">Beschreibungstext</label>
+    <textarea id="catDescTextarea" class="input" rows="6" placeholder="Beschreibung zur Zimmerkategorie …"></textarea>
+    <div class="set-footer right" style="margin-top:10px;">
+      <button class="btn primary" id="btnCatDescSave">Speichern</button>
+    </div>
+  </div>
+</section>
+
+  
   <!-- Libraries + App -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.5/dist/umd/supabase.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
