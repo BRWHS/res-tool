@@ -1218,6 +1218,23 @@ q('#btnNext')?.addEventListener('click', ()=>{
   }
   function genResNo(){ return 'R' + Date.now().toString(36).toUpperCase(); }
   async function createReservation(){
+    // Nach erfolgreichem Insert:
+if (!error){
+  // >>> HNS PUSH (nicht blocking fürs UI)
+  try {
+    // Wir verwenden das gleiche Payload-Objekt, das du gespeichert hast:
+    await (async ()=>{ 
+      try { await pushReservationToHns(payload); }
+      catch (e) { logActivity('channel','push_fail', { err: String(e), res_no: payload.reservation_number }); }
+    })();
+  } catch(e) { /* already logged */ }
+
+  await autoRollPastToDone();
+  await loadKpisToday();
+  await loadKpisNext();
+  await loadReservations();
+  setTimeout(()=>closeModal('modalNew'), 700);
+}
     if (!validateStep('4')){ q('#newInfo') && (q('#newInfo').textContent='Bitte Pflichtfelder ausfüllen.'); return; }
     const code = q('#newHotel')?.value;
     const hUI  = HOTELS.find(h=>h.code===code);
@@ -1725,6 +1742,170 @@ document.querySelector('#sketchBack')?.addEventListener('click', () => {
   await loadKpisToday();
   await loadKpisNext();
   await loadReservations();
+})();
+
+/* =========================
+   HNS CHANNEL INTEGRATION (fetch + mapping + push/pull)
+   ========================= */
+(function HNS_INTEGRATION(){
+  const CH_KEY = 'resTool.channelSettings';
+
+  function readChannelSettings(){
+    try { return JSON.parse(localStorage.getItem(CH_KEY)) || {}; }
+    catch { return {}; }
+  }
+  function hnsBaseUrl(s){
+    return (s.mode === 'live' ? s.hns_prod : s.hns_test) || '';
+  }
+  function mapHotel(code, s){ return (s.hotel_map||{})[code] || null; }
+  function mapCategory(name, s){ return (s.cat_map||{})[name] || null; }
+  function mapRate(code, s){ return (s.rate_map||{})[code] || null; }
+
+  async function hnsFetch(path, { method='GET', headers={}, body, timeoutMs, retries } = {}){
+    const s = readChannelSettings();
+    const base = hnsBaseUrl(s).replace(/\/+$/,'');
+    if (!base) throw new Error('HNS-Endpoint ist nicht konfiguriert.');
+    const url = base + '/' + String(path||'').replace(/^\/+/,'');
+    const to  = timeoutMs ?? (s.timeout_ms || 15000);
+    const max = retries   ?? (s.retry_count || 2);
+
+    const baseHeaders = {
+      'Content-Type': 'application/json',
+      'X-API-Key': s.api_key || '',
+      'X-API-Secret': s.api_secret || '',
+      ...headers
+    };
+
+    let attempt = 0, lastErr;
+    while (attempt <= max){
+      const ctl = new AbortController();
+      const t = setTimeout(()=>ctl.abort(new Error('timeout')), to);
+      const t0 = performance.now();
+      try{
+        const res = await fetch(url, {
+          method,
+          headers: baseHeaders,
+          body: body ? JSON.stringify(body) : undefined,
+          signal: ctl.signal
+        });
+        clearTimeout(t);
+        const ms = Math.round(performance.now()-t0);
+        if (!res.ok) {
+          const txt = await res.text().catch(()=> '');
+          logActivity('channel','api_call',{ path, status: res.status, ms, body, resp: txt?.slice?.(0,400) });
+          throw new Error(`HNS ${res.status}`);
+        }
+        const json = await res.json().catch(()=> ({}));
+        logActivity('channel','api_call',{ path, status: 'ok', ms, body });
+        return json;
+      }catch(e){
+        clearTimeout(t);
+        lastErr = e;
+        attempt++;
+        if (attempt > max){
+          logActivity('channel','api_call',{ path, status:'fail', err:String(e) });
+          throw e;
+        }
+        await new Promise(r=>setTimeout(r, 400*attempt));
+      }
+    }
+    throw lastErr;
+  }
+
+  // --- PUSH: Reservierung an HNS senden (nach lokalem Insert)
+  async function pushReservationToHns(resRow){
+    const s = readChannelSettings();
+    if (!s.api_key || !(s.hns_prod || s.hns_test)) return; // nicht konfiguriert → silent return
+    if (Array.isArray(s.hotels_active) && !s.hotels_active.includes(resRow.hotel_code)) return;
+
+    const hnsHotelId = mapHotel(resRow.hotel_code, s);
+    if (!hnsHotelId) throw new Error('Hotel nicht gemappt (Channel-Einstellungen → Hotel-Mapping).');
+
+    // TIP: falls du `ratecode` im Wizard speicherst, ist das Mapping stabiler.
+    const rateHns = resRow.ratecode ? (mapRate(resRow.ratecode, s) || null) : null;
+    const catHns  = resRow.category ? (mapCategory(resRow.category, s) || null) : null;
+
+    const payload = {
+      hotelId: hnsHotelId,
+      stay: {
+        arrival:   resRow.arrival,
+        departure: resRow.departure,
+        adults:    resRow.guests_adults || 1,
+        children:  resRow.guests_children || 0
+      },
+      guest: {
+        firstName: resRow.guest_first_name || '',
+        lastName:  resRow.guest_last_name  || '',
+        email:     resRow.guest_email      || '',
+        phone:     resRow.guest_phone      || ''
+      },
+      room: { categoryId: catHns },
+      rate: { code: rateHns, name: resRow.rate_name || '', price: Number(resRow.rate_price||0), currency: 'EUR' },
+      notes: resRow.notes || '',
+      idempotencyKey: resRow.reservation_number // gegen Doppelanlage bei Retry
+    };
+
+    const resp = await hnsFetch('/reservations', { method:'POST', body: payload });
+    // Optional: externe ID zurückspeichern
+    // await supabase.from('reservations').update({ hns_id: resp.id }).eq('reservation_number', resRow.reservation_number);
+    return resp;
+  }
+
+  // --- PULL: Availability von HNS holen → Supabase schreiben
+  async function pullAvailabilityFromHns(dateFrom, days=14){
+    const s = readChannelSettings();
+    const from = dateFrom || new Date().toISOString().slice(0,10);
+    for (const h of (window.HOTELS||[])){
+      if (Array.isArray(s.hotels_active) && !s.hotels_active.includes(h.code)) continue;
+      const id = mapHotel(h.code, s); if (!id) continue;
+
+      // Erwartete HNS-Antwort: [{date:'YYYY-MM-DD', capacity:100, booked:67}, …]
+      const data = await hnsFetch(`/availability?hotel=${encodeURIComponent(id)}&from=${from}&days=${days}`);
+      for (const r of (data||[])){
+        await supabase.from('availability').upsert({
+          hotel_code: h.code,
+          date: r.date,
+          capacity: Number(r.capacity||0),
+          booked:   Number(r.booked||0)
+        }, { onConflict: 'hotel_code,date' });
+      }
+    }
+  }
+
+  // --- SYNC-Knopf im Channel-Admin anbinden (falls vorhanden)
+  function bindChannelSync(){
+    const btn = document.getElementById('btnSyncNow');
+    if (!btn || btn.__bound) return;
+    btn.__bound = true;
+
+    btn.addEventListener('click', async ()=>{
+      const info = document.getElementById('channelInfo');
+      try{
+        info && (info.textContent = 'Synchronisiere …');
+        // Health/Ping (falls HNS so etwas hat – andernfalls erste echte Ressource kurz anfragen)
+        try { await hnsFetch('/ping'); } catch { /* optional ignorieren */ }
+        // Availability ziehen (2 Wochen)
+        await pullAvailabilityFromHns(new Date().toISOString().slice(0,10), 14);
+
+        // last_sync in Settings aktualisieren
+        const s = readChannelSettings();
+        s.last_sync = new Date().toISOString();
+        localStorage.setItem(CH_KEY, JSON.stringify(s));
+        const el = document.getElementById('chLastSync'); if (el) el.textContent = new Date(s.last_sync).toLocaleString('de-DE');
+
+        info && (info.textContent = 'Sync OK.');
+      }catch(e){
+        info && (info.textContent = 'Sync fehlgeschlagen: ' + String(e));
+      }
+    });
+  }
+
+  // Beim Öffnen des Channel-Modals binden
+  document.addEventListener('click', (e)=>{
+    const b = e.target.closest('#btnChannel');
+    if (!b) return;
+    setTimeout(bindChannelSync, 50);
+  });
 })();
 
   
