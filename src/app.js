@@ -2142,7 +2142,10 @@ function renderLogTable(rows){
       <div>Kategorien-Mapping: <b style="color:${okB?'#35e08a':'#ff4d6d'}">${okB?'OK':'Fehler'}</b></div>
       <div>Raten-Mapping: <b style="color:${okC?'#35e08a':'#ff4d6d'}">${okC?'OK':'Fehler'}</b></div>
     `;
-  }
+    
+  try{ renderMappingAmpel(); }catch(e){}
+}
+
 
   // Export/Import
   function doExport(){
@@ -2181,6 +2184,58 @@ function renderLogTable(rows){
     updateMonitorChips();
     refreshMappingSummary();
   }
+  // ===== Mapping-Ampel (Monitoring) =====
+function cls(ok){ return ok ? 'lvl-0' : 'lvl-2'; }
+function warn(ok){ return ok ? 'lvl-0' : 'lvl-1'; }
+
+function renderMappingAmpel(){
+  const box = document.getElementById('chMapAmpel'); 
+  if (!box) return;
+
+  const s = (()=>{
+    try{ return JSON.parse(localStorage.getItem('resTool.channelSettings')) || {}; }
+    catch{ return {}; }
+  })();
+
+  const hotelsActive = Array.isArray(s.hotels_active) ? s.hotels_active : [];
+  const hotelMap = s.hotel_map || {};
+  const catMap   = s.cat_map   || {};
+  const rateMap  = s.rate_map  || {};
+
+  const apiOk  = !!( (s.api_key && s.api_secret) && (s.hns_prod || s.hns_test) );
+  const hMapOk = hotelsActive.length > 0 && hotelsActive.every(code => !!hotelMap[code]);
+  const cMapOk = Object.keys(catMap).length > 0;
+  const rMapOk = Object.keys(rateMap).length > 0;
+
+  // Kopf-Ampeln
+  const head = `
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:8px;">
+      <div class="pill ${cls(apiOk)}">API konfiguriert</div>
+      <div class="pill ${warn(hMapOk)}">Hotel-Mapping</div>
+      <div class="pill ${warn(cMapOk)}">Kategorie-Mapping</div>
+      <div class="pill ${warn(rMapOk)}">Raten-Mapping</div>
+    </div>
+  `;
+
+  // pro Hotel
+  const rows = (window.HOTELS || []).map(h=>{
+    const active = !hotelsActive.length || hotelsActive.includes(h.code); // wenn leer → Default aktiv
+    const mapped = !!hotelMap[h.code];
+    const ok = active ? mapped : true; // nicht aktiv → neutral grün
+    const label = `${h.group} – ${h.name.replace(/^.*? /,'')}`;
+    return `
+      <div class="row" style="display:flex; align-items:center; gap:8px; justify-content:space-between;">
+        <div class="tiny">${label} <span class="muted">(${h.code})</span></div>
+        <div class="pill ${ok?'lvl-0':(mapped?'lvl-1':'lvl-2')}">
+          ${active ? (mapped ? 'aktiv · gemappt' : 'aktiv · fehlt Mapping') : 'inaktiv'}
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  box.innerHTML = head + `<div class="divider" style="height:1px;background:var(--line,#1e2b31);margin:8px 0;"></div>` + rows;
+}
+
 
   // Aus UI lesen
   function readFromUi(){
@@ -2273,6 +2328,7 @@ function renderLogTable(rows){
           bindOnce();
           switchChannelTab('api');
           applyToUi(readChannel());
+          try{ renderMappingAmpel(); }catch(e){}
         }catch(e){}
       }, 0);
     });
