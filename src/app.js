@@ -429,6 +429,39 @@ function loadCatsIntoSelect(sel, hotelCode){
   sel.innerHTML = ['*', ...cats].map(c=>`<option value="${c}">${c==='*'?'Alle':c}</option>`).join('');
   makeMultiSelectFriendly(sel);
 }
+  // ===== Kategoriebeschreibung – Modal =====
+let __catDescCtx = null; // {hotel, code, name?, maxPax?, isNew?}
+function openCatDescModal({hotel, code, name, maxPax, isNew=false}){
+  __catDescCtx = {hotel, code, name, maxPax, isNew};
+  const rec = findCatByCode(hotel, code);
+  const ta = document.getElementById('catDescTextarea');
+  if (ta) ta.value = (rec?.desc || '');
+  openModal('modalCatDesc');
+}
+
+// Save-Button nur einmal binden
+(function bindCatDescSave(){
+  const btn = document.getElementById('btnCatDescSave');
+  if (!btn || btn.__bound) return;
+  btn.__bound = true;
+  btn.addEventListener('click', ()=>{
+    if (!__catDescCtx) return closeModal('modalCatDesc');
+    const txt = (document.getElementById('catDescTextarea')?.value || '').trim();
+    const {hotel, code, name, maxPax, isNew} = __catDescCtx;
+
+    const existing = findCatByCode(hotel, code);
+    const cat = existing
+      ? {...existing, desc: txt}
+      : { code, name, maxPax, desc: txt };
+
+    upsertCategory(hotel, cat);
+    renderCatsV2();
+    closeModal('modalCatDesc');
+    setCatsInfo(isNew ? 'Hinzugefügt.' : 'Gespeichert.');
+    __catDescCtx = null;
+  });
+})();
+
   
   /* ===== Rateneinstellungen (neues Modal) ===== */
 function fillHotelSelectGeneric(sel){
@@ -1049,24 +1082,29 @@ document.getElementById('rateCreateForm')?.addEventListener('submit', (e) => {
 }
 
   function updateCatMeta(){
-    const cat = q('#newCat')?.value || 'Standard';
-    const m = CAT_META[cat] || {};
-    const elBody = q('#catMetaBody');
-    if (elBody){
-      elBody.innerHTML =
-        `<div>Größe: <b>${m.size||'—'}</b></div>
-         <div>Betten: <b>${m.beds||'—'}</b></div>
-         <div>Hinweis: <b>${m.note||'—'}</b></div>`;
-    }
-    const cap = q('#imgCatCaption');
-    if (cap) cap.textContent = `${cat} – Beispielbild`;
+  const hotel = document.getElementById('newHotel')?.value || '';
+  const catName = document.getElementById('newCat')?.value || '';
+  const rec = getCategoriesForHotel(hotel).find(c => c.name === catName);
 
-     // ▼ NEU: Platzhalter-Beschreibung unter dem Dropdown
-  const desc = q('#catDesc');
-  if (desc) {
-    desc.textContent = "das Zimmer hat eine größe von mehr oder weniger als 40m², Toaster, Mikrowelle und Balkon mit Ausblick. Dies ist ein Placeholder‑Text und soll einen visuellen Effekt erzeugen. Die Beschreibung soll dem Agent alle Infos zu der Zimmerkategorie liefern, um möglichst präziser arbeiten zu können";
-    }
+  // Beschreibung einsetzen
+  const descEl = document.getElementById('catDesc');
+  if (descEl){
+    descEl.textContent = (rec?.desc && rec.desc.trim())
+      ? rec.desc
+      : "—";
   }
+
+  // „Fakten“ Max-Personen dynamisch zeigen (Rest bleibt als Platzhalter)
+  const facts = document.querySelector('#w2 .s2-facts .tiny');
+  if (facts){
+    const max = rec?.maxPax ?? 2;
+    facts.innerHTML = `Max Personen: ${max}<br/>Haustiere erlaubt: Nein<br/>Check In: 15:00<br/>Check Out: 11:00`;
+  }
+
+  // Galerie-Bild(er) Placeholder belassen
+  const cap = document.getElementById('imgCatCaption');
+  if (cap) cap.textContent = `${catName || 'Kategorie'} – Beispielbild`;
+}
 
   function wizardSet(step){
     qa('.wstep').forEach(b=>b.classList.toggle('active', b.dataset.step==step));
@@ -1760,9 +1798,9 @@ const CAT_CODE_RE = /^[A-Z0-9]{2,12}$/;
 const CAT_PAGE_SIZE = 50;
 
 const DEFAULT_CATS = [
-  { code:'STD', name:'Standard', maxPax:2 },
-  { code:'SUP', name:'Superior', maxPax:2 },
-  { code:'STE', name:'Suite',    maxPax:4 },
+  { code:'STD', name:'Standard', maxPax:2, desc:'' },
+  { code:'SUP', name:'Superior', maxPax:2, desc:'' },
+  { code:'STE', name:'Suite',    maxPax:4, desc:'' },
 ];
 
 // --- Storage helpers ---
@@ -1784,6 +1822,7 @@ function hotelsList(){ return Array.isArray(window.HOTELS) ? window.HOTELS : [];
 (function migrateCats(){
   const v2 = readCatsV2();
   if (Object.keys(v2).length) { writeCatsV2(v2); return; } // schon V2
+  map[h.code] = (names || window.HOTEL_CATEGORIES?.default || []).map(n => {
   // Legacy vorhanden?
   let legacy = {};
   try { legacy = JSON.parse(localStorage.getItem(LEGACY_CATS_KEY)) || {}; } catch {}
@@ -1816,12 +1855,12 @@ function getCategoriesForHotel(hotelCode){
   const map = readCatsV2();
   return (map[hotelCode] || []).slice();
 }
-function upsertCategory(hotelCode, cat){ // {code,name,maxPax}
+function upsertCategory(hotelCode, cat){ // {code,name,maxPax,desc}
   const map = readCatsV2();
   const list = (map[hotelCode]||[]).slice();
   const i = list.findIndex(x=>x.code===cat.code);
-  if (i>=0) list[i] = {...list[i], name:cat.name, maxPax:cat.maxPax};
-  else list.push({code:cat.code, name:cat.name, maxPax:cat.maxPax});
+  if (i>=0) list[i] = {...list[i], name:cat.name, maxPax:cat.maxPax, desc:(cat.desc ?? list[i].desc ?? '')};
+  else list.push({code:cat.code, name:cat.name, maxPax:cat.maxPax, desc:(cat.desc ?? '')});
   map[hotelCode]=list; writeCatsV2(map);
   refreshCategoryDependents(hotelCode);
 }
@@ -1941,33 +1980,37 @@ function renderCatsV2(){
 
   // Row actions
   body.onclick = (e)=>{
-    const tr = e.target.closest('tr.row'); if (!tr) return;
-    const act= e.target.closest('button[data-act]')?.dataset.act;
-    const code = tr.dataset.code;
-    if (!act || !code) return;
+  const tr = e.target.closest('tr.row'); if (!tr) return;
+  const act= e.target.closest('button[data-act]')?.dataset.act;
 
-    const hotel = sel.value;
-    if (act==='del'){
-      deleteCategory(hotel, code); renderCatsV2();
-      return;
-    }
-    if (act==='save'){
-      const name = tr.querySelector('input[data-f="name"]')?.value.trim();
-      const max  = Number(tr.querySelector('input[data-f="max"]')?.value || 2);
-      if (!name){ setCatsInfo('Name darf nicht leer sein.'); return; }
-      if (!(max>=1 && max<=12)){ setCatsInfo('Max. Personen zwischen 1–12.'); return; }
-      upsertCategory(hotel, {code, name, maxPax:max});
-      setCatsInfo('Gespeichert.');
-    }
-  };
-}
+  const code = tr.dataset.code;
+  const hotel = document.getElementById('catsHotel')?.value;
+
+  if (act === 'del'){ /* (bestehend) */ deleteCategory(hotel, code); renderCatsV2(); return; }
+  if (act === 'save'){ /* (bestehend) */ 
+    const name = tr.querySelector('input[data-f="name"]')?.value.trim();
+    const max  = Number(tr.querySelector('input[data-f="max"]')?.value || 2);
+    if (!name){ setCatsInfo('Name darf nicht leer sein.'); return; }
+    if (!(max>=1 && max<=12)){ setCatsInfo('Max. Personen zwischen 1–12.'); return; }
+    upsertCategory(hotel, {code, name, maxPax:max});
+    setCatsInfo('Gespeichert.'); 
+    return;
+  }
+
+  // NEU: Klick auf Zeile (kein Button/Input) → Beschreibungs-Editor
+  if (!e.target.closest('button') && !e.target.matches('input')){
+    openCatDescModal({ hotel, code, isNew:false });
+  }
+};
 
 function setCatsInfo(txt){ const el = document.getElementById('catsInfo'); if (el) el.textContent = txt||''; }
 
 // --- Anlage neue Kategorie ---
 (function bindCatCreate(){
   const btn = document.getElementById('btnCatCreate');
-  if (!btn) return;
+  if (!btn || btn.__bound) return;
+  btn.__bound = true;
+  
   btn.addEventListener('click', ()=>{
     const hotel = document.getElementById('catsHotel')?.value || '';
     const code  = (document.getElementById('catCodeNew')?.value || '').toUpperCase().trim();
@@ -1978,16 +2021,14 @@ function setCatsInfo(txt){ const el = document.getElementById('catsInfo'); if (e
     if (!CAT_CODE_RE.test(code)) return setCatsInfo('Ungültiger Code (nur A-Z/0-9, 2–12 Zeichen).');
     if (!name) return setCatsInfo('Bitte einen Namen angeben.');
     if (!(max>=1 && max<=12)) return setCatsInfo('Max. Personen zwischen 1–12.');
+    if (findCatByCode(hotel, code)) return setCatsInfo('Code existiert bereits für dieses Hotel.');
 
-    const exists = !!findCatByCode(hotel, code);
-    if (exists) return setCatsInfo('Code existiert bereits für dieses Hotel.');
+    // Felder leeren – Anlage erfolgt nach Speichern im Popup
+    document.getElementById('catCodeNew').value = '';
+    document.getElementById('catNameNew').value = '';
+    document.getElementById('catMaxNew').value = '2';
 
-    upsertCategory(hotel, {code, name, maxPax:max});
-    document.getElementById('catCodeNew').value='';
-    document.getElementById('catNameNew').value='';
-    document.getElementById('catMaxNew').value='2';
-    setCatsInfo('Hinzugefügt.');
-    renderCatsV2();
+    openCatDescModal({ hotel, code, name, maxPax:max, isNew:true });
   });
 })();
 
