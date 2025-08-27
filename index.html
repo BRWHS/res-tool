@@ -581,20 +581,6 @@
     </div>
   </section>
 
-      <!-- Modal: Benutzereinstellungen (placeholder) -->
-<section class="modal" id="modalUserPrefs" role="dialog" aria-labelledby="userPrefsTitle" aria-modal="true">
-  <header>
-    <h3 id="userPrefsTitle" class="mono">
-      <span class="set-logo" aria-hidden="true"></span> Benutzereinstellungen
-    </h3>
-    <button class="btn" data-close>Schließen</button>
-  </header>
-  <div class="body">
-    <div class="box">
-      <p class="muted">Platzhalter für persönliche Einstellungen (z. B. Standardhotel, Standardzeitraum, Shortcuts …).</p>
-    </div>
-  </div>
-</section>
 
 <!-- Rateneinstellungen (nur Verwaltung/Liste – ohne "Neue Rate") -->
 <section class="modal" id="modalRates" role="dialog" aria-labelledby="ratesTitle" aria-modal="true">
@@ -602,28 +588,31 @@
     <h3 id="ratesTitle" class="mono"><span class="set-logo" aria-hidden="true"></span> Rateneinstellungen</h3>
     <button class="btn" data-close>Schließen</button>
   </header>
-  <div class="body">
-    <!-- Sidebar: Tabs -->
+<div class="body">
+  <div class="rates-wrap">
+    <!-- Linke Listener-Leiste -->
     <aside class="rates-side">
-      <button class="btn tile" id="rsTabDirect">Direct-Rate</button>
-      <button class="btn tile" id="rsTabCorp">Corp-Rate</button>
-      <button class="btn tile" id="rsTabIds">IDS-Rate</button>
+      <button class="btn tile active" id="rsTabDirect" data-rates-tab="direct">Direct-Rate</button>
+      <button class="btn tile"            id="rsTabCorp"   data-rates-tab="corp">Corp-Rate</button>
+      <button class="btn tile"            id="rsTabIds"    data-rates-tab="ids">IDS-Rate</button>
+      <div class="grow"></div>
+      <!-- Nächster Step: öffnet eigenes Create-Modal -->
+      <button class="btn primary" id="rsNewRate">+ Neue Rate</button>
     </aside>
 
-    <!-- Hauptbereich -->
+    <!-- Rechte Hauptfläche -->
     <section class="rates-main card">
       <div class="content">
         <div class="card-head">
           <h3 class="mono" id="rsTitle">Raten – Direct</h3>
           <div class="rs-toolbar">
-            <!-- "+ Neue Rate" wird später als eigener Schritt/Modal wieder aktiviert -->
-            <!-- <button class="btn primary sm" id="rsNewRate">+ Neue Rate</button> -->
+            <!-- Button in die Seitenleiste verlegt -->
             <input id="rsSearch" class="input sm" placeholder="Suchen: Name oder Ratecode">
             <select id="rsHotelFilter" class="input sm theme-select" title="Hotel filtern"></select>
           </div>
         </div>
 
-        <div class="table-wrap">
+        <div class="table-wrap" id="ratesBoard" data-max-rows="50">
           <table class="resv">
             <thead>
               <tr>
@@ -637,16 +626,17 @@
             </thead>
             <tbody id="rsBody"></tbody>
           </table>
+          <p class="muted tiny" style="margin-top:6px">Max. 50 Einträge werden angezeigt.</p>
         </div>
       </div>
 
       <div class="set-footer">
         <div style="flex:1"></div>
-        <!-- "Rate erstellen" wird im nächsten Step als eigenes Modal nachgerüstet -->
-        <!-- <button class="btn primary" id="btnRateCreate">Rate erstellen</button> -->
+        <!-- (frei für spätere Aktionen) -->
       </div>
     </section>
   </div>
+</div>
 </section>
 
 
