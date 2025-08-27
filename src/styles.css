@@ -669,6 +669,10 @@ html.modal-open { overflow: hidden; }
   transition: filter .15s ease;
 }
 
+.modal { z-index: 1001; }
+.modal-backdrop { z-index: 1000; pointer-events: none; } /* oder sicherstellen, dass die Modal über der Backdrop liegt */
+
+
 
 
 
