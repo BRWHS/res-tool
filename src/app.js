@@ -108,69 +108,6 @@
   }, { passive:false });
 })();
 
-    // dieses Modal öffnen
-    el.classList.add('open');
-    el.setAttribute('aria-hidden','false');
-
-    // Backdrop + Body-State
-    const b = ensureBackdrop();
-    b.classList.add('open');
-    b.style.display = 'block';
-    b.setAttribute('aria-hidden','false');
-    document.documentElement.classList.add('modal-open');
-
-    // Fokus
-    const focusEl = el.querySelector('[data-close]') || el.querySelector('h3, h2, [tabindex], button, input, select, textarea');
-    if (focusEl && focusEl.focus) focusEl.focus({ preventScroll: true });
-  }
-
-  function closeModal(target){
-    const b = ensureBackdrop();
-
-    if (target){
-      const el = asEl(target);
-      if (el){
-        el.classList.remove('open');
-        el.setAttribute('aria-hidden','true');
-      }
-    } else {
-      // oberstes offenes Modal schließen
-      const open = Array.from(document.querySelectorAll('.modal.open'));
-      if (open.length){
-        const top = open[open.length - 1];
-        top.classList.remove('open');
-        top.setAttribute('aria-hidden','true');
-      }
-    }
-
-    if (!anyOpen()){
-      b.classList.remove('open');
-      b.style.display = 'none';
-      b.setAttribute('aria-hidden','true');
-      document.documentElement.classList.remove('modal-open');
-    }
-  }
-
-  // Public API
-  window.openModal  = openModal;
-  window.closeModal = closeModal;
-
-  // ESC → oberstes Modal zu
-  document.addEventListener('keydown', (e)=>{ if (e.key === 'Escape') closeModal(); });
-
-  // Backdrop-Klick → oberstes Modal zu
-  ensureBackdrop().addEventListener('click', ()=> closeModal());
-
-  // [data-close] Buttons (Fallback, zusätzlich zu bestehendem Code ok)
-  document.addEventListener('click', (e)=>{
-    const btn = e.target.closest('[data-close]');
-    if (!btn) return;
-    e.preventDefault();
-    closeModal(btn.closest('.modal'));
-  }, { passive:false });
-})();
-
-
 // Legacy-Alias, damit alle vorhandenen Listener weiter funktionieren
 var openModal  = window.openModal;
 var closeModal = window.closeModal;
