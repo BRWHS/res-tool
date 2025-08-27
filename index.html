@@ -597,21 +597,7 @@
 </section>
 
   <!-- Modal: Rateneinstellungen (Rate anlegen/bearbeiten) -->
-  <!-- Rate – Neuanlage -->
-  <section class="modal" id="modalRateCreate" role="dialog" aria-labelledby="rateCreateTitle" aria-modal="true">
-    <header>
-      <h3 id="rateCreateTitle" class="mono"><span class="set-logo" aria-hidden="true"></span> Neue Rate</h3>
-      <button class="btn" data-close>Schließen</button>
-    </header>
-    <div class="body">
-      <div class="grid2">
-        <label>Ratecode (nur Zahlen) <input id="crCode" class="input" placeholder="z. B. 100123" inputmode="numeric" pattern="\d+"></label>
-        <label>Ratentyp* (fix nach Erstellung)
-          <select id="crType" class="input theme-select">
-            <option value="">Bitte wählen</option>
-            <option>Direct</option><option>Corp</option><option>IDS</option>
-          </select>
-        </label>
+ 
         <label>Hotel* <select id="crHotel" class="input theme-select"></select></label>
         <label>Ratename* <input id="crName" class="input" placeholder="z. B. Flex exkl. Frühstück"></label>
         <label style="grid-column:1 / -1">Kategorien (mehrfach; erst nach Hotelauswahl)
