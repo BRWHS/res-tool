@@ -511,7 +511,7 @@ function prepareRateFormReset(){
 
 
 // Beim Öffnen von Editor/Neuanlage aufrufen:
-makeMultiSelectFriendly(document.querySelector('#rtCats')); // Neuanlage
+makeMultiSelectFriendly(document.querySelector('#crCats')); // Neuanlage
 makeMultiSelectFriendly(document.querySelector('#erCats')); // Bearbeiten
 
   
@@ -639,12 +639,12 @@ newRateBtn?.addEventListener('click', () => {
 // Abbrechen/X im Create → zurück zu Rateneinstellungen
 document.querySelector('[data-cancel-create]')?.addEventListener('click', () => {
   close(MODALS.rateCreate);
-  open(MODALS.rateSettings);
+  open('modalRates');
 });
 document.querySelectorAll('[data-close="modalRateCreate"]').forEach(btn=>{
   btn.addEventListener('click', () => {
     close(MODALS.rateCreate);
-    open(MODALS.rateSettings);
+    open('modalRates');
   });
 });
 
@@ -668,7 +668,7 @@ document.getElementById('rateCreateForm')?.addEventListener('submit', (e) => {
 
   // zurück zur Liste + refresh
   close(MODALS.rateCreate);
-  open(MODALS.rateSettings);
+  open('modalRates');
   if (typeof applyRateFilters === 'function') applyRateFilters();
 });
 
