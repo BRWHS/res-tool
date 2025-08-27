@@ -1872,43 +1872,67 @@ document.querySelector('#sketchBack')?.addEventListener('click', () => {
     }
   }
 
-  // --- SYNC-Knopf im Channel-Admin anbinden (falls vorhanden)
-  function bindChannelSync(){
-    const btn = document.getElementById('btnSyncNow');
-    if (!btn || btn.__bound) return;
-    btn.__bound = true;
+// --- SYNC-Knopf im Channel-Admin anbinden (falls vorhanden)
+function bindChannelSync(){
+  const btn = document.getElementById('btnSyncNow');
+  if (!btn || btn.__bound) return;
+  btn.__bound = true;
 
-    btn.addEventListener('click', async ()=>{
-      const info = document.getElementById('channelInfo');
-      try{
-        info && (info.textContent = 'Synchronisiere …');
-        // Health/Ping (falls HNS so etwas hat – andernfalls erste echte Ressource kurz anfragen)
-        try { await hnsFetch('/ping'); } catch { /* optional ignorieren */ }
-        // Availability ziehen (2 Wochen)
-        await pullAvailabilityFromHns(new Date().toISOString().slice(0,10), 14);
+  btn.addEventListener('click', async ()=>{
+    const info = document.getElementById('channelInfo');
+    const errList = document.getElementById('chErrorList');
 
-        // last_sync in Settings aktualisieren
-        const s = readChannelSettings();
-        s.last_sync = new Date().toISOString();
-        localStorage.setItem(CH_KEY, JSON.stringify(s));
-        const el = document.getElementById('chLastSync'); if (el) el.textContent = new Date(s.last_sync).toLocaleString('de-DE');
+    const pushErr = (msg)=>{
+      if (!errList) return;
+      const li = document.createElement('li');
+      li.textContent = msg;
+      errList.prepend(li);
+      while (errList.children.length > 10) errList.removeChild(errList.lastChild);
+    };
 
-        info && (info.textContent = 'Sync OK.');
-      }catch(e){
-        info && (info.textContent = 'Sync fehlgeschlagen: ' + String(e));
-      }
-    });
-  }
+    try{
+      if (info) info.textContent = 'Synchronisiere … (Health-Check)';
 
-  // Beim Öffnen des Channel-Modals binden
-  document.addEventListener('click', (e)=>{
-    const b = e.target.closest('#btnChannel');
-    if (!b) return;
-    setTimeout(bindChannelSync, 50);
+      // Health/Ping – tolerant, falls Endpoint nicht existiert
+      try { await hnsFetch('/ping'); }
+      catch(e){ pushErr('Health-Check: '+ String(e)); }
+
+      if (info) info.textContent = 'Ziehe Availability (14 Tage) …';
+      await pullAvailabilityFromHns(new Date().toISOString().slice(0,10), 14);
+
+      // last_sync in Settings aktualisieren
+      const s = readChannelSettings();
+      s.last_sync = new Date().toISOString();
+      localStorage.setItem(CH_KEY, JSON.stringify(s));
+      const el = document.getElementById('chLastSync');
+      if (el) el.textContent = new Date(s.last_sync).toLocaleString('de-DE');
+
+      // UI aktualisieren (vorsichtig, nur wenn Funktionen existieren)
+      if (typeof loadKpisToday === 'function')        await loadKpisToday();
+      if (typeof loadKpisNext === 'function')         await loadKpisNext();
+      if (typeof loadAvailabilityMatrix === 'function') await loadAvailabilityMatrix();
+      if (typeof loadReservations === 'function')     await loadReservations();
+
+      // Mapping-Ampel/Monitoring refreshen (falls vorhanden)
+      if (typeof renderMappingAmpel === 'function') { try { renderMappingAmpel(); } catch(e){} }
+
+      if (info) info.textContent = 'Sync OK. Daten aktualisiert.';
+    }catch(e){
+      pushErr('Sync fehlgeschlagen: ' + String(e));
+      if (info) info.textContent = 'Sync fehlgeschlagen: ' + String(e);
+    }
   });
+}
+
+// Beim Öffnen des Channel-Modals binden
+document.addEventListener('click', (e)=>{
+  const b = e.target.closest('#btnChannel');
+  if (!b) return;
+  setTimeout(bindChannelSync, 50);
+});
 })();
 
-  
+
 // --- Seeding für Default-Raten ---
 function seedDefaultRatesIfEmpty(){
   try {
