@@ -1900,6 +1900,203 @@ function renderLogTable(rows){
     setTxt('netLoc', loc || '—');
   }catch{ setTxt('netLoc','—'); }
 }
+// ===== Channel Settings (Tabs + Persistenz) =====
+(function channelSettings(){
+  const KEY = 'resTool.channelSettings';
+
+  function readChannel(){ try{ return JSON.parse(localStorage.getItem(KEY)) || {}; } catch{ return {}; } }
+  function saveChannel(obj){ localStorage.setItem(KEY, JSON.stringify(obj||{})); logActivity('channel','save', obj); }
+  function setTxt(id, v){ const n=document.getElementById(id); if(n) n.textContent = v ?? '—'; }
+  function setVal(id, v){ const n=document.getElementById(id); if(n) n.value = v ?? ''; }
+
+  // Tabs switch
+  function switchChannelTab(name){
+    document.querySelectorAll('.channel-tab').forEach(b=>{
+      b.classList.toggle('active', b.dataset.channelTab === name);
+    });
+    document.querySelectorAll('#channelContent .channel-page').forEach(p=>{
+      p.classList.toggle('hidden', p.id !== ('chPage_'+name));
+    });
+  }
+
+  // Status-Chips im Monitoring spiegeln (HNS rot bis echte Anbindung)
+  function updateMonitorChips(){
+    const chipH = document.getElementById('chChipHns');
+    const chipSb= document.getElementById('chChipSb');
+    chipH?.classList.remove('lvl-0','lvl-1','lvl-2'); chipH?.classList.add('lvl-2'); // HNS noch nicht verdrahtet
+    // SB spiegle aktuellen Statuschip vom Header (falls vorhanden)
+    const sbHeader = document.getElementById('chipSb');
+    if (sbHeader){
+      const ok = sbHeader.classList.contains('lvl-0');
+      chipSb?.classList.remove('lvl-0','lvl-1','lvl-2');
+      chipSb?.classList.add(ok ? 'lvl-0' : 'lvl-1');
+    }
+  }
+
+  // Hotel-Active Liste rendern
+  function renderHotelActive(list){
+    const box = document.getElementById('chHotelActiveList'); if (!box) return;
+    box.innerHTML = '';
+    (window.HOTELS||[]).forEach(h=>{
+      const id = 'chActive_'+h.code;
+      const wrap = document.createElement('label');
+      wrap.className = 'input';
+      wrap.style.cssText = 'display:flex; gap:8px; align-items:center; padding:8px; border-radius:8px;';
+      wrap.innerHTML = `<input type="checkbox" id="${id}"> <span>${h.group} – ${h.name.replace(/^.*? /,'')}</span>`;
+      box.appendChild(wrap);
+      const chk = wrap.querySelector('input');
+      chk.checked = !list || list.includes(h.code); // Default: aktiv
+    });
+  }
+
+  // Mapping-Summary Dummy (zeigt, ob JSON valide ist)
+  function refreshMappingSummary(){
+    const el = document.getElementById('chMappingSummary'); if (!el) return;
+    let okA=true, okB=true, okC=true;
+    try{ JSON.parse(document.getElementById('chHotelMap').value || '{}'); }catch{ okA=false; }
+    try{ JSON.parse(document.getElementById('chCatMap').value   || '{}'); }catch{ okB=false; }
+    try{ JSON.parse(document.getElementById('chRateMap').value  || '{}'); }catch{ okC=false; }
+    el.innerHTML = `
+      <div>Hotel-Mapping: <b style="color:${okA?'#35e08a':'#ff4d6d'}">${okA?'OK':'Fehler'}</b></div>
+      <div>Kategorien-Mapping: <b style="color:${okB?'#35e08a':'#ff4d6d'}">${okB?'OK':'Fehler'}</b></div>
+      <div>Raten-Mapping: <b style="color:${okC?'#35e08a':'#ff4d6d'}">${okC?'OK':'Fehler'}</b></div>
+    `;
+  }
+
+  // Export/Import
+  function doExport(){
+    const data = readChannel();
+    download('channel-settings.json','application/json;charset=utf-8', JSON.stringify(data,null,2));
+  }
+  function doImport(file){
+    const r = new FileReader();
+    r.onload = () => {
+      try{
+        const obj = JSON.parse(r.result);
+        saveChannel(obj); applyToUi(obj);
+        document.getElementById('channelInfo').textContent = 'Import erfolgreich.';
+      }catch(e){
+        document.getElementById('channelInfo').textContent = 'Import fehlgeschlagen: '+e.message;
+      }
+    };
+    r.readAsText(file);
+  }
+
+  // Settings in UI füllen
+  function applyToUi(s){
+    setVal('chApiKey',   s.api_key);
+    setVal('chApiSecret',s.api_secret);
+    setVal('chHnsProd',  s.hns_prod);
+    setVal('chHnsTest',  s.hns_test);
+    setVal('chTimeout',  s.timeout_ms ?? 15000);
+    setVal('chRetry',    s.retry_count ?? 2);
+    setVal('chHotelMap', JSON.stringify(s.hotel_map || {}, null, 2));
+    setVal('chCatMap',   JSON.stringify(s.cat_map   || {}, null, 2));
+    setVal('chRateMap',  JSON.stringify(s.rate_map  || {}, null, 2));
+    setVal('chMode',     s.mode || 'sandbox');
+    setVal('chCancelPolicy', s.cancel_policy || '');
+    setTxt('chLastSync', s.last_sync ? new Date(s.last_sync).toLocaleString('de-DE') : '—');
+    renderHotelActive(s.hotels_active);
+    updateMonitorChips();
+    refreshMappingSummary();
+  }
+
+  // Aus UI lesen
+  function readFromUi(){
+    const hotelsActive = Array.from(document.querySelectorAll('#chHotelActiveList input[type="checkbox"]'))
+      .filter(chk=>chk.checked).map(chk=>chk.id.replace('chActive_',''));
+
+    const parse = (id) => { try{ return JSON.parse(document.getElementById(id).value || '{}'); } catch{ return {}; } };
+
+    return {
+      api_key:      document.getElementById('chApiKey').value || null,
+      api_secret:   document.getElementById('chApiSecret').value || null,
+      hns_prod:     document.getElementById('chHnsProd').value || null,
+      hns_test:     document.getElementById('chHnsTest').value || null,
+      timeout_ms:   Number(document.getElementById('chTimeout').value || 0) || 15000,
+      retry_count:  Number(document.getElementById('chRetry').value || 0) || 2,
+      hotel_map:    parse('chHotelMap'),
+      cat_map:      parse('chCatMap'),
+      rate_map:     parse('chRateMap'),
+      hotels_active,
+      mode:         document.getElementById('chMode').value || 'sandbox',
+      cancel_policy:document.getElementById('chCancelPolicy').value || '',
+      last_sync:    readChannel().last_sync || null // bleibt unverändert
+    };
+  }
+
+  // Buttons/Events binden wenn Modal geöffnet wird
+  function bindOnce(){
+    const tabs = document.getElementById('channelTabs');
+    if (!tabs || tabs.__bound) return;
+    tabs.__bound = true;
+
+    tabs.addEventListener('click', (e)=>{
+      const btn = e.target.closest('.channel-tab'); if (!btn) return;
+      switchChannelTab(btn.dataset.channelTab);
+    });
+
+    document.getElementById('btnSaveChannel')?.addEventListener('click', ()=>{
+      const data = readFromUi();
+      saveChannel(data);
+      document.getElementById('channelInfo').textContent = 'Einstellungen gespeichert.';
+    });
+
+    document.getElementById('chExport')?.addEventListener('click', doExport);
+    document.getElementById('chImportFile')?.addEventListener('change', (e)=> e.target.files?.[0] && doImport(e.target.files[0]));
+
+    document.getElementById('chAddHotel')?.addEventListener('click', ()=>{
+      const code  = (document.getElementById('chNewHotelCode').value||'').trim();
+      const name  = (document.getElementById('chNewHotelName').value||'').trim();
+      const group = (document.getElementById('chNewHotelGroup').value||'').trim();
+      if (!code || !name || !group){ alert('Bitte Code, Name und Gruppe ausfüllen.'); return; }
+      try{
+        // HOTELS ist konstantes Array – wir hängen nur für die Session an (persistente Pflege später separat).
+        window.HOTELS.push({ group, name, code });
+        renderHotelActive(readChannel().hotels_active);
+        document.getElementById('channelInfo').textContent = `Hotel ${code} hinzugefügt (Session).`;
+      }catch(e){}
+    });
+
+    document.getElementById('btnSyncNow')?.addEventListener('click', async ()=>{
+      // Simulierter Sync – hier später echte HNS-Calls
+      const info = document.getElementById('channelInfo');
+      info.textContent = 'Synchronisiere …';
+      await new Promise(r=>setTimeout(r,800));
+      const data = readChannel();
+      data.last_sync = new Date().toISOString();
+      saveChannel(data);
+      setTxt('chLastSync', new Date(data.last_sync).toLocaleString('de-DE'));
+      info.textContent = 'Sync OK.';
+      // Minimaler Error-Eintrag-Beispiel für Monitoring
+      const UL = document.getElementById('chErrorList');
+      if (UL && UL.children.length < 1){
+        const li = document.createElement('li');
+        li.textContent = 'Keine Fehler gemeldet.';
+        UL.appendChild(li);
+      }
+    });
+
+    // Live-Summary für Mapping
+    ['chHotelMap','chCatMap','chRateMap'].forEach(id=>{
+      document.getElementById(id)?.addEventListener('input', refreshMappingSummary);
+    });
+  }
+
+  // Wenn Settings-Modal geöffnet wird, UI füllen
+  const btnChannel = document.getElementById('btnChannel');
+  if (btnChannel){
+    btnChannel.addEventListener('click', ()=>{
+      setTimeout(()=>{
+        try{
+          bindOnce();
+          switchChannelTab('api');
+          applyToUi(readChannel());
+        }catch(e){}
+      }, 0);
+    });
+  }
+})();
 
 document.addEventListener('DOMContentLoaded', ()=>{
   // Controls referenzieren
