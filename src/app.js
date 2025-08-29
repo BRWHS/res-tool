@@ -569,23 +569,45 @@ q('#btnRateSave')?.addEventListener('click', ()=>{
   }));
 
   
-  
-document.addEventListener('click', function(e){
+  document.addEventListener('click', function (e) {
   const btn = e.target.closest('#btnRates, [data-modal="#modalRates"]');
   if (!btn) return;
   e.preventDefault();
-  try{
-    if (typeof openModal === 'function') openModal('modalRates');
-    else {
-      const el = document.getElementById('modalRates');
-      if (el){ el.classList.add('open'); el.removeAttribute('hidden'); }
-      document.documentElement.classList.add('modal-open');
-      const backdrop = document.getElementById('backdrop');
-      if (backdrop){ backdrop.classList.add('open'); backdrop.setAttribute('aria-hidden','false'); }
+
+  // Hilfsfunktionen (verwenden bestehende, falls vorhanden)
+  const $ = (s, c=document) => c.querySelector(s);
+  const $$ = (s, c=document) => Array.from(c.querySelectorAll(s));
+
+  const _open = (selOrEl) => {
+    if (typeof window.openModal === 'function') return window.openModal(selOrEl);
+    const el = typeof selOrEl === 'string' ? $(selOrEl) : selOrEl;
+    if (!el) return;
+    el.classList.add('open');
+    el.setAttribute('aria-hidden', 'false');
+    document.documentElement.classList.add('modal-open');
+    const backdrop = $('#backdrop');
+    if (backdrop) { backdrop.classList.add('open'); backdrop.setAttribute('aria-hidden', 'false'); }
+  };
+
+  const _close = (modalEl) => {
+    if (typeof window.closeModal === 'function') return window.closeModal(modalEl);
+    const el = modalEl && modalEl.classList ? modalEl : btn.closest('.modal');
+    if (!el) return;
+    el.classList.remove('open');
+    el.setAttribute('aria-hidden', 'true');
+    if ($$('.modal.open').length === 0) {
+      document.documentElement.classList.remove('modal-open');
+      const backdrop = $('#backdrop');
+      if (backdrop) { backdrop.classList.remove('open'); backdrop.setAttribute('aria-hidden', 'true'); }
     }
-  }catch(err){ console.warn('open rates modal failed', err); }
-}, { passive:false });
-// Modal-IDs
+  };
+
+  // 1) Eltern-Modal (Einstellungen) schließen …
+  // stack Rates without closing parent
+  setTimeout(() => _open('#modalRates'), 0);
+}, { passive: false });
+
+  // Modal-IDs
 const MODALS = {
   rateSettings: 'modalRateSettings',
   rateCreate:   'modalRateCreate',
@@ -601,7 +623,6 @@ function close(id){
 // „+ Neue Rate“ in Rateneinstellungen → eigenes Create-Modal
 const newRateBtn = document.querySelector('#rsNewRate, #btnOpenNewRate, [data-open="rate-create"]');
 newRateBtn?.addEventListener('click', () => {
-  try{ logActivity('rates','open_create'); }catch(e){}
   // close(MODALS.rateSettings);   // <- RAUS
   document.getElementById('rateCreateForm')?.reset();
   open('modalRateCreate'); // <- draufstapeln
@@ -962,41 +983,21 @@ document.getElementById('rateCreateForm')?.addEventListener('submit', (e) => {
   q('#nextPage')  ?.addEventListener('click', ()=>{ page = page+1; loadReservations(); });
 
   /***** Edit: Dropdowns *****/
-  
-function fillEditDropdowns(hotelCode, curCat, curRate){
-  const cats  = HOTEL_CATEGORIES['default'];
-  const rates = HOTEL_RATES['default'];
+  function fillEditDropdowns(hotelCode, curCat, curRate){
+    const cats = HOTEL_CATEGORIES['default'];
+    const rates = HOTEL_RATES['default'];
 
-  function ensureSelect(id){
-    const node = document.getElementById(id);
-    if (!node) return null;
-    if (node.tagName === 'SELECT') return node;
-    const sel = document.createElement('select');
-    sel.id = node.id;
-    sel.className = node.className || '';
-    node.replaceWith(sel);
-    return sel;
-  }
+    const selCat = q('#eCat'); if (selCat) selCat.innerHTML = cats.map(c=>`<option ${c===curCat?'selected':''}>${c}</option>`).join('');
+    const selRate= q('#eRate'); if (selRate) selRate.innerHTML= rates.map(r=>`<option value="${r.name}" data-price="${r.price}" ${r.name===curRate?'selected':''}>${r.name} (${EUR.format(r.price)})</option>`).join('');
 
-  const selCat  = ensureSelect('eCat');
-  const selRate = ensureSelect('eRate');
-
-  if (selCat) {
-    selCat.innerHTML = (cats||[]).map(c => `<option value="${c}" ${c===curCat?'selected':''}>${c}</option>`).join('');
-  }
-  if (selRate) {
-    selRate.innerHTML = (rates||[]).map(r => `<option value="${r.name}" data-price="${r.price}" ${r.name===curRate?'selected':''}>${r.name} (${EUR.format(r.price)})</option>`).join('');
-    selRate.addEventListener('change', e => {
+    selRate?.addEventListener('change', e=>{
       const p = e.target.selectedOptions[0]?.dataset.price;
-      if (p) document.getElementById('ePrice').value = p;
+      if (p) q('#ePrice').value = p;
     });
   }
-}
 
-/***** Edit-Dialog *****/
+  /***** Edit-Dialog *****/
   async function openEdit(id){
-  try{ logActivity('res','open_edit',{id}); }catch(e){}
-
     const { data, error } = await supabase.from('reservations').select('*').eq('id', id).maybeSingle();
     if (error || !data) return alert('Konnte Reservierung nicht laden.');
 
@@ -1025,7 +1026,6 @@ function fillEditDropdowns(hotelCode, curCat, curRate){
     q('#editInfo') && (q('#editInfo').textContent = createdAtTxt);
 
     q('#btnSaveEdit') && (q('#btnSaveEdit').onclick = async ()=>{
-      try{ logActivity('res','save_edit', {id}); }catch(e){}
       const payload = {
         guest_last_name: q('#eLname').value || null,
         arrival: q('#eArr').value || null,
@@ -1041,7 +1041,6 @@ function fillEditDropdowns(hotelCode, curCat, curRate){
     });
 
     q('#btnSavePay') && (q('#btnSavePay').onclick = async ()=>{
-      try{ logActivity('res','save_payment', {id}); }catch(e){}
       const payload = {
         cc_holder: q('#eCcHolder').value || null,
         cc_last4:  q('#eCcLast4').value  || null,
@@ -1053,7 +1052,6 @@ function fillEditDropdowns(hotelCode, curCat, curRate){
     });
 
     q('#btnCancelRes') && (q('#btnCancelRes').onclick = async ()=>{
-      try{ logActivity('res','cancel', {id}); }catch(e){}
       const { error } = await supabase.from('reservations').update({ status:'canceled', canceled_at: new Date().toISOString() }).eq('id', id);
       q('#editInfo').textContent = error ? ('Fehler: '+error.message) : createdAtTxt;
       await loadReservations();
@@ -1346,7 +1344,6 @@ q('#btnNext')?.addEventListener('click', ()=>{
 
     // 3) Speichern
     const { error } = await supabase.from('reservations').insert(payload);
-    try{ logActivity('res','create',{reservation_number: payload.reservation_number, hotel_code: payload.hotel_code}); }catch(e){}
     if (q('#newInfo')) q('#newInfo').textContent = error ? ('Fehler: ' + error.message) : 'Reservierung gespeichert.';
     if (error) return;
 
@@ -2313,7 +2310,7 @@ seedDefaultRatesIfEmpty();
 
 
   // --- Einstellungen / Admin ---
-const ADMIN_PW = null;
+const ADMIN_PW = "325643";
 const SETTINGS_KEY = "resTool.settings";
 const LOG_KEY = "resTool.activityLog";
 
@@ -2374,9 +2371,12 @@ function applySettings(){
   const sel = document.getElementById('selLang'); if (sel) sel.value = s.lang || 'de';
   const rng = document.getElementById('rngHue'); if (rng){ rng.value = h; const v=document.getElementById('hueVal'); if(v) v.textContent = h+'°'; }
 }
-function requireAdmin(onSuccess){ try{ onSuccess && onSuccess(); }catch(e){} }}
+function requireAdmin(onSuccess){
+  const pw = prompt(t('ui.needpw'));
+  if (pw === ADMIN_PW){ onSuccess && onSuccess(); }
+  else if (pw !== null){ alert(t('ui.wrongpw')); }
+}
 function logActivity(type, action, meta){
-  try{ const s = (JSON.parse(localStorage.getItem('resTool.settings'))||{}); if (meta && !meta.user) meta.user = s.username || s.user || s.email || null; }catch(e){}
   const row = {
     ts: new Date().toISOString(),
     type, action,
@@ -3244,3 +3244,4 @@ document.addEventListener('click', (e)=>{
   });
   obs.observe(el, { attributes:true, attributeFilter:['class'] });
 })();
+
