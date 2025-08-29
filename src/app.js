@@ -1014,7 +1014,6 @@ function fillEditDropdowns(hotelCode, curCat, curRate){
     });
   }
 }
->${c}</option>`).join('');
     const selRate= q('#eRate'); if (selRate) selRate.innerHTML= rates.map(r=>`<option value="${r.name}" data-price="${r.price}" ${r.name===curRate?'selected':''}>${r.name} (${EUR.format(r.price)})</option>`).join('');
 
     selRate?.addEventListener('change', e=>{
@@ -2404,9 +2403,7 @@ function applySettings(){
   const sel = document.getElementById('selLang'); if (sel) sel.value = s.lang || 'de';
   const rng = document.getElementById('rngHue'); if (rng){ rng.value = h; const v=document.getElementById('hueVal'); if(v) v.textContent = h+'°'; }
 }
-function requireAdmin(onSuccess){ try{ onSuccess && onSuccess(); }catch(e){} }
-  else if (pw !== null){ alert(t('ui.wrongpw')); }
-}
+function requireAdmin(onSuccess){ try{ onSuccess && onSuccess(); }catch(e){} }}
 function logActivity(type, action, meta){
   try{ const s = (JSON.parse(localStorage.getItem('resTool.settings'))||{}); if (meta && !meta.user) meta.user = s.username || s.user || s.email || null; }catch(e){}
   const row = {
@@ -3276,4 +3273,3 @@ document.addEventListener('click', (e)=>{
   });
   obs.observe(el, { attributes:true, attributeFilter:['class'] });
 })();
-
