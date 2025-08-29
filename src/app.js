@@ -2310,72 +2310,13 @@ seedDefaultRatesIfEmpty();
 
 
   // --- Einstellungen / Admin ---
-const ADMIN_PW = "325643";
-const SETTINGS_KEY = "resTool.settings";
-const LOG_KEY = "resTool.activityLog";
-
-const I18N = {
-  de: {
-    "settings.language": "Sprache",
-    "settings.hue": "Farbton",
-    "settings.save": "Einstellungen speichern",
-    // Beispieltexte (füge bei Bedarf weitere hinzu)
-    "ui.saved": "Einstellungen gespeichert",
-    "ui.wrongpw": "Falsches Admin‑Passwort",
-    "ui.needpw": "Bitte Admin‑Passwort eingeben"
-  },
-  en: {
-    "settings.language": "Language",
-    "settings.hue": "Hue",
-    "settings.save": "Save settings",
-    "ui.saved": "Settings saved",
-    "ui.wrongpw": "Wrong admin password",
-    "ui.needpw": "Please enter admin password"
-  }
-};
-
-function t(key){ 
-  const lang = (getSettings().lang || 'de');
-  return (I18N[lang] && I18N[lang][key]) || I18N['de'][key] || key; 
-}
-function translateAll(){
-  document.querySelectorAll('[data-i18n]').forEach(n=>{
-    n.textContent = t(n.getAttribute('data-i18n'));
-  });
-  // Beispiel: Platzhalter in Inputs
-  const s = getSettings().lang || 'de';
-  const phSearch = s === 'en' ? 'Search… (text/meta)' : 'Suche… (Text/Meta)';
-  const el = document.getElementById('logSearch'); if (el) el.placeholder = phSearch;
-}
-function getSettings(){
-  try{ return JSON.parse(localStorage.getItem(SETTINGS_KEY)) || { lang:'de', hue: 180 }; }
-  catch(e){ return { lang:'de', hue:180 }; }
-}
-function saveSettings(obj){
-  localStorage.setItem(SETTINGS_KEY, JSON.stringify(obj));
-  logActivity('settings','saved', {settings: obj});
-}
-function applySettings(){
-  const s = getSettings();
-  // Sprache – UI aktualisieren
-  translateAll();
-  // Hue → Theme Variablen (du kannst hier die Intensitäten tweaken)
-  const h = Number(s.hue||180);
-  const accent  = `hsl(${h} 100% 55%)`;
-  const accent2 = `hsl(${h} 80% 65%)`;
-  const glow    = `0 0 10px hsla(${h} 100% 60% / .35)`;
-  document.documentElement.style.setProperty('--accent', accent);
-  document.documentElement.style.setProperty('--accent-2', accent2);
-  document.documentElement.style.setProperty('--glow', glow);
-  // Controls spiegeln
-  const sel = document.getElementById('selLang'); if (sel) sel.value = s.lang || 'de';
-  const rng = document.getElementById('rngHue'); if (rng){ rng.value = h; const v=document.getElementById('hueVal'); if(v) v.textContent = h+'°'; }
-}
+// --- Einstellungen / Admin (Passwort entfernt) ---
+const ADMIN_PW = null;
 function requireAdmin(onSuccess){
-  const pw = prompt(t('ui.needpw'));
-  if (pw === ADMIN_PW){ onSuccess && onSuccess(); }
-  else if (pw !== null){ alert(t('ui.wrongpw')); }
+  // Passwortabfrage übersprungen
+  onSuccess && onSuccess();
 }
+
 function logActivity(type, action, meta){
   const row = {
     ts: new Date().toISOString(),
