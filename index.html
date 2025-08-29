@@ -179,8 +179,9 @@
         <input id="erName" class="input" placeholder="z. B. Flex exkl. Frühstück" />
       </label>
       <label style="grid-column:1 / -1">Kategorien
-        <select id="erCats" class="input theme-select" multiple size="4"></select>
-      </label>
+  <div id="erCatsWrap" class="cat-stack"></div>
+  <button class="btn sm ghost" id="erAddCatRow" type="button">+ weitere Kategorie</button>
+</label>
       <label style="grid-column:1 / -1">Stornobedingung
         <textarea id="erPolicy" class="input" rows="3" placeholder="z. B. Bis zum Anreisetag 18:00 Uhr kostenfrei stornierbar."></textarea>
       </label>
@@ -228,8 +229,9 @@
         <input id="crName" class="input" placeholder="z. B. Flex exkl. Frühstück">
       </label>
       <label style="grid-column:1 / -1">Kategorien
-        <select id="crCats" class="input theme-select" multiple size="4" disabled></select>
-      </label>
+  <div id="crCatsWrap" class="cat-stack" data-disabled="true"></div>
+  <button class="btn sm ghost" id="crAddCatRow" type="button" disabled>+ weitere Kategorie</button>
+</label>
       <label style="grid-column:1 / -1">Stornobedingung
         <textarea id="crPolicy" class="input" rows="3" placeholder="Bis 18:00 Uhr am Anreisetag kostenfrei stornierbar."></textarea>
       </label>
@@ -960,8 +962,6 @@
   </div>
 </div>
 </section>
-
-<button class="btn tile" id="btnCats">Kategorieverwaltung</button>
 
   <!-- Hilfe & FAQ -->
   <section class="modal" id="modalHelp" role="dialog" aria-labelledby="helpTitle" aria-modal="true" aria-hidden="true">
