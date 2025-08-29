@@ -441,11 +441,16 @@
           <label>Gast Nachname <input id="eLname" class="input"/></label>
           <label>Anreise <input id="eArr" type="date" class="input"/></label>
           <label>Abreise <input id="eDep" type="date" class="input"/></label>
-          <label>Kategorie <input id="eCat" class="input"/></label>
-          <label>Rate <input id="eRate" class="input"/></label>
+          <label>Kategorie
+          <select id="eCat" class="input theme-select"></select>
+          </label>
+          <label>Rate
+            <select id="eRate" class="input theme-select"></select>
+              </label>
+          
           <label>Preis <input id="ePrice" type="number" class="input"/></label>
         </div>
-        <div class="right"><button class="btn" id="btnSaveDet">Speichern</button></div>
+        <div class="right"><button class="btn" id="btnSaveEdit">Speichern</button></div>
       </div>
 
       <div class="tabpage hidden" id="tabPay">
