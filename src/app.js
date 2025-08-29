@@ -87,6 +87,20 @@
     }
   }
 
+// Extra safety: if no open modals are visible, make sure backdrop is hidden
+(function(){ 
+  try {
+    const anyOpen = document.querySelector('.modal.open');
+    if (!anyOpen) {
+      const b = document.getElementById('backdrop') || document.querySelector('.modal-backdrop');
+      if (b) { b.classList.remove('open'); b.style.display='none'; b.setAttribute('aria-hidden','true'); }
+      document.documentElement.classList.remove('modal-open');
+      // Reset modal stack to avoid stale entries
+      if (Array.isArray(window.__MODAL_STACK__)) window.__MODAL_STACK__.length = 0;
+    }
+  } catch(e){ /* noop */ }
+})();
+
   window.openModal  = openModal;
   window.closeModal = closeModal;
 
@@ -3007,11 +3021,8 @@ function openRateEditor(id){
   q('#erHotel').disabled = true;
 
   renderCatStack('erCatsWrap', r.hotel_code, (r.categories||[]));
-document.getElementById('erAddCatRow')?.addEventListener('click', ()=>{
-  addCatRow(document.getElementById('erCatsWrap'), r.hotel_code, '');
-});
-
-  q('#erCode').value = r.ratecode || '';    q('#erCode').disabled = true;
+(() => { const b = document.getElementById('erAddCatRow'); if (!b) return; const clone = b.cloneNode(true); b.replaceWith(clone); clone.addEventListener('click', () => { addCatRow(document.getElementById('erCatsWrap'), r.hotel_code, ''); }); })();
+q('#erCode').value = r.ratecode || '';    q('#erCode').disabled = true;
   q('#erType').value = r.ratetype || 'Direct'; q('#erType').disabled = true;
   q('#erName').value = r.name || '';        q('#erName').disabled = false;
   q('#erPolicy').value = r.policy || '';
@@ -3084,18 +3095,14 @@ function openRateCreate(){
 
  // Kategorien: Stack aufbauen, sobald ein Hotel gewählt ist
 const crWrap = document.getElementById('crCatsWrap');
-const crAdd  = document.getElementById('crAddCatRow');
+const crAddRaw = document.getElementById('crAddCatRow');
 function resetCreateCats(){
-  const hotel_code = code('crHotel').value;
+const hotel_code = code('crHotel').value;
   renderCatStack('crCatsWrap', hotel_code, []);
 }
-code('crHotel').addEventListener('change', resetCreateCats, { once:true });
-crAdd?.addEventListener('click', ()=>{
-  addCatRow(crWrap, code('crHotel').value, '');
-});
-
-
-  // Create-Button neu binden (Duplicate-Listener vermeiden)
+code('crHotel').addEventListener('change', resetCreateCats);
+(() => { if (!crAddRaw) return; const crAdd = crAddRaw.cloneNode(true); crAddRaw.replaceWith(crAdd); crAdd.addEventListener('click', () => { addCatRow(crWrap, code('crHotel').value, ''); }); })();
+// Create-Button neu binden (Duplicate-Listener vermeiden)
   const btn = code('btnRateCreate');
   btn.replaceWith(btn.cloneNode(true));
   document.getElementById('btnRateCreate').addEventListener('click', ()=>{
