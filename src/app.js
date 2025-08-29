@@ -474,19 +474,7 @@ function openCatDescModal({hotel, code, name, maxPax, isNew=false}){
 })();
 
   
-  
-function ensureSelect(elId){
-  const node = document.getElementById(elId);
-  if (!node) return null;
-  if (node.tagName === 'SELECT') return node;
-  const sel = document.createElement('select');
-  sel.id = node.id;
-  sel.className = (node.className||'') + ' input theme-select';
-  node.replaceWith(sel);
-  return sel;
-}
-
-/* ===== Rateneinstellungen (neues Modal) ===== */
+  /* ===== Rateneinstellungen (neues Modal) ===== */
 function fillHotelSelectGeneric(sel){
   if (!sel) return;
   sel.innerHTML = '';
@@ -567,9 +555,7 @@ q('#btnRateSave')?.addEventListener('click', ()=>{
     created_at: now, updated_at: now
   });
 
-  
-  try{ logActivity('rates','save',{hotel_code, ratecode}); }catch(e){}
-q('#rateInfo').textContent = 'Rate gespeichert.';
+  q('#rateInfo').textContent = 'Rate gespeichert.';
   // Falls du ein Raten-Board auf der Startmaske hast, hier refreshen:
   try {
     const active = qa('#rateTabs .tab.active')[0]?.dataset.ratetype || ratetype;
@@ -637,7 +623,6 @@ function close(id){
 // „+ Neue Rate“ in Rateneinstellungen → eigenes Create-Modal
 const newRateBtn = document.querySelector('#rsNewRate, #btnOpenNewRate, [data-open="rate-create"]');
 newRateBtn?.addEventListener('click', () => {
-  try{ logActivity('rates','open_create'); }catch(e){}
   // close(MODALS.rateSettings);   // <- RAUS
   document.getElementById('rateCreateForm')?.reset();
   open('modalRateCreate'); // <- draufstapeln
@@ -987,34 +972,42 @@ document.getElementById('rateCreateForm')?.addEventListener('submit', (e) => {
   }
 
   // Filter Events
-  q('#searchInput')?.addEventListener('input', (e)=>{ try{ logActivity('ui','filter_search'); }catch(e){}; search = e.target.value.trim(); page = 1; loadReservations(); });
-  q('#filterHotel')?.addEventListener('change', (e)=>{ try{ logActivity('ui','filter_hotel'); }catch(e){}; fHotel = e.target.value; page=1; loadReservations(); });
-  q('#filterResNo')?.addEventListener('input', (e)=>{ try{ logActivity('ui','filter_resno'); }catch(e){}; fResNo = e.target.value.trim(); page=1; loadReservations(); });
-  q('#filterFrom')?.addEventListener('change', (e)=>{ try{ logActivity('ui','filter_from'); }catch(e){}; fFrom = e.target.value||null; page=1; loadReservations(); });
+  q('#searchInput')?.addEventListener('input', (e)=>{ search = e.target.value.trim(); page = 1; loadReservations(); });
+  q('#filterHotel')?.addEventListener('change', (e)=>{ fHotel = e.target.value; page=1; loadReservations(); });
+  q('#filterResNo')?.addEventListener('input', (e)=>{ fResNo = e.target.value.trim(); page=1; loadReservations(); });
+  q('#filterFrom')?.addEventListener('change', (e)=>{ fFrom = e.target.value||null; page=1; loadReservations(); });
   q('#filterTo')  ?.addEventListener('change', (e)=>{ fTo   = e.target.value||null; page=1; loadReservations(); });
-  q('#filterStatus')?.addEventListener('change', (e)=>{ try{ logActivity('ui','filter_status'); }catch(e){}; fStatus = e.target.value; page=1; loadReservations(); });
+  q('#filterStatus')?.addEventListener('change', (e)=>{ fStatus = e.target.value; page=1; loadReservations(); });
   q('#btnRefresh')?.addEventListener('click', async ()=>{ await autoRollPastToDone(); loadReservations(); });
-  q('#prevPage')  ?.addEventListener('click', ()=>{ page = Math.max(1, page-1); try{ logActivity('ui','page_prev',{page}); }catch(e){}; loadReservations(); });
-  q('#nextPage')  ?.addEventListener('click', ()=>{ page = page+1; try{ logActivity('ui','page_next',{page}); }catch(e){}; loadReservations(); });
+  q('#prevPage')  ?.addEventListener('click', ()=>{ page = Math.max(1, page-1); loadReservations(); });
+  q('#nextPage')  ?.addEventListener('click', ()=>{ page = page+1; loadReservations(); });
 
   /***** Edit: Dropdowns *****/
-  
+  /***** Edit: Dropdowns *****/
 function fillEditDropdowns(hotelCode, curCat, curRate){
-  const cats = HOTEL_CATEGORIES['default'];
+  const cats  = HOTEL_CATEGORIES['default'];
   const rates = HOTEL_RATES['default'];
 
-  const selCat = ensureSelect('eCat');
-  const selRate = ensureSelect('eRate');
+  const selCat  = document.getElementById('eCat');
+  const selRate = document.getElementById('eRate');
 
-  if (selCat) selCat.innerHTML = cats.map(c=>`<option ${c===curCat?'selected':''}>${c}</option>`).join('');
-  if (selRate) selRate.innerHTML= rates.map(r=>`<option value="${r.name}" data-price="${r.price}" ${r.name===curRate?'selected':''}>${r.name} (${EUR.format(r.price)})</option>`).join('');
+  if (selCat) {
+    selCat.innerHTML = cats
+      .map(c => `<option value="${c}" ${c===curCat ? 'selected' : ''}>${c}</option>`)
+      .join('');
+  }
 
-  selRate?.addEventListener('change', e=>{
-    const p = e.target.selectedOptions[0]?.dataset.price;
-    if (p) document.getElementById('ePrice').value = p;
-  });
+  if (selRate) {
+    selRate.innerHTML = rates
+      .map(r => `<option value="${r.name}" data-price="${r.price}" ${r.name===curRate ? 'selected' : ''}>${r.name} (${EUR.format(r.price)})</option>`)
+      .join('');
+
+    selRate.addEventListener('change', e => {
+      const p = e.target.selectedOptions[0]?.dataset.price;
+      if (p) document.getElementById('ePrice').value = p;
+    });
+  }
 }
-    >${c}</option>`).join('');
     const selRate= q('#eRate'); if (selRate) selRate.innerHTML= rates.map(r=>`<option value="${r.name}" data-price="${r.price}" ${r.name===curRate?'selected':''}>${r.name} (${EUR.format(r.price)})</option>`).join('');
 
     selRate?.addEventListener('change', e=>{
@@ -1025,8 +1018,6 @@ function fillEditDropdowns(hotelCode, curCat, curRate){
 
   /***** Edit-Dialog *****/
   async function openEdit(id){
-  try{ logActivity('res','open_edit',{id}); }catch(e){}
-
     const { data, error } = await supabase.from('reservations').select('*').eq('id', id).maybeSingle();
     if (error || !data) return alert('Konnte Reservierung nicht laden.');
 
@@ -1372,8 +1363,7 @@ q('#btnNext')?.addEventListener('click', ()=>{
     };
 
     // 3) Speichern
-    try{ logActivity('res','create',{reservation_number: payload.reservation_number, hotel_code: payload.hotel_code}); }catch(e){}
-const { error } = await supabase.from('reservations').insert(payload);
+    const { error } = await supabase.from('reservations').insert(payload);
     if (q('#newInfo')) q('#newInfo').textContent = error ? ('Fehler: ' + error.message) : 'Reservierung gespeichert.';
     if (error) return;
 
@@ -2340,7 +2330,7 @@ seedDefaultRatesIfEmpty();
 
 
   // --- Einstellungen / Admin ---
-const ADMIN_PW = null;
+const ADMIN_PW = "325643";
 const SETTINGS_KEY = "resTool.settings";
 const LOG_KEY = "resTool.activityLog";
 
@@ -2401,11 +2391,12 @@ function applySettings(){
   const sel = document.getElementById('selLang'); if (sel) sel.value = s.lang || 'de';
   const rng = document.getElementById('rngHue'); if (rng){ rng.value = h; const v=document.getElementById('hueVal'); if(v) v.textContent = h+'°'; }
 }
-function requireAdmin(onSuccess){ try{ onSuccess && onSuccess(); }catch(e){} }
+function requireAdmin(onSuccess){
+  const pw = prompt(t('ui.needpw'));
+  if (pw === ADMIN_PW){ onSuccess && onSuccess(); }
   else if (pw !== null){ alert(t('ui.wrongpw')); }
 }
 function logActivity(type, action, meta){
-  try{ const s = (JSON.parse(localStorage.getItem('resTool.settings'))||{}); if (meta && !meta.user) meta.user = s.username || s.user || s.email || null; }catch(e){}
   const row = {
     ts: new Date().toISOString(),
     type, action,
@@ -3273,4 +3264,3 @@ document.addEventListener('click', (e)=>{
   });
   obs.observe(el, { attributes:true, attributeFilter:['class'] });
 })();
-
