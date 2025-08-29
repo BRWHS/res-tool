@@ -1061,14 +1061,15 @@ function fillEditDropdowns(hotelCode, curCat, curRate){
 
     q('#btnSaveEdit') && (q('#btnSaveEdit').onclick = async ()=>{
       const payload = {
-        guest_last_name: q('#eLname').value || null,
-        arrival: q('#eArr').value || null,
-        departure: q('#eDep').value || null,
-        category: q('#eCat').value || null,
-        rate_name: q('#eRate').value || null,
-        rate_price: Number(q('#ePrice').value||0),
-        notes: q('#eNotes').value || null
-      };
+  guest_last_name: q('#eLname')?.value || null,
+  arrival: q('#eArr')?.value || null,
+  departure: q('#eDep')?.value || null,
+  category: q('#eCat')?.value || null,
+  rate_name: q('#eRate')?.value || null,
+  rate_price: Number(q('#ePrice')?.value || 0),
+  notes: q('#eNotes') ? q('#eNotes').value : null
+};
+
       const { error } = await supabase.from('reservations').update(payload).eq('id', id);
       q('#editInfo').textContent = error ? ('Fehler: '+error.message) : createdAtTxt;
       await autoRollPastToDone(); await loadReservations();
