@@ -680,6 +680,12 @@ html.modal-open { overflow: hidden; }
 .cats-main .btn.sm{height:34px}
 @media(max-width:900px){ .cats-wrap{grid-template-columns:1fr} }
 
+/* Rate-Kategorien (Dropdown-Stack) */
+.cat-stack{ display:flex; flex-direction:column; gap:8px; }
+.cat-row{ display:flex; gap:8px; align-items:center; }
+.cat-row select.input{ flex:1; }
+.cat-row .btn.icon{ width:34px; height:34px; padding:0; border-radius:10px; }
+
 
 
 
