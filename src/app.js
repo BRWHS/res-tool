@@ -627,6 +627,14 @@ newRateBtn?.addEventListener('click', () => {
   document.getElementById('rateCreateForm')?.reset();
   open('modalRateCreate'); // <- draufstapeln
   try { renderCatStack('crCatsWrap', document.getElementById('crHotel')?.value || (HOTELS[0]?.code||''), []); } catch(e){}
+  // Enable '+ weitere Kategorie' in Create modal
+  (function(){
+    const wrap = document.getElementById('crCatsWrap');
+    const add  = document.getElementById('crAddCatRow');
+    if (wrap) wrap.removeAttribute('data-disabled');
+    if (add) { add.disabled = false; add.removeAttribute('disabled'); }
+  })();
+
 });
 
 // Abbrechen/X im Create → zurück zu Rateneinstellungen
@@ -3219,4 +3227,21 @@ document.addEventListener('click', (e)=>{
   if (!wrap) return;
   try { addCatRow(wrap, hotelCode, ''); } catch(e){ console.warn('addCatRow failed', e); }
 });
+
+
+
+// Guard: when Create modal becomes open, ensure '+ weitere Kategorie' is enabled
+(function(){
+  const el = document.getElementById('modalRateCreate');
+  if (!el) return;
+  const obs = new MutationObserver(()=>{
+    if (el.classList.contains('open')){
+      const wrap = document.getElementById('crCatsWrap');
+      const add  = document.getElementById('crAddCatRow');
+      if (wrap) wrap.removeAttribute('data-disabled');
+      if (add) { add.disabled = false; add.removeAttribute('disabled'); }
+    }
+  });
+  obs.observe(el, { attributes:true, attributeFilter:['class'] });
+})();
 
