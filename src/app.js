@@ -2310,7 +2310,7 @@ seedDefaultRatesIfEmpty();
 
 
   // --- Einstellungen / Admin ---
-const ADMIN_PW = null;
+const ADMIN_PW = "325643";
 const SETTINGS_KEY = "resTool.settings";
 const LOG_KEY = "resTool.activityLog";
 
@@ -2371,7 +2371,11 @@ function applySettings(){
   const sel = document.getElementById('selLang'); if (sel) sel.value = s.lang || 'de';
   const rng = document.getElementById('rngHue'); if (rng){ rng.value = h; const v=document.getElementById('hueVal'); if(v) v.textContent = h+'°'; }
 }
-function requireAdmin(onSuccess){ try { onSuccess && onSuccess(); } catch(e){} }}
+function requireAdmin(onSuccess){
+  const pw = prompt(t('ui.needpw'));
+  if (pw === ADMIN_PW){ onSuccess && onSuccess(); }
+  else if (pw !== null){ alert(t('ui.wrongpw')); }
+}
 function logActivity(type, action, meta){
   const row = {
     ts: new Date().toISOString(),
