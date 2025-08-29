@@ -569,45 +569,23 @@ q('#btnRateSave')?.addEventListener('click', ()=>{
   }));
 
   
-  document.addEventListener('click', function (e) {
+  
+document.addEventListener('click', function(e){
   const btn = e.target.closest('#btnRates, [data-modal="#modalRates"]');
   if (!btn) return;
   e.preventDefault();
-
-  // Hilfsfunktionen (verwenden bestehende, falls vorhanden)
-  const $ = (s, c=document) => c.querySelector(s);
-  const $$ = (s, c=document) => Array.from(c.querySelectorAll(s));
-
-  const _open = (selOrEl) => {
-    if (typeof window.openModal === 'function') return window.openModal(selOrEl);
-    const el = typeof selOrEl === 'string' ? $(selOrEl) : selOrEl;
-    if (!el) return;
-    el.classList.add('open');
-    el.setAttribute('aria-hidden', 'false');
-    document.documentElement.classList.add('modal-open');
-    const backdrop = $('#backdrop');
-    if (backdrop) { backdrop.classList.add('open'); backdrop.setAttribute('aria-hidden', 'false'); }
-  };
-
-  const _close = (modalEl) => {
-    if (typeof window.closeModal === 'function') return window.closeModal(modalEl);
-    const el = modalEl && modalEl.classList ? modalEl : btn.closest('.modal');
-    if (!el) return;
-    el.classList.remove('open');
-    el.setAttribute('aria-hidden', 'true');
-    if ($$('.modal.open').length === 0) {
-      document.documentElement.classList.remove('modal-open');
-      const backdrop = $('#backdrop');
-      if (backdrop) { backdrop.classList.remove('open'); backdrop.setAttribute('aria-hidden', 'true'); }
+  try{
+    if (typeof openModal === 'function') openModal('modalRates');
+    else {
+      const el = document.getElementById('modalRates');
+      if (el){ el.classList.add('open'); el.removeAttribute('hidden'); }
+      document.documentElement.classList.add('modal-open');
+      const backdrop = document.getElementById('backdrop');
+      if (backdrop){ backdrop.classList.add('open'); backdrop.setAttribute('aria-hidden','false'); }
     }
-  };
-
-  // 1) Eltern-Modal (Einstellungen) schließen …
-  // stack Rates without closing parent
-  setTimeout(() => _open('#modalRates'), 0);
-}, { passive: false });
-
-  // Modal-IDs
+  }catch(err){ console.warn('open rates modal failed', err); }
+}, { passive:false });
+// Modal-IDs
 const MODALS = {
   rateSettings: 'modalRateSettings',
   rateCreate:   'modalRateCreate',
@@ -1014,15 +992,8 @@ function fillEditDropdowns(hotelCode, curCat, curRate){
     });
   }
 }
-    const selRate= q('#eRate'); if (selRate) selRate.innerHTML= rates.map(r=>`<option value="${r.name}" data-price="${r.price}" ${r.name===curRate?'selected':''}>${r.name} (${EUR.format(r.price)})</option>`).join('');
 
-    selRate?.addEventListener('change', e=>{
-      const p = e.target.selectedOptions[0]?.dataset.price;
-      if (p) q('#ePrice').value = p;
-    });
-  }
-
-  /***** Edit-Dialog *****/
+/***** Edit-Dialog *****/
   async function openEdit(id){
   try{ logActivity('res','open_edit',{id}); }catch(e){}
 
