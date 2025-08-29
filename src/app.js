@@ -39,10 +39,7 @@
       ? parseInt(prevTop.style.zIndex || getComputedStyle(prevTop).zIndex || '60', 10)
       : 60;
 
-    if (prevTop && prevTop !== el){
-      prevTop.classList.add('blurred');
-      prevTop.style.pointerEvents = 'none';
-    }
+    if (prevTop && prevTop !== el) { /* keep parent visible and interactive */ }
 
     const b = ensureBackdrop();
     b.classList.add('open');
@@ -592,10 +589,7 @@ q('#btnRateSave')?.addEventListener('click', ()=>{
   };
 
   // 1) Eltern-Modal (Einstellungen) schließen …
-  const parentModal = btn.closest('.modal');
-  if (parentModal) _close(parentModal);
-
-  // 2) … und im nächsten Tick Rateneinstellungen öffnen
+  // stack Rates without closing parent
   setTimeout(() => _open('#modalRates'), 0);
 }, { passive: false });
 
@@ -617,7 +611,8 @@ const newRateBtn = document.querySelector('#rsNewRate, #btnOpenNewRate, [data-op
 newRateBtn?.addEventListener('click', () => {
   // close(MODALS.rateSettings);   // <- RAUS
   document.getElementById('rateCreateForm')?.reset();
-  open('modalRateCreate');         // <- draufstapeln
+  open('modalRateCreate'); // <- draufstapeln
+  try { renderCatStack('crCatsWrap', document.getElementById('crHotel')?.value || (HOTELS[0]?.code||''), []); } catch(e){}
 });
 
 // Abbrechen/X im Create → zurück zu Rateneinstellungen
@@ -3012,7 +3007,7 @@ function openRateEditor(id){
   q('#erHotel').disabled = true;
 
   renderCatStack('erCatsWrap', r.hotel_code, (r.categories||[]));
-document.getElementById('erAddCat')?.addEventListener('click', ()=>{
+document.getElementById('erAddCatRow')?.addEventListener('click', ()=>{
   addCatRow(document.getElementById('erCatsWrap'), r.hotel_code, '');
 });
 
@@ -3089,7 +3084,7 @@ function openRateCreate(){
 
  // Kategorien: Stack aufbauen, sobald ein Hotel gewählt ist
 const crWrap = document.getElementById('crCatsWrap');
-const crAdd  = document.getElementById('crAddCat');
+const crAdd  = document.getElementById('crAddCatRow');
 function resetCreateCats(){
   const hotel_code = code('crHotel').value;
   renderCatStack('crCatsWrap', hotel_code, []);
@@ -3202,3 +3197,19 @@ setTimeout(()=>{ try{ refreshNewResRates(); }catch(e){} }, 0);
 
 })();
 })();
+
+
+// --- Safe delegation for '+ weitere Kategorie' buttons (Create/Edit) ---
+document.addEventListener('click', (e)=>{
+  const btn = e.target.closest('#crAddCatRow, #erAddCatRow');
+  if (!btn) return;
+  e.preventDefault();
+  const isCreate = btn.id === 'crAddCatRow';
+  const wrapId = isCreate ? 'crCatsWrap' : 'erCatsWrap';
+  const hotelSel = isCreate ? document.getElementById('crHotel') : document.getElementById('erHotel');
+  const hotelCode = hotelSel ? hotelSel.value : '';
+  const wrap = document.getElementById(wrapId);
+  if (!wrap) return;
+  try { addCatRow(wrap, hotelCode, ''); } catch(e){ console.warn('addCatRow failed', e); }
+});
+
