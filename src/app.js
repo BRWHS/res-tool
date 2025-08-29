@@ -983,18 +983,52 @@ document.getElementById('rateCreateForm')?.addEventListener('submit', (e) => {
   q('#nextPage')  ?.addEventListener('click', ()=>{ page = page+1; loadReservations(); });
 
   /***** Edit: Dropdowns *****/
-  function fillEditDropdowns(hotelCode, curCat, curRate){
-    const cats = HOTEL_CATEGORIES['default'];
-    const rates = HOTEL_RATES['default'];
+function fillEditDropdowns(hotelCode, curCat, curRate){
+  // 1) Kategorien pro Hotel aus V2 ziehen (Fallback: Defaults)
+  let cats = [];
+  try { cats = (getCategoriesForHotel(hotelCode) || []).map(c => c.name); } catch(e) { cats = []; }
+  if (!cats.length) { cats = (HOTEL_CATEGORIES?.[hotelCode] || HOTEL_CATEGORIES?.default || []); }
 
-    const selCat = q('#eCat'); if (selCat) selCat.innerHTML = cats.map(c=>`<option ${c===curCat?'selected':''}>${c}</option>`).join('');
-    const selRate= q('#eRate'); if (selRate) selRate.innerHTML= rates.map(r=>`<option value="${r.name}" data-price="${r.price}" ${r.name===curRate?'selected':''}>${r.name} (${EUR.format(r.price)})</option>`).join('');
+  const selCat  = q('#eCat');
+  const selRate = q('#eRate');
 
-    selRate?.addEventListener('change', e=>{
-      const p = e.target.selectedOptions[0]?.dataset.price;
-      if (p) q('#ePrice').value = p;
-    });
+  if (selCat){
+    selCat.innerHTML = cats.map(n => `<option value="${n}" ${n===curCat?'selected':''}>${n}</option>`).join('');
   }
+
+  // 2) Raten passend zur Kategorie/Hotel (nur gemappte Raten, sonst Fallback)
+  function renderRates(forCat, currentRate){
+    // zuerst gemappte Raten probieren
+    let list = [];
+    try { list = getMappedRatesFor(hotelCode, forCat); } catch(e) { list = []; }
+    if (!list.length){
+      // Fallback: Default-Dummyraten
+      list = (HOTEL_RATES?.default || []).map(r => ({ name:r.name, price:r.price }));
+    }
+    if (selRate){
+      selRate.innerHTML = list.map(r =>
+        `<option value="${r.name}" data-price="${r.price}" ${r.name===currentRate?'selected':''}>${r.name} (${EUR.format(r.price)})</option>`
+      ).join('');
+    }
+    // Preis mitziehen, wenn Rate steht
+    const p = selRate?.selectedOptions?.[0]?.dataset.price;
+    if (p && q('#ePrice')) q('#ePrice').value = p;
+  }
+
+  renderRates(curCat || (selCat?.value || ''), curRate);
+
+  // 3) Wenn Kategorie geändert wird → Ratenliste neu bauen
+  selCat?.addEventListener('change', (e)=>{
+    renderRates(e.target.value, /* keep current rate unless not available */ (q('#eRate')?.value || ''));
+  }, { once:true });
+
+  // 4) Preis bei Ratenwechsel live updaten
+  selRate?.addEventListener('change', (e)=>{
+    const p = e.target.selectedOptions[0]?.dataset.price;
+    if (p && q('#ePrice')) q('#ePrice').value = p;
+  }, { once:true });
+}
+
 
   /***** Edit-Dialog *****/
   async function openEdit(id){
