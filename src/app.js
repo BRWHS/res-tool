@@ -1016,50 +1016,31 @@ function fillEditDropdowns(hotelCode, curCat, curRate){
     });
   }
 
-  /***** Edit-Dialog *****/
-  async function openEdit(id){
-    const { data, error } = await supabase.from('reservations').select('*').eq('id', id).maybeSingle();
-    if (error || !data) return alert('Konnte Reservierung nicht laden.');
+ /***** Edit: Dropdowns *****/
+function fillEditDropdowns(hotelCode, curCat, curRate){
+  const cats  = HOTEL_CATEGORIES['default'];
+  const rates = HOTEL_RATES['default'];
 
-    q('#eResNo') && (q('#eResNo').value = data.reservation_number || '');
-    q('#eHotel') && (q('#eHotel').value = safeDisplayFromRow(data));
-    q('#eLname') && (q('#eLname').value = data.guest_last_name || '');
-    q('#eArr') && (q('#eArr').value = data.arrival ? isoDate(new Date(data.arrival)) : '');
-    q('#eDep') && (q('#eDep').value = data.departure ? isoDate(new Date(data.departure)) : '');
+  const selCat  = document.getElementById('eCat');
+  const selRate = document.getElementById('eRate');
 
-    const eStatus = q('#eStatus');
-    if (eStatus){
-      eStatus.value = uiStatus(data);
-      eStatus.disabled = true;
-    }
+  if (selCat) {
+    selCat.innerHTML = cats
+      .map(c => `<option value="${c}" ${c===curCat ? 'selected' : ''}>${c}</option>`)
+      .join('');
+  }
 
-    fillEditDropdowns(data.hotel_code, data.category||'', data.rate_name||'');
+  if (selRate) {
+    selRate.innerHTML = rates
+      .map(r => `<option value="${r.name}" data-price="${r.price}" ${r.name===curRate ? 'selected' : ''}>${r.name} (${EUR.format(r.price)})</option>`)
+      .join('');
 
-    q('#ePrice') && (q('#ePrice').value = data.rate_price || 0);
-    q('#eNotes') && (q('#eNotes').value = data.notes || '');
-    q('#eCcHolder') && (q('#eCcHolder').value = data.cc_holder || '');
-    q('#eCcLast4')  && (q('#eCcLast4').value  = data.cc_last4  || '');
-    q('#eCcExpM')   && (q('#eCcExpM').value   = data.cc_exp_month || '');
-    q('#eCcExpY')   && (q('#eCcExpY').value   = data.cc_exp_year  || '');
-
-    const createdAtTxt = data.created_at ? `Erstellt am ${new Date(data.created_at).toLocaleString('de-DE')}` : '';
-    q('#editInfo') && (q('#editInfo').textContent = createdAtTxt);
-
-    q('#btnSaveEdit') && (q('#btnSaveEdit').onclick = async ()=>{
-      const payload = {
-        guest_last_name: q('#eLname').value || null,
-        arrival: q('#eArr').value || null,
-        departure: q('#eDep').value || null,
-        category: q('#eCat').value || null,
-        rate_name: q('#eRate').value || null,
-        rate_price: Number(q('#ePrice').value||0),
-        notes: q('#eNotes').value || null
-      };
-      const { error } = await supabase.from('reservations').update(payload).eq('id', id);
-      q('#editInfo').textContent = error ? ('Fehler: '+error.message) : createdAtTxt;
-      await autoRollPastToDone(); await loadReservations();
+    selRate.addEventListener('change', e => {
+      const p = e.target.selectedOptions[0]?.dataset.price;
+      if (p) document.getElementById('ePrice').value = p;
     });
-
+  }
+}
     q('#btnSavePay') && (q('#btnSavePay').onclick = async ()=>{
       const payload = {
         cc_holder: q('#eCcHolder').value || null,
