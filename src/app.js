@@ -2314,10 +2314,6 @@ const ADMIN_PW = null;
 const SETTINGS_KEY = "resTool.settings";
 const LOG_KEY = "resTool.activityLog";
 
-
-// --- Log: Pagination State ---
-const LOG_PAGE_SIZE = 50;
-window.__logState = window.__logState || { page: 1, rows: [] };
 const I18N = {
   de: {
     "settings.language": "Sprache",
@@ -2383,14 +2379,8 @@ function requireAdmin(onSuccess){
 function logActivity(type, action, meta){
   const row = {
     ts: new Date().toISOString(),
-    type,
-    action,
-    meta: meta || {},
-    user: (window.__currentUser && (window.__currentUser.name || window.__currentUser.email)) || 'anonymous'
-  };
-  const list = readLog(); list.push(row);
-  localStorage.setItem(LOG_KEY, JSON.stringify(list));
-}
+    type, action,
+    meta: meta || {}
   };
   const list = readLog(); list.push(row);
   localStorage.setItem(LOG_KEY, JSON.stringify(list));
@@ -2414,77 +2404,11 @@ function filterLog({q='', type='', from='', to=''}){
   return data.filter(f).sort((a,b)=> new Date(b.ts) - new Date(a.ts));
 }
 function renderLogTable(rows){
-  // 1) Cache rows & compute pages
-  window.__logState.rows = Array.isArray(rows) ? rows : [];
-  const total = window.__logState.rows.length;
-  const pages = Math.max(1, Math.ceil(total / LOG_PAGE_SIZE));
-  if (!window.__logState.page || window.__logState.page < 1) window.__logState.page = 1;
-  if (window.__logState.page > pages) window.__logState.page = pages;
-
-  // 2) Slice current page
-  const start = (window.__logState.page - 1) * LOG_PAGE_SIZE;
-  const pageRows = window.__logState.rows.slice(start, start + LOG_PAGE_SIZE);
-
-  // 3) Render table body
-  const tbody = document.querySelector('#logTable tbody'); 
-  if (!tbody) return;
+  const tbody = document.querySelector('#logTable tbody'); if (!tbody) return;
   tbody.innerHTML = '';
-  pageRows.forEach(r=>{
+  rows.forEach(r=>{
     const tr = document.createElement('tr');
     const details = JSON.stringify(r.meta||{}, null, 0);
-    tr.innerHTML = `
-      <td>${new Date(r.ts).toLocaleString()}</td>
-      <td>${r.user || '—'}</td>
-      <td>${r.type}</td>
-      <td>${r.action}</td>
-      <td><code style="white-space:nowrap">${details.length>120 ? (details.slice(0,120)+'…') : details}</code></td>
-    `;
-    tbody.appendChild(tr);
-  });
-
-  // 4) Ensure pager UI exists (create if missing)
-  let pager = document.getElementById('logPager');
-  if (!pager){
-    const modal = document.getElementById('modalLog') || document.body;
-    pager = document.createElement('div');
-    pager.id = 'logPager';
-    pager.style.cssText = 'display:flex; gap:8px; align-items:center; justify-content:flex-end; margin-top:8px;';
-    pager.innerHTML = `
-      <button id="logPrev" class="btn sm ghost">Zurück</button>
-      <span id="logPageInfo" class="muted"></span>
-      <button id="logNext" class="btn sm">Weiter</button>
-    `;
-    // Try to place below table
-    const table = document.getElementById('logTable');
-    if (table && table.parentElement) table.parentElement.appendChild(pager);
-    else modal.appendChild(pager);
-  }
-
-  const info = document.getElementById('logPageInfo');
-  const prev = document.getElementById('logPrev');
-  const next = document.getElementById('logNext');
-  if (info) info.textContent = `Seite ${window.__logState.page} / ${pages} · ${total} Einträge`;
-
-  if (prev && !prev.__bound){
-    prev.__bound = true;
-    prev.addEventListener('click', ()=>{
-      if (window.__logState.page > 1){
-        window.__logState.page--;
-        renderLogTable(window.__logState.rows);
-      }
-    });
-  }
-  if (next && !next.__bound){
-    next.__bound = true;
-    next.addEventListener('click', ()=>{
-      const pgs = Math.max(1, Math.ceil((window.__logState.rows.length||0)/LOG_PAGE_SIZE));
-      if (window.__logState.page < pgs){
-        window.__logState.page++;
-        renderLogTable(window.__logState.rows);
-      }
-    });
-  }
-}, null, 0);
     tr.innerHTML = `
       <td>${new Date(r.ts).toLocaleString()}</td>
       <td>${r.type}</td>
@@ -2825,7 +2749,6 @@ document.addEventListener('DOMContentLoaded', ()=>{
         document.getElementById('logType').value = '';
         document.getElementById('logFrom').value = '';
         document.getElementById('logTo').value = '';
-        window.__logState.page = 1;
         renderLogTable(filterLog({}));
         openModal('modalLog');
       });
@@ -2845,7 +2768,6 @@ document.addEventListener('DOMContentLoaded', ()=>{
       const type= document.getElementById('logType').value;
       const from= document.getElementById('logFrom').value;
       const to  = document.getElementById('logTo').value;
-      window.__logState.page = 1;
       renderLogTable(filterLog({q,type,from,to}));
     });
   }
@@ -2855,8 +2777,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
       document.getElementById('logType').value   = '';
       document.getElementById('logFrom').value   = '';
       document.getElementById('logTo').value     = '';
-      window.__logState.page = 1;
-        renderLogTable(filterLog({}));
+      renderLogTable(filterLog({}));
     });
   }
 });
