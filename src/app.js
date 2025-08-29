@@ -623,6 +623,7 @@ function close(id){
 // „+ Neue Rate“ in Rateneinstellungen → eigenes Create-Modal
 const newRateBtn = document.querySelector('#rsNewRate, #btnOpenNewRate, [data-open="rate-create"]');
 newRateBtn?.addEventListener('click', () => {
+  try{ logActivity('rates','open_create'); }catch(e){}
   // close(MODALS.rateSettings);   // <- RAUS
   document.getElementById('rateCreateForm')?.reset();
   open('modalRateCreate'); // <- draufstapeln
@@ -983,11 +984,37 @@ document.getElementById('rateCreateForm')?.addEventListener('submit', (e) => {
   q('#nextPage')  ?.addEventListener('click', ()=>{ page = page+1; loadReservations(); });
 
   /***** Edit: Dropdowns *****/
-  function fillEditDropdowns(hotelCode, curCat, curRate){
-    const cats = HOTEL_CATEGORIES['default'];
-    const rates = HOTEL_RATES['default'];
+  
+function fillEditDropdowns(hotelCode, curCat, curRate){
+  const cats  = HOTEL_CATEGORIES['default'];
+  const rates = HOTEL_RATES['default'];
 
-    const selCat = q('#eCat'); if (selCat) selCat.innerHTML = cats.map(c=>`<option ${c===curCat?'selected':''}>${c}</option>`).join('');
+  function ensureSelect(id){
+    const node = document.getElementById(id);
+    if (!node) return null;
+    if (node.tagName === 'SELECT') return node;
+    const sel = document.createElement('select');
+    sel.id = node.id;
+    sel.className = node.className || '';
+    node.replaceWith(sel);
+    return sel;
+  }
+
+  const selCat  = ensureSelect('eCat');
+  const selRate = ensureSelect('eRate');
+
+  if (selCat) {
+    selCat.innerHTML = (cats||[]).map(c => `<option value="${c}" ${c===curCat?'selected':''}>${c}</option>`).join('');
+  }
+  if (selRate) {
+    selRate.innerHTML = (rates||[]).map(r => `<option value="${r.name}" data-price="${r.price}" ${r.name===curRate?'selected':''}>${r.name} (${EUR.format(r.price)})</option>`).join('');
+    selRate.addEventListener('change', e => {
+      const p = e.target.selectedOptions[0]?.dataset.price;
+      if (p) document.getElementById('ePrice').value = p;
+    });
+  }
+}
+>${c}</option>`).join('');
     const selRate= q('#eRate'); if (selRate) selRate.innerHTML= rates.map(r=>`<option value="${r.name}" data-price="${r.price}" ${r.name===curRate?'selected':''}>${r.name} (${EUR.format(r.price)})</option>`).join('');
 
     selRate?.addEventListener('change', e=>{
@@ -998,6 +1025,8 @@ document.getElementById('rateCreateForm')?.addEventListener('submit', (e) => {
 
   /***** Edit-Dialog *****/
   async function openEdit(id){
+  try{ logActivity('res','open_edit',{id}); }catch(e){}
+
     const { data, error } = await supabase.from('reservations').select('*').eq('id', id).maybeSingle();
     if (error || !data) return alert('Konnte Reservierung nicht laden.');
 
@@ -1026,6 +1055,7 @@ document.getElementById('rateCreateForm')?.addEventListener('submit', (e) => {
     q('#editInfo') && (q('#editInfo').textContent = createdAtTxt);
 
     q('#btnSaveEdit') && (q('#btnSaveEdit').onclick = async ()=>{
+      try{ logActivity('res','save_edit', {id}); }catch(e){}
       const payload = {
         guest_last_name: q('#eLname').value || null,
         arrival: q('#eArr').value || null,
@@ -1041,6 +1071,7 @@ document.getElementById('rateCreateForm')?.addEventListener('submit', (e) => {
     });
 
     q('#btnSavePay') && (q('#btnSavePay').onclick = async ()=>{
+      try{ logActivity('res','save_payment', {id}); }catch(e){}
       const payload = {
         cc_holder: q('#eCcHolder').value || null,
         cc_last4:  q('#eCcLast4').value  || null,
@@ -1052,6 +1083,7 @@ document.getElementById('rateCreateForm')?.addEventListener('submit', (e) => {
     });
 
     q('#btnCancelRes') && (q('#btnCancelRes').onclick = async ()=>{
+      try{ logActivity('res','cancel', {id}); }catch(e){}
       const { error } = await supabase.from('reservations').update({ status:'canceled', canceled_at: new Date().toISOString() }).eq('id', id);
       q('#editInfo').textContent = error ? ('Fehler: '+error.message) : createdAtTxt;
       await loadReservations();
@@ -1344,6 +1376,7 @@ q('#btnNext')?.addEventListener('click', ()=>{
 
     // 3) Speichern
     const { error } = await supabase.from('reservations').insert(payload);
+    try{ logActivity('res','create',{reservation_number: payload.reservation_number, hotel_code: payload.hotel_code}); }catch(e){}
     if (q('#newInfo')) q('#newInfo').textContent = error ? ('Fehler: ' + error.message) : 'Reservierung gespeichert.';
     if (error) return;
 
@@ -2310,7 +2343,7 @@ seedDefaultRatesIfEmpty();
 
 
   // --- Einstellungen / Admin ---
-const ADMIN_PW = "325643";
+const ADMIN_PW = null;
 const SETTINGS_KEY = "resTool.settings";
 const LOG_KEY = "resTool.activityLog";
 
@@ -2371,12 +2404,11 @@ function applySettings(){
   const sel = document.getElementById('selLang'); if (sel) sel.value = s.lang || 'de';
   const rng = document.getElementById('rngHue'); if (rng){ rng.value = h; const v=document.getElementById('hueVal'); if(v) v.textContent = h+'°'; }
 }
-function requireAdmin(onSuccess){
-  const pw = prompt(t('ui.needpw'));
-  if (pw === ADMIN_PW){ onSuccess && onSuccess(); }
+function requireAdmin(onSuccess){ try{ onSuccess && onSuccess(); }catch(e){} }
   else if (pw !== null){ alert(t('ui.wrongpw')); }
 }
 function logActivity(type, action, meta){
+  try{ const s = (JSON.parse(localStorage.getItem('resTool.settings'))||{}); if (meta && !meta.user) meta.user = s.username || s.user || s.email || null; }catch(e){}
   const row = {
     ts: new Date().toISOString(),
     type, action,
