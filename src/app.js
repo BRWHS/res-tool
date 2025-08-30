@@ -288,15 +288,13 @@ function totalPriceFromRow(row){
   const hasPlan = Array.isArray(row.priceplan) && row.priceplan.length;
   if (hasPlan) return totalOfPlan(row.priceplan);
 
-  const arr = row.arrival ? isoDateLocal(toDateOnly(row.arrival)) : null;
-  const dep = row.departure ? isoDateLocal(toDateOnly(row.departure)) : null;
+  const arr = row.arrival ? isoDate(toDateOnly(row.arrival)) : null;
+  const dep = row.departure ? isoDate(toDateOnly(row.departure)) : null;
   const plan = nightsBetween(arr, dep);
   const base = Number(row.rate_price || 0);
   plan.forEach(n => n.price = base);
   return totalOfPlan(plan);
 }
-
-
 
 
   /***** Bild-Helfer *****/
