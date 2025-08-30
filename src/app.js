@@ -234,6 +234,41 @@ window.addEventListener('keydown', (e)=>{ if (e.key === 'Escape') window.closeMo
     return 1 + Math.round(diff / 7);
   }
 
+  // ==== Priceplan Helpers ====
+const DAY_MS = 86400000;
+
+function nightsBetween(arrISO, depISO){
+  if (!arrISO || !depISO) return [];
+  const arr = new Date(arrISO); arr.setHours(0,0,0,0);
+  const dep = new Date(depISO); dep.setHours(0,0,0,0);
+  const out = [];
+  for (let d = new Date(arr); d < dep; d = new Date(d.getTime()+DAY_MS)){
+    const to = new Date(d.getTime()+DAY_MS);
+    out.push({
+      from: isoDate(d),
+      to:   isoDate(to),
+      wFrom: d.toLocaleDateString('de-DE', { weekday:'long' }),
+      wTo:   to.toLocaleDateString('de-DE', { weekday:'long' }),
+      price: null,
+      incl: true,
+      notes: ''
+    });
+  }
+  return out;
+}
+function basePlanFrom(res){
+  const base = Number(res.rate_price||0);
+  const arr = res.arrival ? isoDate(new Date(res.arrival)) : null;
+  const dep = res.departure ? isoDate(new Date(res.departure)) : null;
+  const plan = nightsBetween(arr, dep);
+  plan.forEach(n => n.price = base);
+  return plan;
+}
+function totalOfPlan(plan){
+  return plan.reduce((s,n)=> s + (n.incl ? Number(n.price||0) : 0), 0);
+}
+
+
   /***** Bild-Helfer *****/
   function safeSetImg(imgEl, src){
     if (!imgEl) return;
@@ -1028,6 +1063,91 @@ function fillEditDropdowns(hotelCode, curCat, curRate){
     if (p && q('#ePrice')) q('#ePrice').value = p;
   }, { once:true });
 }
+async function renderPricePlan(resRow){
+  const list = document.getElementById('planList');
+  const info = document.getElementById('planInfo');
+  if (!list) return;
+
+  // vorhandenen Plan aus DB nehmen, sonst Basis vom rate_price
+  const plan = Array.isArray(resRow.priceplan) ? resRow.priceplan : basePlanFrom(resRow);
+
+  // Karten aufbauen
+  list.innerHTML = '';
+  plan.forEach((n, idx)=>{
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.style.minHeight = '120px';
+    card.innerHTML = `
+      <div class="content">
+        <div class="row wrap" style="justify-content:space-between;align-items:center;">
+          <div>
+            <div><b>${n.from}</b> → <b>${n.to}</b></div>
+            <div class="muted">${n.wFrom} → ${n.wTo}</div>
+            <div class="muted">Leistungen (Placeholder)</div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <input class="input sm mono" type="number" min="0" step="0.01"
+                   style="width:120px" value="${Number(n.price||0)}"
+                   data-pp="price" data-idx="${idx}">
+            <span class="mono">€ / Nacht</span>
+          </div>
+        </div>
+      </div>`;
+    list.appendChild(card);
+  });
+
+  const sum = totalOfPlan(plan);
+  if (info) info.textContent = `Summe im Aufenthalt: ${EUR.format(sum)} (Rate * Nächte)`;
+
+  // Eingaben live spiegeln (einmalig binden)
+  list.addEventListener('input', (e)=>{
+    const el = e.target.closest('input[data-pp="price"]');
+    if (!el) return;
+    const i = Number(el.dataset.idx);
+    plan[i].price = Number(el.value||0);
+    if (info) info.textContent = `Summe im Aufenthalt: ${EUR.format(totalOfPlan(plan))}`;
+  }, { once: true });
+
+  // Buttons (Reset / Weekdays / Speichern)
+  const btnReset = document.getElementById('btnPlanReset');
+  if (btnReset && !btnReset.__bound){
+    btnReset.__bound = true;
+    btnReset.addEventListener('click', ()=>{
+      const base = basePlanFrom(resRow);
+      resRow.priceplan = base;
+      renderPricePlan(resRow);
+    });
+  }
+
+  const btnWeek = document.getElementById('btnPlanFillWeekdays');
+  if (btnWeek && !btnWeek.__bound){
+    btnWeek.__bound = true;
+    btnWeek.addEventListener('click', ()=>{
+      // Beispielmuster: So -10%, Fr/Sa +10%
+      const base = Number(resRow.rate_price||0);
+      (resRow.priceplan || plan).forEach(n=>{
+        const d = new Date(n.from).getDay(); // 0 So ... 6 Sa
+        let p = base;
+        if (d === 0) p = Math.round((base*0.9)*100)/100;     // Sonntag
+        if (d === 5 || d === 6) p = Math.round((base*1.1)*100)/100; // Fr/Sa
+        n.price = p;
+      });
+      renderPricePlan(resRow);
+    });
+  }
+
+  const btnSave = document.getElementById('btnSavePlan');
+  if (btnSave){
+    btnSave.onclick = async ()=>{
+      const payload = { priceplan: plan };
+      const { error } = await supabase.from('reservations').update(payload).eq('id', resRow.id);
+      document.getElementById('planInfo').textContent = error ? ('Fehler: ' + error.message) : 'Preisplan gespeichert.';
+      try{
+        await loadKpisToday(); await loadKpisNext(); await loadReservations();
+      }catch(_){}
+    };
+  }
+}
 
 
   /***** Edit-Dialog *****/
@@ -1069,7 +1189,6 @@ function fillEditDropdowns(hotelCode, curCat, curRate){
   rate_price: Number(q('#ePrice')?.value || 0),
   notes: q('#eNotes') ? q('#eNotes').value : null
 };
-
       const { error } = await supabase.from('reservations').update(payload).eq('id', id);
       q('#editInfo').textContent = error ? ('Fehler: '+error.message) : createdAtTxt;
       await autoRollPastToDone(); await loadReservations();
@@ -1091,6 +1210,8 @@ function fillEditDropdowns(hotelCode, curCat, curRate){
       q('#editInfo').textContent = error ? ('Fehler: '+error.message) : createdAtTxt;
       await loadReservations();
     });
+
+    try { await renderPricePlan(data); } catch(e){ console.warn('Preisplan/UI', e); }
 
     qa('.tab').forEach(b=>b.classList.remove('active')); q('.tab[data-tab="tabDet"]')?.classList.add('active');
     qa('.tabpage').forEach(p=>p.classList.add('hidden')); q('#tabDet')?.classList.remove('hidden');
@@ -1598,15 +1719,29 @@ async function runReport(){
   const { data: avRows, error: avErr } = await qAv;
   if (avErr){ body.append(el('tr',{}, el('td',{colspan:'5'}, 'Fehler beim Laden (Availability)'))); return; }
 
-  // (3) Aggregation
-  const byHotel = new Map();
-  (resRows||[]).forEach(r=>{
-    const key = r.hotel_code || r.hotel_name || '—';
-    const o = byHotel.get(key) || { hotel_code:r.hotel_code, hotel_name:r.hotel_name||r.hotel_code, bookings:0, revenue:0 };
-    o.bookings += 1;
-    o.revenue  += Number(r.rate_price||0);
-    byHotel.set(key, o);
-  });
+ // (3) Aggregation NACH NACHTEN im Zeitraum
+const DAY = 86400000;
+const fromD = soD(new Date(from));
+const toD   = soD(new Date(to));
+const toEx  = new Date(toD); toEx.setDate(toEx.getDate()+1);
+
+const byHotel = new Map();
+(resRows||[]).forEach(r=>{
+  // Überlappung von Aufenthalt mit [fromD, toEx)
+  const arr = soD(new Date(r.arrival));
+  const dep = r.departure ? soD(new Date(r.departure)) : null;
+  const stayEndEx = dep ? dep : toEx; // open-ended bis Fensterende
+  const overlapStart = new Date(Math.max(arr.getTime(), fromD.getTime()));
+  const overlapEndEx = new Date(Math.min(stayEndEx.getTime(), toEx.getTime()));
+  const nights = Math.max(0, Math.round((overlapEndEx - overlapStart)/DAY));
+  if (nights <= 0) return;
+
+  const key = r.hotel_code || r.hotel_name || '—';
+  const o = byHotel.get(key) || { hotel_code:r.hotel_code, hotel_name:r.hotel_name||r.hotel_code, bookings:0, revenue:0 };
+  o.bookings += 1;                              // >= 1 Nacht im Fenster
+  o.revenue  += Number(r.rate_price||0) * nights; // NACHTEN-basiert
+  byHotel.set(key, o);
+});
 
   const occMap = new Map(); // code -> {sum,n}
   (avRows||[]).forEach(a=>{
