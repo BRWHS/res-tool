@@ -1103,6 +1103,12 @@ async function renderPricePlan(resRow){
   const btnApplyTrim = document.getElementById('btnApplyTrim');
   const elTotal = document.getElementById('editTotalPrice');
   const elNotes = document.getElementById('editNotes');
+  const btnAll   = document.getElementById('btnPlanAll');
+  const popAll   = document.getElementById('planAllPopup');
+  const inpAll   = document.getElementById('planAllValue');
+  const allCancel= document.getElementById('planAllCancel');
+  const allApply = document.getElementById('planAllApply');
+
   if (!list) return;
 
   // Arbeitskopie
@@ -1182,6 +1188,44 @@ async function renderPricePlan(resRow){
         updateTotalsUI(); // KEIN drawStatic(); Fokus bleibt!
       });
     });
+
+    // --- All Price: Popup öffnen/schließen
+if (btnAll && !btnAll.__bound){
+  btnAll.__bound = true;
+  btnAll.addEventListener('click', ()=>{
+    if (!popAll) return;
+    popAll.classList.toggle('hidden', false);
+    setTimeout(()=> inpAll?.focus?.(), 0);
+  });
+}
+if (allCancel && !allCancel.__bound){
+  allCancel.__bound = true;
+  allCancel.addEventListener('click', ()=> popAll?.classList.add('hidden'));
+}
+// Bestätigen: alle Nachtpreise setzen, UI aktualisieren, Popup zu
+if (allApply && !allApply.__bound){
+  allApply.__bound = true;
+  allApply.addEventListener('click', ()=>{
+    const v = Number(inpAll?.value || '');
+    if (!(v >= 0)) { inpAll?.focus(); return; }
+    plan.forEach(n => n.price = v);
+    popAll?.classList.add('hidden');
+
+    // Eingabefelder im Grid updaten (Werte setzen) ohne Re-Render
+    list.querySelectorAll('.price-input').forEach(inp=>{
+      inp.value = String(v);
+    });
+    // Summen & Gesamtpreis aktualisieren
+    (typeof updateTotalsUI === 'function') && updateTotalsUI();
+  });
+}
+// Klick außerhalb des Popups schließt es
+document.addEventListener('click', (e)=>{
+  if (!popAll || popAll.classList.contains('hidden')) return;
+  const inside = e.target.closest('#planAllPopup') || e.target.closest('#btnPlanAll');
+  if (!inside) popAll.classList.add('hidden');
+});
+
 
     updateTotalsUI();
 
