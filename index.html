@@ -483,12 +483,27 @@
       <h4 class="mono" style="margin:0">Preisplan (pro Nacht)</h4>
       <div class="row wrap" style="gap:8px;">
         <button id="btnPlanFillWeekdays" class="btn sm ghost" title="Wochentage-Muster anwenden">Wochentage-Muster</button>
+        <button id="btnPlanAll" class="btn sm ghost" title="Alle Nächte auf einen Preis setzen">All Price</button>
         <button id="btnPlanReset" class="btn sm ghost" title="Alle Nächte wieder auf Basispreis setzen">Zurücksetzen</button>
         <button id="btnSavePlan" class="btn sm primary">Preisplan speichern</button>
        <!-- Footer-Aktionen unten rechts im Tab -->
 <div id="planFooter" style="position:sticky; bottom:0; padding-top:8px;">
   <div style="display:flex; justify-content:flex-end; gap:8px;">
     <button id="btnApplyTrim" class="btn sm danger hidden">Anpassung speichern</button>
+  </div>
+</div>
+        <!-- Mini-Popup: All Price -->
+<div id="planAllPopup" class="card hidden" style="
+     position:absolute; right:12px; top:56px; z-index:200;
+     width: 260px; padding:12px; border:1px solid var(--line,#17414b);">
+  <div class="mono" style="margin-bottom:8px;">Alle Nächte auf Preis setzen</div>
+  <div class="row" style="gap:8px; align-items:center;">
+    <input id="planAllValue" class="input mono" type="number" step="0.01" min="0" placeholder="z. B. 109.00" style="flex:1;">
+    <span class="mono">€</span>
+  </div>
+  <div class="row" style="justify-content:flex-end; gap:8px; margin-top:10px;">
+    <button id="planAllCancel" class="btn sm">Abbrechen</button>
+    <button id="planAllApply" class="btn sm primary">Preise setzen</button>
   </div>
 </div>
 
