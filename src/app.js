@@ -218,6 +218,13 @@ window.addEventListener('keydown', (e)=>{ if (e.key === 'Escape') window.closeMo
     kids.forEach(k=>e.append(k));
     return e;
   }
+  function debounce(fn, ms = 300){
+  let t;
+  return (...args) => {
+    clearTimeout(t);
+    t = setTimeout(() => fn(...args), ms);
+  };
+}
   function setChip(node, ok){ node?.classList.remove('lvl-2','lvl-1','lvl-0'); node?.classList.add(ok?'lvl-0':'lvl-1'); }
   function download(filename, mime, content){
     const blob = new Blob([content], {type:mime});
@@ -1396,8 +1403,8 @@ if (sumField){ // falls kein Preisplan: Basispreis * Nächte
     q('#btnNext')?.classList.toggle('hidden', step==='4');
     q('#btnCreate')?.classList.toggle('hidden', step!=='4');
 
-    if (step==='2' || step==='3'){
-      ensureCatRateOptions();
+    if (step==='2' || step==='3') {
+    ensureCatRateOptions();
       setCatImage(SKETCH_IMG_SRC);
     }
     if (step==='1'){
