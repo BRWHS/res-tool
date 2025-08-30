@@ -1063,40 +1063,54 @@ function fillEditDropdowns(hotelCode, curCat, curRate){
     if (p && q('#ePrice')) q('#ePrice').value = p;
   }, { once:true });
 }
-// === REPLACE: renderPricePlan ===
+// === REPLACE ENTIRE FUNCTION: renderPricePlan ===
 async function renderPricePlan(resRow){
   const list = document.getElementById('planList');
   const info = document.getElementById('planInfo');
   if (!list) return;
 
-  // 1) Arbeitskopie des Plans (nicht sofort persistieren)
-  let plan = Array.isArray(resRow.priceplan) ? JSON.parse(JSON.stringify(resRow.priceplan))
-                                            : basePlanFrom(resRow);
+  // Arbeitskopie des Plans (DB wird erst beim Speichern angefasst)
+  let plan = Array.isArray(resRow.priceplan)
+    ? JSON.parse(JSON.stringify(resRow.priceplan))
+    : basePlanFrom(resRow); // nutzt arrival/dep + rate_price
 
-  // pending Range-Cut (start/end Indizes) – wird erst bei "Speichern" angewendet
-  let trimSel = null; // {a: index, b: index} (inklusive)
+  // Trim-Selektor (von/bis) + Modus
+  let trimSel = null;        // { a, b } (inklusive Indizes)
+  let trimMode = false;
 
-  // 2) Container kompakt als Grid setzen (hochkant Karten)
+  // List-Layout: schlanke, hochkant Karten
   list.style.display = 'grid';
-  list.style.gridTemplateColumns = 'repeat(auto-fill, minmax(180px, 1fr))';
-  list.style.gap = '10px';
+  list.style.gridTemplateColumns = 'repeat(auto-fill, minmax(160px, 1fr))';
+  list.style.gap = '8px';
 
-  // 3) Hilfs-Renderer für eine Karte
-  function cardHtml(n, idx, selected=false){
+  function selA(){ return Math.min(trimSel?.a ?? Infinity, trimSel?.b ?? -Infinity); }
+  function selB(){ return Math.max(trimSel?.a ?? -Infinity, trimSel?.b ?? -Infinity); }
+  function inRange(i){
+    if (!trimSel) return false;
+    const a = selA(), b = selB();
+    return Number.isFinite(a) && Number.isFinite(b) ? (i >= a && i <= b) : (i === a);
+  }
+  function isEnd(i){ return trimSel && (i === selA() || i === selB()); }
+
+  function cardHtml(n, idx){
+    const _in = inRange(idx), _end = isEnd(idx);
     return `
       <div class="content" style="
-            display:flex;flex-direction:column;gap:6px;
-            padding:12px;min-height:160px;border-radius:12px;
-            border:1px solid var(--line,#17414b);
-            box-shadow: 0 0 0 ${selected? '2px var(--accent, #00CCCC)':'0 transparent'};
-          ">
-        <div class="mono" style="font-size:13px;opacity:.9;">${n.wFrom} → ${n.wTo}</div>
-        <div style="font-size:14px;color:#9adce6;">
+        display:flex; flex-direction:column; gap:6px;
+        padding:12px; min-height:164px; border-radius:12px;
+        border:1px solid var(--line, #17414b);
+        ${_end ? 'box-shadow:0 0 0 2px var(--accent, #00CCCC);' : ''}
+        ${_in && !_end ? 'background:linear-gradient(0deg, rgba(0,255,255,0.07), rgba(0,255,255,0.07));' : ''}
+      ">
+        <div class="mono" style="font-size:13px; opacity:.9;">
+          ${n.wFrom} → ${n.wTo}
+        </div>
+        <div style="font-size:14px; color:#9adce6;">
           <b>${n.from}</b> <span style="opacity:.6;">→</span> <b>${n.to}</b>
         </div>
         <div class="muted tiny" style="margin-top:2px;">Leistungen (Placeholder)</div>
         <div class="muted tiny">– leer –</div>
-        <div style="margin-top:auto;display:flex;align-items:center;gap:8px;justify-content:flex-end;">
+        <div style="margin-top:auto; display:flex; align-items:center; gap:8px; justify-content:flex-end;">
           <input class="input sm mono" type="number" min="0" step="0.01"
                  style="width:110px" value="${Number(n.price||0)}"
                  data-pp="price" data-idx="${idx}">
@@ -1106,118 +1120,100 @@ async function renderPricePlan(resRow){
     `;
   }
 
-  function isSelected(idx){
-    if (!trimSel) return false;
-    const a = Math.min(trimSel.a, trimSel.b);
-    const b = Math.max(trimSel.a, trimSel.b);
-    return idx === a || idx === b;
-  }
-
-  // 4) Liste rendern
   function draw(){
-    list.innerHTML = plan.map((n,i)=>`<div class="card" data-idx="${i}" style="padding:0;">${cardHtml(n,i,isSelected(i))}</div>`).join('');
+    list.innerHTML = plan.map((n,i)=>(
+      `<button class="card" data-idx="${i}" style="padding:0; text-align:left;">${cardHtml(n,i)}</button>`
+    )).join('');
+
     const sum = totalOfPlan(plan);
     info.textContent = `Summe im Aufenthalt: ${EUR.format(sum)} (Rate × Nächte)` +
-      (trimSel ? ' · Bereich gewählt – mit „Preisplan speichern“ übernehmen' : '');
+      (trimMode ? ' · Kürzen aktiv: wähle „von“, dann „bis“ – Speichern bestätigt.' : '');
   }
   draw();
 
-  // 5) „Wochentage-Muster“ → in „Aufenthalt verkürzen“ umwidmen (mit ✂️)
-  const btnTrim = document.getElementById('btnPlanFillWeekdays');
-  if (btnTrim){
-    btnTrim.textContent = '✂️ Aufenthalt verkürzen';
-    btnTrim.title = 'Von/Bis auswählen, dann mit „Preisplan speichern“ übernehmen';
-  }
-
-  // 6) Events
-
-  // Preiseingabe (einmalig binden)
+  // Preise live updaten (nicht "once"!)
   list.addEventListener('input', (e)=>{
     const el = e.target.closest('input[data-pp="price"]');
     if (!el) return;
     const i = Number(el.dataset.idx);
-    plan[i].price = Number(el.value||0);
+    plan[i].price = Number(el.value || 0);
     const sum = totalOfPlan(plan);
     info.textContent = `Summe im Aufenthalt: ${EUR.format(sum)} (Rate × Nächte)` +
-      (trimSel ? ' · Bereich gewählt – mit „Preisplan speichern“ übernehmen' : '');
-  }, { once: true });
+      (trimMode ? ' · Kürzen aktiv: wähle „von“, dann „bis“ – Speichern bestätigt.' : '');
+  });
 
-  // Kartenklicks: Range für Verkürzung wählen (wenn Trim-Modus aktiv)
-  let trimMode = false;
-  function setTrimMode(on){
-    trimMode = on;
-    if (!trimMode) trimSel = null;
-    draw();
-    if (trimMode){
-      info.textContent = 'Verkürzen aktiv: Klicke zuerst die neue „von“-Nacht, danach die „bis“-Nacht. Bestätige mit „Preisplan speichern“.';
-    }else{
-      const sum = totalOfPlan(plan);
-      info.textContent = `Summe im Aufenthalt: ${EUR.format(sum)} (Rate × Nächte)`;
-    }
-  }
-
-  // Toggle per Button
-  if (btnTrim && !btnTrim.__bound){
-    btnTrim.__bound = true;
-    btnTrim.addEventListener('click', ()=>{
-      setTrimMode(!trimMode);
-    });
-  }
-
-  // Klick auf Karte (nur im Trim-Modus relevant)
+  // Kartenklicks: Range (nur im Trim-Modus)
   list.addEventListener('click', (e)=>{
     if (!trimMode) return;
     const card = e.target.closest('.card'); if (!card) return;
     const idx = Number(card.dataset.idx);
-    if (trimSel == null){ trimSel = { a: idx, b: idx }; }
-    else if (trimSel && trimSel.a !== undefined && trimSel.b === trimSel.a){ trimSel.b = idx; }
-    else { trimSel = { a: idx, b: idx }; } // neu starten, falls bereits zwei Punkte standen
+
+    if (!trimSel){ trimSel = { a: idx, b: idx }; }
+    else if (trimSel.a === trimSel.b){ trimSel.b = idx; }
+    else { trimSel = { a: idx, b: idx }; } // neu anfangen
     draw();
   });
 
-  // Zurücksetzen: Auswahl + Plan auf Basis zurück
+  // Buttons holen
+  const btnTrim = document.getElementById('btnPlanFillWeekdays');
   const btnReset = document.getElementById('btnPlanReset');
+  const btnSave  = document.getElementById('btnSavePlan');
+
+  // "Wochentage-Muster" → umbenennen in "Aufenthalt verkürzen"
+  if (btnTrim && !btnTrim.__bound){
+    btnTrim.__bound = true;
+    btnTrim.textContent = '✂️ Aufenthalt verkürzen';
+    btnTrim.title = 'Von- & Bis-Nacht wählen, dann „Preisplan speichern“.';
+    btnTrim.addEventListener('click', ()=>{
+      if (plan.length < 2){
+        info.textContent = 'Verkürzen nicht möglich: Aufenthalt hat nur 1 Nacht.';
+        return;
+      }
+      trimMode = !trimMode;
+      if (!trimMode) trimSel = null;
+      draw();
+    });
+  }
+
+  // Zurücksetzen → Basisplan (rate_price je Nacht), Auswahl & Modus löschen
   if (btnReset && !btnReset.__bound){
     btnReset.__bound = true;
     btnReset.addEventListener('click', ()=>{
       plan = basePlanFrom(resRow);
       trimSel = null;
-      setTrimMode(false);
+      trimMode = false;
       draw();
     });
   }
 
-  // Speichern: Preisplan + (falls Trim gewählt) Aufenthalt kürzen
-  const btnSave = document.getElementById('btnSavePlan');
+  // Speichern → priceplan + optional An-/Abreise anpassen (Kürzung)
   if (btnSave){
     btnSave.onclick = async ()=>{
       let payload = { priceplan: plan };
 
       if (trimSel){
-        const a = Math.min(trimSel.a, trimSel.b);
-        const b = Math.max(trimSel.a, trimSel.b);
-        const slice = plan.slice(a, b+1);
-        if (slice.length >= 1){
-          // neue Arrival/Departure aus Auswahl
-          const newArr = slice[0].from;        // ab dieser Nacht
-          const newDep = slice[slice.length-1].to; // bis Checkout am Ende
-          plan = slice;                         // Plan auf Auswahl begrenzen
-          payload = {
-            priceplan: plan,
-            arrival: newArr,
-            departure: newDep
-          };
+        const a = selA(), b = selB();
+        if (Number.isFinite(a) && Number.isFinite(b)){
+          const slice = plan.slice(Math.min(a,b), Math.max(a,b)+1);
+          if (slice.length >= 1){
+            payload = {
+              priceplan: slice,
+              arrival:   slice[0].from,             // inkl. erster Nacht
+              departure: slice[slice.length-1].to   // Checkout am Ende
+            };
+            plan = slice; // damit UI danach konsistent ist
+          }
         }
       }
 
-      const { error } = await supabase.from('reservations').update(payload).eq('id', resRow.id);
+      const { error } = await supabase.from('reservations')
+        .update(payload)
+        .eq('id', resRow.id);
+
       info.textContent = error ? ('Fehler: ' + error.message) : 'Preisplan gespeichert.';
       if (!error){
-        // Nach speichern: Auswahl/Modus beenden + KPIs/Listen refreshen
-        setTrimMode(false);
-        try{
-          await loadKpisToday(); await loadKpisNext(); await loadReservations();
-        }catch(_){}
+        trimMode = false; trimSel = null;
+        try { await loadKpisToday(); await loadKpisNext(); await loadReservations(); } catch {}
       }
     };
   }
