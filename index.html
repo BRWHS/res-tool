@@ -464,6 +464,14 @@
         <button id="btnPlanFillWeekdays" class="btn sm ghost" title="Wochentage-Muster anwenden">Wochentage-Muster</button>
         <button id="btnPlanReset" class="btn sm ghost" title="Alle Nächte wieder auf Basispreis setzen">Zurücksetzen</button>
         <button id="btnSavePlan" class="btn sm primary">Preisplan speichern</button>
+        <!-- NEU: Floating-Aktion für Trim -->
+<div id="planFloat" style="position:relative;">
+  <button id="btnApplyTrim" class="btn sm danger hidden"
+          style="position:absolute; right:0; bottom:-6px;">
+    Anpassung speichern
+  </button>
+</div>
+
       </div>
     </div>
     <div id="planList" class="grid2" style="margin-top:10px;"></div>
