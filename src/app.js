@@ -327,6 +327,30 @@ function totalPriceFromRow(row){
   plan.forEach(n => n.price = base);
   return totalOfPlan(plan);
 }
+  // Jede Reservierung in Einzelnächte auflösen (Preisplan bevorzugt)
+function expandNightsFromRow(row){
+  const arr = row.arrival   ? isoDateLocal(toDateOnly(row.arrival))   : null;
+  const dep = row.departure ? isoDateLocal(toDateOnly(row.departure)) : null;
+  if (!arr || !dep) return [];
+
+  // Plan wählen: vorhandener priceplan oder Basisrate*Nächte
+  let plan = Array.isArray(row.priceplan) && row.priceplan.length
+    ? row.priceplan
+    : (() => {
+        const p = nightsBetween(arr, dep);
+        const base = Number(row.rate_price || 0);
+        p.forEach(n => n.price = base);
+        return p;
+      })();
+
+  // Ausgabe: eine Zeile pro Nacht – Umsatz fällt auf n.from
+  return plan.map(n => ({
+    date: n.from,
+    price: Number(n.price || 0),
+    hotel_code: row.hotel_code || null,
+  }));
+}
+
 
 
   /***** Bild-Helfer *****/
@@ -779,77 +803,69 @@ document.getElementById('rateCreateForm')?.addEventListener('submit', (e) => {
   /***** Performance — Heute *****/
   // KPI: Heute (nachtbasiert; Umsatz/ADR nach Nächten am heutigen Datum)
 async function loadKpisToday(){
-  const selHotel = q('#kpiFilterToday')?.value || 'all';
-  const today = isoDateLocal(toDateOnly(new Date()));
+  try {
+    const selHotel = q('#kpiFilterToday')?.value || 'all';
+    const today = isoDateLocal(toDateOnly(new Date()));
 
-  // Nur benötigte Felder laden – wichtig: priceplan muss mit rein!
-  const { data: rows, error } = await supabase
-    .from('reservations')
-    .select('id,arrival,departure,rate_price,hotel_code,priceplan,created_at,status');
+    const { data: rows, error } = await supabase
+      .from('reservations')
+      .select('id,arrival,departure,rate_price,hotel_code,priceplan,created_at,status');
+    if (error){ console.warn(error); return; }
 
-  if (error){ console.warn(error); return; }
+    const filt = selHotel === 'all' ? rows : rows.filter(r => r.hotel_code === selHotel);
 
-  // Hotel-Filter anwenden
-  const filt = selHotel === 'all' ? rows : rows.filter(r => r.hotel_code === selHotel);
+    const nights = filt.flatMap(expandNightsFromRow).filter(n => n.date === today);
 
-  // Nächte expandieren → nur die Nächte, deren "date" == heute
-  const nights = filt.flatMap(expandNightsFromRow).filter(n => n.date === today);
+    const revenue = nights.reduce((s,n)=> s + Number(n.price||0), 0);
+    const adr = nights.length ? (revenue / nights.length) : 0;
 
-  // Umsatz heute = Summe der Nachtpreise
-  const revenue = nights.reduce((s,n)=> s + Number(n.price||0), 0);
+    const createdToday = (rows||[]).filter(r=>{
+      const d = isoDateLocal(toDateOnly(r.created_at));
+      return d === today && (selHotel === 'all' || r.hotel_code === selHotel);
+    }).length;
 
-  // ADR heute = Revenue / #Nächte heute
-  const adr = nights.length ? (revenue / nights.length) : 0;
-
-  // Buchungen (heute eingegangen) belassen (created_at auf heutigem Datum)
-  const createdToday = (rows||[]).filter(r=>{
-    const d = isoDateLocal(toDateOnly(r.created_at));
-    return d === today && (selHotel === 'all' || r.hotel_code === selHotel);
-  }).length;
-
-  // UI ausgeben
-  q('#tBookings').textContent = String(createdToday);
-  q('#tRevenue').textContent  = EUR.format(revenue);
-  q('#tADR').textContent      = EUR.format(adr);
-
-  // tOcc (Auslastung) lässt du wie bisher (aus availability). Wenn du es
-  // auch strikt nacht-basiert willst, sag Bescheid – dann passe ich es an.
+    q('#tBookings').textContent = String(createdToday);
+    q('#tRevenue').textContent  = EUR.format(revenue);
+    q('#tADR').textContent      = EUR.format(adr);
+    // Auslastung (tOcc) bleibt wie bisher über availability
+  } catch (err){
+    console.error('loadKpisToday fatal', err);
+  }
 }
+
 
   /***** Performance — Nächste 7 Tage *****/
  // KPI: Nächste 7 Tage (nachtbasiert; Range = [morgen, morgen+7) )
 async function loadKpisNext(){
-  const selHotel = q('#kpiFilterNext')?.value || 'all';
+  try {
+    const selHotel = q('#kpiFilterNext')?.value || 'all';
+    const d0 = toDateOnly(new Date());
+    const startD = addDaysLocal(d0, 1);
+    const endD   = addDaysLocal(startD, 7);
+    const start  = isoDateLocal(startD);
+    const endEx  = isoDateLocal(endD);
 
-  const d0 = toDateOnly(new Date());      // heute (lokal)
-  const startD = addDaysLocal(d0, 1);     // morgen inkl.
-  const endD   = addDaysLocal(startD, 7); // exklusive Obergrenze
-  const start  = isoDateLocal(startD);
-  const endEx  = isoDateLocal(endD);
+    const { data: rows, error } = await supabase
+      .from('reservations')
+      .select('id,arrival,departure,rate_price,hotel_code,priceplan');
+    if (error){ console.warn(error); return; }
 
-  const { data: rows, error } = await supabase
-    .from('reservations')
-    .select('id,arrival,departure,rate_price,hotel_code,priceplan');
+    const filt = selHotel === 'all' ? rows : rows.filter(r => r.hotel_code === selHotel);
 
-  if (error){ console.warn(error); return; }
+    const nights = filt.flatMap(expandNightsFromRow)
+      .filter(n => n.date >= start && n.date < endEx);
 
-  // Hotel-Filter
-  const filt = selHotel === 'all' ? rows : rows.filter(r => r.hotel_code === selHotel);
+    const revenue = nights.reduce((s,n)=> s + Number(n.price||0), 0);
+    const adr = nights.length ? (revenue / nights.length) : 0;
 
-  // Alle Nächte expandieren → auf Range filtern: start <= date < endEx
-  const nights = filt.flatMap(expandNightsFromRow)
-    .filter(n => n.date >= start && n.date < endEx);
-
-  const revenue = nights.reduce((s,n)=> s + Number(n.price||0), 0);
-  const adr = nights.length ? (revenue / nights.length) : 0;
-
-  // UI ausgeben
-  q('#nRevenue').textContent = EUR.format(revenue);
-  q('#nADR').textContent     = EUR.format(adr);
-
-  // nOcc (Ø Auslastung +1..+7) lässt du wie bisher über availability.
-  // Gerne passe ich das ansonsten auch auf nacht-basierte Logik an.
+    q('#nRevenue').textContent = EUR.format(revenue);
+    q('#nADR').textContent     = EUR.format(adr);
+    // Auslastung (nOcc) bleibt wie bisher über availability
+  } catch (err){
+    console.error('loadKpisNext fatal', err);
+  }
 }
+
 
       // Anzahl Buchungen mit mind. 1 Nacht im Fenster:
       const bookingsInWindow = rows.filter(r=>{
