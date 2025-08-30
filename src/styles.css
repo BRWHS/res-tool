@@ -693,19 +693,6 @@ html.modal-open { overflow: hidden; }
   max-width: none;
 }
 
-/* Platz „reservieren“ ohne Fake-Content */
-.kpis.big .value {
-  min-width: 12ch;          /* genug für 100.000,00 € */
-  line-height: 1.1;
-}
-
-/* Auf kleinen Screens automatisch kleiner zeichnen */
-@media (max-width: 900px) {
-  .kpis.big .value {
-    min-width: 9ch;
-    font-size: clamp(20px, 4.8vw, 36px);
-  }
-}
 
 
 
