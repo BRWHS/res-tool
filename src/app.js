@@ -1105,11 +1105,11 @@ async function renderPricePlan(resRow){
   list.style.gap = '10px';
 
   // Hilfen
-  const isWE = (iso) => { const d = toDateOnly(iso).getDay(); return d === 0 || d === 6; };
+  const isWE = (iso) => { const d = toDateOnly(iso).getDay(); return d===0 || d===6; };
   const selA = () => Math.min(trimSel?.a ?? Infinity, trimSel?.b ?? -Infinity);
   const selB = () => Math.max(trimSel?.a ?? -Infinity, trimSel?.b ?? -Infinity);
   const inRange = (i) => { if (!trimSel) return false; const a=selA(), b=selB(); if(!isFinite(a)||!isFinite(b)) return i===a; return i>=a&&i<=b; };
-  const isEnd = (i) => trimSel && (i === selA() || i === selB());
+  const isEnd   = (i) => trimSel && (i === selA() || i === selB());
 
   function cardHtml(n, idx){
     const weekend = isWE(n.from) || isWE(n.to);
@@ -1158,16 +1158,21 @@ async function renderPricePlan(resRow){
   function drawStatic(){
     // äußere .card ohne Rahmen → kein Doppelrand
     list.innerHTML = plan.map((n,i)=>`<button class="card" data-idx="${i}" style="padding:0; text-align:left; border:none; background:transparent;">${cardHtml(n,i)}</button>`).join('');
-    // Preis-Inputs live ohne Re-Render behandeln
+
+    // Inputs: live aktualisieren ohne Re-Render, & Events nicht in Trim-Klicks laufen lassen
     list.querySelectorAll('.price-input').forEach(inp=>{
+      inp.addEventListener('mousedown', e=>e.stopPropagation());
+      inp.addEventListener('click',     e=>e.stopPropagation());
       inp.addEventListener('input', (e)=>{
         const i = Number(e.target.dataset.idx);
         plan[i].price = Number(e.target.value || 0);
         updateTotalsUI(); // KEIN drawStatic(); Fokus bleibt!
       });
     });
+
     updateTotalsUI();
-    // Trim-Button Sichtbarkeit unten rechts
+
+    // Trim-Aktion unten rechts
     const haveRange = trimSel && isFinite(selA()) && isFinite(selB());
     if (btnApplyTrim) btnApplyTrim.classList.toggle('hidden', !(trimMode && haveRange));
   }
@@ -1211,7 +1216,7 @@ async function renderPricePlan(resRow){
     });
   }
 
-  // Trim anwenden (unten rechts)
+  // Trim anwenden (unten rechts Button)
   if (btnApplyTrim && !btnApplyTrim.__bound){
     btnApplyTrim.__bound = true;
     btnApplyTrim.addEventListener('click', async ()=>{
@@ -1247,8 +1252,14 @@ async function renderPricePlan(resRow){
     };
   }
 
-  // Notes in Details-Tab initial füllen (falls vorhanden)
+  // Notes initial befüllen
   if (elNotes && resRow.notes != null) elNotes.value = String(resRow.notes||'');
+  if (elNotes && !elNotes.__bound){
+    elNotes.__bound = true;
+    elNotes.addEventListener('input', debounce(async (e)=>{
+      await supabase.from('reservations').update({ notes: e.target.value }).eq('id', resRow.id);
+    }, 350));
+  }
 }
 
 
