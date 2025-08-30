@@ -283,6 +283,19 @@ function toDateOnly(isoLike){
   const [y,m,d] = s.split('-').map(Number);
   return new Date(y, (m||1)-1, d||1); // lokales Datum (00:00) ohne TZ-Verschiebung
 }
+  // Gesamtpreis aus Row berechnen (Priceplan bevorzugt, sonst Basisrate * Nächte)
+function totalPriceFromRow(row){
+  const hasPlan = Array.isArray(row.priceplan) && row.priceplan.length;
+  if (hasPlan) return totalOfPlan(row.priceplan);
+
+  const arr = row.arrival ? isoDateLocal(toDateOnly(row.arrival)) : null;
+  const dep = row.departure ? isoDateLocal(toDateOnly(row.departure)) : null;
+  const plan = nightsBetween(arr, dep);
+  const base = Number(row.rate_price || 0);
+  plan.forEach(n => n.price = base);
+  return totalOfPlan(plan);
+}
+
 
 
 
@@ -964,7 +977,7 @@ document.getElementById('rateCreateForm')?.addEventListener('submit', (e) => {
       return query;
     };
 
-    const selectCols = 'id,reservation_number,guest_first_name,guest_last_name,arrival,departure,hotel_name,hotel_code,category,rate_name,rate_price,status,created_at';
+    const selectCols = 'id,reservation_number,guest_first_name,guest_last_name,arrival,departure,hotel_name,hotel_code,category,rate_name,rate_price,status,created_at,priceplan';
 
     let data = [], count = 0, error = null;
 
@@ -1007,7 +1020,7 @@ document.getElementById('rateCreateForm')?.addEventListener('submit', (e) => {
         el('td', {}, row.departure ? D2.format(new Date(row.departure)) : '—'),
         el('td', {}, row.category || '—'),
         el('td', {}, row.rate_name || '—'),
-        el('td', {}, row.rate_price != null ? EUR.format(row.rate_price) : '—'),
+        el('td', {}, EUR.format(totalPriceFromRow(row))),
         (()=>{
           const td = el('td',{class:'status'});
           td.append(el('span',{class:`status-dot ${dotCls}` }));
@@ -1117,7 +1130,7 @@ async function renderPricePlan(resRow){
     return `
       <div class="content" style="
         display:flex; flex-direction:column; gap:8px;
-        padding:12px; min-height:172px; border-radius:12px;
+        padding:12px; min-height:245px; border-radius:12px;
         border:1px solid ${_end ? 'var(--accent,#00CCCC)' : 'var(--line,#17414b)'};
         ${_in && !_end ? 'background:linear-gradient(0deg, rgba(0,255,255,0.06), rgba(0,255,255,0.06));' : ''}
       ">
