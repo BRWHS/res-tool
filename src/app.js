@@ -239,16 +239,16 @@ const DAY_MS = 86400000;
 
 function nightsBetween(arrISO, depISO){
   if (!arrISO || !depISO) return [];
-  const arr = new Date(arrISO); arr.setHours(0,0,0,0);
-  const dep = new Date(depISO); dep.setHours(0,0,0,0);
+  const arr = toDateOnly(arrISO);
+  const dep = toDateOnly(depISO);
   const out = [];
-  for (let d = new Date(arr); d < dep; d = new Date(d.getTime()+DAY_MS)){
-    const to = new Date(d.getTime()+DAY_MS);
+  for (let d = new Date(arr); d < dep; d = new Date(d.getFullYear(), d.getMonth(), d.getDate()+1)){
+    const to = new Date(d.getFullYear(), d.getMonth(), d.getDate()+1);
     out.push({
       from: isoDate(d),
-      to:   isoDate(to),
+      to: isoDate(to),
       wFrom: d.toLocaleDateString('de-DE', { weekday:'long' }),
-      wTo:   to.toLocaleDateString('de-DE', { weekday:'long' }),
+      wTo: to.toLocaleDateString('de-DE', { weekday:'long' }),
       price: null,
       incl: true,
       notes: ''
@@ -258,15 +258,25 @@ function nightsBetween(arrISO, depISO){
 }
 function basePlanFrom(res){
   const base = Number(res.rate_price||0);
-  const arr = res.arrival ? isoDate(new Date(res.arrival)) : null;
-  const dep = res.departure ? isoDate(new Date(res.departure)) : null;
+  const arr = res.arrival ? isoDate(toDateOnly(res.arrival)) : null;
+  const dep = res.departure ? isoDate(toDateOnly(res.departure)) : null;
   const plan = nightsBetween(arr, dep);
   plan.forEach(n => n.price = base);
   return plan;
 }
+  
 function totalOfPlan(plan){
   return plan.reduce((s,n)=> s + (n.incl ? Number(n.price||0) : 0), 0);
 }
+
+  // --- Date-only Parser (verhindert Off-by-one durch Zeitzonen) ---
+function toDateOnly(isoLike){
+  // akzeptiert 'YYYY-MM-DD' oder volles ISO → nimmt nur das Datum
+  const s = String(isoLike||'').slice(0,10);
+  const [y,m,d] = s.split('-').map(Number);
+  return new Date(y, (m||1)-1, d||1); // lokales Datum (00:00) ohne TZ-Verschiebung
+}
+
 
 
   /***** Bild-Helfer *****/
@@ -1071,40 +1081,32 @@ async function renderPricePlan(resRow){
   const btnReset = document.getElementById('btnPlanReset');
   const btnSave  = document.getElementById('btnSavePlan');
   const btnApplyTrim = document.getElementById('btnApplyTrim');
+  const elTotal = document.getElementById('editTotalPrice');
+  const elNotes = document.getElementById('editNotes');
   if (!list) return;
 
-  // Arbeitskopie (DB erst beim Speichern)
-  let plan = Array.isArray(resRow.priceplan)
-    ? JSON.parse(JSON.stringify(resRow.priceplan))
-    : basePlanFrom(resRow);
+  // Arbeitskopie
+  let plan = Array.isArray(resRow.priceplan) ? JSON.parse(JSON.stringify(resRow.priceplan)) : basePlanFrom(resRow);
 
   // Trim-State
-  let trimMode = false;      // Ein/Aus
-  let trimSel  = null;       // {a,b} inkl. Indizes (nur UI, DB erst via "Anpassung speichern")
+  let trimMode = false;
+  let trimSel  = null;
 
-  // Grid-Layout: schlank/hochkant
+  // Grid (schlank/hochkant)
   list.style.display = 'grid';
   list.style.gridTemplateColumns = 'repeat(auto-fill, minmax(170px, 1fr))';
   list.style.gap = '10px';
 
-  // Helpers
-  const wShort = (iso) => new Date(iso).toLocaleDateString('de-DE',{weekday:'short'});
-  const isWE = (iso) => { const d = new Date(iso).getDay(); return d === 0 || d === 6; }; // So / Sa
+  // Hilfen
+  const isWE = (iso) => { const d = toDateOnly(iso).getDay(); return d === 0 || d === 6; };
   const selA = () => Math.min(trimSel?.a ?? Infinity, trimSel?.b ?? -Infinity);
   const selB = () => Math.max(trimSel?.a ?? -Infinity, trimSel?.b ?? -Infinity);
-  const inRange = (i) => {
-    if (!trimSel) return false;
-    const a = selA(), b = selB();
-    if (!Number.isFinite(a) || !Number.isFinite(b)) return i === a;
-    return i >= a && i <= b;
-  };
+  const inRange = (i) => { if (!trimSel) return false; const a=selA(), b=selB(); if(!isFinite(a)||!isFinite(b)) return i===a; return i>=a&&i<=b; };
   const isEnd = (i) => trimSel && (i === selA() || i === selB());
 
-  // Karte (nur EIN Innen-Rahmen → kein Double Border mehr)
   function cardHtml(n, idx){
     const weekend = isWE(n.from) || isWE(n.to);
     const _in = inRange(idx), _end = isEnd(idx);
-
     return `
       <div class="content" style="
         display:flex; flex-direction:column; gap:8px;
@@ -1114,11 +1116,11 @@ async function renderPricePlan(resRow){
       ">
         <div style="display:flex; align-items:center; justify-content:space-between;">
           <div class="mono" style="font-size:12px; letter-spacing:.2px; opacity:.95;">
-            ${n.wFrom} → ${n.wTo}
+            ${toDateOnly(n.from).toLocaleDateString('de-DE',{weekday:'long'})}
+            <span style="opacity:.6;">→</span>
+            ${toDateOnly(n.to).toLocaleDateString('de-DE',{weekday:'long'})}
           </div>
-          ${weekend ? `<span class="mono" style="
-              font-size:10px; padding:2px 6px; border-radius:999px;
-              border:1px solid var(--line,#17414b); opacity:.85;">WE</span>` : ``}
+          ${weekend ? `<span class="mono" style="font-size:10px; padding:2px 6px; border-radius:999px; border:1px solid var(--line,#17414b); opacity:.85;">WE</span>` : ``}
         </div>
 
         <div style="font-size:13.5px; color:#9adce6; line-height:1.25;">
@@ -1128,61 +1130,59 @@ async function renderPricePlan(resRow){
         <div class="muted tiny">Leistungen (Placeholder)</div>
         <div class="muted tiny" style="margin-top:-4px;">– leer –</div>
 
-        <div style="
-          margin-top:auto;
-          border-top:1px solid var(--line,#17414b);
-          padding-top:8px; display:flex; align-items:center; gap:8px; justify-content:flex-end;">
-          <input class="input sm mono" type="number" min="0" step="0.01"
+        <div style="margin-top:auto; border-top:1px solid var(--line,#17414b); padding-top:8px; display:flex; align-items:center; gap:8px; justify-content:flex-end;">
+          <input class="input sm mono price-input" type="number" min="0" step="0.01"
                  style="width:112px; padding-right:8px;"
                  value="${Number(n.price||0)}"
-                 data-pp="price" data-idx="${idx}">
+                 data-idx="${idx}">
           <span class="mono">€ / Nacht</span>
         </div>
       </div>
     `;
   }
 
-  function draw(){
-    // äußere .card OHNE Border, um doppelte Ränder sicher zu vermeiden
-    list.innerHTML = plan.map((n,i)=>(
-      `<button class="card" data-idx="${i}" style="padding:0; text-align:left; border:none; background:transparent;">${cardHtml(n,i)}</button>`
-    )).join('');
-    const sum = EUR.format(totalOfPlan(plan));
-    info.textContent = `Summe im Aufenthalt: ${sum} (Rate × Nächte)` +
+  function updateTotalsUI(){
+    const sum = totalOfPlan(plan);
+    info.textContent = `Summe im Aufenthalt: ${EUR.format(sum)} (Rate × Nächte)` +
       (trimMode ? ' · Kürzen aktiv: wähle „von“, dann „bis“.' : '');
-    // Floating-Button für Trim nur zeigen, wenn Modus aktiv UND Range komplett
-    const haveRange = trimSel && Number.isFinite(selA()) && Number.isFinite(selB());
-    if (btnApplyTrim){
-      btnApplyTrim.classList.toggle('hidden', !(trimMode && haveRange));
-    }
+    if (elTotal) elTotal.value = Number(sum).toFixed(2);
   }
-  draw();
 
-  // --- EVENTS ---
+  function drawStatic(){
+    // äußere .card ohne Rahmen → kein Doppelrand
+    list.innerHTML = plan.map((n,i)=>`<button class="card" data-idx="${i}" style="padding:0; text-align:left; border:none; background:transparent;">${cardHtml(n,i)}</button>`).join('');
+    // Preis-Inputs live ohne Re-Render behandeln
+    list.querySelectorAll('.price-input').forEach(inp=>{
+      inp.addEventListener('input', (e)=>{
+        const i = Number(e.target.dataset.idx);
+        plan[i].price = Number(e.target.value || 0);
+        updateTotalsUI(); // KEIN drawStatic(); Fokus bleibt!
+      });
+    });
+    updateTotalsUI();
+    // Trim-Button Sichtbarkeit unten rechts
+    const haveRange = trimSel && isFinite(selA()) && isFinite(selB());
+    if (btnApplyTrim) btnApplyTrim.classList.toggle('hidden', !(trimMode && haveRange));
+  }
 
-  // Preise live updaten
-  list.addEventListener('input', (e)=>{
-    const el = e.target.closest('input[data-pp="price"]'); if (!el) return;
-    plan[Number(el.dataset.idx)].price = Number(el.value || 0);
-    draw();
-  });
+  drawStatic();
 
-  // Kartenklicks: nur im Trim-Modus relevant
+  // Kartenklicks nur im Trim-Modus
   list.addEventListener('click', (e)=>{
     if (!trimMode) return;
     const card = e.target.closest('.card'); if (!card) return;
     const idx = Number(card.dataset.idx);
     if (!trimSel) trimSel = { a: idx, b: idx };
     else if (trimSel.a === trimSel.b) trimSel.b = idx;
-    else trimSel = { a: idx, b: idx }; // neu starten
-    draw();
+    else trimSel = { a: idx, b: idx };
+    drawStatic();
   });
 
-  // Trim-Toggle: "✂️ Aufenthalt verkürzen"
+  // ✂️ Toggle
   if (btnTrim && !btnTrim.__bound){
     btnTrim.__bound = true;
     btnTrim.textContent = '✂️ Aufenthalt verkürzen';
-    btnTrim.title = 'Von- & Bis-Nacht wählen. Dann unten rechts „Anpassung speichern“.';
+    btnTrim.title = 'Von- & Bis-Nacht wählen. Dann „Anpassung speichern“.';
     btnTrim.addEventListener('click', ()=>{
       if (plan.length < 2){
         info.textContent = 'Verkürzen nicht möglich: Aufenthalt hat nur 1 Nacht.';
@@ -1190,26 +1190,26 @@ async function renderPricePlan(resRow){
       }
       trimMode = !trimMode;
       if (!trimMode) trimSel = null;
-      draw();
+      drawStatic();
     });
   }
 
-  // Zurücksetzen: Basisplan (rate_price), Trim-UI aus
+  // Zurücksetzen: Basisplan + Trim aus
   if (btnReset && !btnReset.__bound){
     btnReset.__bound = true;
     btnReset.addEventListener('click', ()=>{
       plan = basePlanFrom(resRow);
       trimMode = false; trimSel = null;
-      draw();
+      drawStatic();
     });
   }
 
-  // NEU: Anpassung speichern (nur Trim übernehmen)
+  // Trim anwenden (unten rechts)
   if (btnApplyTrim && !btnApplyTrim.__bound){
     btnApplyTrim.__bound = true;
     btnApplyTrim.addEventListener('click', async ()=>{
       const a = selA(), b = selB();
-      if (!Number.isFinite(a) || !Number.isFinite(b)) return;
+      if (!isFinite(a) || !isFinite(b)) return;
       const slice = plan.slice(Math.min(a,b), Math.max(a,b)+1);
       if (!slice.length) return;
 
@@ -1221,15 +1221,14 @@ async function renderPricePlan(resRow){
       const { error } = await supabase.from('reservations').update(payload).eq('id', resRow.id);
       info.textContent = error ? ('Fehler: ' + error.message) : 'Aufenthalt verkürzt & gespeichert.';
       if (!error){
-        // lokale Kopie aktualisieren
         plan = slice; trimMode = false; trimSel = null;
-        draw();
+        drawStatic();
         try{ await loadKpisToday(); await loadKpisNext(); await loadReservations(); }catch{}
       }
     });
   }
 
-  // Plan speichern (nur Preise sichern, ohne Kürzung)
+  // Speichern: NUR Preise (ohne Kürzung)
   if (btnSave){
     btnSave.onclick = async ()=>{
       const payload = { priceplan: plan };
@@ -1240,6 +1239,9 @@ async function renderPricePlan(resRow){
       }
     };
   }
+
+  // Notes in Details-Tab initial füllen (falls vorhanden)
+  if (elNotes && resRow.notes != null) elNotes.value = String(resRow.notes||'');
 }
 
 
@@ -1307,6 +1309,18 @@ async function renderPricePlan(resRow){
     });
 
     try { await renderPricePlan(data); } catch(e){ console.warn('Preisplan/UI', e); }
+
+    // Details-Tab: Notizen & Gesamtpreis initialisieren/sperren
+q('#editNotes')?.addEventListener?.('input', debounce(async (e)=>{
+  await supabase.from('reservations').update({ notes: e.target.value }).eq('id', data.id);
+}, 400));
+const sumField = q('#editTotalPrice');
+if (sumField){ // falls kein Preisplan: Basispreis * Nächte
+  const pplan = Array.isArray(data.priceplan) ? data.priceplan : basePlanFrom(data);
+  sumField.value = totalOfPlan(pplan).toFixed(2);
+  sumField.readOnly = true;
+}
+
 
     qa('.tab').forEach(b=>b.classList.remove('active')); q('.tab[data-tab="tabDet"]')?.classList.add('active');
     qa('.tabpage').forEach(p=>p.classList.add('hidden')); q('#tabDet')?.classList.remove('hidden');
