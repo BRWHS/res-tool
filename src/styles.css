@@ -686,6 +686,27 @@ html.modal-open { overflow: hidden; }
 .cat-row select.input{ flex:1; }
 .cat-row .btn.icon{ width:34px; height:34px; padding:0; border-radius:10px; }
 
+/* KPI-Werte dürfen groß sein (100.000 €+) */
+.kpis .value {
+  white-space: nowrap;
+  overflow: visible;
+  max-width: none;
+}
+
+/* Platz „reservieren“ ohne Fake-Content */
+.kpis.big .value {
+  min-width: 12ch;          /* genug für 100.000,00 € */
+  line-height: 1.1;
+}
+
+/* Auf kleinen Screens automatisch kleiner zeichnen */
+@media (max-width: 900px) {
+  .kpis.big .value {
+    min-width: 9ch;
+    font-size: clamp(20px, 4.8vw, 36px);
+  }
+}
+
 
 
 
