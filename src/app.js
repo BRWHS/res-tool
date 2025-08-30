@@ -1101,7 +1101,6 @@ async function renderPricePlan(resRow){
   const btnApplyTrim = document.getElementById('btnApplyTrim');
   const elTotal = document.getElementById('editTotalPrice');
   const elNotes = document.getElementById('editNotes');
-  const btnAll   = document.getElementById('btnPlanAll');
   const popAll   = document.getElementById('planAllPopup');
   const inpAll   = document.getElementById('planAllValue');
   const allCancel= document.getElementById('planAllCancel');
@@ -1239,6 +1238,91 @@ if (allApply && !allApply.__bound){
   }
 
   drawStatic();
+
+  // === All Price: robustes Popup, dynamisch erzeugt ===
+(function initAllPrice(){
+  const btnAll = document.getElementById('btnPlanAll');
+  if (!btnAll) return;
+
+  // Popup erzeugen, wenn noch nicht im DOM
+  let popAll = document.getElementById('planAllPopupDyn');
+  if (!popAll){
+    popAll = document.createElement('div');
+    popAll.id = 'planAllPopupDyn';
+    popAll.className = 'card hidden';
+    popAll.setAttribute('role','dialog');
+    popAll.style.position = 'fixed';
+    popAll.style.right = '18px';
+    popAll.style.bottom = '18px';
+    popAll.style.width = '280px';
+    popAll.style.zIndex = '9999';
+    popAll.style.padding = '12px';
+    popAll.style.border = '1px solid var(--line,#17414b)';
+    popAll.innerHTML = `
+      <div class="mono" style="margin-bottom:8px;">Alle Nächte auf Preis setzen</div>
+      <div class="row" style="gap:8px; align-items:center;">
+        <input id="planAllValueDyn" class="input mono" type="number" step="0.01" min="0"
+               placeholder="z. B. 109.00" style="flex:1;">
+        <span class="mono">€</span>
+      </div>
+      <div class="row" style="justify-content:flex-end; gap:8px; margin-top:10px;">
+        <button id="planAllCancelDyn" class="btn sm">Abbrechen</button>
+        <button id="planAllApplyDyn"  class="btn sm primary">Preise setzen</button>
+      </div>
+    `;
+    document.body.appendChild(popAll);
+  }
+  const inpAll   = popAll.querySelector('#planAllValueDyn');
+  const allCancel= popAll.querySelector('#planAllCancelDyn');
+  const allApply = popAll.querySelector('#planAllApplyDyn');
+
+  // Öffnen
+  btnAll.onclick = ()=>{
+    popAll.classList.remove('hidden');
+    setTimeout(()=> inpAll?.focus?.(), 0);
+  };
+
+  // Schließen
+  allCancel.onclick = ()=> popAll.classList.add('hidden');
+  document.addEventListener('click', (e)=>{
+    if (popAll.classList.contains('hidden')) return;
+    const inside = e.target.closest('#planAllPopupDyn') || e.target.closest('#btnPlanAll');
+    if (!inside) popAll.classList.add('hidden');
+  });
+
+  // Anwenden + SPEICHERN
+  allApply.onclick = async ()=>{
+    const vRaw = (inpAll?.value ?? '').trim();
+    const v = Number(String(vRaw).replace(',', '.'));
+    if (!(v >= 0)) { inpAll?.focus(); return; }
+
+    // 1) lokal setzen
+    plan.forEach(n => n.price = v);
+
+    // 2) persistieren
+    const { error } = await supabase
+      .from('reservations')
+      .update({ priceplan: plan })
+      .eq('id', resRow.id);
+
+    if (error){
+      info.textContent = 'Fehler: ' + error.message;
+      return;
+    }
+
+    // 3) UI: Inputs aktualisieren ohne Re-Render, Summe neu, Popup schließen
+    list.querySelectorAll('.price-input').forEach(inp=>{ inp.value = String(v); });
+    (typeof updateTotalsUI === 'function') && updateTotalsUI();
+    popAll.classList.add('hidden');
+
+    // 4) KPIs/Listen auffrischen (optional, aber hilfreich)
+    try{
+      await loadKpisToday(); await loadKpisNext(); await loadReservations();
+    }catch(_){}
+    info.textContent = 'Alle Nachtpreise gesetzt & gespeichert.';
+  };
+})();
+
 
   // Kartenklicks nur im Trim-Modus
   list.addEventListener('click', (e)=>{
