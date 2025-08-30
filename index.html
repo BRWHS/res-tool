@@ -424,7 +424,7 @@
       <div class="tabs">
         <button class="tab active" data-tab="tabDet">Details</button>
         <button class="tab" data-tab="tabPlan">Preisplan</button>
-        <button class="tab" data-tab="tabPay">Zahlung</button>
+        <button class="tab" data-tab="tabPay">Zahlungskonto</button>
         <button class="tab" data-tab="tabAct">Aktionen</button>
       </div>
 
@@ -448,9 +448,15 @@
 <label>Rate
   <select id="eRate" class="input theme-select"></select>
 </label>
-<label>Preis
-  <input id="ePrice" type="number" step="0.01" class="input"/>
-</label>
+<!-- Gesamtpreis (read-only; Summe Preisplan) -->
+<label for="editTotalPrice" class="lbl">Gesamtpreis</label>
+<input id="editTotalPrice" class="input mono" type="number" step="0.01" readonly
+       title="Summe der Nachtpreise aus dem Preisplan" />
+
+<!-- Notizen -->
+<label for="editNotes" class="lbl" style="margin-top:8px;">Notizen</label>
+<textarea id="editNotes" class="input" rows="3" placeholder="Interne Notizen zur Reservierung"></textarea>
+
         </div>
         <div class="right"><button class="btn" id="btnSaveEdit">Speichern</button></div>
       </div>
@@ -464,13 +470,13 @@
         <button id="btnPlanFillWeekdays" class="btn sm ghost" title="Wochentage-Muster anwenden">Wochentage-Muster</button>
         <button id="btnPlanReset" class="btn sm ghost" title="Alle Nächte wieder auf Basispreis setzen">Zurücksetzen</button>
         <button id="btnSavePlan" class="btn sm primary">Preisplan speichern</button>
-        <!-- NEU: Floating-Aktion für Trim -->
-<div id="planFloat" style="position:relative;">
-  <button id="btnApplyTrim" class="btn sm danger hidden"
-          style="position:absolute; right:0; bottom:-6px;">
-    Anpassung speichern
-  </button>
+       <!-- Footer-Aktionen unten rechts im Tab -->
+<div id="planFooter" style="position:sticky; bottom:0; padding-top:8px;">
+  <div style="display:flex; justify-content:flex-end; gap:8px;">
+    <button id="btnApplyTrim" class="btn sm danger hidden">Anpassung speichern</button>
+  </div>
 </div>
+
 
       </div>
     </div>
