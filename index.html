@@ -448,15 +448,30 @@
 <label>Rate
   <select id="eRate" class="input theme-select"></select>
 </label>
-<!-- Gesamtpreis (read-only; Summe Preisplan) -->
-<label for="editTotalPrice" class="lbl">Gesamtpreis</label>
-<input id="editTotalPrice" class="input mono" type="number" step="0.01" readonly
-       title="Summe der Nachtpreise aus dem Preisplan" />
+<!-- Gesamtpreis (read-only; Summe aus Preisplan) -->
+<div class="row" style="gap:12px; align-items:flex-end;">
+  <div style="flex:1 1 220px;">
+    <label for="editTotalPrice" class="lbl">Gesamtpreis</label>
+    <input id="editTotalPrice" class="input mono" type="number" step="0.01" readonly
+           title="Summe der Nachtpreise aus dem Preisplan" />
+  </div>
+</div>
 
-<!-- Notizen -->
-<label for="editNotes" class="lbl" style="margin-top:8px;">Notizen</label>
-<textarea id="editNotes" class="input" rows="3" placeholder="Interne Notizen zur Reservierung"></textarea>
-
+<!-- Notizen (klar erkennbar, rot-leuchtender Rahmen) -->
+<div style="margin-top:12px;">
+  <div class="lbl" style="display:flex; align-items:center; gap:8px;">
+    <span>Notizen</span>
+    <span class="tiny muted">(intern)</span>
+  </div>
+  <div style="
+       border:1px solid #ff4d4d;
+       border-radius:10px;
+       box-shadow: 0 0 12px rgba(255,77,77,.25), inset 0 0 8px rgba(255,77,77,.12);
+       padding:8px;">
+    <textarea id="editNotes" class="input" rows="4" placeholder="Interne Notizen zur Reservierung"
+              style="resize:vertical; border:none; background:transparent; box-shadow:none;"></textarea>
+  </div>
+</div>
         </div>
         <div class="right"><button class="btn" id="btnSaveEdit">Speichern</button></div>
       </div>
