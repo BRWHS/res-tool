@@ -1187,42 +1187,48 @@ async function renderPricePlan(resRow){
       });
     });
 
-    // --- All Price: Popup öffnen/schließen
-if (btnAll && !btnAll.__bound){
-  btnAll.__bound = true;
-  btnAll.addEventListener('click', ()=>{
-    if (!popAll) return;
-    popAll.classList.toggle('hidden', false);
-    setTimeout(()=> inpAll?.focus?.(), 0);
-  });
-}
-if (allCancel && !allCancel.__bound){
-  allCancel.__bound = true;
-  allCancel.addEventListener('click', ()=> popAll?.classList.add('hidden'));
-}
-// Bestätigen: alle Nachtpreise setzen, UI aktualisieren, Popup zu
+    // Bestätigen: alle Nachtpreise setzen UND SOFORT SPEICHERN
 if (allApply && !allApply.__bound){
   allApply.__bound = true;
-  allApply.addEventListener('click', ()=>{
-    const v = Number(inpAll?.value || '');
+  allApply.addEventListener('click', async ()=>{
+    const vRaw = (inpAll?.value ?? '').trim();
+    const v = Number(vRaw.replace(',', '.'));
     if (!(v >= 0)) { inpAll?.focus(); return; }
+
+    // 1) lokal alle Nachtpreise setzen
     plan.forEach(n => n.price = v);
+
+    // 2) persistieren
+    const payload = { priceplan: plan };
+    const { error } = await supabase
+      .from('reservations')
+      .update(payload)
+      .eq('id', resRow.id);
+
+    // 3) UI aktualisieren
+    if (error){
+      info.textContent = 'Fehler: ' + error.message;
+      return;
+    }
+    // Popup zu
     popAll?.classList.add('hidden');
 
-    // Eingabefelder im Grid updaten (Werte setzen) ohne Re-Render
+    // Eingabefelder im Grid aktualisieren (ohne Re-Render, Fokus bleibt)
     list.querySelectorAll('.price-input').forEach(inp=>{
       inp.value = String(v);
     });
-    // Summen & Gesamtpreis aktualisieren
+
+    // Summen/„Gesamtpreis“ neu berechnen
     (typeof updateTotalsUI === 'function') && updateTotalsUI();
+
+    // KPIs/Liste refreshen (nicht kritisch, aber nice)
+    try{
+      await loadKpisToday(); await loadKpisNext(); await loadReservations();
+    }catch(_){}
+
+    info.textContent = 'Alle Nachtpreise gesetzt & gespeichert.';
   });
 }
-// Klick außerhalb des Popups schließt es
-document.addEventListener('click', (e)=>{
-  if (!popAll || popAll.classList.contains('hidden')) return;
-  const inside = e.target.closest('#planAllPopup') || e.target.closest('#btnPlanAll');
-  if (!inside) popAll.classList.add('hidden');
-});
 
 
     updateTotalsUI();
