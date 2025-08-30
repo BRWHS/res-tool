@@ -1150,6 +1150,7 @@ async function renderPricePlan(resRow){
 }
 
 
+
   /***** Edit-Dialog *****/
   async function openEdit(id){
     const { data, error } = await supabase.from('reservations').select('*').eq('id', id).maybeSingle();
