@@ -202,7 +202,17 @@ window.addEventListener('keydown', (e)=>{ if (e.key === 'Escape') window.closeMo
   const D2 = new Intl.DateTimeFormat('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'});
   const Dm = new Intl.DateTimeFormat('de-DE',{day:'2-digit',month:'2-digit'});
   const EUR = new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'});
-  const euro = v=>v==null?'— €':EUR.format(v);
+  // neu (fix: große Beträge + zwei Nachkommastellen):
+const euro = v=>{
+  if (v == null || isNaN(v)) return '— €';
+  return new Intl.NumberFormat('de-DE',{
+    style: 'currency',
+    currency: 'EUR',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+    useGrouping: true
+  }).format(Number(v));
+};
   const pct  = v=>v==null?'—%':`${v}%`;
   const soD = d=>{const x=new Date(d); x.setHours(0,0,0,0); return x;};
   const isoDate = d => d.toISOString().slice(0,10);
