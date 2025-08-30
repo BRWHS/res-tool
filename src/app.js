@@ -240,6 +240,13 @@ window.addEventListener('keydown', (e)=>{ if (e.key === 'Escape') window.closeMo
     const diff = (date - firstThursday) / 86400000;
     return 1 + Math.round(diff / 7);
   }
+  // YYYY-MM-DD aus *lokaler* Zeit (ohne UTC-Shift)
+function isoDateLocal(d){
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const da = String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${da}`;
+}
 
   // ==== Priceplan Helpers ====
 const DAY_MS = 86400000;
@@ -252,8 +259,8 @@ function nightsBetween(arrISO, depISO){
   for (let d = new Date(arr); d < dep; d = new Date(d.getFullYear(), d.getMonth(), d.getDate()+1)){
     const to = new Date(d.getFullYear(), d.getMonth(), d.getDate()+1);
     out.push({
-      from: isoDate(d),
-      to: isoDate(to),
+      from: isoDateLocal(d),
+      to:   isoDateLocal(to),
       wFrom: d.toLocaleDateString('de-DE', { weekday:'long' }),
       wTo: to.toLocaleDateString('de-DE', { weekday:'long' }),
       price: null,
@@ -265,8 +272,8 @@ function nightsBetween(arrISO, depISO){
 }
 function basePlanFrom(res){
   const base = Number(res.rate_price||0);
-  const arr = res.arrival ? isoDate(toDateOnly(res.arrival)) : null;
-  const dep = res.departure ? isoDate(toDateOnly(res.departure)) : null;
+  const arr = res.arrival   ? isoDateLocal(toDateOnly(res.arrival))   : null;
+  const dep = res.departure ? isoDateLocal(toDateOnly(res.departure)) : null;
   const plan = nightsBetween(arr, dep);
   plan.forEach(n => n.price = base);
   return plan;
@@ -288,8 +295,8 @@ function totalPriceFromRow(row){
   const hasPlan = Array.isArray(row.priceplan) && row.priceplan.length;
   if (hasPlan) return totalOfPlan(row.priceplan);
 
-  const arr = row.arrival ? isoDate(toDateOnly(row.arrival)) : null;
-  const dep = row.departure ? isoDate(toDateOnly(row.departure)) : null;
+  const arr = row.arrival   ? isoDateLocal(toDateOnly(row.arrival))   : null;
+  const dep = row.departure ? isoDateLocal(toDateOnly(row.departure)) : null;
   const plan = nightsBetween(arr, dep);
   const base = Number(row.rate_price || 0);
   plan.forEach(n => n.price = base);
