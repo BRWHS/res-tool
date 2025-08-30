@@ -1063,88 +1063,162 @@ function fillEditDropdowns(hotelCode, curCat, curRate){
     if (p && q('#ePrice')) q('#ePrice').value = p;
   }, { once:true });
 }
+// === REPLACE: renderPricePlan ===
 async function renderPricePlan(resRow){
   const list = document.getElementById('planList');
   const info = document.getElementById('planInfo');
   if (!list) return;
 
-  // vorhandenen Plan aus DB nehmen, sonst Basis vom rate_price
-  const plan = Array.isArray(resRow.priceplan) ? resRow.priceplan : basePlanFrom(resRow);
+  // 1) Arbeitskopie des Plans (nicht sofort persistieren)
+  let plan = Array.isArray(resRow.priceplan) ? JSON.parse(JSON.stringify(resRow.priceplan))
+                                            : basePlanFrom(resRow);
 
-  // Karten aufbauen
-  list.innerHTML = '';
-  plan.forEach((n, idx)=>{
-    const card = document.createElement('div');
-    card.className = 'card';
-    card.style.minHeight = '120px';
-    card.innerHTML = `
-      <div class="content">
-        <div class="row wrap" style="justify-content:space-between;align-items:center;">
-          <div>
-            <div><b>${n.from}</b> → <b>${n.to}</b></div>
-            <div class="muted">${n.wFrom} → ${n.wTo}</div>
-            <div class="muted">Leistungen (Placeholder)</div>
-          </div>
-          <div style="display:flex;gap:8px;align-items:center;">
-            <input class="input sm mono" type="number" min="0" step="0.01"
-                   style="width:120px" value="${Number(n.price||0)}"
-                   data-pp="price" data-idx="${idx}">
-            <span class="mono">€ / Nacht</span>
-          </div>
+  // pending Range-Cut (start/end Indizes) – wird erst bei "Speichern" angewendet
+  let trimSel = null; // {a: index, b: index} (inklusive)
+
+  // 2) Container kompakt als Grid setzen (hochkant Karten)
+  list.style.display = 'grid';
+  list.style.gridTemplateColumns = 'repeat(auto-fill, minmax(180px, 1fr))';
+  list.style.gap = '10px';
+
+  // 3) Hilfs-Renderer für eine Karte
+  function cardHtml(n, idx, selected=false){
+    return `
+      <div class="content" style="
+            display:flex;flex-direction:column;gap:6px;
+            padding:12px;min-height:160px;border-radius:12px;
+            border:1px solid var(--line,#17414b);
+            box-shadow: 0 0 0 ${selected? '2px var(--accent, #00CCCC)':'0 transparent'};
+          ">
+        <div class="mono" style="font-size:13px;opacity:.9;">${n.wFrom} → ${n.wTo}</div>
+        <div style="font-size:14px;color:#9adce6;">
+          <b>${n.from}</b> <span style="opacity:.6;">→</span> <b>${n.to}</b>
         </div>
-      </div>`;
-    list.appendChild(card);
-  });
+        <div class="muted tiny" style="margin-top:2px;">Leistungen (Placeholder)</div>
+        <div class="muted tiny">– leer –</div>
+        <div style="margin-top:auto;display:flex;align-items:center;gap:8px;justify-content:flex-end;">
+          <input class="input sm mono" type="number" min="0" step="0.01"
+                 style="width:110px" value="${Number(n.price||0)}"
+                 data-pp="price" data-idx="${idx}">
+          <span class="mono">€ / Nacht</span>
+        </div>
+      </div>
+    `;
+  }
 
-  const sum = totalOfPlan(plan);
-  if (info) info.textContent = `Summe im Aufenthalt: ${EUR.format(sum)} (Rate * Nächte)`;
+  function isSelected(idx){
+    if (!trimSel) return false;
+    const a = Math.min(trimSel.a, trimSel.b);
+    const b = Math.max(trimSel.a, trimSel.b);
+    return idx === a || idx === b;
+  }
 
-  // Eingaben live spiegeln (einmalig binden)
+  // 4) Liste rendern
+  function draw(){
+    list.innerHTML = plan.map((n,i)=>`<div class="card" data-idx="${i}" style="padding:0;">${cardHtml(n,i,isSelected(i))}</div>`).join('');
+    const sum = totalOfPlan(plan);
+    info.textContent = `Summe im Aufenthalt: ${EUR.format(sum)} (Rate × Nächte)` +
+      (trimSel ? ' · Bereich gewählt – mit „Preisplan speichern“ übernehmen' : '');
+  }
+  draw();
+
+  // 5) „Wochentage-Muster“ → in „Aufenthalt verkürzen“ umwidmen (mit ✂️)
+  const btnTrim = document.getElementById('btnPlanFillWeekdays');
+  if (btnTrim){
+    btnTrim.textContent = '✂️ Aufenthalt verkürzen';
+    btnTrim.title = 'Von/Bis auswählen, dann mit „Preisplan speichern“ übernehmen';
+  }
+
+  // 6) Events
+
+  // Preiseingabe (einmalig binden)
   list.addEventListener('input', (e)=>{
     const el = e.target.closest('input[data-pp="price"]');
     if (!el) return;
     const i = Number(el.dataset.idx);
     plan[i].price = Number(el.value||0);
-    if (info) info.textContent = `Summe im Aufenthalt: ${EUR.format(totalOfPlan(plan))}`;
+    const sum = totalOfPlan(plan);
+    info.textContent = `Summe im Aufenthalt: ${EUR.format(sum)} (Rate × Nächte)` +
+      (trimSel ? ' · Bereich gewählt – mit „Preisplan speichern“ übernehmen' : '');
   }, { once: true });
 
-  // Buttons (Reset / Weekdays / Speichern)
+  // Kartenklicks: Range für Verkürzung wählen (wenn Trim-Modus aktiv)
+  let trimMode = false;
+  function setTrimMode(on){
+    trimMode = on;
+    if (!trimMode) trimSel = null;
+    draw();
+    if (trimMode){
+      info.textContent = 'Verkürzen aktiv: Klicke zuerst die neue „von“-Nacht, danach die „bis“-Nacht. Bestätige mit „Preisplan speichern“.';
+    }else{
+      const sum = totalOfPlan(plan);
+      info.textContent = `Summe im Aufenthalt: ${EUR.format(sum)} (Rate × Nächte)`;
+    }
+  }
+
+  // Toggle per Button
+  if (btnTrim && !btnTrim.__bound){
+    btnTrim.__bound = true;
+    btnTrim.addEventListener('click', ()=>{
+      setTrimMode(!trimMode);
+    });
+  }
+
+  // Klick auf Karte (nur im Trim-Modus relevant)
+  list.addEventListener('click', (e)=>{
+    if (!trimMode) return;
+    const card = e.target.closest('.card'); if (!card) return;
+    const idx = Number(card.dataset.idx);
+    if (trimSel == null){ trimSel = { a: idx, b: idx }; }
+    else if (trimSel && trimSel.a !== undefined && trimSel.b === trimSel.a){ trimSel.b = idx; }
+    else { trimSel = { a: idx, b: idx }; } // neu starten, falls bereits zwei Punkte standen
+    draw();
+  });
+
+  // Zurücksetzen: Auswahl + Plan auf Basis zurück
   const btnReset = document.getElementById('btnPlanReset');
   if (btnReset && !btnReset.__bound){
     btnReset.__bound = true;
     btnReset.addEventListener('click', ()=>{
-      const base = basePlanFrom(resRow);
-      resRow.priceplan = base;
-      renderPricePlan(resRow);
+      plan = basePlanFrom(resRow);
+      trimSel = null;
+      setTrimMode(false);
+      draw();
     });
   }
 
-  const btnWeek = document.getElementById('btnPlanFillWeekdays');
-  if (btnWeek && !btnWeek.__bound){
-    btnWeek.__bound = true;
-    btnWeek.addEventListener('click', ()=>{
-      // Beispielmuster: So -10%, Fr/Sa +10%
-      const base = Number(resRow.rate_price||0);
-      (resRow.priceplan || plan).forEach(n=>{
-        const d = new Date(n.from).getDay(); // 0 So ... 6 Sa
-        let p = base;
-        if (d === 0) p = Math.round((base*0.9)*100)/100;     // Sonntag
-        if (d === 5 || d === 6) p = Math.round((base*1.1)*100)/100; // Fr/Sa
-        n.price = p;
-      });
-      renderPricePlan(resRow);
-    });
-  }
-
+  // Speichern: Preisplan + (falls Trim gewählt) Aufenthalt kürzen
   const btnSave = document.getElementById('btnSavePlan');
   if (btnSave){
     btnSave.onclick = async ()=>{
-      const payload = { priceplan: plan };
+      let payload = { priceplan: plan };
+
+      if (trimSel){
+        const a = Math.min(trimSel.a, trimSel.b);
+        const b = Math.max(trimSel.a, trimSel.b);
+        const slice = plan.slice(a, b+1);
+        if (slice.length >= 1){
+          // neue Arrival/Departure aus Auswahl
+          const newArr = slice[0].from;        // ab dieser Nacht
+          const newDep = slice[slice.length-1].to; // bis Checkout am Ende
+          plan = slice;                         // Plan auf Auswahl begrenzen
+          payload = {
+            priceplan: plan,
+            arrival: newArr,
+            departure: newDep
+          };
+        }
+      }
+
       const { error } = await supabase.from('reservations').update(payload).eq('id', resRow.id);
-      document.getElementById('planInfo').textContent = error ? ('Fehler: ' + error.message) : 'Preisplan gespeichert.';
-      try{
-        await loadKpisToday(); await loadKpisNext(); await loadReservations();
-      }catch(_){}
+      info.textContent = error ? ('Fehler: ' + error.message) : 'Preisplan gespeichert.';
+      if (!error){
+        // Nach speichern: Auswahl/Modus beenden + KPIs/Listen refreshen
+        setTrimMode(false);
+        try{
+          await loadKpisToday(); await loadKpisNext(); await loadReservations();
+        }catch(_){}
+      }
     };
   }
 }
