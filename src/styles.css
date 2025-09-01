@@ -764,13 +764,107 @@ html.modal-open { overflow: hidden; }
 #confirmEmailModal .btn--ghost { background:transparent; color:#e6ffff; border-color:rgba(0,255,255,0.25); }
 #confirmEmailModal .btn--primary { background:#00ffff; color:#001b1b; font-weight:600; }
 
+/* --- FORCE CENTER for confirmation modal (override any globals) --- */
+#confirmEmailModal {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 1200 !important;
+}
 
+#confirmEmailModal .modal__backdrop {
+  position: fixed !important;
+  inset: 0 !important;
+}
 
+#confirmEmailModal .modal__panel {
+  position: relative !important;   /* NICHT absolute */
+  top: auto !important;
+  left: auto !important;
+  transform: none !important;      /* falls eine globale transform greift */
+  margin: 0 !important;
+  width: min(680px, 96vw) !important;
+  max-height: 90vh !important;
+  overflow: auto !important;
+}
 
+/* ======================================================================
+   CONFIRMATION MODAL — HARD OVERRIDE FOR CENTERING (SAFE & SCOPED)
+   Ensures the "Reservierungsbestätigung versenden" popup is always centered,
+   regardless of global .modal rules that style the modal container as a panel.
+   ====================================================================== */
+#confirmEmailModal.hidden { display: none !important; }
 
+/* Make the modal container a full-viewport shell (transparent).
+   We DO NOT use the global .modal panel box styling here. */
+#confirmEmailModal.modal {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  transform: none !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  overflow: visible !important;
+  z-index: 1200 !important;
+  display: none; /* default off; .open toggles on */
+}
+#confirmEmailModal.modal.open { display: block !important; }
 
+/* Backdrop covers the viewport */
+#confirmEmailModal .modal__backdrop {
+  position: fixed !important;
+  inset: 0 !important;
+  background: rgba(0,0,0,0.5) !important;
+  backdrop-filter: blur(2px);
+  z-index: 0 !important;
+}
 
+/* The actual panel is centered via transform */
+#confirmEmailModal .modal__panel {
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  margin: 0 !important;
+  width: min(680px, 96vw) !important;
+  max-height: 90vh !important;
+  overflow: auto !important;
+  background: #111 !important;
+  color: #e6ffff !important;
+  border: 1px solid rgba(0,255,255,0.2) !important;
+  border-radius: 14px !important;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5) !important;
+  z-index: 1 !important;
+  padding: 0 !important;
+}
 
-
-
-
+/* Scoped cosmetics for header/body/footer */
+#confirmEmailModal .modal__header,
+#confirmEmailModal .modal__footer {
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+#confirmEmailModal .modal__header { border-bottom: 1px solid rgba(0,255,255,0.12); }
+#confirmEmailModal .modal__body { padding: 16px; }
+#confirmEmailModal .modal__close {
+  background: transparent; border: none; color: #00ffff; font-size: 20px; cursor: pointer;
+}
+#confirmEmailModal .form__label { display:block; font-size:13px; opacity:.8; margin-bottom:6px; }
+#confirmEmailModal .form__input, #confirmEmailModal .form__textarea {
+  width:100%; background:#0b0b0b; color:#e6ffff; border:1px solid rgba(0,255,255,0.18);
+  border-radius:10px; padding:10px 12px; outline:none;
+}
+#confirmEmailModal .form__input:focus, #confirmEmailModal .form__textarea:focus {
+  border-color:#00ffff; box-shadow:0 0 0 2px rgba(0,255,255,0.15);
+}
+#confirmEmailModal .btn { padding:10px 14px; border-radius:10px; border:1px solid transparent; cursor:pointer; }
+#confirmEmailModal .btn--ghost { background:transparent; color:#e6ffff; border-color:rgba(0,255,255,0.25); }
+#confirmEmailModal .btn--primary { background:#00ffff; color:#001b1b; font-weight:600; }
