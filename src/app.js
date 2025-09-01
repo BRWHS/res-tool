@@ -3364,7 +3364,7 @@ async function loadDailyPricesWindow(startISO, endISO, hotelCodeOrAll='all'){
 
   // 1) Kandidaten-Reservierungen, die das Fenster berühren
   let q = supabase.from('reservations')
-    .select('id,hotel_code,arrival,departure,status,rate_price,price_plan,daily_prices')
+    .select('id,hotel_code,arrival,departure,status,rate_price,priceplan')
     .neq('status','canceled')
     .lte('arrival', endISO)
     .gte('departure', startISO);
@@ -3372,7 +3372,7 @@ async function loadDailyPricesWindow(startISO, endISO, hotelCodeOrAll='all'){
 
   // zusätzlich offene Departures zulassen
   let qOpen = supabase.from('reservations')
-    .select('id,hotel_code,arrival,departure,status,rate_price,price_plan,daily_prices')
+    .select('id,hotel_code,arrival,departure,status,rate_price,priceplan')
     .neq('status','canceled')
     .lte('arrival', endISO)
     .is('departure', null);
@@ -3419,10 +3419,11 @@ async function loadDailyPricesWindow(startISO, endISO, hotelCodeOrAll='all'){
 
     bookingsCount++;
 
-    // Quellen 2: am Objekt gespeicherte Daily Prices?
-    const objPlan = Array.isArray(r.price_plan) ? r.price_plan
-                   : Array.isArray(r.daily_prices) ? r.daily_prices
-                   : null; // erwartet [{date:'YYYY-MM-DD',price:Number},...]
+    // neu (unterstützt r.priceplan UND die alten Keys als Fallback)
+const objPlan = Array.isArray(r.priceplan)     ? r.priceplan
+             : Array.isArray(r.price_plan)     ? r.price_plan
+             : Array.isArray(r.daily_prices)   ? r.daily_prices
+             : null;
 
     const dates = [];
     for (let d=new Date(ovStart); d<ovEndEx; d.setDate(d.getDate()+1)){
@@ -3438,7 +3439,12 @@ async function loadDailyPricesWindow(startISO, endISO, hotelCodeOrAll='all'){
 
       // Falls kein Override: Objekt-Plan
       if (price==null && objPlan){
-        const f = objPlan.find(p=>p.date===date);
+        const f = objPlan.find(p =>
+  (p.incl !== false) && (
+    (p.from && p.from === date) ||           // dein Nacht-Objekt
+    (p.date && p.date === date)              // evtl. altes Format
+  )
+);
         if (f) price = Number(f.price)||0;
       }
 
