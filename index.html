@@ -116,7 +116,10 @@
               <input id="filterFrom" type="date" class="input" style="width:170px;" />
               <input id="filterTo"   type="date" class="input" style="width:170px;" />
               <button class="btn" id="btnRefresh">Refresh</button>
-            </div>
+            
+<button class="btn ghost" id="btnClearFilters" title="Filter zurücksetzen">Reset</button>
+<button class="btn ghost" id="resExportCsv" title="Tabelle als CSV exportieren">Export CSV</button>
+</div>
           </div>
 
           <div class="table-wrap">
@@ -1134,12 +1137,13 @@
     </div>
 
     <div class="modal__footer">
-      <button class="btn btn--ghost" data-close="confirmEmailModal">Abbrechen</button>
+      <div style="margin-right:auto; display:flex; gap:8px;"><button class="btn btn--ghost" id="btnCopyEmail" type="button" title="E-Mail kopieren">E-Mail kopieren</button><button class="btn btn--ghost" id="btnCopyConfirmation" type="button" title="Text kopieren">Text kopieren</button></div><button class="btn btn--ghost" data-close="confirmEmailModal">Abbrechen</button>
       <button id="btnSendConfirmationNow" class="btn btn--primary">Reservierungsbestätigung versenden</button>
     </div>
   </div>
 </div>
 
 
+  <div id="appToast" class="toast hidden" role="status" aria-live="polite"></div>
 </body>
 </html>
