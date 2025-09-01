@@ -868,3 +868,26 @@ html.modal-open { overflow: hidden; }
 #confirmEmailModal .btn { padding:10px 14px; border-radius:10px; border:1px solid transparent; cursor:pointer; }
 #confirmEmailModal .btn--ghost { background:transparent; color:#e6ffff; border-color:rgba(0,255,255,0.25); }
 #confirmEmailModal .btn--primary { background:#00ffff; color:#001b1b; font-weight:600; }
+
+
+/* Toast */
+.toast{
+  position: fixed;
+  left: 50%; top: 16px; transform: translateX(-50%);
+  background: rgba(0, 0, 0, .65);
+  color: var(--text);
+  border: 1px solid rgba(0,255,255,.3);
+  border-radius: 12px;
+  padding: 10px 14px;
+  z-index: 4000;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(4px);
+  pointer-events: none;
+  transition: opacity .2s ease, transform .2s ease;
+  opacity: 0;
+}
+.toast.show{
+  opacity: 1;
+  transform: translateX(-50%) translateY(4px);
+}
+.toast.hidden{ display:none; }
