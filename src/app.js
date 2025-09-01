@@ -213,6 +213,7 @@ const euro = v=>{
     useGrouping: true
   }).format(Number(v));
 };
+
   const pct  = v=>v==null?'—%':`${v}%`;
   const soD = d=>{const x=new Date(d); x.setHours(0,0,0,0); return x;};
   const isoDate = d => d.toISOString().slice(0,10);
@@ -847,32 +848,33 @@ document.getElementById('rateCreateForm')?.addEventListener('submit', (e) => {
 }
       
 
-  /***** Performance — Nächste 7 Tage *****/
- async function loadKpisNext(){
+/***** Performance — Nächste 7 Tage *****/
+async function loadKpisNext(){
   try {
-    const code = q('#kpiFilterNext')?.value || 'all';
-    const hotel = code!=='all' ? HOTELS.find(h=>h.code===code) : null;
+    const code  = q('#kpiFilterNext')?.value || 'all';
+    const hotel = code !== 'all' ? HOTELS.find(h=>h.code===code) : null;
 
     const today = soD(new Date());
-    const start = new Date(today); start.setDate(start.getDate()+1);
-    const end   = new Date(today); end.setDate(end.getDate()+7);
+    const start = new Date(today); start.setDate(start.getDate()+1); // +1 = morgen
+    const end   = new Date(today); end.setDate(end.getDate()+7);     // +7
 
-    // (optional) KW-Label
+    // KW-Label (optional)
     const kwFrom = isoWeek(start);
     const kwTo   = isoWeek(end);
     const kwNode = q('#kwLabel');
     if (kwNode) kwNode.textContent = kwFrom===kwTo ? `(KW ${kwFrom})` : `(KW ${kwFrom}–${kwTo})`;
 
-    const startDate = isoDate(start);
-    const endDate   = isoDate(end);
-    const endPlus1  = new Date(end); endPlus1.setDate(endPlus1.getDate()+1);
+    const startDate = isoDate(start); // inkl.
+    const endDate   = isoDate(end);   // inkl.
+    const endPlus1  = new Date(end); endPlus1.setDate(endPlus1.getDate()+1); // exkl. Grenze
 
-    // Buchungen, die das Fenster +1..+7 mindestens 1 Nacht berühren
+    // 1) Kandidaten aus Supabase: irgend eine Überlappung mit +1..+7 (Departure offen zulassen)
     let qA = supabase.from('reservations')
       .select('id, rate_price, hotel_code, arrival, departure, status')
       .neq('status','canceled')
       .lte('arrival', endDate)
       .gte('departure', startDate);
+
     if (hotel) qA = qA.eq('hotel_code', hotel.code);
 
     let qB = supabase.from('reservations')
@@ -880,6 +882,7 @@ document.getElementById('rateCreateForm')?.addEventListener('submit', (e) => {
       .neq('status','canceled')
       .lte('arrival', endDate)
       .is('departure', null);
+
     if (hotel) qB = qB.eq('hotel_code', hotel.code);
 
     const [rA, rB] = await Promise.all([qA, qB]);
@@ -889,21 +892,21 @@ document.getElementById('rateCreateForm')?.addEventListener('submit', (e) => {
     (rB.data||[]).forEach(x => byId.set(x.id, x));
     const rows = Array.from(byId.values());
 
+    // 2) Harte Überlappungsprüfung + Umsatz = Rate × Nächte im Fenster
     const DAY = 86400000;
     let totalRevenue = 0;
 
-    // Umsatz über alle Überlappungsnächte im Fenster
     rows.forEach(r=>{
       const arr = soD(new Date(r.arrival));
-      const dep = r.departure ? soD(new Date(r.departure)) : null; // checkout (exklusiv)
-      const stayEndExcl = dep ? dep : endPlus1; // open-ended: bis Zeitraum-Ende
+      const dep = r.departure ? soD(new Date(r.departure)) : null; // checkout (exkl.)
+      const stayEndExcl = dep ? dep : endPlus1;                    // open-ended → bis Fensterende
       const overlapStart   = new Date(Math.max(arr.getTime(), start.getTime()));
       const overlapEndExcl = new Date(Math.min(stayEndExcl.getTime(), endPlus1.getTime()));
       const nights = Math.max(0, Math.round((overlapEndExcl - overlapStart)/DAY));
       if (nights > 0) totalRevenue += Number(r.rate_price || 0) * nights;
     });
 
-    // ADR (Woche) = Umsatz / Anzahl Buchungen mit ≥1 Nacht im Fenster (nicht / Nächte)
+    // 3) ADR (WDR) = Umsatz / Anzahl Buchungen mit mind. 1 Nacht im Fenster (nicht / Nächte)
     const bookingsInWindow = rows.filter(r=>{
       const arr = soD(new Date(r.arrival));
       const dep = r.departure ? soD(new Date(r.departure)) : null;
@@ -916,27 +919,39 @@ document.getElementById('rateCreateForm')?.addEventListener('submit', (e) => {
 
     const adr = bookingsInWindow ? Math.round((totalRevenue/bookingsInWindow)*100)/100 : null;
 
-    // Ø Auslastung im Zeitraum
+    // 4) Ø-Auslastung im Zeitraum
     let nOcc = null;
     if (hotel){
       const r = await supabase.from('availability').select('capacity,booked')
-        .eq('hotel_code', hotel.code).gte('date', startDate).lte('date', endDate);
+        .eq('hotel_code', hotel.code)
+        .gte('date', startDate).lte('date', endDate);
       if (!r.error && r.data?.length){
-        const avg = r.data.reduce((s,a)=> s + Math.min(100, Math.round((Number(a.booked||0)/Math.max(1,Number(a.capacity||0)))*100)), 0)/r.data.length;
+        const avg = r.data.reduce((s,a)=>{
+          const cap = Math.max(1, Number(a.capacity||0));
+          const bok = Math.max(0, Number(a.booked||0));
+          return s + Math.min(100, Math.round((bok/cap)*100));
+        }, 0) / r.data.length;
         nOcc = Math.round(avg);
       }
     } else {
       const r = await supabase.from('availability').select('capacity,booked')
         .gte('date', startDate).lte('date', endDate);
       if (!r.error && r.data?.length){
-        const avg = r.data.reduce((s,a)=> s + Math.min(100, Math.round((Number(a.booked||0)/Math.max(1,Number(a.capacity||0)))*100)), 0)/r.data.length;
+        const avg = r.data.reduce((s,a)=>{
+          const cap = Math.max(1, Number(a.capacity||0));
+          const bok = Math.max(0, Number(a.booked||0));
+          return s + Math.min(100, Math.round((bok/cap)*100));
+        }, 0) / r.data.length;
         nOcc = Math.round(avg);
       }
     }
 
+    // 5) Render
     q('#nRevenue') && (q('#nRevenue').textContent = euro(totalRevenue));
+    console.debug('[KPI+7] bookings, revenue €:', bookingsInWindow, totalRevenue);
     q('#nADR')     && (q('#nADR').textContent     = euro(adr));
     q('#nOcc')     && (q('#nOcc').textContent     = pct(nOcc));
+
   } catch (err) {
     console.error('loadKpisNext fatal', err);
     q('#nRevenue') && (q('#nRevenue').textContent  = '— €');
@@ -944,6 +959,7 @@ document.getElementById('rateCreateForm')?.addEventListener('submit', (e) => {
     q('#nOcc')     && (q('#nOcc').textContent      = '—%');
   }
 }
+
 
   /***** Reservierungsliste (+ Statuslogik) *****/
   let page=1, pageSize=50, search='', fHotel='all', fResNo='', fFrom=null, fTo=null, fStatus='active';
