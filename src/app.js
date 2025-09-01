@@ -132,6 +132,135 @@ window.addEventListener('keydown', (e)=>{ if (e.key === 'Escape') window.closeMo
   const SB_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt5dHVpb2RvamZjYWdna3ZpenRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ4MzA0NjgsImV4cCI6MjA3MDQwNjQ2OH0.YobQZnCQ7LihWtewynoCJ6ZTjqetkGwh82Nd2mmmhLU";
   const supabase = window.supabase.createClient(SB_URL, SB_ANON_KEY);
 
+  // ===== Confirmation: Templates & Modal Control =====
+
+// Optional: hotel-spezifische Templates (später pflegen)
+const confirmationTemplatesByHotel = {
+  // Beispiel:
+  // 'MA7-M-DOR': {
+  //   subject: ({hotel}) => `Ihre Buchungsbestätigung – ${hotel.display_name || hotel.name || 'Ihr Hotel'}`,
+  //   body: ({guest,res,hotel}) => `Hallo ${[guest.first_name, guest.last_name].filter(Boolean).join(' ')||'Gäst*in'},\n\n...`
+  // }
+};
+
+function defaultConfirmationTemplate({ guest, res, hotel }) {
+  const name = [guest?.first_name, guest?.last_name].filter(Boolean).join(' ') || 'Gäst*in';
+  const arrival = res?.arrival || '';
+  const departure = res?.departure || '';
+  const hotelName = hotel?.display_name || hotel?.name || hotel?.hotel_name || 'Ihr Hotel';
+  const category = res?.category || res?.category_name || '';
+  const rate = res?.rate_name || '';
+  const total = (typeof res?.total === 'number') ? res.total.toFixed(2) + ' €' : '';
+  const resNo = res?.reservation_number || res?.id || '';
+
+  return {
+    subject: `Ihre Buchungsbestätigung – ${hotelName}`,
+    body:
+`Hallo ${name},
+
+vielen Dank für Ihre Reservierung im ${hotelName}.
+
+• Anreise: ${arrival}
+• Abreise: ${departure}
+${category ? `• Kategorie: ${category}\n` : ''}${rate ? `• Rate: ${rate}\n` : ''}${total ? `• Gesamtpreis: ${total}\n` : ''}${resNo ? `• Reservierungsnummer: ${resNo}\n` : ''}
+
+Bei Rückfragen sind wir gerne für Sie da.
+Herzliche Grüße
+${hotelName} Reservierung`
+  };
+}
+
+function buildConfirmationContent({ hotel, guest, res }) {
+  const key = hotel?.code || hotel?.hotel_code || hotel?.display_name || '';
+  const tpl = confirmationTemplatesByHotel[key];
+  if (tpl) {
+    const subject = typeof tpl.subject === 'function' ? tpl.subject({hotel, guest, res}) : tpl.subject;
+    const body = typeof tpl.body === 'function' ? tpl.body({hotel, guest, res}) : tpl.body;
+    return { subject, body };
+  }
+  return defaultConfirmationTemplate({ hotel, guest, res });
+}
+
+function openConfirmationModal(context) {
+  const modal = document.getElementById('confirmEmailModal');
+  if (!modal) return;
+  const { hotel, guest, res } = context || {};
+  const content = buildConfirmationContent({ hotel, guest, res });
+
+  const input = document.getElementById('confirmEmailTo');
+  const ta = document.getElementById('confirmEmailBody');
+
+  // Prefill E-Mail: beachtet dein Feld 'guest_email'
+  const guessedEmail =
+    res?.guest_email ||
+    guest?.email ||
+    document.querySelector('#step1 input[type="email"], input[name="email"], #guestEmail')?.value ||
+    '';
+
+  input.value = guessedEmail || '';
+  input.dataset.subject = content.subject || '';
+  ta.value = content.body || '';
+
+  modal.classList.remove('hidden');
+  modal.setAttribute('aria-hidden', 'false');
+}
+
+function closeConfirmationModal() {
+  const modal = document.getElementById('confirmEmailModal');
+  if (!modal) return;
+  modal.classList.add('hidden');
+  modal.setAttribute('aria-hidden', 'true');
+}
+
+// Close-Click
+document.addEventListener('click', (ev) => {
+  const t = ev.target;
+  if (t?.dataset?.close === 'confirmEmailModal' || t?.closest?.('[data-close="confirmEmailModal"]')) {
+    closeConfirmationModal();
+  }
+});
+
+// Versand-Hook (vorerst Mailto; später echte API)
+async function sendConfirmationEmail({ to, subject, body, context }) {
+  const mailto = `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  window.location.href = mailto;
+  await new Promise(r=>setTimeout(r,200)); // kurzer Tick für UX
+  return { ok: true };
+}
+
+// Button im Modal binden (einmalig)
+(function bindSendConfirmationNow(){
+  const btn = document.getElementById('btnSendConfirmationNow');
+  if (!btn || btn.__bound) return;
+  btn.__bound = true;
+
+  btn.addEventListener('click', async () => {
+    const to = document.getElementById('confirmEmailTo')?.value?.trim();
+    const body = document.getElementById('confirmEmailBody')?.value || '';
+    const subject = document.getElementById('confirmEmailTo')?.dataset?.subject || 'Ihre Buchungsbestätigung';
+    if (!to) { alert('Bitte eine gültige E-Mail eintragen.'); return; }
+    btn.disabled = true;
+    try{
+      const ctx = window.__lastReservationContext || {};
+      const res = await sendConfirmationEmail({ to, subject, body, context: ctx });
+      if (res?.ok){
+        alert('Bestätigung wurde versendet.');
+        closeConfirmationModal();
+        window.dispatchEvent(new Event('confirmation:sent'));
+      } else {
+        alert('Senden fehlgeschlagen. Bitte später erneut versuchen.');
+      }
+    }catch(e){
+      console.error(e);
+      alert('Senden fehlgeschlagen. Bitte später erneut versuchen.');
+    }finally{
+      btn.disabled = false;
+    }
+  });
+})();
+
+  
+
   /***** Bildquellen *****/
   const HOTEL_IMG_SRC  = "/assets/hotel-placeholder.png";
   const SKETCH_IMG_SRC = "/assets/sketch-placeholder.png";
@@ -1419,6 +1548,26 @@ if (allApply && !allApply.__bound){
       await loadReservations();
     });
 
+    // Aktionen-Tab: "Bestätigung erneut senden" anbinden
+(function bindResendConfirmation(){
+  const btn = document.getElementById('btnResendConfirmation');
+  if (!btn || btn.__bound) return;
+  btn.__bound = true;
+
+  btn.addEventListener('click', ()=>{
+    const hotel = { code: data.hotel_code, display_name: data.hotel_name };
+    const guest = {
+      first_name: data.guest_first_name,
+      last_name:  data.guest_last_name,
+      email:      data.guest_email
+    };
+    const res = data;
+    window.__lastReservationContext = { hotel, guest, res };
+    openConfirmationModal(window.__lastReservationContext);
+  });
+})();
+
+
     try { await renderPricePlan(data); } catch(e){ console.warn('Preisplan/UI', e); }
 
     // Details-Tab: Notizen & Gesamtpreis initialisieren/sperren
@@ -1729,12 +1878,31 @@ q('#btnNext')?.addEventListener('click', ()=>{
       catch(e){ logActivity('channel','push_fail', { err: String(e), res_no: payload.reservation_number }); }
     })();
 
-    // 5) UI refresh + Modal schließen
-    await autoRollPastToDone();
-    await loadKpisToday();
-    await loadKpisNext();
-    await loadReservations();
-    setTimeout(()=> closeModal('modalNew'), 700);
+    // 5) UI refresh
+await autoRollPastToDone();
+await loadKpisToday();
+await loadKpisNext();
+await loadReservations();
+
+// 6) Context für Bestätigungsmodal setzen (payload reicht hier)
+window.__lastReservationContext = {
+  hotel: { code: payload.hotel_code, display_name: payload.hotel_name },
+  guest: {
+    first_name: payload.guest_first_name,
+    last_name:  payload.guest_last_name,
+    email:      payload.guest_email
+  },
+  res: payload
+};
+
+// 7) Bestätigungs-Popup öffnen (Modal "Reservierungsbestätigung versenden")
+openConfirmationModal(window.__lastReservationContext);
+
+// Optional: New-Wizard erst nach Versand schließen (wenn du willst):
+// window.addEventListener('confirmation:sent', ()=> closeModal('modalNew'), { once:true });
+
+// Oder sofort schließen und Pop-up über der Seite zeigen:
+// closeModal('modalNew');
 
   } catch (err) {
     console.error('createReservation fatal', err);
