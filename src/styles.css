@@ -764,7 +764,39 @@ html.modal-open { overflow: hidden; }
 #confirmEmailModal .btn--ghost { background:transparent; color:#e6ffff; border-color:rgba(0,255,255,0.25); }
 #confirmEmailModal .btn--primary { background:#00ffff; color:#001b1b; font-weight:600; }
 
+/* === FINAL OVERRIDE: center the confirmation modal no matter what === */
+#confirmEmailModal.hidden { display: none !important; }
 
+#confirmEmailModal {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 1200 !important;
+  display: block !important;     /* Modal-Manager darf flex/block umschalten, uns egal */
+}
+
+#confirmEmailModal .modal__backdrop {
+  position: fixed !important;
+  inset: 0 !important;
+}
+
+#confirmEmailModal .modal__panel {
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  margin: 0 !important;
+
+  /* (Rest vom Look – falls woanders überschrieben wird) */
+  width: min(680px, 96vw) !important;
+  max-height: 90vh !important;
+  overflow: auto !important;
+  background: #111 !important;
+  color: #e6ffff !important;
+  border: 1px solid rgba(0,255,255,0.2) !important;
+  border-radius: 14px !important;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5) !important;
+  padding: 0 !important;
+}
 
 
 
