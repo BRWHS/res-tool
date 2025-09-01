@@ -1115,5 +1115,30 @@
   <!-- Build erwartet /src/app.js -->
   <script src="/src/app.js"></script>
 
+  <!-- Confirmations-Popup -->
+<div id="confirmEmailModal" class="modal hidden" aria-hidden="true">
+  <div class="modal__backdrop" data-close="confirmEmailModal"></div>
+  <div class="modal__panel">
+    <div class="modal__header">
+      <h3>Reservierungsbestätigung versenden</h3>
+      <button class="modal__close" data-close="confirmEmailModal" aria-label="Schließen">×</button>
+    </div>
+
+    <div class="modal__body">
+      <label class="form__label">Empfänger-E-Mail</label>
+      <input id="confirmEmailTo" type="email" class="form__input" placeholder="kunde@example.com" />
+
+      <label class="form__label" style="margin-top:12px;">Nachricht (bearbeitbar)</label>
+      <textarea id="confirmEmailBody" class="form__textarea" rows="8" placeholder="Ihre Buchungsbestätigung …"></textarea>
+    </div>
+
+    <div class="modal__footer">
+      <button class="btn btn--ghost" data-close="confirmEmailModal">Abbrechen</button>
+      <button id="btnSendConfirmationNow" class="btn btn--primary">Reservierungsbestätigung versenden</button>
+    </div>
+  </div>
+</div>
+
+
 </body>
 </html>
