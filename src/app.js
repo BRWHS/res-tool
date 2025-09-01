@@ -762,192 +762,188 @@ document.getElementById('rateCreateForm')?.addEventListener('submit', (e) => {
   }
   
   /***** Performance — Heute *****/
-  async function loadKpisToday(){
-    try {
-      const sel = q('#kpiFilterToday');
-      const code = sel ? sel.value : 'all';
-      const hotel = code !== 'all' ? HOTELS.find(h=>h.code===code) : null;
+ async function loadKpisToday(){
+  try {
+    const sel   = q('#kpiFilterToday');
+    const code  = sel ? sel.value : 'all';
+    const hotel = code !== 'all' ? HOTELS.find(h=>h.code===code) : null;
 
-      const today = soD(new Date());
-      const tDate = isoDate(today);              // 'YYYY-MM-DD'
-      const nowISO = new Date().toISOString();
-      const startISO = today.toISOString();
+    const today  = soD(new Date());
+    const tDate  = isoDate(today);              // 'YYYY-MM-DD'
+    const nowISO = new Date().toISOString();
+    const startISO = today.toISOString();
 
-      // (1) Buchungen heute (eingegangen)
-      let qb = supabase.from('reservations')
-        .select('id,created_at')
-        .gte('created_at', startISO)
-        .lte('created_at', nowISO);
-      if (hotel) qb = qb.eq('hotel_code', hotel.code);
-      const rB = await qb;
-      const bookingsToday = (rB.data || []).length;
+    // (1) Buchungen heute (eingegangen)
+    let qb = supabase.from('reservations')
+      .select('id,created_at')
+      .gte('created_at', startISO)
+      .lte('created_at', nowISO);
+    if (hotel) qb = qb.eq('hotel_code', hotel.code);
+    const rB = await qb;
+    const bookingsToday = (rB.data || []).length;
 
-      // (2) Heutige Aufenthalte (Nacht heute→morgen)
-      // A) arrival <= today AND departure >= today
-      let qA = supabase.from('reservations')
-        .select('id, rate_price, hotel_code, hotel_name, arrival, departure, status')
-        .lte('arrival', tDate)
-        .gte('departure', tDate)
-        .neq('status', 'canceled');
-      if (hotel) qA = qA.eq('hotel_code', hotel.code);
+    // (2) Heutige Aufenthalte (Nacht heute→morgen)
+    let qA = supabase.from('reservations')
+      .select('id, rate_price, hotel_code, hotel_name, arrival, departure, status')
+      .lte('arrival', tDate)
+      .gte('departure', tDate)
+      .neq('status', 'canceled');
+    if (hotel) qA = qA.eq('hotel_code', hotel.code);
 
-      // B arrival <= today AND departure IS NULL (open-ended)
-      let qB2 = supabase.from('reservations')
-        .select('id, rate_price, hotel_code, hotel_name, arrival, departure, status')
-        .lte('arrival', tDate)
-        .is('departure', null)
-        .neq('status', 'canceled');
-      if (hotel) qB2 = qB2.eq('hotel_code', hotel.code);
+    let qB2 = supabase.from('reservations')
+      .select('id, rate_price, hotel_code, hotel_name, arrival, departure, status')
+      .lte('arrival', tDate)
+      .is('departure', null)
+      .neq('status', 'canceled');
+    if (hotel) qB2 = qB2.eq('hotel_code', hotel.code);
 
-      const [rA, rBopen] = await Promise.all([qA, qB2]);
+    const [rA, rBopen] = await Promise.all([qA, qB2]);
 
-      const byId = new Map();
-      (rA.data||[]).forEach(x => byId.set(x.id, x));
-      (rBopen.data||[]).forEach(x => byId.set(x.id, x));
+    const byId = new Map();
+    (rA.data||[]).forEach(x => byId.set(x.id, x));
+    (rBopen.data||[]).forEach(x => byId.set(x.id, x));
 
-      const isActiveToday = (row) => {
-        const arr = row.arrival ? isoDate(new Date(row.arrival)) : null;
-        const depRaw = row.departure;
-        const dep = depRaw ? isoDate(new Date(depRaw)) : null;
-        const noDep = depRaw == null || depRaw === '' || dep === null;
-        const arrived = arr && arr <= tDate;
-        const notLeft = noDep || (dep && dep >= tDate);
-        const notCanceled = String(row.status||'').toLowerCase() !== 'canceled';
-        return arrived && notLeft && notCanceled;
-      };
-      const activeToday = Array.from(byId.values()).filter(isActiveToday);
+    const isActiveToday = (row) => {
+      const arr = row.arrival ? isoDate(new Date(row.arrival)) : null;
+      const depRaw = row.departure;
+      const dep = depRaw ? isoDate(new Date(depRaw)) : null;
+      const noDep = depRaw == null || depRaw === '' || dep === null;
+      const arrived = arr && arr <= tDate;
+      const notLeft = noDep || (dep && dep >= tDate);
+      const notCanceled = String(row.status||'').toLowerCase() !== 'canceled';
+      return arrived && notLeft && notCanceled;
+    };
+    const activeToday = Array.from(byId.values()).filter(isActiveToday);
 
-      // Umsatz = Summe der (pro-Nacht-)Rate der Buchungen, die die Nacht heute→morgen beinhalten
-      const revenue = activeToday.reduce((s,r)=> s + Number(r.rate_price||0), 0);
-      // ADR (heute) = Umsatz / Anzahl Buchungen, die die Nacht heute→morgen bleiben
-      const adr = activeToday.length ? Math.round((revenue/activeToday.length)*100)/100 : null;
+    // Umsatz = Summe der (pro-Nacht-)Rate der Buchungen, die die Nacht heute→morgen beinhalten
+    const revenue = activeToday.reduce((s,r)=> s + Number(r.rate_price||0), 0);
+    // ADR (heute) = Umsatz / Anzahl Buchungen, die die Nacht heute→morgen bleiben
+    const adr = activeToday.length ? Math.round((revenue/activeToday.length)*100)/100 : null;
 
-      // (3) Auslastung
-      let occ = null;
-      if (hotel){
-        const r = await supabase.from('availability').select('capacity,booked').eq('hotel_code', hotel.code).eq('date', tDate);
-        if (!r.error && r.data?.length){ const a = r.data[0]; occ = Math.round(Math.min(100, (Number(a.booked||0)/Math.max(1,Number(a.capacity||0)))*100)); }
-      } else {
-        const r = await supabase.from('availability').select('capacity,booked').eq('date', tDate);
-        if (!r.error && r.data?.length){
-          const avg = r.data.reduce((s,a)=> s + Math.min(100, Math.round((Number(a.booked||0)/Math.max(1,Number(a.capacity||0)))*100)), 0)/r.data.length;
-          occ = Math.round(avg);
-        }
+    // (3) Auslastung
+    let occ = null;
+    if (hotel){
+      const r = await supabase.from('availability').select('capacity,booked').eq('hotel_code', hotel.code).eq('date', tDate);
+      if (!r.error && r.data?.length){ const a = r.data[0]; occ = Math.round(Math.min(100, (Number(a.booked||0)/Math.max(1,Number(a.capacity||0)))*100)); }
+    } else {
+      const r = await supabase.from('availability').select('capacity,booked').eq('date', tDate);
+      if (!r.error && r.data?.length){
+        const avg = r.data.reduce((s,a)=> s + Math.min(100, Math.round((Number(a.booked||0)/Math.max(1,Number(a.capacity||0)))*100)), 0)/r.data.length;
+        occ = Math.round(avg);
       }
-
-      q('#tBookings') && (q('#tBookings').textContent = bookingsToday);
-      q('#tRevenue')  && (q('#tRevenue').textContent  = euro(revenue));
-      q('#tADR')      && (q('#tADR').textContent      = euro(adr));
-      q('#tOcc')      && (q('#tOcc').textContent      = pct(occ));
-    } catch (err) {
-      console.error('loadKpisToday fatal', err);
-      q('#tBookings') && (q('#tBookings').textContent = '—');
-      q('#tRevenue')  && (q('#tRevenue').textContent  = '— €');
-      q('#tADR')      && (q('#tADR').textContent      = '— €');
-      q('#tOcc')      && (q('#tOcc').textContent      = '—%');
     }
+
+    q('#tBookings') && (q('#tBookings').textContent = bookingsToday);
+    q('#tRevenue')  && (q('#tRevenue').textContent  = euro(revenue));
+    q('#tADR')      && (q('#tADR').textContent      = euro(adr));
+    q('#tOcc')      && (q('#tOcc').textContent      = pct(occ));
+  } catch (err) {
+    console.error('loadKpisToday fatal', err);
+    q('#tBookings') && (q('#tBookings').textContent = '—');
+    q('#tRevenue')  && (q('#tRevenue').textContent  = '— €');
+    q('#tADR')      && (q('#tADR').textContent      = '— €');
+    q('#tOcc')      && (q('#tOcc').textContent      = '—%');
   }
+}
+      
 
   /***** Performance — Nächste 7 Tage *****/
-  async function loadKpisNext(){
-    try {
-      const code = q('#kpiFilterNext')?.value || 'all';
-      const hotel = code!=='all' ? HOTELS.find(h=>h.code===code) : null;
+ async function loadKpisNext(){
+  try {
+    const code = q('#kpiFilterNext')?.value || 'all';
+    const hotel = code!=='all' ? HOTELS.find(h=>h.code===code) : null;
 
-      const today = soD(new Date());
-      const start = new Date(today); start.setDate(start.getDate()+1);
-      const end   = new Date(today); end.setDate(end.getDate()+7);
+    const today = soD(new Date());
+    const start = new Date(today); start.setDate(start.getDate()+1);
+    const end   = new Date(today); end.setDate(end.getDate()+7);
 
-      // KW-Label updaten (falls vorhanden)
-      const kwFrom = isoWeek(start);
-      const kwTo   = isoWeek(end);
-      const kwNode = q('#kwLabel');
-      if (kwNode) kwNode.textContent = kwFrom===kwTo ? `(KW ${kwFrom})` : `(KW ${kwFrom}–${kwTo})`;
+    // (optional) KW-Label
+    const kwFrom = isoWeek(start);
+    const kwTo   = isoWeek(end);
+    const kwNode = q('#kwLabel');
+    if (kwNode) kwNode.textContent = kwFrom===kwTo ? `(KW ${kwFrom})` : `(KW ${kwFrom}–${kwTo})`;
 
-      const startDate = isoDate(start);
-      const endDate   = isoDate(end);
-      const endPlus1  = new Date(end); endPlus1.setDate(endPlus1.getDate()+1);
+    const startDate = isoDate(start);
+    const endDate   = isoDate(end);
+    const endPlus1  = new Date(end); endPlus1.setDate(endPlus1.getDate()+1);
 
-      // Ohne "eq('departure','')" um 400er zu vermeiden
-      let qA = supabase.from('reservations')
-        .select('id, rate_price, hotel_code, arrival, departure, status')
-        .neq('status','canceled')
-        .lte('arrival', endDate)
-        .gte('departure', startDate);
-      if (hotel) qA = qA.eq('hotel_code', hotel.code);
+    // Buchungen, die das Fenster +1..+7 mindestens 1 Nacht berühren
+    let qA = supabase.from('reservations')
+      .select('id, rate_price, hotel_code, arrival, departure, status')
+      .neq('status','canceled')
+      .lte('arrival', endDate)
+      .gte('departure', startDate);
+    if (hotel) qA = qA.eq('hotel_code', hotel.code);
 
-      let qB = supabase.from('reservations')
-        .select('id, rate_price, hotel_code, arrival, departure, status')
-        .neq('status','canceled')
-        .lte('arrival', endDate)
-        .is('departure', null);
-      if (hotel) qB = qB.eq('hotel_code', hotel.code);
+    let qB = supabase.from('reservations')
+      .select('id, rate_price, hotel_code, arrival, departure, status')
+      .neq('status','canceled')
+      .lte('arrival', endDate)
+      .is('departure', null);
+    if (hotel) qB = qB.eq('hotel_code', hotel.code);
 
-      const [rA, rB] = await Promise.all([qA, qB]);
+    const [rA, rB] = await Promise.all([qA, qB]);
 
-      const byId = new Map();
-      (rA.data||[]).forEach(x => byId.set(x.id, x));
-      (rB.data||[]).forEach(x => byId.set(x.id, x));
-      const rows = Array.from(byId.values());
+    const byId = new Map();
+    (rA.data||[]).forEach(x => byId.set(x.id, x));
+    (rB.data||[]).forEach(x => byId.set(x.id, x));
+    const rows = Array.from(byId.values());
 
-      const DAY = 86400000;
-      let totalRevenue = 0, totalNights = 0;
+    const DAY = 86400000;
+    let totalRevenue = 0;
 
-      rows.forEach(r=>{
-        const arr = soD(new Date(r.arrival));
-        const dep = r.departure ? soD(new Date(r.departure)) : null; // checkout (exklusiv)
-        const stayEndExcl = dep ? dep : endPlus1; // open-ended: bis Zeitraum-Ende
-        const overlapStart = new Date(Math.max(arr.getTime(), start.getTime()));
-        const overlapEndExcl = new Date(Math.min(stayEndExcl.getTime(), endPlus1.getTime()));
-        const nights = Math.max(0, Math.round((overlapEndExcl - overlapStart)/DAY));
-        if (nights > 0) {
-          totalNights += nights;
-          totalRevenue += Number(r.rate_price || 0) * nights;
-        }
-      });
+    // Umsatz über alle Überlappungsnächte im Fenster
+    rows.forEach(r=>{
+      const arr = soD(new Date(r.arrival));
+      const dep = r.departure ? soD(new Date(r.departure)) : null; // checkout (exklusiv)
+      const stayEndExcl = dep ? dep : endPlus1; // open-ended: bis Zeitraum-Ende
+      const overlapStart   = new Date(Math.max(arr.getTime(), start.getTime()));
+      const overlapEndExcl = new Date(Math.min(stayEndExcl.getTime(), endPlus1.getTime()));
+      const nights = Math.max(0, Math.round((overlapEndExcl - overlapStart)/DAY));
+      if (nights > 0) totalRevenue += Number(r.rate_price || 0) * nights;
+    });
 
-      // Anzahl Buchungen mit mind. 1 Nacht im Fenster:
-      const bookingsInWindow = rows.filter(r=>{
-        const arr = soD(new Date(r.arrival));
-        const dep = r.departure ? soD(new Date(r.departure)) : null;
-        const stayEndExcl = dep ? dep : endPlus1;
-        const overlapStart = new Date(Math.max(arr.getTime(), start.getTime()));
-        const overlapEndExcl = new Date(Math.min(stayEndExcl.getTime(), endPlus1.getTime()));
-        const nights = Math.max(0, Math.round((overlapEndExcl - overlapStart)/DAY));
-        return nights > 0;
-      }).length;
+    // ADR (Woche) = Umsatz / Anzahl Buchungen mit ≥1 Nacht im Fenster (nicht / Nächte)
+    const bookingsInWindow = rows.filter(r=>{
+      const arr = soD(new Date(r.arrival));
+      const dep = r.departure ? soD(new Date(r.departure)) : null;
+      const stayEndExcl = dep ? dep : endPlus1;
+      const overlapStart   = new Date(Math.max(arr.getTime(), start.getTime()));
+      const overlapEndExcl = new Date(Math.min(stayEndExcl.getTime(), endPlus1.getTime()));
+      const nights = Math.max(0, Math.round((overlapEndExcl - overlapStart)/DAY));
+      return nights > 0;
+    }).length;
 
-      // ADR (Woche) = Umsatz / Buchungen (nicht / Nächte)
-      const adr = bookingsInWindow ? Math.round((totalRevenue/bookingsInWindow)*100)/100 : null;
+    const adr = bookingsInWindow ? Math.round((totalRevenue/bookingsInWindow)*100)/100 : null;
 
-      // Auslastung: Ø über Zeitraum
-      let nOcc = null;
-      if (hotel){
-        const r = await supabase.from('availability').select('capacity,booked')
-          .eq('hotel_code', hotel.code).gte('date', startDate).lte('date', endDate);
-        if (!r.error && r.data?.length){
-          const avg = r.data.reduce((s,a)=> s + Math.min(100, Math.round((Number(a.booked||0)/Math.max(1,Number(a.capacity||0)))*100)), 0)/r.data.length;
-          nOcc = Math.round(avg);
-        }
-      } else {
-        const r = await supabase.from('availability').select('capacity,booked')
-          .gte('date', startDate).lte('date', endDate);
-        if (!r.error && r.data?.length){
-          const avg = r.data.reduce((s,a)=> s + Math.min(100, Math.round((Number(a.booked||0)/Math.max(1,Number(a.capacity||0)))*100)), 0)/r.data.length;
-          nOcc = Math.round(avg);
-        }
+    // Ø Auslastung im Zeitraum
+    let nOcc = null;
+    if (hotel){
+      const r = await supabase.from('availability').select('capacity,booked')
+        .eq('hotel_code', hotel.code).gte('date', startDate).lte('date', endDate);
+      if (!r.error && r.data?.length){
+        const avg = r.data.reduce((s,a)=> s + Math.min(100, Math.round((Number(a.booked||0)/Math.max(1,Number(a.capacity||0)))*100)), 0)/r.data.length;
+        nOcc = Math.round(avg);
       }
-
-      q('#nRevenue') && (q('#nRevenue').textContent = euro(totalRevenue));
-      q('#nADR')     && (q('#nADR').textContent     = euro(adr));
-      q('#nOcc')     && (q('#nOcc').textContent     = pct(nOcc));
-    } catch (err) {
-      console.error('loadKpisNext fatal', err);
-      q('#nRevenue') && (q('#nRevenue').textContent  = '— €');
-      q('#nADR')     && (q('#nADR').textContent      = '— €');
-      q('#nOcc')     && (q('#nOcc').textContent      = '—%');
+    } else {
+      const r = await supabase.from('availability').select('capacity,booked')
+        .gte('date', startDate).lte('date', endDate);
+      if (!r.error && r.data?.length){
+        const avg = r.data.reduce((s,a)=> s + Math.min(100, Math.round((Number(a.booked||0)/Math.max(1,Number(a.capacity||0)))*100)), 0)/r.data.length;
+        nOcc = Math.round(avg);
+      }
     }
+
+    q('#nRevenue') && (q('#nRevenue').textContent = euro(totalRevenue));
+    q('#nADR')     && (q('#nADR').textContent     = euro(adr));
+    q('#nOcc')     && (q('#nOcc').textContent     = pct(nOcc));
+  } catch (err) {
+    console.error('loadKpisNext fatal', err);
+    q('#nRevenue') && (q('#nRevenue').textContent  = '— €');
+    q('#nADR')     && (q('#nADR').textContent      = '— €');
+    q('#nOcc')     && (q('#nOcc').textContent      = '—%');
   }
+}
 
   /***** Reservierungsliste (+ Statuslogik) *****/
   let page=1, pageSize=50, search='', fHotel='all', fResNo='', fFrom=null, fTo=null, fStatus='active';
