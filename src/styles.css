@@ -692,6 +692,30 @@ html.modal-open { overflow: hidden; }
   overflow: visible;
   max-width: none;
 }
+/* --- Confirmation Modal (lean) --- */
+.modal.hidden { display:none; }
+.modal { position:fixed; inset:0; z-index:9999; }
+.modal__backdrop { position:absolute; inset:0; backdrop-filter: blur(2px); background: rgba(0,0,0,0.5); }
+.modal__panel {
+  position:relative; z-index:1; margin:6vh auto; max-width:680px;
+  background:#111; color:#e6ffff; border:1px solid rgba(0,255,255,0.2);
+  border-radius:14px; box-shadow:0 10px 30px rgba(0,0,0,0.5); padding:0;
+}
+.modal__header, .modal__footer { padding:14px 16px; display:flex; align-items:center; justify-content:space-between; }
+.modal__header { border-bottom:1px solid rgba(0,255,255,0.12); }
+.modal__body { padding:16px; }
+.modal__close { background:transparent; border:none; color:#00ffff; font-size:20px; cursor:pointer; }
+.form__label { display:block; font-size:13px; opacity:.8; margin-bottom:6px; }
+.form__input, .form__textarea {
+  width:100%; background:#0b0b0b; color:#e6ffff; border:1px solid rgba(0,255,255,0.18);
+  border-radius:10px; padding:10px 12px; outline:none;
+}
+.form__input:focus, .form__textarea:focus { border-color:#00ffff; box-shadow:0 0 0 2px rgba(0,255,255,0.15); }
+.btn { padding:10px 14px; border-radius:10px; border:1px solid transparent; cursor:pointer; }
+.btn--ghost { background:transparent; color:#e6ffff; border-color:rgba(0,255,255,0.25); }
+.btn--primary { background:#00ffff; color:#001b1b; font-weight:600; 
+}
+
 
 
 
