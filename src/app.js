@@ -220,11 +220,11 @@ document.addEventListener('click', (ev) => {
   }
 });
 
-// Versand-Hook (vorerst Mailto; später echte API)
+// Quick-Win: nutzt den lokalen Mail-Client
 async function sendConfirmationEmail({ to, subject, body, context }) {
   const mailto = `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   window.location.href = mailto;
-  await new Promise(r=>setTimeout(r,200)); // kurzer Tick für UX
+  await new Promise(r=>setTimeout(r,200));
   return { ok: true };
 }
 
