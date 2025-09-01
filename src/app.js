@@ -766,7 +766,7 @@ document.getElementById('rateCreateForm')?.addEventListener('submit', (e) => {
 async function loadKpisToday(){
   try{
     const codeSel = q('#kpiFilterToday')?.value || 'all';
-    const todayISO = new Date().toISOString().slice(0,10);
+    const todayISO = isoDateLocal(soD(new Date()));
 
     // Buchungen (eingegangen) heute wie gehabt
     const startISO = new Date(new Date().setHours(0,0,0,0)).toISOString();
@@ -818,11 +818,12 @@ async function loadKpisNext(){
   try{
     const codeSel = q('#kpiFilterNext')?.value || 'all';
 
-    const today  = new Date();
-    const start  = new Date(today.getFullYear(), today.getMonth(), today.getDate()+1);
-    const end    = new Date(today.getFullYear(), today.getMonth(), today.getDate()+7);
-    const startISO = start.toISOString().slice(0,10);
-    const endISO   = end.toISOString().slice(0,10);
+    const today = soD(new Date());                 // 00:00 lokal
+    const start = new Date(today); start.setDate(start.getDate() + 1);
+    const end   = new Date(today); end.setDate(end.getDate() + 7);
+    const startISO = isoDateLocal(start);
+    const endISO   = isoDateLocal(end);
+
 
     // KW-Label (wenn vorhanden)
     const kwFrom = isoWeek(start), kwTo = isoWeek(end);
@@ -3427,7 +3428,7 @@ const objPlan = Array.isArray(r.priceplan)     ? r.priceplan
 
     const dates = [];
     for (let d=new Date(ovStart); d<ovEndEx; d.setDate(d.getDate()+1)){
-      dates.push(d.toISOString().slice(0,10));
+      dates.push(isoDateLocal(d));
     }
 
     dates.forEach(date=>{
