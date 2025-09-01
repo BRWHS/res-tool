@@ -220,11 +220,11 @@ document.addEventListener('click', (ev) => {
   }
 });
 
-// Quick-Win: nutzt den lokalen Mail-Client
+// Versand-Hook (vorerst Mailto; später echte API)
 async function sendConfirmationEmail({ to, subject, body, context }) {
   const mailto = `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   window.location.href = mailto;
-  await new Promise(r=>setTimeout(r,200));
+  await new Promise(r=>setTimeout(r,200)); // kurzer Tick für UX
   return { ok: true };
 }
 
@@ -3993,5 +3993,131 @@ window.invalidateKpis = function(){
 
 // Globaler Listener: jedes Preisplan-Save feuert dieses Event
 window.addEventListener('priceplan:saved', ()=> window.invalidateKpis());
+})();
+
+
+
+// ===== Small UI helpers =====
+function showToast(msg, ms=1800){
+  const el = document.getElementById('appToast');
+  if (!el) { alert(msg); return; }
+  el.textContent = msg;
+  el.classList.remove('hidden');
+  el.classList.add('show');
+  clearTimeout(el.__t);
+  el.__t = setTimeout(()=>{
+    el.classList.remove('show');
+    setTimeout(()=>{ el.classList.add('hidden'); }, 200);
+  }, ms);
+}
+async function copyToClipboard(txt){
+  try { await navigator.clipboard.writeText(txt); showToast('Kopiert.'); }
+  catch(e){ console.warn('Clipboard',e); showToast('Konnte nicht kopieren'); }
+}
+
+
+(function enhanceReservationList(){
+  const STORAGE_KEY = 'resTool.filters.v2';
+  const get = sel => document.querySelector(sel);
+  const saveFilters = () => {
+    const data = {
+      q:  get('#searchInput')?.value || '',
+      h:  get('#filterHotel')?.value || '',
+      s:  get('#filterStatus')?.value || '',
+      rn: get('#filterResNo')?.value || '',
+      f:  get('#filterFrom')?.value || '',
+      t:  get('#filterTo')?.value || ''
+    };
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e){}
+  };
+  const loadFilters = () => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      const d = JSON.parse(raw);
+      if (get('#searchInput'))   get('#searchInput').value = d.q || '';
+      if (get('#filterHotel'))   get('#filterHotel').value = d.h || '';
+      if (get('#filterStatus'))  get('#filterStatus').value = d.s || 'active';
+      if (get('#filterResNo'))   get('#filterResNo').value = d.rn || '';
+      if (get('#filterFrom'))    get('#filterFrom').value = d.f || '';
+      if (get('#filterTo'))      get('#filterTo').value = d.t || '';
+    } catch(e){}
+  };
+
+  document.addEventListener('DOMContentLoaded', loadFilters);
+  const debLoad = debounce(()=> { saveFilters(); try{ loadReservations && loadReservations(); }catch(e){} }, 350);
+
+  ['#searchInput','#filterHotel','#filterStatus','#filterResNo','#filterFrom','#filterTo'].forEach(sel => {
+    const el = get(sel); if (!el) return;
+    const ev = (el.tagName === 'SELECT' || el.type === 'date') ? 'change' : 'input';
+    el.addEventListener(ev, debLoad);
+  });
+
+  get('#btnClearFilters')?.addEventListener('click', () => {
+    ['#searchInput','#filterHotel','#filterStatus','#filterResNo','#filterFrom','#filterTo'].forEach(sel => {
+      const el = get(sel); if (!el) return;
+      if (el.tagName === 'SELECT') { el.selectedIndex = 0; }
+      else el.value = '';
+    });
+    saveFilters();
+    try{ loadReservations && loadReservations(); }catch(e){}
+  });
+
+  get('#resExportCsv')?.addEventListener('click', () => {
+    const table = document.getElementById('resTable');
+    if (!table) { showToast('Keine Tabelle gefunden'); return; }
+    const rows = Array.from(table.querySelectorAll('tr'));
+    const csv = rows.map(tr => Array.from(tr.children).map(td => {
+      let t = td.textContent.replace(/\s+/g,' ').replace(/\n/g,' ').trim();
+      return '"' + t.replace(/"/g,'""') + '"';
+    }).join(',')).join('\n');
+    download('reservierungen.csv', 'text/csv;charset=utf-8', csv);
+    showToast('CSV exportiert');
+  });
+})();
+
+
+
+(function persistDock(){
+  const KEY='resTool.dock.collapsed';
+  const dock = document.querySelector('.analytics-dock');
+  const btn = document.getElementById('dockToggle');
+  if (!dock || !btn) return;
+  const apply = (v)=>{ dock.style.display = v ? 'none' : ''; btn.textContent = v ? '+' : '–'; };
+  try { apply(localStorage.getItem(KEY) === '1'); } catch(e){}
+  btn.addEventListener('click', ()=>{
+    const collapsed = dock.style.display !== 'none';
+    apply(collapsed);
+    try{ localStorage.setItem(KEY, collapsed ? '1':'0'); }catch(e){}
+  });
+})();
+
+
+
+(function enhanceConfirmModal(){
+  const byId = id => document.getElementById(id);
+  byId('btnCopyEmail')?.addEventListener('click', ()=>{
+    const v = byId('confirmEmailTo')?.value || '';
+    if (!v) return showToast('Keine E-Mail eingetragen');
+    copyToClipboard(v);
+  });
+  byId('btnCopyConfirmation')?.addEventListener('click', ()=>{
+    const v = byId('confirmEmailBody')?.value || '';
+    if (!v) return showToast('Kein Text vorhanden');
+    copyToClipboard(v);
+  });
+})();
+
+
+
+(function keyboardShortcuts(){
+  document.addEventListener('keydown', (e)=>{
+    if (e.target && (/INPUT|TEXTAREA|SELECT/).test(e.target.tagName)) return;
+    if (e.key === '/') {
+      const s = document.getElementById('searchInput'); if (s){ e.preventDefault(); s.focus(); }
+    } else if (e.key.toLowerCase() === 'n') {
+      const b = document.getElementById('btnNew'); if (b){ e.preventDefault(); b.click(); }
+    }
+  });
 })();
 
