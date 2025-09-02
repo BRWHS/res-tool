@@ -669,8 +669,6 @@
       <button class="btn tile" id="btnHelp">Hilfe & FAQ</button>
     </div>
   </div>
-<!-- Mount-Point: Benutzereinstellungen -->
-<div id="usersTabMount" style="margin-top:12px;"></div>
 
   <!-- RECHTER BLOCK: Live-Systeminfo (kleiner, transparenter) -->
   <aside class="box set-sys" id="netBox">
@@ -980,7 +978,18 @@
 </section>
 
 
- 
+  <!-- Benutzereinstellungen -->
+  <section class="modal" id="modalUserPrefs" role="dialog" aria-labelledby="userPrefsTitle" aria-modal="true" aria-hidden="true">
+    <header>
+      <h3 id="userPrefsTitle" class="mono"><span class="set-logo" aria-hidden="true"></span> Benutzereinstellungen</h3>
+      <button class="btn" data-close>Schließen</button>
+    </header>
+    <div class="body">
+      <div class="box">
+        <p class="muted">Platzhalter für persönliche Einstellungen (z. B. Standardhotel, Standardzeitraum, Shortcuts …).</p>
+      </div>
+    </div>
+  </section>
 
 
 <!-- Rateneinstellungen (nur Verwaltung/Liste – ohne "Neue Rate") -->
