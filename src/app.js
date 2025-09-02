@@ -1399,6 +1399,15 @@ if (allApply && !allApply.__bound){
   };
 })();
 
+  // Sprache beim Start anwenden (falls i18n geladen)
+try {
+  const lang = (localStorage.getItem('resTool.lang') || 'de');
+  if (window.resToolI18n) window.resToolI18n.apply(lang);
+  const sel = document.getElementById('selLang');
+  if (sel) sel.value = lang;
+} catch (e) {}
+
+
 
   // Kartenklicks nur im Trim-Modus
   list.addEventListener('click', (e)=>{
