@@ -3039,73 +3039,10 @@ function renderLogTable(rows){
     setTxt('netOs', `${os} / ${browser}`);
   }catch{ setTxt('netOs','—'); }
 
-  (function(){
-  function setTxt(id, val){ const el = document.getElementById(id); if (el) el.textContent = val ?? '—'; }
+  // Öffentliche IP (IPv6/IPv4) & IPv4 separat
+  try{ const r = await fetch('https://api64.ipify.org?format=json',{cache:'no-store'}); const j = await r.json(); setTxt('netIp', j.ip); }catch{ setTxt('netIp','—'); }
+  try{ const r = await fetch('https://api4.ipify.org?format=json',{cache:'no-store'});  const j = await r.json(); setTxt('netIpv4', j.ip);}catch{ setTxt('netIpv4','—'); }
 
-  async function getPublicIP(){
-    try {
-      const r = await fetch('https://api.ipify.org?format=json', {cache:'no-store'});
-      if (r.ok){ const d = await r.json(); return d.ip; }
-    } catch(e){}
-    try {
-      const r = await fetch('https://api64.ipify.org?format=json', {cache:'no-store'});
-      if (r.ok){ const d = await r.json(); return d.ip; }
-    } catch(e){}
-    return null;
-  }
-
-  function getPrivateIPv4(timeoutMs=2200){
-    return new Promise(resolve=>{
-      const ips = new Set();
-      const isV4 = ip => /^\d{1,3}(\.\d{1,3}){3}$/.test(ip);
-      const isPrivate = ip =>
-        /^10\./.test(ip) ||
-        /^192\.168\./.test(ip) ||
-        /^172\.(1[6-9]|2\d|3[0-1])\./.test(ip);
-
-      let done = false;
-      const finish = () => { if (done) return; done = true;
-        const priv = [...ips].find(isPrivate) || null;
-        resolve(priv);
-      };
-
-      const pcs = [
-        new RTCPeerConnection({ iceServers: [] }),
-        new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] })
-      ];
-
-      pcs.forEach(pc=>{
-        try{ pc.createDataChannel('x'); }catch{}
-        pc.onicecandidate = e=>{
-          const c = e.candidate && e.candidate.candidate;
-          if (!c) return;
-          const parts = c.split(' ');
-          const ip = parts[4];
-          if (ip && isV4(ip)) ips.add(ip);
-        };
-        pc.createOffer().then(o=>pc.setLocalDescription(o)).catch(()=>{});
-      });
-
-      setTimeout(()=>{ pcs.forEach(pc=>{ try{pc.close();}catch{} }); finish(); }, timeoutMs);
-    });
-  }
-
-  async function init(){
-    const [pub, lanPriv] = await Promise.all([getPublicIP(), getPrivateIPv4()]);
-    setTxt('netIp', pub || '—');
-
-    // Only display a local IPv4 if it's private (LAN). Otherwise mask.
-    if (lanPriv) {
-      setTxt('netIpv4', lanPriv);
-    } else {
-      setTxt('netIpv4', '— (maskiert)');
-    }
-  }
-
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
-  else init();
-})();
-    
   // Grober Standort per IP (nur Anzeige, kein Storage)
   try{
     const r = await fetch('https://ipapi.co/json/',{cache:'no-store'});
@@ -4170,6 +4107,8 @@ async function copyToClipboard(txt){
     copyToClipboard(v);
   });
 })();
+
+
 
 (function keyboardShortcuts(){
   document.addEventListener('keydown', (e)=>{
