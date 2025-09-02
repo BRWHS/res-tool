@@ -1,5 +1,4 @@
-<!-- /src/i18n.js -->
-<script>
+
 // ===== Light i18n engine for res-tool =====
 (function(){
   const LS_KEY = 'resTool.lang';
@@ -453,4 +452,4 @@
     initI18n();
   }
 })();
-</script>
+
