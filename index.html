@@ -640,15 +640,13 @@
       <!-- oben: links Form / rechts Live-Systeminfo -->
      <div class="set-top">
   <!-- LINKER BLOCK: Sprache/Farbton + Buttons -->
-  <div class="set-left">
-    <div class="set-grid">
-      <label class="set-field">
-        <span class="set-label">Sprache</span>
-        <select id="selLang" class="input theme-select">
-          <option value="de">Deutsch</option>
-          <option value="en">English</option>
-        </select>
-      </label>
+  <label class="set-field">
+  <span class="set-label">Sprache</span>
+  <select id="selLang">
+    <option value="de">Deutsch</option>
+    <option value="en">English</option>
+  </select>
+</label>
 
       <label class="set-field">
         <span class="set-label">Farbton (Hue) <span id="hueVal" class="muted">180°</span></span>
@@ -1119,6 +1117,49 @@
   <!-- Build erwartet /src/app.js -->
   <script src="/src/app.js"></script>
   <script src="/src/i18n.js"></script>
+  <script>
+(function(){
+  function bindLangSelect(){
+    // akzeptiert diverse Selektoren – falls #selLang fehlt
+    const sel = document.querySelector('#selLang, [data-role="lang-select"], #language, #lang, select[name="language"]');
+    if (!sel || sel.__i18nBound) return;
+    sel.__i18nBound = true;
+
+    // Initialwert aus LocalStorage widerspiegeln
+    try {
+      const cur = (localStorage.getItem('resTool.lang') || 'de');
+      if (sel.value !== cur) sel.value = cur;
+    } catch(e){}
+
+    sel.addEventListener('change', e=>{
+      const v = (e.target.value || '').toLowerCase().startsWith('en') ? 'en' : 'de';
+      if (window.resToolI18n){
+        window.resToolI18n.setLang(v);
+        window.resToolI18n.apply(v);
+      }
+    });
+  }
+
+  function applyOnLoad(){
+    // Beim Laden einmal anwenden
+    try{
+      const v = (localStorage.getItem('resTool.lang') || 'de');
+      if (window.resToolI18n) {
+        window.resToolI18n.setLang(v);
+        window.resToolI18n.apply(v);
+      }
+    }catch(e){}
+  }
+
+  if (document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', ()=>{ bindLangSelect(); applyOnLoad(); });
+  } else {
+    bindLangSelect(); applyOnLoad();
+  }
+})();
+</script>
+
+  <script>try{window.resToolI18n && window.resToolI18n.apply(localStorage.getItem('resTool.lang')||'de');}catch(e){}</script>
 
   <!-- Confirmations-Popup -->
 <div id="confirmEmailModal" class="modal hidden" aria-hidden="true">
@@ -1147,10 +1188,7 @@
 
   <div id="appToast" class="toast hidden" role="status" aria-live="polite"></div>
 
-  <!-- App-Logik -->
-  <script src="/src/app.js"></script>
-  <!-- Übersetzungen (DE/EN) – muss als eigene Datei eingebunden sein -->
-  <script src="/src/i18n.js"></script>
+
 
 </body>
 </html>
