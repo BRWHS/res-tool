@@ -1,0 +1,114 @@
+
+/* ==========================================================
+   RES-TOOL • LEVEL-UP THEME (drop-in, non-breaking)
+   Place AFTER your existing styles.css
+   ========================================================== */
+
+/* Tokens */
+:root{
+  --bg: #06090a;
+  --surface: #0b1113;
+  --surface-2: #0d1417;
+  --card: #0f171a;
+  --line: rgba(0,255,255,.18);
+  --line-soft: rgba(0,255,255,.10);
+  --text: #e6ffff;
+  --text-dim: rgba(230,255,255,.76);
+  --brand: #00ffff;
+  --ok: #2ecc71;
+  --warn: #ffb020;
+  --bad: #ff4d4f;
+  --shadow: 0 14px 38px rgba(0,0,0,.55);
+  --radius: 14px;
+  --radius-sm: 10px;
+}
+
+/* Page polish */
+body{ background: var(--bg); color: var(--text); }
+a{ color: var(--brand); }
+hr{ border-color: var(--line-soft); }
+
+/* Header glow */
+#appGlowBar{ position: fixed; inset:auto 0 0 0; height:2px; background:linear-gradient(90deg,transparent,var(--brand),transparent); box-shadow:0 0 16px var(--brand); z-index: 5; }
+
+/* Cards / panels */
+.card, .box, .kpi-card, .rates-main, .matrix, .table-wrap{
+  background: linear-gradient(180deg, var(--card), var(--surface-2));
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+.card .content, .rates-main .content{ padding: 14px; }
+
+/* KPI look */
+.kpi .value, .kpi-card .kpi-value{ font-weight: 700; letter-spacing: .2px; }
+.kpi .delta.ok, .kpi-card .kpi-delta.ok{ color: var(--ok); }
+.kpi .delta.bad, .kpi-card .kpi-delta.bad{ color: var(--bad); }
+
+/* Inputs & selects */
+.input, input, select, textarea{ background:#0a1012; color:var(--text); border:1px solid var(--line); border-radius: var(--radius-sm); }
+.input:focus, input:focus, select:focus, textarea:focus{ outline: none; box-shadow: 0 0 0 2px rgba(0,255,255,.18); border-color: var(--brand); }
+
+/* Buttons */
+.btn{ border-radius: var(--radius-sm); border:1px solid var(--line); transition: transform .05s ease, filter .12s ease; }
+.btn.primary, .btn--primary{ background: var(--brand); color:#001b1b; border-color: transparent; font-weight: 700; }
+.btn.ghost, .btn--ghost{ background: transparent; color: var(--text); border-color: var(--line); }
+.btn:hover{ filter: brightness(1.06); }
+.btn:active{ transform: translateY(1px); }
+
+/* Toolbars */
+.table-tools{ position: sticky; top: 0; background: rgba(8,12,13,.7); backdrop-filter: blur(8px); border-bottom:1px solid var(--line-soft); z-index: 20; }
+.table-tools .row{ gap: 10px; }
+
+/* Tables */
+.table, .table-wrap{ overflow:auto; }
+table{ width:100%; border-collapse: separate; border-spacing:0; }
+thead th{ position: sticky; top: 0; background: linear-gradient(180deg, rgba(0,0,0,.25), rgba(0,0,0,.05)); color: var(--text-dim); border-bottom:1px solid var(--line); text-transform: uppercase; font-size: 12px; letter-spacing: .3px; backdrop-filter: blur(4px); }
+tbody tr{ border-bottom: 1px solid var(--line-soft); }
+tbody tr:hover{ background: rgba(0,255,255,.04); }
+td{ padding: 12px 10px; }
+
+/* Sorting indicator */
+th.sortable{ cursor: pointer; user-select: none; }
+th.sortable .sort-ind{ opacity:.5; margin-left: 4px; }
+th.sortable.asc .sort-ind::after{ content: "▲"; }
+th.sortable.desc .sort-ind::after{ content: "▼"; }
+
+/* Pagination */
+.pagination{ display:flex; align-items:center; gap:10px; padding:10px; }
+.pagination .muted{ color: var(--text-dim); }
+
+/* Toast */
+.toast{ position: fixed; left: 50%; top: 16px; transform: translateX(-50%); background: rgba(0,0,0,.65); color: var(--text); border:1px solid rgba(0,255,255,.3); border-radius:12px; padding:10px 14px; z-index:4000; box-shadow: var(--shadow); backdrop-filter: blur(4px); pointer-events:none; transition: opacity .2s ease, transform .2s ease; opacity:0; }
+.toast.show{ opacity:1; transform: translateX(-50%) translateY(4px); }
+.toast.hidden{ display:none; }
+
+/* Analytics dock */
+.analytics-dock{ position: fixed; right:16px; bottom:16px; width: 360px; max-width: 92vw; border:1px solid var(--line); border-radius: var(--radius); background: var(--surface); box-shadow: var(--shadow); }
+.analytics-dock header{ display:flex; align-items:center; justify-content:space-between; padding: 8px 12px; border-bottom:1px solid var(--line-soft); color: var(--text-dim); }
+.analytics-dock .content{ padding: 10px 12px; }
+#dockToggle{ width:28px; height:28px; border-radius:8px; }
+
+/* Confirmation modal force-center (safe & scoped) */
+#confirmEmailModal.hidden{ display:none !important; }
+#confirmEmailModal.modal.open .modal__panel{
+  position: fixed !important; top:50% !important; left:50% !important; transform: translate(-50%,-50%) !important;
+  background: var(--card); color: var(--text); border:1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow);
+  width: min(680px, 96vw); max-height: 90vh; overflow: auto;
+}
+#confirmEmailModal .modal__header{ border-bottom:1px solid var(--line-soft); }
+#confirmEmailModal .modal__body{ padding: 16px; }
+#confirmEmailModal .modal__footer{ padding: 14px 16px; display:flex; align-items:center; gap:10px; justify-content:flex-end; }
+#confirmEmailModal .modal__close{ background: transparent; color: var(--brand); border:none; font-size: 20px; cursor: pointer; }
+
+/* Skeleton loader */
+.skel{ position:relative; background: #0b1113; overflow:hidden; }
+.skel::after{ content:""; position:absolute; inset:0; background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,.06) 45%, transparent 90%); transform: translateX(-100%); animation: shimmer 1.3s infinite; }
+@keyframes shimmer{ 100%{ transform: translateX(100%); } }
+
+/* Print-friendly */
+@media print{
+  body{ background:#fff; color:#000; }
+  .table-tools, .analytics-dock, .toast{ display:none !important; }
+  .card, .table, .rates-main, .matrix{ border-color:#999 !important; box-shadow:none !important; }
+}
