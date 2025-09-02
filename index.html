@@ -16,6 +16,8 @@
   
   <!-- Build erwartet /src/styles.css -->
   <link rel="stylesheet" href="/src/styles.css" />
+  <link rel="stylesheet" href="/src/auth.css">
+
 </head>
 
 <body>
@@ -38,6 +40,7 @@
         <div id="statusChips">
           <span class="pill" id="chipSb"  title="Supabase">SB</span>
           <span class="pill" id="chipHns" title="HotelNetSolutions">HNS</span>
+          <span class="mono muted" id="authUserInline" style="margin-right:8px;"></span>
         </div>
         <div class="clock">
           <span id="dateLocal">--.--.----</span>
@@ -1119,7 +1122,7 @@
   <!-- Build erwartet /src/app.js -->
   <script src="/src/app.js"></script>
   <script src="/src/i18n.js"></script>
-
+  <script src="/src/auth.js"></script>
   <!-- Confirmations-Popup -->
 <div id="confirmEmailModal" class="modal hidden" aria-hidden="true">
   <div class="modal__backdrop" data-close="confirmEmailModal"></div>
