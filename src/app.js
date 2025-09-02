@@ -3024,10 +3024,13 @@ function renderLogTable(rows){
     });
   }
 }
-  async function fetchNetworkInfo(){
-  const setTxt = (id, v) => { const n = document.getElementById(id); if(n) n.textContent = v ?? '—'; };
+ async function fetchNetworkInfo(){
+  const setTxt = (id, v) => {
+    const n = document.getElementById(id);
+    if(n) n.textContent = v ?? '—';
+  };
 
-  // OS / Browser lokal ermitteln (nur Anzeige)
+  // OS / Browser
   try{
     const os = (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || '—';
     const ua = navigator.userAgent || '';
@@ -3039,11 +3042,38 @@ function renderLogTable(rows){
     setTxt('netOs', `${os} / ${browser}`);
   }catch{ setTxt('netOs','—'); }
 
-  // Öffentliche IP (IPv6/IPv4) & IPv4 separat
-  try{ const r = await fetch('https://api64.ipify.org?format=json',{cache:'no-store'}); const j = await r.json(); setTxt('netIp', j.ip); }catch{ setTxt('netIp','—'); }
-  try{ const r = await fetch('https://api4.ipify.org?format=json',{cache:'no-store'});  const j = await r.json(); setTxt('netIpv4', j.ip);}catch{ setTxt('netIpv4','—'); }
+  // Öffentliche IP
+  try{
+    const r = await fetch('https://api.ipify.org?format=json',{cache:'no-store'});
+    const j = await r.json();
+    setTxt('netIp', j.ip);
+  }catch{ setTxt('netIp','—'); }
 
-  // Grober Standort per IP (nur Anzeige, kein Storage)
+  // Lokale private IPv4 über WebRTC (falls Browser das zulässt)
+  const getPrivateIPv4 = () => new Promise(resolve=>{
+    const ips = new Set();
+    const isV4 = ip => /^\d{1,3}(\.\d{1,3}){3}$/.test(ip);
+    const isPrivate = ip =>
+      /^10\./.test(ip) || /^192\.168\./.test(ip) || /^172\.(1[6-9]|2\d|3[0-1])\./.test(ip);
+
+    const pc = new RTCPeerConnection({iceServers:[]});
+    pc.createDataChannel('x');
+    pc.onicecandidate = e=>{
+      if(!e.candidate) return;
+      const parts = e.candidate.candidate.split(' ');
+      const ip = parts[4];
+      if(ip && isV4(ip) && isPrivate(ip)) ips.add(ip);
+    };
+    pc.createOffer().then(o=>pc.setLocalDescription(o));
+    setTimeout(()=>{ pc.close(); resolve([...ips][0] || null); },1500);
+  });
+
+  try{
+    const priv = await getPrivateIPv4();
+    setTxt('netIpv4', priv || '— (maskiert)');
+  }catch{ setTxt('netIpv4','—'); }
+
+  // Standort per IP
   try{
     const r = await fetch('https://ipapi.co/json/',{cache:'no-store'});
     const j = await r.json();
@@ -3051,6 +3081,7 @@ function renderLogTable(rows){
     setTxt('netLoc', loc || '—');
   }catch{ setTxt('netLoc','—'); }
 }
+
 // ===== Channel Settings (Tabs + Persistenz) =====
 (function channelSettings(){
   const KEY = 'resTool.channelSettings';
