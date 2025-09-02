@@ -4173,6 +4173,22 @@ async function copyToClipboard(txt){
     } else if (e.key.toLowerCase() === 'n') {
       const b = document.getElementById('btnNew'); if (b){ e.preventDefault(); b.click(); }
     }
+    // --- Auth Inline-Label im Header aktualisieren (optional) ---
+(function(){
+  function setInlineUser(u){
+    const el = document.getElementById('authUserInline');
+    if (!el) return;
+    el.textContent = u ? `User: ${u.id}` : '';
+  }
+
+  window.addEventListener('auth:ready',  e => setInlineUser(e.detail.user));
+  window.addEventListener('auth:login',  e => setInlineUser(e.detail.user));
+  window.addEventListener('auth:logout', e => setInlineUser(null));
+
+  // Falls die Seite schon geladen ist und ein User existiert:
+  try { setInlineUser(window.getCurrentUser && window.getCurrentUser()); } catch {}
+})();
+
   });
 })();
 
