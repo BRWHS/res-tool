@@ -1,5 +1,4 @@
-<!-- /src/i18n.js -->
-<script>
+
 /* res-tool i18n (DE/EN) – full coverage */
 (function(){
   const LS_KEY = 'resTool.lang';
@@ -510,4 +509,4 @@
   // optional export
   window.resToolI18n = {apply: (lng)=>applyI18n(lng), getLang, setLang};
 })();
-</script>
+
