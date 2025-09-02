@@ -4451,123 +4451,123 @@ window.addEventListener('reservation:saved', e => {
     { user: (window.getCurrentUser && window.getCurrentUser()?.id), reservation_id: r.id }
   );
 });
-// ===== User Settings UI Mount =====
+/* ===== User Settings: robustes Mounting & Bindings (am Dateiende einfügen) ===== */
+
+// 1) UI-Renderer – baut die Oberfläche nur EINMAL, wenn der Mount existiert
 function renderUserSettingsUI(){
   const mount = document.getElementById('usersTabMount');
-  if(!mount) return; // Tab/Pane noch nicht im DOM
+  if(!mount) return;               // Mount-Point existiert (noch) nicht
+  if(mount.__rendered) return;     // schon gebaut → skip
+  mount.__rendered = true;
 
   mount.innerHTML = `
-  <div id="userSettings" class="card">
-    <div class="card-header">
-      <h3>Benutzereinstellungen</h3>
-      <p class="muted">Benutzer anlegen, aktivieren/deaktivieren, Passwort zurücksetzen.</p>
-    </div>
+    <div id="userSettings" class="card">
+      <div class="card-header">
+        <h3>Benutzereinstellungen</h3>
+        <p class="muted">Benutzer anlegen, aktivieren/deaktivieren, Passwort zurücksetzen.</p>
+      </div>
 
-    <div class="grid-2">
-      <!-- Create / Edit Form -->
-      <form id="userForm" class="stack" autocomplete="off">
-        <div>
-          <label for="u_id">Benutzer-ID</label>
-          <input id="u_id" name="id" type="text" class="input" placeholder="z. B. m.suvari" required>
-        </div>
-        <div>
-          <label for="u_name">Anzeigename</label>
-          <input id="u_name" name="name" type="text" class="input" placeholder="z. B. Merve Suvari">
-        </div>
-        <div>
-          <label for="u_pw">Passwort</label>
-          <input id="u_pw" name="password" type="password" class="input" placeholder="••••" required>
-        </div>
-        <div class="row">
-          <label class="switch">
-            <input id="u_active" name="active" type="checkbox" checked>
-            <span>Aktiv</span>
-          </label>
-        </div>
-        <div class="row gap">
-          <button type="submit" class="btn primary">Speichern</button>
-          <button type="button" id="userFormReset" class="btn">Zurücksetzen</button>
-        </div>
-        <small class="muted">Standard-Admin bleibt bestehen: <code>Admin / 6764</code></small>
-      </form>
+      <div class="grid-2">
+        <form id="userForm" class="stack" autocomplete="off">
+          <div>
+            <label for="u_id">Benutzer-ID</label>
+            <input id="u_id" name="id" type="text" class="input" placeholder="z. B. m.suvari" required>
+          </div>
+          <div>
+            <label for="u_name">Anzeigename</label>
+            <input id="u_name" name="name" type="text" class="input" placeholder="z. B. Merve Suvari">
+          </div>
+          <div>
+            <label for="u_pw">Passwort</label>
+            <input id="u_pw" name="password" type="password" class="input" placeholder="••••" required>
+          </div>
+          <div class="row">
+            <label class="switch">
+              <input id="u_active" name="active" type="checkbox" checked>
+              <span>Aktiv</span>
+            </label>
+          </div>
+          <div class="row gap">
+            <button type="submit" class="btn primary">Speichern</button>
+            <button type="button" id="userFormReset" class="btn">Zurücksetzen</button>
+          </div>
+          <small class="muted">Standard-Admin bleibt bestehen: <code>Admin / 6764</code></small>
+        </form>
 
-      <!-- Users Table -->
-      <div>
-        <div class="row between">
-          <h4>Benutzerliste</h4>
-          <input id="userSearch" class="input" placeholder="Suche…">
-        </div>
-        <div class="table-wrap">
-          <table class="table compact" id="usersTable">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Aktiv</th>
-                <th>Rolle</th>
-                <th style="width:210px;">Aktionen</th>
-              </tr>
-            </thead>
-            <tbody><!-- filled by JS --></tbody>
-          </table>
+        <div>
+          <div class="row between">
+            <h4>Benutzerliste</h4>
+            <input id="userSearch" class="input" placeholder="Suche…">
+          </div>
+          <div class="table-wrap">
+            <table class="table compact" id="usersTable">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Name</th>
+                  <th>Aktiv</th>
+                  <th>Rolle</th>
+                  <th style="width:210px;">Aktionen</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
-  </div>
   `;
 
-  // danach die UI initialisieren
-  initUserSettingsUI?.();
+  // deine bereits eingefügte Logik initialisieren (falls vorhanden)
+  if (typeof initUserSettingsUI === 'function') {
+    initUserSettingsUI();
+  }
 }
 
-// Beim Laden versuchen zu mounten …
-document.addEventListener('DOMContentLoaded', renderUserSettingsUI);
-
-// … und falls dein Tab-Lazy-Loads nutzt, on-tab-change erneut mounten:
-window.addEventListener('tab:change', (e)=>{
-  // Falls du ein eigenes Event bei Tabwechsel hast: optional neu mounten
-  if(e.detail?.tab === 'Benutzereinstellungen' || e.detail?.id === 'users') {
+// 2) Sofort rendern, falls der Mount-Point bereits da ist (z. B. Modal ist im DOM)
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
     renderUserSettingsUI();
-  }
-});
-    // ===== Bindings für Einstellungen & Benutzereinstellungen =====
-document.addEventListener('DOMContentLoaded', () => {
-  // A) Wenn die Settings geöffnet werden, rendere die User-UI
-  const btnOpenSettings = document.getElementById('btnSettings') 
-    || document.querySelector('[data-modal="#modalSettings"]');
-  btnOpenSettings?.addEventListener('click', () => {
-    // kurz nach Öffnen rendern (DOM im Modal ist dann da)
-    setTimeout(() => renderUserSettingsUI?.(), 0);
   });
+} else {
+  renderUserSettingsUI();
+}
 
-  // B) Direkt auf die Kachel "Benutzereinstellungen" binden (im Modal)
-  function bindUserPrefsButton(){
-    const btnPrefs = document.getElementById('btnUserPrefs');
-    if(!btnPrefs || btnPrefs.__bound) return;
-    btnPrefs.__bound = true;
-    btnPrefs.addEventListener('click', () => {
-      renderUserSettingsUI?.();
-      // sanft dahin scrollen
-      const m = document.getElementById('usersTabMount');
-      m && m.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    });
-  }
-  bindUserPrefsButton();
-
-  // C) Falls dein Modal seine Sichtbarkeit per aria-hidden/class toggelt:
-  const settingsModal = document.getElementById('modalSettings');
-  if(settingsModal){
-    const mo = new MutationObserver(() => {
-      // Wenn sichtbar, rendern & Button-Bindings sicherstellen
-      const hidden = settingsModal.getAttribute('aria-hidden');
-      if(hidden === null || hidden === 'false'){
-        renderUserSettingsUI?.();
-        bindUserPrefsButton();
-      }
-    });
-    mo.observe(settingsModal, { attributes: true, attributeFilter: ['aria-hidden','class'] });
-  }
+// 3) Event-Delegation: Klicks abfangen, auch wenn Button erst später kommt
+document.addEventListener('click', (e) => {
+  const t = e.target.closest('#btnUserPrefs,[data-user-prefs="true"]');
+  if (!t) return;
+  // sicherstellen, dass UI da ist
+  renderUserSettingsUI();
+  // zum Block scrollen (falls im Modal)
+  const m = document.getElementById('usersTabMount');
+  if (m) m.scrollIntoView({ behavior:'smooth', block:'start' });
 });
+
+// 4) Fallback: wenn das Settings-Modal sichtbar wird, rendere erneut (MutationObserver)
+(function(){
+  const modal = document.getElementById('modalSettings');
+  if (!modal) return;
+  const obs = new MutationObserver(() => {
+    const hidden = modal.getAttribute('aria-hidden');
+    // sichtbar? (je nach Implementierung entweder null, "false" oder via Klasse gesteuert)
+    const visibleByAria = hidden === null || hidden === 'false';
+    const visibleByClass = modal.classList.contains('open') || modal.classList.contains('active') || getComputedStyle(modal).display !== 'none';
+    if (visibleByAria || visibleByClass) {
+      renderUserSettingsUI();
+    }
+  });
+  obs.observe(modal, { attributes:true, attributeFilter:['aria-hidden','class','style'] });
+})();
+
+// 5) Falls dein "Einstellungen"-Button das Modal öffnet, rendere kurz danach ebenfalls
+(function(){
+  const btnOpenSettings = document.getElementById('btnSettings') || document.querySelector('[data-modal="#modalSettings"]');
+  if (!btnOpenSettings) return;
+  btnOpenSettings.addEventListener('click', () => {
+    setTimeout(() => renderUserSettingsUI(), 0);
+  });
+})();
 
 
 
