@@ -4451,6 +4451,85 @@ window.addEventListener('reservation:saved', e => {
     { user: (window.getCurrentUser && window.getCurrentUser()?.id), reservation_id: r.id }
   );
 });
+// ===== User Settings UI Mount =====
+function renderUserSettingsUI(){
+  const mount = document.getElementById('usersTabMount');
+  if(!mount) return; // Tab/Pane noch nicht im DOM
+
+  mount.innerHTML = `
+  <div id="userSettings" class="card">
+    <div class="card-header">
+      <h3>Benutzereinstellungen</h3>
+      <p class="muted">Benutzer anlegen, aktivieren/deaktivieren, Passwort zurücksetzen.</p>
+    </div>
+
+    <div class="grid-2">
+      <!-- Create / Edit Form -->
+      <form id="userForm" class="stack" autocomplete="off">
+        <div>
+          <label for="u_id">Benutzer-ID</label>
+          <input id="u_id" name="id" type="text" class="input" placeholder="z. B. m.suvari" required>
+        </div>
+        <div>
+          <label for="u_name">Anzeigename</label>
+          <input id="u_name" name="name" type="text" class="input" placeholder="z. B. Merve Suvari">
+        </div>
+        <div>
+          <label for="u_pw">Passwort</label>
+          <input id="u_pw" name="password" type="password" class="input" placeholder="••••" required>
+        </div>
+        <div class="row">
+          <label class="switch">
+            <input id="u_active" name="active" type="checkbox" checked>
+            <span>Aktiv</span>
+          </label>
+        </div>
+        <div class="row gap">
+          <button type="submit" class="btn primary">Speichern</button>
+          <button type="button" id="userFormReset" class="btn">Zurücksetzen</button>
+        </div>
+        <small class="muted">Standard-Admin bleibt bestehen: <code>Admin / 6764</code></small>
+      </form>
+
+      <!-- Users Table -->
+      <div>
+        <div class="row between">
+          <h4>Benutzerliste</h4>
+          <input id="userSearch" class="input" placeholder="Suche…">
+        </div>
+        <div class="table-wrap">
+          <table class="table compact" id="usersTable">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Aktiv</th>
+                <th>Rolle</th>
+                <th style="width:210px;">Aktionen</th>
+              </tr>
+            </thead>
+            <tbody><!-- filled by JS --></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  `;
+
+  // danach die UI initialisieren
+  initUserSettingsUI?.();
+}
+
+// Beim Laden versuchen zu mounten …
+document.addEventListener('DOMContentLoaded', renderUserSettingsUI);
+
+// … und falls dein Tab-Lazy-Loads nutzt, on-tab-change erneut mounten:
+window.addEventListener('tab:change', (e)=>{
+  // Falls du ein eigenes Event bei Tabwechsel hast: optional neu mounten
+  if(e.detail?.tab === 'Benutzereinstellungen' || e.detail?.id === 'users') {
+    renderUserSettingsUI();
+  }
+});
 
 
   });
