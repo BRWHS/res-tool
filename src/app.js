@@ -3024,10 +3024,12 @@ function renderLogTable(rows){
     });
   }
 }
- async function fetchNetworkInfo(){
-  const setTxt = (id, v) => {
-    const n = document.getElementById(id);
-    if(n) n.textContent = v ?? '—';
+async function fetchNetworkInfo(){
+  const setTxt = (id, v, tip) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = v ?? '—';
+    if (tip) el.setAttribute('title', tip);
   };
 
   // OS / Browser
@@ -3042,38 +3044,60 @@ function renderLogTable(rows){
     setTxt('netOs', `${os} / ${browser}`);
   }catch{ setTxt('netOs','—'); }
 
-  // Öffentliche IP
+  // Öffentliche IP (WAN)
   try{
     const r = await fetch('https://api.ipify.org?format=json',{cache:'no-store'});
     const j = await r.json();
     setTxt('netIp', j.ip);
   }catch{ setTxt('netIp','—'); }
 
-  // Lokale private IPv4 über WebRTC (falls Browser das zulässt)
-  const getPrivateIPv4 = () => new Promise(resolve=>{
-    const ips = new Set();
-    const isV4 = ip => /^\d{1,3}(\.\d{1,3}){3}$/.test(ip);
-    const isPrivate = ip =>
-      /^10\./.test(ip) || /^192\.168\./.test(ip) || /^172\.(1[6-9]|2\d|3[0-1])\./.test(ip);
+  // Lokale private IPv4 – nur echte LAN-Ranges anzeigen; sonst klar markieren
+  function getPrivateIPv4(timeoutMs=2500){
+    return new Promise(resolve=>{
+      const ips = new Set();
+      const isV4 = ip => /^\d{1,3}(\.\d{1,3}){3}$/.test(ip);
+      const isPrivate = ip =>
+        /^10\./.test(ip) || /^192\.168\./.test(ip) || /^172\.(1[6-9]|2\d|3[0-1])\./.test(ip);
 
-    const pc = new RTCPeerConnection({iceServers:[]});
-    pc.createDataChannel('x');
-    pc.onicecandidate = e=>{
-      if(!e.candidate) return;
-      const parts = e.candidate.candidate.split(' ');
-      const ip = parts[4];
-      if(ip && isV4(ip) && isPrivate(ip)) ips.add(ip);
-    };
-    pc.createOffer().then(o=>pc.setLocalDescription(o));
-    setTimeout(()=>{ pc.close(); resolve([...ips][0] || null); },1500);
-  });
+      let done = false;
+      const finish = () => { if (done) return; done = true; resolve([...ips].find(isPrivate) || null); };
+
+      const pcs = [
+        new RTCPeerConnection({ iceServers: [], iceCandidatePoolSize: 1 }),
+        new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }], iceCandidatePoolSize: 1 })
+      ];
+
+      pcs.forEach(pc=>{
+        try{ pc.createDataChannel('x'); }catch{}
+        pc.onicecandidate = e=>{
+          const c = e.candidate && e.candidate.candidate; // e.g. "candidate:... <ip> <port> typ host ..."
+          if (!c) return;
+          const parts = c.split(' ');
+          const ip = parts[4];
+          if (ip && isV4(ip)) ips.add(ip);
+        };
+        pc.createOffer().then(o=>pc.setLocalDescription(o)).catch(()=>{});
+      });
+
+      setTimeout(()=>{
+        pcs.forEach(pc=>{ try{pc.close();}catch{} });
+        finish();
+      }, timeoutMs);
+    });
+  }
 
   try{
-    const priv = await getPrivateIPv4();
-    setTxt('netIpv4', priv || '— (maskiert)');
-  }catch{ setTxt('netIpv4','—'); }
+    const priv = await getPrivateIPv4(2600);
+    if (priv) {
+      setTxt('netIpv4', priv, 'Lokale IPv4 (LAN)');
+    } else {
+      setTxt('netIpv4', '— (vom Browser verborgen)', 'Viele Browser maskieren LAN-IPs via mDNS/Privacy.');
+    }
+  }catch{
+    setTxt('netIpv4','—','Fehler beim Erfassen der LAN-IP');
+  }
 
-  // Standort per IP
+  // Standort (nur Anzeige)
   try{
     const r = await fetch('https://ipapi.co/json/',{cache:'no-store'});
     const j = await r.json();
