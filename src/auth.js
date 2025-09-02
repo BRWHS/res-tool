@@ -32,11 +32,11 @@
     const modal = ce('div', { id: 'authModal' });
 
     const title = ce('h3', { className: 'auth-title', textContent: 'Anmeldung' });
-    const sub = ce('p', { className: 'auth-sub', textContent: 'Bitte einloggen, um das Dashboard zu verwenden.' });
+    const sub = ce('p', { className: 'auth-sub', textContent: 'Log-In' });
 
     const fUser = ce('div', { className: 'auth-field' });
     const lUser = ce('label', { className: 'auth-label', textContent: 'Benutzer-ID' });
-    const iUser = ce('input', { className: 'auth-input', id: 'authUser', placeholder: 'z. B. Admin', autocomplete: 'username' });
+    const iUser = ce('input', { className: 'auth-input', id: 'authUser', placeholder: 'z. B. Log-In', autocomplete: 'username' });
     fUser.append(lUser, iUser);
 
     const fPw = ce('div', { className: 'auth-field' });
