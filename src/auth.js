@@ -44,7 +44,7 @@
     const iPw = ce('input', { className: 'auth-input', id: 'authPass', placeholder: '••••', type: 'password', autocomplete: 'current-password' });
     fPw.append(lPw, iPw);
 
-    const err = ce('div', { id: 'authErr', className: 'auth-err', textContent: 'Ungültige Zugangsdaten. Versuche: Admin / 6764' });
+    const err = ce('div', { id: 'authErr', className: 'auth-err', textContent: 'Ungültige Zugangsdaten' });
 
     const actions = ce('div', { className: 'auth-actions' });
     const btnLogin = ce('button', { className: 'auth-btn', textContent: 'Login' });
