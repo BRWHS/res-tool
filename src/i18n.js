@@ -1,3 +1,6 @@
+// HTML lang-Attribut und Dock-Tooltip passend setzen
+document.documentElement.lang = (lang === 'en' ? 'en' : 'de');
+document.getElementById('dockToggle')?.setAttribute('title', tr('dock.toggle', lang));
 
 // ===== Light i18n engine for res-tool =====
 (function(){
@@ -414,6 +417,13 @@
       sel.value = lang;
       // Option labels stay localized (Deutsch/English), no change needed
     }
+
+    // de:
+'dock.toggle': 'Ein-/Ausblenden',
+
+// en:
+'dock.toggle': 'Collapse/Expand',
+
 
     // Small things: table headers in Reporting modal (if present)
     const repHead = document.querySelector('#modalReporting thead tr');
