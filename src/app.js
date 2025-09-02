@@ -2364,6 +2364,191 @@ document.querySelector('#sketchBack')?.addEventListener('click', () => {
   document.querySelector('#sketchStateList')?.classList.remove('hidden');
 });
 
+  // Wrap saveReservation (falls vorhanden)
+(function(){
+  const w = window;
+  if(typeof w.saveReservation === 'function' && !w.saveReservation._stamped){
+    const orig = w.saveReservation;
+    w.saveReservation = async function(res){
+      // create vs update?
+      const isNew = !res.id;
+      const stamped = isNew ? stampOnCreate(res) : stampOnUpdate(res);
+      const result = await orig.call(this, stamped);
+      // Activity
+      trackActivity(isNew ? 'res.create' : 'res.update',
+        `${isNew?'Reservierung erstellt':'Reservierung geändert'} #${result?.id ?? stamped.id ?? '—'}`,
+        { user: getCurrentUser()?.id, reservation_id: result?.id ?? stamped.id });
+      // Signals
+      window.dispatchEvent(new CustomEvent('reservation:saved', { detail: { isNew, reservation: result || stamped } }));
+      return result || stamped;
+    };
+    w.saveReservation._stamped = true;
+  }
+})();
+  
+  // ===== Reservation Editor Meta UI =====
+(function(){
+  function injectMeta(container, res){
+    if(!container) return;
+    // Meta-Container einmalig erzeugen
+    let m = container.querySelector('#resMeta');
+    if(!m){
+      m = document.createElement('div');
+      m.id = 'resMeta';
+      m.className = 'muted';
+      m.style.marginTop = '8px';
+      container.appendChild(m);
+    }
+    const createdAt = res.created_at ? new Date(res.created_at) : null;
+    const updatedAt = res.updated_at ? new Date(res.updated_at) : null;
+    m.innerHTML = `
+      <div>Erstellt am: <b>${createdAt ? createdAt.toLocaleString() : '—'}</b> von <b>${res.created_by || '—'}</b></div>
+      <div>Zuletzt editiert: <b>${updatedAt ? updatedAt.toLocaleString() : '—'}</b> von <b>${res.updated_by || '—'}</b></div>
+    `;
+  }
+
+  // Wenn du ein eigenes Event beim Öffnen hast, hänge dich hier rein:
+  window.addEventListener('reservation:open', e => {
+    const res = e.detail?.reservation;
+    const c = document.querySelector('#reservationEditModal .meta') 
+           || document.querySelector('#reservationEditModal .card-header')
+           || document.querySelector('#reservationEditModal');
+    injectMeta(c, res||{});
+  });
+
+  // Fallback: bei Save direkt aktualisieren
+  window.addEventListener('reservation:saved', e => {
+    const res = e.detail?.reservation;
+    const c = document.querySelector('#reservationEditModal #resMeta')?.parentElement
+           || document.querySelector('#reservationEditModal .meta')
+           || document.querySelector('#reservationEditModal');
+    injectMeta(c, res||{});
+  });
+})();
+
+
+  // ===== User Management (localStorage) =====
+const USER_STORE_KEY = 'resToolUsers';
+
+function getCurrentUser() { try { return window.ResToolAuth?.user || JSON.parse(localStorage.getItem('resToolAuth')||'null'); } catch { return null; } }
+
+function loadUsers(){
+  let arr = [];
+  try { arr = JSON.parse(localStorage.getItem(USER_STORE_KEY) || '[]'); } catch {}
+  // Admin immer sicherstellen
+  if(!arr.find(u=>u.id==='Admin')){
+    arr.push({ id:'Admin', name:'Administrator', password:'6764', active:true, role:'admin', created_at:new Date().toISOString() });
+    localStorage.setItem(USER_STORE_KEY, JSON.stringify(arr));
+  }
+  return arr;
+}
+function saveUsers(users){ localStorage.setItem(USER_STORE_KEY, JSON.stringify(users)); }
+
+function addOrUpdateUser(u){
+  const users = loadUsers();
+  const i = users.findIndex(x=>x.id===u.id);
+  if(i>-1){
+    users[i] = { ...users[i], ...u, updated_at:new Date().toISOString() };
+  }else{
+    users.push({ ...u, role: u.role || 'user', created_at:new Date().toISOString() });
+  }
+  saveUsers(users);
+  trackActivity('user.save', `Benutzer gespeichert: ${u.id}`, { user: getCurrentUser()?.id, target: u.id });
+}
+function toggleUserActive(id, active){
+  const users = loadUsers();
+  const i = users.findIndex(x=>x.id===id);
+  if(i>-1){ users[i].active = !!active; users[i].updated_at=new Date().toISOString(); saveUsers(users); }
+  trackActivity('user.active', `Benutzer ${id} ${active?'aktiviert':'deaktiviert'}`, { user: getCurrentUser()?.id, target: id });
+}
+function resetUserPassword(id, newPw){
+  const users = loadUsers();
+  const i = users.findIndex(x=>x.id===id);
+  if(i>-1){ users[i].password = newPw; users[i].updated_at=new Date().toISOString(); saveUsers(users); }
+  trackActivity('user.resetpw', `Passwort zurückgesetzt: ${id}`, { user: getCurrentUser()?.id, target: id });
+}
+function deleteUser(id){
+  if(id==='Admin') return alert('Admin kann nicht gelöscht werden.');
+  const users = loadUsers().filter(x=>x.id!==id);
+  saveUsers(users);
+  trackActivity('user.delete', `Benutzer gelöscht: ${id}`, { user: getCurrentUser()?.id, target: id });
+}
+
+function renderUsersTable(filter=''){
+  const tb = document.querySelector('#usersTable tbody');
+  if(!tb) return;
+  const q = (filter||'').toLowerCase();
+  const users = loadUsers()
+    .filter(u => !q || u.id.toLowerCase().includes(q) || (u.name||'').toLowerCase().includes(q));
+
+  tb.innerHTML = users.map(u => `
+    <tr>
+      <td><code>${u.id}</code></td>
+      <td>${u.name||'—'}</td>
+      <td>${u.active?'<span class="pill green">aktiv</span>':'<span class="pill">inaktiv</span>'}</td>
+      <td>${u.role||'user'}</td>
+      <td class="row" style="gap:6px;">
+        <button class="btn small" data-act="edit" data-id="${u.id}">Bearb.</button>
+        <button class="btn small" data-act="toggle" data-id="${u.id}">${u.active?'Deaktiv.':'Aktiv.'}</button>
+        <button class="btn small" data-act="reset" data-id="${u.id}">PW Reset</button>
+        <button class="btn small danger" data-act="del" data-id="${u.id}">Löschen</button>
+      </td>
+    </tr>
+  `).join('');
+
+  tb.querySelectorAll('button').forEach(btn=>{
+    const id = btn.dataset.id, act = btn.dataset.act;
+    btn.addEventListener('click', ()=>{
+      if(act==='edit'){
+        const u = loadUsers().find(x=>x.id===id);
+        if(!u) return;
+        document.getElementById('u_id').value = u.id;
+        document.getElementById('u_name').value = u.name || '';
+        document.getElementById('u_pw').value = u.password || '';
+        document.getElementById('u_active').checked = !!u.active;
+      } else if(act==='toggle'){
+        const u = loadUsers().find(x=>x.id===id);
+        if(!u) return;
+        toggleUserActive(id, !u.active); renderUsersTable(document.getElementById('userSearch').value);
+      } else if(act==='reset'){
+        const npw = prompt(`Neues Passwort für ${id}:`, '');
+        if(npw){ resetUserPassword(id, npw); renderUsersTable(document.getElementById('userSearch').value); }
+      } else if(act==='del'){
+        if(confirm(`Benutzer ${id} löschen?`)){ deleteUser(id); renderUsersTable(document.getElementById('userSearch').value); }
+      }
+    });
+  });
+}
+
+function initUserSettingsUI(){
+  const form = document.getElementById('userForm');
+  const search = document.getElementById('userSearch');
+  const reset = document.getElementById('userFormReset');
+  if(!form) return;
+
+  form.addEventListener('submit', (e)=>{
+    e.preventDefault();
+    const u = {
+      id: form.id.value.trim(),
+      name: form.name.value.trim(),
+      password: form.password.value,
+      active: form.active.checked
+    };
+    if(!u.id || !u.password) return alert('ID und Passwort sind Pflicht.');
+    addOrUpdateUser(u);
+    form.reset(); document.getElementById('u_active').checked = true;
+    renderUsersTable(search?.value);
+  });
+
+  reset?.addEventListener('click', ()=>{ form.reset(); document.getElementById('u_active').checked = true; });
+  search?.addEventListener('input', ()=> renderUsersTable(search.value));
+
+  renderUsersTable();
+}
+
+document.addEventListener('DOMContentLoaded', initUserSettingsUI);
+
+
 /* =========================
    CATEGORY MODULE v2 (per Hotel: code, name, maxPax)
    ========================= */
@@ -4050,6 +4235,24 @@ window.invalidateKpis = function(){
 window.addEventListener('priceplan:saved', ()=> window.invalidateKpis());
 })();
 
+// ===== Reservation Meta Helpers =====
+function stampOnCreate(res){
+  const cu = getCurrentUser()?.id || 'anonymous';
+  return { ...res,
+    created_by: res.created_by || cu,
+    created_at: res.created_at || new Date().toISOString(),
+    updated_by: res.updated_by || cu,
+    updated_at: res.updated_at || new Date().toISOString()
+  };
+}
+function stampOnUpdate(res){
+  const cu = getCurrentUser()?.id || 'anonymous';
+  return { ...res,
+    updated_by: cu,
+    updated_at: new Date().toISOString()
+  };
+}
+
 
 
 // ===== Small UI helpers =====
@@ -4188,6 +4391,67 @@ async function copyToClipboard(txt){
   // Falls die Seite schon geladen ist und ein User existiert:
   try { setInlineUser(window.getCurrentUser && window.getCurrentUser()); } catch {}
 })();
+    // ===== Activity Tracker =====
+function trackActivity(type, message, meta={}){
+  const user = meta.user || (window.getCurrentUser && window.getCurrentUser()?.id) || 'anonymous';
+  const ts = new Date().toISOString();
+
+  // Persist optional in localStorage (Ringpuffer)
+  const key = 'resToolActivity';
+  let list = [];
+  try { list = JSON.parse(localStorage.getItem(key) || '[]'); } catch {}
+  list.unshift({ ts, type, message, user, ...meta });
+  list = list.slice(0, 500);
+  localStorage.setItem(key, JSON.stringify(list));
+
+  // In UI schreiben, wenn vorhanden
+  const logEl = document.querySelector('#activityLog tbody') || document.querySelector('#activityLog');
+  if(logEl){
+    const row = document.createElement(logEl.tagName==='TBODY' ? 'tr':'div');
+    const timeTxt = new Date(ts).toLocaleString();
+    if(logEl.tagName==='TBODY'){
+      row.innerHTML = `<td>${timeTxt}</td><td>${user}</td><td>${type}</td><td>${message}</td>`;
+    } else {
+      row.className = 'log-line';
+      row.textContent = `[${timeTxt}] ${user} • ${type} — ${message}`;
+    }
+    logEl.prepend(row);
+  }
+
+  // Event für andere Module
+  window.dispatchEvent(new CustomEvent('activity:added', { detail: { ts, type, user, message, meta } }));
+}
+
+// Globale Shortcuts (optional)
+window.logActivity = window.addActivity = function(msgOrObj){
+  const user = (window.getCurrentUser && window.getCurrentUser()?.id) || 'anonymous';
+  if(typeof msgOrObj === 'string'){
+    trackActivity('note', msgOrObj, { user });
+  }else{
+    trackActivity(msgOrObj.type || 'note', msgOrObj.message || '', { ...msgOrObj, user });
+  }
+};
+// ===== Hooks für Aktivitäten =====
+
+// Login/Logout mitloggen
+window.addEventListener('auth:login',  e => trackActivity('auth.login',  'Login',  { user: e.detail?.user?.id }));
+window.addEventListener('auth:logout', e => trackActivity('auth.logout', 'Logout', { user: (window.getCurrentUser && window.getCurrentUser()?.id) }));
+
+// Preisplan / Ratenänderungen (falls dein Code dieses Event feuert)
+window.addEventListener('priceplan:saved',  e => 
+  trackActivity('rate.save', 'Preisplan gespeichert', { user: (window.getCurrentUser && window.getCurrentUser()?.id), payload: e.detail })
+);
+
+// Reservierungen (ergänzend zum Wrapper)
+// Erwartet, dass irgendwo beim Speichern `window.dispatchEvent(new CustomEvent('reservation:saved', { detail:{ isNew, reservation } }))` passiert.
+window.addEventListener('reservation:saved', e => {
+  const r = e.detail?.reservation || {};
+  trackActivity(e.detail?.isNew ? 'res.create' : 'res.update',
+    `${e.detail?.isNew ? 'Erstellt' : 'Geändert'} #${r.id || '—'} ${r.guest_last_name || ''}`,
+    { user: (window.getCurrentUser && window.getCurrentUser()?.id), reservation_id: r.id }
+  );
+});
+
 
   });
 })();
