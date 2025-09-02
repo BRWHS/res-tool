@@ -32,7 +32,7 @@
     const modal = ce('div', { id: 'authModal' });
 
     const title = ce('h3', { className: 'auth-title', textContent: 'Anmeldung' });
-    const sub = ce('p', { className: 'auth-sub', textContent: 'Log-In' });
+    const sub = ce('p', { className: 'auth-sub', textContent: 'Wie geht es dir heute ?' });
 
     const fUser = ce('div', { className: 'auth-field' });
     const lUser = ce('label', { className: 'auth-label', textContent: 'Benutzer-ID' });
