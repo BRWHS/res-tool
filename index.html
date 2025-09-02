@@ -1147,219 +1147,340 @@
 
   <div id="appToast" class="toast hidden" role="status" aria-live="polite"></div>
 
-  <script>
-/* ===== Inline i18n for res-tool (DE/EN) ===== */
+ <script>
+/* ===== res-tool i18n (DE/EN) – extended coverage ===== */
 (function(){
   const LS_KEY = 'resTool.lang';
 
+  // --- Wörterbuch ---
   const I18N = {
     de: {
+      // Topbar/Toolbar
       'btn.new':'Neue Reservierung','btn.avail':'Verfügbarkeit','btn.reporting':'Reporting','btn.settings':'Einstellungen','btn.sketch':'Hotelskizze',
+      // KPIs
       'kpi.today.title':'Performance - Heute','kpi.today.bookings':'Buchungen (heute eingegangen)','kpi.today.revenue':'Umsatz (heute)','kpi.today.adr':'ADR (heute)','kpi.today.occ':'Auslastung (heute)',
       'kpi.next.title':'Performance - Nächste 7 Tage','kpi.next.revenue':'Umsatz (Anreisen +1..+7)','kpi.next.adr':'WDR (+1..+7)','kpi.next.occ':'Ø Auslastung (+1..+7)',
-      'res.table.title':'Reservierungen','res.table.th.resno':'Res.-Nr.','res.table.th.hotel':'Hotel','res.table.th.guest':'Gastname','res.table.th.arr':'Anreise','res.table.th.dep':'Abreise','res.table.th.cat':'Kategorie','res.table.th.rate':'Rate','res.table.th.price':'Preis','res.table.th.status':'Status',
-      'res.filter.search':'Gastname…','res.filter.status.active':'Status: Active (Zukunft)','res.filter.status.done':'Status: Done (Vergangenheit)','res.filter.status.canceled':'Status: Canceled','res.filter.status.all':'Status: Alle','res.filter.resno':'Res.-Nr.','res.filter.from':'Von','res.filter.to':'Bis',
+      // Res-Liste
+      'res.title':'Reservierungen','res.th.resno':'Res.-Nr.','res.th.hotel':'Hotel','res.th.guest':'Gastname','res.th.arr':'Anreise','res.th.dep':'Abreise','res.th.cat':'Kategorie','res.th.rate':'Rate','res.th.price':'Preis','res.th.status':'Status',
+      'res.ph.search':'Gastname…','res.ph.resno':'Res.-Nr.','res.filter.status.active':'Status: Active (Zukunft)','res.filter.status.done':'Status: Done (Vergangenheit)','res.filter.status.canceled':'Status: Canceled','res.filter.status.all':'Status: Alle',
       'btn.refresh':'Refresh','btn.reset':'Reset','btn.export.csv':'Export CSV',
-      'modal.new.title':'Neue Reservierung','wiz.step1':'Hotel & Daten','wiz.step2':'Kategorie','wiz.step3':'Rate','wiz.step4':'Gast & Zahlung',
-      'step1.arrival':'Anreise','step1.departure':'Abreise','step1.adults':'Erwachsene','step1.children':'Kinder','contact.phone':'Telefon','contact.email':'E-Mail',
-      'step2.facts':'Fakten','step2.desc':'Beschreibung','step3.policy':'Stornobedingung','step4.company':'Firma (optional)','step4.cc':'Kreditkarte','step4.notes':'Notizen',
-      'btn.prev':'Zurück','btn.next':'Weiter','btn.create':'Reservierung abschicken',
-      'modal.edit.title':'Reservierung bearbeiten','edit.tabs.details':'Details','edit.tabs.plan':'Preisplan','edit.tabs.pay':'Zahlungskonto','edit.tabs.actions':'Aktionen',
-      'edit.total':'Gesamtpreis','edit.notes':'Notizen','btn.save':'Speichern','btn.cancel':'Stornieren','btn.resend':'Bestätigung erneut senden',
-      'modal.avail.title':'Verfügbarkeit','avail.legend':'Legende:','avail.legend.g':'≤64%','avail.legend.o':'65–89%','avail.legend.r':'≥90%','btn.avail.update':'Aktualisieren',
-      'modal.reporting.title':'Reporting','report.revenue':'Umsatz pro Hotel','report.bookings':'Buchungen pro Hotel','btn.export.xls':'Export Excel','btn.export.pdf':'Export PDF',
-      'modal.settings.title':'Einstellungen','settings.lang':'Sprache','settings.hue':'Farbton (Hue)','settings.save':'Einstellungen speichern','settings.userprefs':'Benutzereinstellungen','settings.channel':'Channel – Einstellungen','settings.log':'Log Activity','settings.cats':'Kategorieverwaltung','settings.rates':'Rateneinstellungen','settings.help':'Hilfe & FAQ',
-      'sysinfo.title':'Live-Systeminfo','modal.rate.edit':'Rate bearbeiten','modal.rate.create':'Neue Rate','btn.rate.create':'Rate erstellen','btn.rate.update':'Änderungen speichern','btn.rate.delete':'Rate löschen',
-      'modal.cats.title':'Kategorieverwaltung','cats.new.title':'Neue Kategorie','btn.sync.now':'Jetzt synchronisieren',
-      'channel.title':'Channel – Einstellungen','channel.api.title':'API – Einstellungen','channel.prop.title':'Property – Mapping','channel.monitor.title':'Monitoring','channel.system.title':'System – Technik','channel.admin.title':'Admin'
+      'pager.prev':'Zurück','pager.next':'Weiter','pager.page':'Seite','pager.of':'/','pager.entries':'Einträge',
+      // Neue Reservierung
+      'modal.new':'Neue Reservierung','wiz.step1':'Hotel & Daten','wiz.step2':'Kategorie','wiz.step3':'Rate','wiz.step4':'Gast & Zahlung',
+      'lab.hotel':'Hotel','lab.arrival':'Anreise','lab.departure':'Abreise','lab.adults':'Erwachsene','lab.children':'Kinder',
+      'lab.fname':'Vorname','lab.lname':'Nachname*','lab.zip':'PLZ','lab.street':'Straße','lab.city':'Ort',
+      'contact.box':'Kontaktdaten','ph.phone':'Telefon','ph.email':'E-Mail',
+      's2.facts':'Fakten','s2.desc':'Beschreibung',
+      's3.policy':'Stornobedingung',
+      's4.company':'Firma (optional)','s4.cc':'Kreditkarte','s4.notes':'Notizen',
+      'btn.prev':'Zurück','btn.next':'Weiter','btn.create':'Reservierung abschicken','btn.close':'Schließen',
+      // Edit Modal
+      'modal.edit':'Reservierung bearbeiten','tab.details':'Details','tab.plan':'Preisplan','tab.pay':'Zahlungskonto','tab.act':'Aktionen',
+      'lab.resno':'Res.-Nr.','lab.status':'Status','lab.guestlname':'Gast Nachname','lab.category':'Kategorie','lab.rate':'Rate',
+      'lab.total':'Gesamtpreis','lab.notes':'Notizen','notes.hint':'(intern)',
+      'btn.save':'Speichern','btn.cancel':'Stornieren','btn.resend':'Bestätigung erneut senden',
+      // Availability
+      'modal.avail':'Verfügbarkeit','lab.from':'Von','lab.to':'Bis','lab.days':'Tage','avail.legend':'Legende:','avail.g':'≤64%','avail.o':'65–89%','avail.r':'≥90%','btn.update':'Aktualisieren',
+      // Reporting
+      'modal.report':'Reporting','report.h1':'Umsatz pro Hotel','report.h2':'Buchungen pro Hotel',
+      'rep.th.hotel':'Hotel','rep.th.bookings':'Buchungen','rep.th.revenue':'Umsatz','rep.th.adr':'ADR','rep.th.occ':'Belegungsrate',
+      'btn.export.xls':'Export Excel','btn.export.csv':'Export CSV','btn.export.pdf':'Export PDF',
+      // Settings
+      'modal.settings':'Einstellungen','set.lang':'Sprache','set.hue':'Farbton (Hue)','set.save':'Einstellungen speichern',
+      'set.userprefs':'Benutzereinstellungen','set.channel':'Channel – Einstellungen','set.log':'Log Activity','set.cats':'Kategorieverwaltung','set.rates':'Rateneinstellungen','set.help':'Hilfe & FAQ',
+      'sysinfo':'Live-Systeminfo',
+      // Quick Links
+      'ql.book':'Buchungs-Tracker','ql.call':'Telefon-Tracker','ql.manual':'Handbuch',
+      // Rate-Edit/Create
+      'modal.rate.edit':'Rate bearbeiten','modal.rate.create':'Neue Rate',
+      'lab.ratecode':'Ratecode (nur Zahlen)','lab.ratetype':'Ratentyp*','lab.ratehotel':'Hotel*','lab.ratename':'Ratename*','lab.cats':'Kategorien','lab.policy':'Stornobedingung','lab.price':'Preis/Nacht (€)','lab.mapped':'Gemappt',
+      'btn.rate.create':'Rate erstellen','btn.rate.update':'Änderungen speichern','btn.rate.delete':'Rate löschen',
+      // Category Mgmt
+      'modal.cats':'Kategorieverwaltung','cats.new':'Neue Kategorie','lab.cat.code':'Code','lab.cat.max':'Max. Pers.','lab.cat.name':'Name','ph.cats.search':'Suche: Code/Name',
+      // Channel
+      'modal.channel':'Channel – Einstellungen','tab.api':'API – Einstellungen','tab.prop':'Property – Mapping','tab.monitor':'Monitoring','tab.system':'System – Technik','tab.admin':'Admin',
+      'btn.sync':'Jetzt synchronisieren',
+      // Log
+      'modal.log':'Log Activity','log.ph.search':'Suche… (Text/Meta)','log.type.all':'Typ: Alle','log.th.time':'Datum/Zeit','log.th.user':'Benutzer','log.th.type':'Typ','log.th.action':'Aktion','log.th.details':'Details'
     },
     en: {
+      // Topbar/Toolbar
       'btn.new':'New Reservation','btn.avail':'Availability','btn.reporting':'Reporting','btn.settings':'Settings','btn.sketch':'Hotel Sketch',
+      // KPIs
       'kpi.today.title':'Performance - Today','kpi.today.bookings':'Bookings (received today)','kpi.today.revenue':'Revenue (today)','kpi.today.adr':'ADR (today)','kpi.today.occ':'Occupancy (today)',
       'kpi.next.title':'Performance - Next 7 Days','kpi.next.revenue':'Revenue (arrivals +1..+7)','kpi.next.adr':'ADR (+1..+7)','kpi.next.occ':'Avg. Occupancy (+1..+7)',
-      'res.table.title':'Reservations','res.table.th.resno':'Res. No.','res.table.th.hotel':'Hotel','res.table.th.guest':'Guest name','res.table.th.arr':'Arrival','res.table.th.dep':'Departure','res.table.th.cat':'Category','res.table.th.rate':'Rate','res.table.th.price':'Price','res.table.th.status':'Status',
-      'res.filter.search':'Guest name…','res.filter.status.active':'Status: Active (future)','res.filter.status.done':'Status: Done (past)','res.filter.status.canceled':'Status: Canceled','res.filter.status.all':'Status: All','res.filter.resno':'Res. No.','res.filter.from':'From','res.filter.to':'To',
+      // Res-Liste
+      'res.title':'Reservations','res.th.resno':'Res. No.','res.th.hotel':'Hotel','res.th.guest':'Guest name','res.th.arr':'Arrival','res.th.dep':'Departure','res.th.cat':'Category','res.th.rate':'Rate','res.th.price':'Price','res.th.status':'Status',
+      'res.ph.search':'Guest name…','res.ph.resno':'Res. No.','res.filter.status.active':'Status: Active (future)','res.filter.status.done':'Status: Done (past)','res.filter.status.canceled':'Status: Canceled','res.filter.status.all':'Status: All',
       'btn.refresh':'Refresh','btn.reset':'Reset','btn.export.csv':'Export CSV',
-      'modal.new.title':'New Reservation','wiz.step1':'Hotel & Dates','wiz.step2':'Category','wiz.step3':'Rate','wiz.step4':'Guest & Payment',
-      'step1.arrival':'Arrival','step1.departure':'Departure','step1.adults':'Adults','step1.children':'Children','contact.phone':'Phone','contact.email':'Email',
-      'step2.facts':'Facts','step2.desc':'Description','step3.policy':'Cancellation policy','step4.company':'Company (optional)','step4.cc':'Credit Card','step4.notes':'Notes',
-      'btn.prev':'Back','btn.next':'Next','btn.create':'Submit reservation',
-      'modal.edit.title':'Edit Reservation','edit.tabs.details':'Details','edit.tabs.plan':'Price Plan','edit.tabs.pay':'Payment','edit.tabs.actions':'Actions',
-      'edit.total':'Total price','edit.notes':'Notes','btn.save':'Save','btn.cancel':'Cancel','btn.resend':'Resend confirmation',
-      'modal.avail.title':'Availability','avail.legend':'Legend:','avail.legend.g':'≤64%','avail.legend.o':'65–89%','avail.legend.r':'≥90%','btn.avail.update':'Update',
-      'modal.reporting.title':'Reporting','report.revenue':'Revenue by hotel','report.bookings':'Bookings by hotel','btn.export.xls':'Export Excel','btn.export.pdf':'Export PDF',
-      'modal.settings.title':'Settings','settings.lang':'Language','settings.hue':'Hue (color)','settings.save':'Save settings','settings.userprefs':'User preferences','settings.channel':'Channel settings','settings.log':'Log Activity','settings.cats':'Category Management','settings.rates':'Rate settings','settings.help':'Help & FAQ',
-      'sysinfo.title':'Live system info','modal.rate.edit':'Edit Rate','modal.rate.create':'Create Rate','btn.rate.create':'Create rate','btn.rate.update':'Save changes','btn.rate.delete':'Delete rate',
-      'modal.cats.title':'Category Management','cats.new.title':'New Category','btn.sync.now':'Sync now',
-      'channel.title':'Channel settings','channel.api.title':'API settings','channel.prop.title':'Property mapping','channel.monitor.title':'Monitoring','channel.system.title':'System / Tech','channel.admin.title':'Admin'
+      'pager.prev':'Back','pager.next':'Next','pager.page':'Page','pager.of':'/','pager.entries':'entries',
+      // Neue Reservierung
+      'modal.new':'New Reservation','wiz.step1':'Hotel & Dates','wiz.step2':'Category','wiz.step3':'Rate','wiz.step4':'Guest & Payment',
+      'lab.hotel':'Hotel','lab.arrival':'Arrival','lab.departure':'Departure','lab.adults':'Adults','lab.children':'Children',
+      'lab.fname':'First name','lab.lname':'Last name*','lab.zip':'ZIP','lab.street':'Street','lab.city':'City',
+      'contact.box':'Contact','ph.phone':'Phone','ph.email':'Email',
+      's2.facts':'Facts','s2.desc':'Description',
+      's3.policy':'Cancellation policy',
+      's4.company':'Company (optional)','s4.cc':'Credit Card','s4.notes':'Notes',
+      'btn.prev':'Back','btn.next':'Next','btn.create':'Submit reservation','btn.close':'Close',
+      // Edit Modal
+      'modal.edit':'Edit Reservation','tab.details':'Details','tab.plan':'Price Plan','tab.pay':'Payment','tab.act':'Actions',
+      'lab.resno':'Res. No.','lab.status':'Status','lab.guestlname':'Guest last name','lab.category':'Category','lab.rate':'Rate',
+      'lab.total':'Total price','lab.notes':'Notes','notes.hint':'(internal)',
+      'btn.save':'Save','btn.cancel':'Cancel','btn.resend':'Resend confirmation',
+      // Availability
+      'modal.avail':'Availability','lab.from':'From','lab.to':'To','lab.days':'Days','avail.legend':'Legend:','avail.g':'≤64%','avail.o':'65–89%','avail.r':'≥90%','btn.update':'Update',
+      // Reporting
+      'modal.report':'Reporting','report.h1':'Revenue by hotel','report.h2':'Bookings by hotel',
+      'rep.th.hotel':'Hotel','rep.th.bookings':'Bookings','rep.th.revenue':'Revenue','rep.th.adr':'ADR','rep.th.occ':'Occupancy',
+      'btn.export.xls':'Export Excel','btn.export.csv':'Export CSV','btn.export.pdf':'Export PDF',
+      // Settings
+      'modal.settings':'Settings','set.lang':'Language','set.hue':'Hue (color)','set.save':'Save settings',
+      'set.userprefs':'User preferences','set.channel':'Channel settings','set.log':'Log Activity','set.cats':'Category Management','set.rates':'Rate settings','set.help':'Help & FAQ',
+      'sysinfo':'Live system info',
+      // Quick Links
+      'ql.book':'Booking tracker','ql.call':'Call tracker','ql.manual':'Manual',
+      // Rate-Edit/Create
+      'modal.rate.edit':'Edit Rate','modal.rate.create':'Create Rate',
+      'lab.ratecode':'Ratecode (numbers only)','lab.ratetype':'Rate type*','lab.ratehotel':'Hotel*','lab.ratename':'Rate name*','lab.cats':'Categories','lab.policy':'Cancellation policy','lab.price':'Price / night (€)','lab.mapped':'Mapped',
+      'btn.rate.create':'Create rate','btn.rate.update':'Save changes','btn.rate.delete':'Delete rate',
+      // Category Mgmt
+      'modal.cats':'Category Management','cats.new':'New Category','lab.cat.code':'Code','lab.cat.max':'Max. guests','lab.cat.name':'Name','ph.cats.search':'Search: Code/Name',
+      // Channel
+      'modal.channel':'Channel settings','tab.api':'API settings','tab.prop':'Property mapping','tab.monitor':'Monitoring','tab.system':'System / Tech','tab.admin':'Admin',
+      'btn.sync':'Sync now',
+      // Log
+      'modal.log':'Log Activity','log.ph.search':'Search… (text/meta)','log.type.all':'Type: All','log.th.time':'Date/Time','log.th.user':'User','log.th.type':'Type','log.th.action':'Action','log.th.details':'Details'
     }
   };
 
-  // Map: CSS-Selektoren → Schlüssel (wir bedienen nur sichtbare UI-Texte)
-  const MAP = [
-    // Topbar / Toolbar
-    ['#btnNew','btn.new'],['#btnAvail','btn.avail'],['#btnReporting','btn.reporting'],['#btnSettings','btn.settings'],['#btnSketch','btn.sketch'],
+  // --- Helfer: Label eines Inputs per ID setzen ---
+  function setLabelByInputId(id, key, lang){
+    const input = document.getElementById(id);
+    if (!input) return;
+    const label = input.closest('label') || input.parentElement?.tagName==='LABEL' ? input.parentElement : null;
+    if (!label) return;
+    const txt = tr(key, lang);
+    const tn = Array.from(label.childNodes).find(n=>n.nodeType===3);
+    if (tn) tn.nodeValue = txt + ' ';
+    else label.prepend(document.createTextNode(txt + ' '));
+  }
 
-    // KPI-Titel
-    ['.hero article:nth-of-type(1) .card-head h3','kpi.today.title'],
-    ['.hero article:nth-of-type(2) .card-head h3','kpi.next.title'],
-
-    // KPI-Labels
-    ['.hero article:nth-of-type(1) .kpis .kpi:nth-child(1) .label','kpi.today.bookings'],
-    ['.hero article:nth-of-type(1) .kpis .kpi:nth-child(2) .label','kpi.today.revenue'],
-    ['.hero article:nth-of-type(1) .kpis .kpi:nth-child(3) .label','kpi.today.adr'],
-    ['.hero article:nth-of-type(1) .kpis .kpi:nth-child(4) .label','kpi.today.occ'],
-    ['.hero article:nth-of-type(2) .kpis .kpi:nth-child(1) .label','kpi.next.revenue'],
-    ['.hero article:nth-of-type(2) .kpis .kpi:nth-child(2) .label','kpi.next.adr'],
-    ['.hero article:nth-of-type(2) .kpis .kpi:nth-child(3) .label','kpi.next.occ'],
-
-    // Reservierungen – Titel, Filter, Buttons
-    ['section[aria-label="Reservierungen"] .card-head h3','res.table.title'],
-    ['#filterStatus option[value="active"]','res.filter.status.active'],
-    ['#filterStatus option[value="done"]','res.filter.status.done'],
-    ['#filterStatus option[value="canceled"]','res.filter.status.canceled'],
-    ['#filterStatus option[value="all"]','res.filter.status.all'],
-    ['#btnRefresh','btn.refresh'],['#btnClearFilters','btn.reset'],['#resExportCsv','btn.export.csv'],
-
-    // Tabelle
-    ['#resTable thead th:nth-child(1)','res.table.th.resno'],
-    ['#resTable thead th:nth-child(2)','res.table.th.hotel'],
-    ['#resTable thead th:nth-child(3)','res.table.th.guest'],
-    ['#resTable thead th:nth-child(4)','res.table.th.arr'],
-    ['#resTable thead th:nth-child(5)','res.table.th.dep'],
-    ['#resTable thead th:nth-child(6)','res.table.th.cat'],
-    ['#resTable thead th:nth-child(7)','res.table.th.rate'],
-    ['#resTable thead th:nth-child(8)','res.table.th.price'],
-    ['#resTable thead th:nth-child(9)','res.table.th.status'],
-
-    // Neue Reservierung – Titel/Steps
-    ['#modalNew header h3','modal.new.title'],
-    ['.wizard-steps .wstep[data-step="1"] b','wiz.step1'],
-    ['.wizard-steps .wstep[data-step="2"] b','wiz.step2'],
-    ['.wizard-steps .wstep[data-step="3"] b','wiz.step3'],
-    ['.wizard-steps .wstep[data-step="4"] b','wiz.step4'],
-
-    // Step 2/3/4 Labels
-    ['#w2 .s2-facts .mono','step2.facts'],
-    ['#w2 .s2-desc .mono','step2.desc'],
-    ['#w3 .policy-box .muted','step3.policy'],
-    ['#btnPrev','btn.prev'],['#btnNext','btn.next'],['#btnCreate','btn.create'],
-
-    // Edit-Modal
-    ['#modalEdit header h3','modal.edit.title'],
-    ['#modalEdit .tabs .tab[data-tab="tabDet"]','edit.tabs.details'],
-    ['#modalEdit .tabs .tab[data-tab="tabPlan"]','edit.tabs.plan'],
-    ['#modalEdit .tabs .tab[data-tab="tabPay"]','edit.tabs.pay'],
-    ['#modalEdit .tabs .tab[data-tab="tabAct"]','edit.tabs.actions'],
-    ['label[for="editTotalPrice"]','edit.total'],
-    ['#tabDet .lbl span:first-child','edit.notes'],
-    ['#btnSaveEdit','btn.save'],['#btnSavePay','btn.save'],
-    ['#btnCancelRes','btn.cancel'],['#btnResendConfirmation','btn.resend'],
-
-    // Availability
-    ['#modalAvail header h3','modal.avail.title'],
-    ['#availRun','btn.avail.update'],
-
-    // Reporting
-    ['#modalReporting header h3','modal.reporting.title'],
-    ['#repXls','btn.export.xls'],['#repCsv','btn.export.csv'],['#repPdf','btn.export.pdf'],
-
-    // Settings
-    ['#modalSettings header h3','modal.settings.title'],
-    ['#btnUserPrefs','settings.userprefs'],['#btnChannel','settings.channel'],['#btnLog','settings.log'],
-    ['#btnCats','settings.cats'],['#btnRates','settings.rates'],['#btnHelp','settings.help'],
-    ['#btnSaveSettings','settings.save'],['.set-sys h4.section','sysinfo.title'],
-
-    // Rates/Cats
-    ['#modalRateEdit header h3','modal.rate.edit'],
-    ['#modalRateCreate header h3','modal.rate.create'],
-    ['#btnRateCreate','btn.rate.create'],['#btnRateUpdate','btn.rate.update'],['#btnRateDelete','btn.rate.delete'],
-    ['#modalCats header h3','modal.cats.title'],['.cats-wrap .box h4.mono','cats.new.title'],
-
-    // Channel
-    ['#modalChannel header h3','channel.title'],
-    ['.channel-tab[data-channel-tab="api"]','channel.api.title'],
-    ['.channel-tab[data-channel-tab="property"]','channel.prop.title'],
-    ['.channel-tab[data-channel-tab="monitor"]','channel.monitor.title'],
-    ['.channel-tab[data-channel-tab="system"]','channel.system.title'],
-    ['.channel-tab[data-channel-tab="admin"]','channel.admin.title'],
-    ['#btnSyncNow','btn.sync.now']
-  ];
-
-  // Platzhalter/Label-Felder separat (placeholder bzw. Text im Label)
-  const PLACEHOLDERS = [
-    ['#searchInput','res.filter.search'],
-    ['#filterResNo','res.filter.resno'],
-    // Step 1 Inputs
-    ['#newPhone','contact.phone'],
-    ['#newEmail','contact.email']
-  ];
-
-  // Step 1 Label-Texte (die zusammen mit Inputs in <label> stehen)
-  const STEP1_LABELS = [
-    ['#w1 .form-col .grid-compact label:nth-child(2)','step1.arrival'],
-    ['#w1 .form-col .grid-compact label:nth-child(3)','step1.departure'],
-    ['#w1 .form-col .grid-compact label:nth-child(4)','step1.adults'],
-    ['#w1 .form-col .grid-compact label:nth-child(5)','step1.children']
-  ];
-
+  // --- Texte holen ---
   function tr(key, lang){ return (I18N[lang] && I18N[lang][key]) || I18N.de[key] || ''; }
 
-  function setLabelText(labelEl, text){
-    // Ersetzt nur den ersten Text-Node im Label (nicht die Inputs)
-    const tn = Array.from(labelEl.childNodes).find(n=>n.nodeType===3);
-    if (tn) tn.nodeValue = text + ' ';
-    else labelEl.prepend(document.createTextNode(text + ' '));
-  }
-
+  // --- Haupt-Anwendung: alle bekannten Stellen übersetzen ---
   function applyI18n(lang){
-    // Haupttexte
-    MAP.forEach(([sel,key])=>{
-      const el = document.querySelector(sel);
-      if (el) el.textContent = tr(key, lang);
-    });
+    // Toolbar
+    text('#btnNew','btn.new'); text('#btnAvail','btn.avail'); text('#btnReporting','btn.reporting'); text('#btnSettings','btn.settings'); text('#btnSketch','btn.sketch');
 
-    // Platzhalter
-    PLACEHOLDERS.forEach(([sel,key])=>{
-      const el = document.querySelector(sel);
-      if (el) el.setAttribute('placeholder', tr(key, lang));
-    });
+    // KPIs
+    text('.hero article:nth-of-type(1) .card-head h3','kpi.today.title');
+    text('.hero article:nth-of-type(2) .card-head h3','kpi.next.title');
+    text('.hero article:nth-of-type(1) .kpis .kpi:nth-child(1) .label','kpi.today.bookings');
+    text('.hero article:nth-of-type(1) .kpis .kpi:nth-child(2) .label','kpi.today.revenue');
+    text('.hero article:nth-of-type(1) .kpis .kpi:nth-child(3) .label','kpi.today.adr');
+    text('.hero article:nth-of-type(1) .kpis .kpi:nth-child(4) .label','kpi.today.occ');
+    text('.hero article:nth-of-type(2) .kpis .kpi:nth-child(1) .label','kpi.next.revenue');
+    text('.hero article:nth-of-type(2) .kpis .kpi:nth-child(2) .label','kpi.next.adr');
+    text('.hero article:nth-of-type(2) .kpis .kpi:nth-child(3) .label','kpi.next.occ');
 
-    // Step1 Labeltexte
-    STEP1_LABELS.forEach(([sel,key])=>{
-      const el = document.querySelector(sel);
-      if (el) setLabelText(el, tr(key, lang));
-    });
+    // Reservierungen – Titel & Header
+    text('section[aria-label="Reservierungen"] .card-head h3','res.title');
+    th('#resTable thead th', ['res.th.resno','res.th.hotel','res.th.guest','res.th.arr','res.th.dep','res.th.cat','res.th.rate','res.th.price','res.th.status']);
 
-    // Reporting Tabellen-Header (5 Spalten)
-    const repHead = document.querySelector('#modalReporting thead tr');
-    if (repHead){
-      const map = (lang==='en')
-        ? ['Hotel','Bookings','Revenue','ADR','Occupancy']
-        : ['Hotel','Buchungen','Umsatz','ADR','Belegungsrate'];
-      Array.from(repHead.children).forEach((th,i)=> th.textContent = map[i] || th.textContent);
+    // Filter/Placeholders
+    ph('#searchInput','res.ph.search'); ph('#filterResNo','res.ph.resno');
+    text('#filterStatus option[value="active"]','res.filter.status.active');
+    text('#filterStatus option[value="done"]','res.filter.status.done');
+    text('#filterStatus option[value="canceled"]','res.filter.status.canceled');
+    text('#filterStatus option[value="all"]','res.filter.status.all');
+    text('#btnRefresh','btn.refresh'); text('#btnClearFilters','btn.reset'); text('#resExportCsv','btn.export.csv');
+
+    // Paginierung Tabelle
+    text('#prevPage','pager.prev'); text('#nextPage','pager.next');
+    const pi = document.getElementById('pageInfo'); if (pi && /Seite|Page/.test(pi.textContent)) { /* dynamische Zahl drin lassen */ pi.textContent = pi.textContent.replace(/Seite|Page/, tr('pager.page',lang)); }
+
+    // Quick Links
+    text('.quick-links a:nth-child(1)','ql.book'); text('.quick-links a:nth-child(2)','ql.call'); text('.quick-links a:nth-child(3)','ql.manual');
+
+    // Modale: Close-Buttons
+    document.querySelectorAll('section.modal header button[data-close]').forEach(b=> b.textContent = tr('btn.close', lang));
+
+    // Neue Reservierung – Titel/Steps
+    text('#modalNew header h3','modal.new');
+    text('.wizard-steps .wstep[data-step="1"] b','wiz.step1');
+    text('.wizard-steps .wstep[data-step="2"] b','wiz.step2');
+    text('.wizard-steps .wstep[data-step="3"] b','wiz.step3');
+    text('.wizard-steps .wstep[data-step="4"] b','wiz.step4');
+
+    // Step 1: Labels via Input-IDs
+    setLabelByInputId('newHotel','lab.hotel',lang);
+    setLabelByInputId('newArr','lab.arrival',lang);
+    setLabelByInputId('newDep','lab.departure',lang);
+    setLabelByInputId('newAdults','lab.adults',lang);
+    setLabelByInputId('newChildren','lab.children',lang);
+    setLabelByInputId('newFname','lab.fname',lang);
+    setLabelByInputId('newLname','lab.lname',lang);
+    setLabelByInputId('newZip','lab.zip',lang);
+    setLabelByInputId('newStreet','lab.street',lang);
+    setLabelByInputId('newCity','lab.city',lang);
+    // Step 1: Kontakt-Box + Placeholders
+    text('#w1 .preview-col .box h4.section','contact.box');
+    ph('#newPhone','ph.phone'); ph('#newEmail','ph.email');
+
+    // Step 2
+    text('#w2 .s2-facts .mono','s2.facts');
+    text('#w2 .s2-desc .mono','s2.desc');
+
+    // Step 3
+    text('#w3 .policy-box .muted','s3.policy');
+
+    // Step 4
+    text('#w4 .section:nth-of-type(1)','s4.company');
+    text('#w4 .section:nth-of-type(2)','s4.cc');
+    text('#w4 label.section','s4.notes');
+
+    // Wizard Buttons
+    text('#btnPrev','btn.prev'); text('#btnNext','btn.next'); text('#btnCreate','btn.create');
+
+    // Edit-Modal – Titel/Tabs
+    text('#modalEdit header h3','modal.edit');
+    text('#modalEdit .tabs .tab[data-tab="tabDet"]','tab.details');
+    text('#modalEdit .tabs .tab[data-tab="tabPlan"]','tab.plan');
+    text('#modalEdit .tabs .tab[data-tab="tabPay"]','tab.pay');
+    text('#modalEdit .tabs .tab[data-tab="tabAct"]','tab.act');
+
+    // Edit-Modal – Labels (per Input-ID)
+    setLabelByInputId('eResNo','lab.resno',lang);
+    setLabelByInputId('eStatus','lab.status',lang);
+    setLabelByInputId('eHotel','lab.hotel',lang);
+    setLabelByInputId('eLname','lab.guestlname',lang);
+    setLabelByInputId('eArr','lab.arrival',lang);
+    setLabelByInputId('eDep','lab.departure',lang);
+    setLabelByInputId('eCat','lab.category',lang);
+    setLabelByInputId('eRate','lab.rate',lang);
+    text('label[for="editTotalPrice"]','lab.total');
+    const notesLbl = document.querySelector('#tabDet .lbl span:first-child'); if (notesLbl) notesLbl.textContent = tr('lab.notes',lang);
+    const hint = document.querySelector('#tabDet .lbl .tiny'); if (hint) hint.textContent = tr('notes.hint',lang);
+
+    text('#btnSaveEdit','btn.save'); text('#btnSavePay','btn.save'); text('#btnCancelRes','btn.cancel'); text('#btnResendConfirmation','btn.resend');
+
+    // Availability
+    text('#modalAvail header h3','modal.avail');
+    setLabelByInputId('availFrom','lab.from',lang);
+    setLabelByInputId('availDays','lab.days',lang);
+    text('#availRun','btn.update');
+    const avLegend = document.querySelector('#modalAvail .body .muted'); if (avLegend) avLegend.textContent = tr('avail.legend',lang);
+    text('#modalAvail .pill.occ-g','avail.g'); text('#modalAvail .pill.occ-o','avail.o'); text('#modalAvail .pill.occ-r','avail.r');
+
+    // Reporting
+    text('#modalReporting header h3','modal.report');
+    setLabelByInputId('repFrom','lab.from',lang);
+    setLabelByInputId('repTo','lab.to',lang);
+    setLabelByInputId('repHotel','lab.hotel',lang);
+    text('#repXls','btn.export.xls'); text('#repCsv','btn.export.csv'); text('#repPdf','btn.export.pdf');
+    text('#modalReporting .chart-card:nth-child(1) h4','report.h1');
+    text('#modalReporting .chart-card:nth-child(2) h4','report.h2');
+    th('#modalReporting thead th', ['rep.th.hotel','rep.th.bookings','rep.th.revenue','rep.th.adr','rep.th.occ']);
+
+    // Settings
+    text('#modalSettings header h3','modal.settings');
+    // Labeltexte neben den Controls: dort sind <span class="set-label"> …</span>
+    replTextIn('.set-label','Sprache','set.lang');
+    replTextIn('.set-label','Farbton','set.hue');
+    text('#btnUserPrefs','set.userprefs'); text('#btnChannel','set.channel'); text('#btnLog','set.log'); text('#btnCats','set.cats'); text('#btnRates','set.rates'); text('#btnHelp','set.help');
+    text('#btnSaveSettings','set.save');
+    text('.set-sys h4.section','sysinfo');
+
+    // Rates
+    text('#modalRateEdit header h3','modal.rate.edit');
+    text('#modalRateCreate header h3','modal.rate.create');
+    setLabelByInputId('crCode','lab.ratecode',lang);
+    setLabelByInputId('crType','lab.ratetype',lang);
+    setLabelByInputId('crHotel','lab.ratehotel',lang);
+    setLabelByInputId('crName','lab.ratename',lang);
+    text('label[for="crCatsWrap"] .set-label','lab.cats'); // falls als label-for gesetzt
+    setLabelByInputId('crPolicy','lab.policy',lang);
+    setLabelByInputId('crPrice','lab.price',lang);
+    setLabelByInputId('crMapped','lab.mapped',lang);
+    text('#btnRateCreate','btn.rate.create');
+    // Edit
+    setLabelByInputId('erHotel','lab.ratehotel',lang);
+    setLabelByInputId('erCode','lab.ratecode',lang);
+    setLabelByInputId('erType','lab.ratetype',lang);
+    setLabelByInputId('erName','lab.ratename',lang);
+    setLabelByInputId('erPolicy','lab.policy',lang);
+    setLabelByInputId('erPrice','lab.price',lang);
+    setLabelByInputId('erMapped','lab.mapped',lang);
+    text('#btnRateUpdate','btn.rate.update'); text('#btnRateDelete','btn.rate.delete');
+
+    // Categories
+    text('#modalCats header h3','modal.cats');
+    text('.cats-wrap .box h4.mono','cats.new');
+    setLabelByInputId('catsHotel','lab.hotel',lang);
+    ph('#catsSearch','ph.cats.search');
+    setLabelByInputId('catCodeNew','lab.cat.code',lang);
+    setLabelByInputId('catMaxNew','lab.cat.max',lang);
+    setLabelByInputId('catNameNew','lab.cat.name',lang);
+
+    // Channel
+    text('#modalChannel header h3','modal.channel');
+    text('.channel-tab[data-channel-tab="api"]','tab.api');
+    text('.channel-tab[data-channel-tab="property"]','tab.prop');
+    text('.channel-tab[data-channel-tab="monitor"]','tab.monitor');
+    text('.channel-tab[data-channel-tab="system"]','tab.system');
+    text('.channel-tab[data-channel-tab="admin"]','tab.admin');
+    text('#btnSyncNow','btn.sync');
+
+    // Log
+    text('#modalLog header h3','modal.log');
+    ph('#logSearch','log.ph.search');
+    const optAll = document.querySelector('#logType option[value=""]'); if (optAll) optAll.textContent = tr('log.type.all',lang);
+    th('#logTable thead th', ['log.th.time','log.th.user','log.th.type','log.th.action','log.th.details']);
+    text('#logPrev','pager.prev'); text('#logNext','pager.next');
+    const lpi = document.getElementById('logPageInfo'); if (lpi) {
+      lpi.textContent = lpi.textContent
+        .replace(/Seite|Page/, tr('pager.page',lang))
+        .replace(/Einträge|entries/, tr('pager.entries',lang));
     }
-
-    // Availability Legende: erster .muted im Headerbereich
-    const avScope = document.querySelector('#modalAvail .body .muted');
-    if (avScope) avScope.textContent = tr('avail.legend', lang);
-
-    // Sektionstitel „Kontaktdaten“ vs. „Contact“
-    const contactH = document.querySelector('#w1 .preview-col .box h4.section');
-    if (contactH) contactH.textContent = (lang==='en') ? 'Contact' : 'Kontaktdaten';
-
-    // Sprache im Select reflektieren
-    const sel = document.getElementById('selLang');
-    if (sel) sel.value = lang;
   }
 
+  // --- kleine DOM-Utils ---
+  function el(sel){ return document.querySelector(sel); }
+  function text(sel,key){ const e = el(sel); if (e) e.textContent = tr(key, getLang()); }
+  function ph(sel,key){ const e = el(sel); if (e) e.setAttribute('placeholder', tr(key, getLang())); }
+  function th(sel, keys){
+    const row = el(sel);
+    if (!row) { // if sel points to the first TH, try its parent row
+      const heads = document.querySelectorAll(sel);
+      if (heads && heads.length) heads.forEach((thEl,i)=> thEl.textContent = tr(keys[i], getLang()));
+      return;
+    }
+    const list = document.querySelectorAll(sel);
+    list.forEach((thEl,i)=> thEl.textContent = tr(keys[i], getLang()));
+  }
+  function replTextIn(selector, contains, key){
+    document.querySelectorAll(selector).forEach(el=>{
+      if ((el.textContent||'').includes(contains)) el.textContent = tr(key, getLang());
+    });
+  }
+
+  // --- Sprache speichern/lesen ---
   function getLang(){ return localStorage.getItem(LS_KEY) || 'de'; }
   function setLang(v){ localStorage.setItem(LS_KEY, v); }
 
-  function init(){
-    const lang = getLang();
-    applyI18n(lang);
+  // --- Re-apply bei dynamischen Änderungen (Modale, Tabs, Table reload) ---
+  let mo;
+  function observeMutations(){
+    if (mo) return;
+    mo = new MutationObserver(()=> applyI18n(getLang()));
+    mo.observe(document.body, {subtree:true, childList:true, attributes:true, attributeFilter:['aria-hidden','class']});
+  }
 
+  // --- Init ---
+  function init(){
+    applyI18n(getLang());
     const sel = document.getElementById('selLang');
     if (sel && !sel.__i18nBound){
       sel.__i18nBound = true;
@@ -1369,16 +1490,13 @@
         applyI18n(v);
       });
     }
+    observeMutations();
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
-  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 
-  // Expose für evtl. spätere Nutzung
-  window.resToolI18n = {apply:applyI18n, getLang, setLang};
+  // optional öffentlich
+  window.resToolI18n = {apply:lang=>applyI18n(lang), getLang, setLang};
 })();
 </script>
 
