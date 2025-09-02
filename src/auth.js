@@ -76,18 +76,28 @@
     iPw.addEventListener('keydown', (e)=>{ if(e.key === 'Enter') tryLogin(); });
   }
 
-  function ensureBadge(){
-    if(qs('#authUserBadge')) return;
-    const badge = ce('div', { id:'authUserBadge' });
-    const dot = ce('span', { id:'authUserDot' });
-    const label = ce('span', { id:'authUserLabel', textContent: '' });
-    badge.append(dot, label);
-    document.body.append(badge);
+function ensureBadge(){
+  if(document.getElementById('authUserBadge')) return;
 
-    badge.addEventListener('click', ()=>{
-      if(confirm('Abmelden?')){ signOut(); }
-    });
+  const badge = ce('div', { id:'authUserBadge' });
+  const dot = ce('span', { id:'authUserDot' });
+  const label = ce('span', { id:'authUserLabel', textContent: '' });
+  badge.append(dot, label);
+
+  // Ziel: in die Topbar rechts integrieren, sonst Fallback: body (fixed)
+  const right = document.querySelector('.toolbar-right') || document.querySelector('header .toolbar-right');
+  if (right) {
+    badge.classList.add('in-toolbar');   // CSS schaltet auf "inline" um
+    right.append(badge);
+  } else {
+    document.body.append(badge);         // Fallback: fixed oben rechts
   }
+
+  badge.addEventListener('click', ()=>{
+    if(confirm('Abmelden?')){ signOut(); }
+  });
+}
+
 
   function showOverlay(active){
     const overlay = qs('#authOverlay');
