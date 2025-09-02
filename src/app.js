@@ -4530,6 +4530,45 @@ window.addEventListener('tab:change', (e)=>{
     renderUserSettingsUI();
   }
 });
+    // ===== Bindings für Einstellungen & Benutzereinstellungen =====
+document.addEventListener('DOMContentLoaded', () => {
+  // A) Wenn die Settings geöffnet werden, rendere die User-UI
+  const btnOpenSettings = document.getElementById('btnSettings') 
+    || document.querySelector('[data-modal="#modalSettings"]');
+  btnOpenSettings?.addEventListener('click', () => {
+    // kurz nach Öffnen rendern (DOM im Modal ist dann da)
+    setTimeout(() => renderUserSettingsUI?.(), 0);
+  });
+
+  // B) Direkt auf die Kachel "Benutzereinstellungen" binden (im Modal)
+  function bindUserPrefsButton(){
+    const btnPrefs = document.getElementById('btnUserPrefs');
+    if(!btnPrefs || btnPrefs.__bound) return;
+    btnPrefs.__bound = true;
+    btnPrefs.addEventListener('click', () => {
+      renderUserSettingsUI?.();
+      // sanft dahin scrollen
+      const m = document.getElementById('usersTabMount');
+      m && m.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }
+  bindUserPrefsButton();
+
+  // C) Falls dein Modal seine Sichtbarkeit per aria-hidden/class toggelt:
+  const settingsModal = document.getElementById('modalSettings');
+  if(settingsModal){
+    const mo = new MutationObserver(() => {
+      // Wenn sichtbar, rendern & Button-Bindings sicherstellen
+      const hidden = settingsModal.getAttribute('aria-hidden');
+      if(hidden === null || hidden === 'false'){
+        renderUserSettingsUI?.();
+        bindUserPrefsButton();
+      }
+    });
+    mo.observe(settingsModal, { attributes: true, attributeFilter: ['aria-hidden','class'] });
+  }
+});
+
 
 
   });
