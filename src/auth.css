@@ -139,3 +139,20 @@ body.auth-lock {
   background: #00ffaa;
   box-shadow: 0 0 10px rgba(0,255,170,0.6);
 }
+/* Badge in der Topbar integriert */
+.topbar .toolbar-right { display: flex; align-items: center; gap: 12px; }
+
+#authUserBadge.in-toolbar {
+  position: static;           /* nicht mehr fixed */
+  display: inline-flex;
+  margin-left: 8px;           /* kleiner Abstand hinter den Status-Chips */
+  backdrop-filter: none;      /* wirkt sonst in der Topbar etwas kräftig */
+  -webkit-backdrop-filter: none;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04);
+}
+
+/* Optional: wenn dir die Badge in der Topbar zu „glowig“ ist */
+#authUserBadge.in-toolbar #authUserDot {
+  box-shadow: none;
+}
+
