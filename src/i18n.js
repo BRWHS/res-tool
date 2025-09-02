@@ -1,11 +1,9 @@
-// HTML lang-Attribut und Dock-Tooltip passend setzen
-document.documentElement.lang = (lang === 'en' ? 'en' : 'de');
-document.getElementById('dockToggle')?.setAttribute('title', tr('dock.toggle', lang));
-
-// ===== Light i18n engine for res-tool =====
+// ===== Light i18n engine for res-tool (CLEANED) =====
+// All logic is isolated in an IIFE. Nothing leaks to global scope except window.resToolI18n.
 (function(){
   const LS_KEY = 'resTool.lang';
 
+  // --- Translations ---------------------------------------------------------
   const I18N = {
     de: { // German originals
       'brand.title': 'res-tool',
@@ -96,7 +94,7 @@ document.getElementById('dockToggle')?.setAttribute('title', tr('dock.toggle', l
       'settings.cats': 'Kategorieverwaltung',
       'settings.rates': 'Rateneinstellungen',
       'settings.help': 'Hilfe & FAQ',
-      'sysinfo.title': 'Live-Systeminfo',
+      'sysinfo.title': 'Live‑Systeminfo',
       'modal.rate.edit': 'Rate bearbeiten',
       'modal.rate.create': 'Neue Rate',
       'btn.rate.create': 'Rate erstellen',
@@ -111,6 +109,7 @@ document.getElementById('dockToggle')?.setAttribute('title', tr('dock.toggle', l
       'channel.monitor.title': 'Monitoring',
       'channel.system.title': 'System – Technik',
       'channel.admin.title': 'Admin',
+      'dock.toggle': 'Ein-/Ausblenden'
     },
     en: {
       'brand.title': 'res-tool',
@@ -216,10 +215,11 @@ document.getElementById('dockToggle')?.setAttribute('title', tr('dock.toggle', l
       'channel.monitor.title': 'Monitoring',
       'channel.system.title': 'System / Tech',
       'channel.admin.title': 'Admin',
+      'dock.toggle': 'Collapse/Expand'
     }
   };
 
-  // Declarative map: what to translate (selectors -> key or function)
+  // --- Mapping of DOM targets to keys ---------------------------------------
   const MAP = [
     // Top toolbar
     {sel:'#btnNew', key:'btn.new'},
@@ -250,8 +250,8 @@ document.getElementById('dockToggle')?.setAttribute('title', tr('dock.toggle', l
     {sel:'#filterStatus option[value="canceled"]', key:'res.filter.status.canceled'},
     {sel:'#filterStatus option[value="all"]', key:'res.filter.status.all'},
     {sel:'#filterResNo', key:'res.filter.resno', attr:'placeholder'},
-    {sel:'label[for="filterFrom"], #filterFrom', key:'res.filter.from', attrLabelOrPlaceholder:true},
-    {sel:'label[for="filterTo"], #filterTo', key:'res.filter.to', attrLabelOrPlaceholder:true},
+    {sel:'#filterFrom', key:'res.filter.from', attr:'placeholder'},
+    {sel:'#filterTo', key:'res.filter.to', attr:'placeholder'},
     {sel:'#btnRefresh', key:'btn.refresh'},
     {sel:'#btnClearFilters', key:'btn.reset'},
     {sel:'#resExportCsv', key:'btn.export.csv'},
@@ -273,28 +273,11 @@ document.getElementById('dockToggle')?.setAttribute('title', tr('dock.toggle', l
     {sel:'.wizard-steps .wstep[data-step="2"] b', key:'wiz.step2'},
     {sel:'.wizard-steps .wstep[data-step="3"] b', key:'wiz.step3'},
     {sel:'.wizard-steps .wstep[data-step="4"] b', key:'wiz.step4'},
-    // Step 1 labels
-    {sel:'#w1 .form-col h4.section:nth-of-type(1)', key:'wiz.step1'},
-    {sel:'#w1 .form-col .grid-compact label:nth-child(2)', key:'step1.arrival', asLabel:true},
-    {sel:'#w1 .form-col .grid-compact label:nth-child(3)', key:'step1.departure', asLabel:true},
-    {sel:'#w1 .form-col .grid-compact label:nth-child(4)', key:'step1.adults', asLabel:true},
-    {sel:'#w1 .form-col .grid-compact label:nth-child(5)', key:'step1.children', asLabel:true},
-    {sel:'#w1 .preview-col .box h4.section', key:'contact.email', custom(el,txt,lang){
-      // We change only the box title; fields below get placeholders next:
-      el.textContent = (lang==='en') ? 'Contact' : 'Kontaktdaten';
-    }},
-    {sel:'#newPhone', key:'contact.phone', attr:'placeholder'},
-    {sel:'#newEmail', key:'contact.email', attr:'placeholder'},
 
-    // Step 2
-    {sel:'#w2 .s2-left .s2-label', key:'wiz.step2'},
-    {sel:'#w2 .s2-facts .mono', key:'step2.facts'},
-    {sel:'#w2 .s2-desc .mono', key:'step2.desc'},
-
-    // Step 3
+    // Step 3 policy label
     {sel:'#w3 .policy-box .muted', key:'step3.policy'},
 
-    // Step 4
+    // Step 4 sections
     {sel:'#w4 .section:nth-of-type(1)', key:'step4.company'},
     {sel:'#w4 .section:nth-of-type(2)', key:'step4.cc'},
     {sel:'#w4 label.section', key:'step4.notes'},
@@ -319,7 +302,7 @@ document.getElementById('dockToggle')?.setAttribute('title', tr('dock.toggle', l
 
     // Availability
     {sel:'#modalAvail header h3', key:'modal.avail.title'},
-    {sel:'#modalAvail .muted', key:'avail.legend', whichText:0}, // first muted span "Legende:"
+    {sel:'#modalAvail .muted', key:'avail.legend'}, // first muted span "Legende:" / "Legend:"
     {sel:'#modalAvail .pill.occ-g', key:'avail.legend.g'},
     {sel:'#modalAvail .pill.occ-o', key:'avail.legend.o'},
     {sel:'#modalAvail .pill.occ-r', key:'avail.legend.r'},
@@ -330,13 +313,9 @@ document.getElementById('dockToggle')?.setAttribute('title', tr('dock.toggle', l
     {sel:'#repXls', key:'btn.export.xls'},
     {sel:'#repCsv', key:'btn.export.csv'},
     {sel:'#repPdf', key:'btn.export.pdf'},
-    {sel:'h4.mono:contains("Umsatz pro Hotel")', key:'report.revenue'},
-    {sel:'h4.mono:contains("Buchungen pro Hotel")', key:'report.bookings'},
 
     // Settings
     {sel:'#modalSettings header h3', key:'modal.settings.title'},
-    {sel:'label .set-label:contains("Sprache")', key:'settings.lang'},
-    {sel:'label .set-label:contains("Farbton")', key:'settings.hue'},
     {sel:'#btnUserPrefs', key:'settings.userprefs'},
     {sel:'#btnChannel', key:'settings.channel'},
     {sel:'#btnLog', key:'settings.log'},
@@ -364,15 +343,15 @@ document.getElementById('dockToggle')?.setAttribute('title', tr('dock.toggle', l
     {sel:'.channel-tab[data-channel-tab="monitor"]', key:'channel.monitor.title'},
     {sel:'.channel-tab[data-channel-tab="system"]', key:'channel.system.title'},
     {sel:'.channel-tab[data-channel-tab="admin"]', key:'channel.admin.title'},
-    {sel:'#btnSyncNow', key:'btn.sync.now'},
+    {sel:'#btnSyncNow', key:'btn.sync.now'}
   ];
 
-  // Helpers
+  // --- Helpers ---------------------------------------------------------------
   function getLang(){ return localStorage.getItem(LS_KEY) || 'de'; }
   function setLang(v){ localStorage.setItem(LS_KEY, v); }
   function tr(key, lang){ return (I18N[lang] && I18N[lang][key]) || I18N.de[key] || ''; }
 
-  // Query that supports :contains() for a few labels (fallback)
+  // Simple query that supports :contains() fallback for a few static labels (not heavy)
   function $(sel){
     if (!/:contains\(/.test(sel)) return document.querySelector(sel);
     const [before, text] = sel.split(':contains(');
@@ -382,50 +361,23 @@ document.getElementById('dockToggle')?.setAttribute('title', tr('dock.toggle', l
   }
 
   function applyI18n(lang){
-    // Toolbar/status simple bits
+    // Translate main mapped elements
     MAP.forEach(m=>{
       const el = $(m.sel);
       if (!el) return;
       const txt = tr(m.key, lang);
-      if (m.custom) return m.custom(el, txt, lang);
       if (m.attr) { el.setAttribute(m.attr, txt); return; }
-      if (m.attrLabelOrPlaceholder){
-        if (el.tagName === 'INPUT' || el.tagName === 'SELECT' || el.tagName === 'TEXTAREA')
-          el.setAttribute('placeholder', txt);
-        else el.textContent = txt;
-        return;
-      }
-      if (m.asLabel){
-        // Many labels use: <label>Text <input/></label>
-        // Replace only the first text node
-        const tn = Array.from(el.childNodes).find(n=>n.nodeType===3);
-        if (tn) tn.nodeValue = txt + ' ';
-        else el.prepend(document.createTextNode(txt+' '));
-        return;
-      }
-      if (m.whichText != null){
-        const node = el; // pick nth text span if needed
-        el.textContent = txt;
-        return;
-      }
       el.textContent = txt;
     });
 
-    // Language select reflect current (so UI shows "Deutsch"/"English")
-    const sel = document.getElementById('selLang');
-    if (sel){
-      sel.value = lang;
-      // Option labels stay localized (Deutsch/English), no change needed
-    }
+    // Apply language marker on <html>
+    document.documentElement.lang = (lang === 'en' ? 'en' : 'de');
 
-    // de:
-'dock.toggle': 'Ein-/Ausblenden',
+    // Dock toggle tooltip (if exists)
+    const dockBtn = document.getElementById('dockToggle');
+    if (dockBtn) dockBtn.setAttribute('title', tr('dock.toggle', lang));
 
-// en:
-'dock.toggle': 'Collapse/Expand',
-
-
-    // Small things: table headers in Reporting modal (if present)
+    // Reporting table header (if present)
     const repHead = document.querySelector('#modalReporting thead tr');
     if (repHead && lang==='en'){
       const map = ['Hotel','Bookings','Revenue','ADR','Occupancy'];
@@ -435,6 +387,10 @@ document.getElementById('dockToggle')?.setAttribute('title', tr('dock.toggle', l
       const map = ['Hotel','Buchungen','Umsatz','ADR','Belegungsrate'];
       Array.from(repHead.children).forEach((th,i)=> th.textContent = map[i] || th.textContent);
     }
+
+    // Reflect current language in selector
+    const sel = document.getElementById('selLang');
+    if (sel) sel.value = lang;
   }
 
   // Wire up
@@ -462,4 +418,3 @@ document.getElementById('dockToggle')?.setAttribute('title', tr('dock.toggle', l
     initI18n();
   }
 })();
-
