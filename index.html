@@ -1255,16 +1255,27 @@
   };
 
   // --- Helfer: Label eines Inputs per ID setzen ---
-  function setLabelByInputId(id, key, lang){
-    const input = document.getElementById(id);
-    if (!input) return;
-    const label = input.closest('label') || input.parentElement?.tagName==='LABEL' ? input.parentElement : null;
-    if (!label) return;
-    const txt = tr(key, lang);
-    const tn = Array.from(label.childNodes).find(n=>n.nodeType===3);
-    if (tn) tn.nodeValue = txt + ' ';
-    else label.prepend(document.createTextNode(txt + ' '));
-  }
+function setLabelByInputId(id, key, lang){
+  const input = document.getElementById(id);
+  if (!input) return;
+
+  // Korrekte Klammerung – kein Ternary/OR-Mixup mehr
+  const parentIsLabel = input.parentElement && input.parentElement.tagName === 'LABEL';
+  const candidate = input.closest && input.closest('label');
+  const label = candidate ? candidate : (parentIsLabel ? input.parentElement : null);
+
+  if (!label) return;
+
+  const txt = tr(key, lang);
+  // Nur den ersten Text-Node im Label ersetzen, Inputs unangetastet lassen
+  const tn = Array.from(label.childNodes).find(n => n.nodeType === 3);
+  if (tn) tn.nodeValue = txt + ' ';
+  else label.prepend(document.createTextNode(txt + ' '));
+}
+
+// … Rest deines i18n-Skripts unverändert …
+</script>
+
 
   // --- Texte holen ---
   function tr(key, lang){ return (I18N[lang] && I18N[lang][key]) || I18N.de[key] || ''; }
