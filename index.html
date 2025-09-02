@@ -640,13 +640,15 @@
       <!-- oben: links Form / rechts Live-Systeminfo -->
      <div class="set-top">
   <!-- LINKER BLOCK: Sprache/Farbton + Buttons -->
-  <label class="set-field">
-  <span class="set-label">Sprache</span>
-  <select id="selLang">
-    <option value="de">Deutsch</option>
-    <option value="en">English</option>
-  </select>
-</label>
+<div class="set-left">
+    <div class="set-grid">
+      <label class="set-field">
+        <span class="set-label">Sprache</span>
+        <select id="selLang" class="input theme-select">
+          <option value="de">Deutsch</option>
+          <option value="en">English</option>
+        </select>
+      </label>
 
       <label class="set-field">
         <span class="set-label">Farbton (Hue) <span id="hueVal" class="muted">180°</span></span>
