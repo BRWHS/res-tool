@@ -891,3 +891,14 @@ html.modal-open { overflow: hidden; }
   transform: translateX(-50%) translateY(4px);
 }
 .toast.hidden{ display:none; }
+
+/* User Settings */
+#userSettings .grid-2 { display:grid; grid-template-columns: 1fr 1.2fr; gap:16px; }
+#userSettings .table-wrap { max-height: 52vh; overflow:auto; }
+#userSettings .table.compact td, 
+#userSettings .table.compact th { padding: 8px 10px; }
+#userSettings .row.gap { gap: 8px; }
+#userSettings .row.between { display:flex; justify-content:space-between; align-items:center; gap:8px; }
+#userSettings input.input { width:100%; }
+#userSettings .btn.small { padding:6px 10px; font-size:.9rem; }
+
