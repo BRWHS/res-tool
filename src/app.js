@@ -4119,5 +4119,68 @@ async function copyToClipboard(txt){
       const b = document.getElementById('btnNew'); if (b){ e.preventDefault(); b.click(); }
     }
   });
+
+  // ===== System Info (öffentliche IP vs. lokale IPv4) — safe add-on =====
+// Kann **nach** app.js eingebunden werden. Läuft eigenständig und berührt nichts anderes.
+(function(){
+  function setTxt(id, val){ const el = document.getElementById(id); if (el) el.textContent = val ?? '—'; }
+
+  async function getPublicIP(){
+    try {
+      const r = await fetch('https://api.ipify.org?format=json', {cache:'no-store'});
+      if (r.ok){ const d = await r.json(); return d.ip; }
+    } catch(e){}
+    try {
+      const r = await fetch('https://api64.ipify.org?format=json', {cache:'no-store'});
+      if (r.ok){ const d = await r.json(); return d.ip; }
+    } catch(e){}
+    return null;
+  }
+
+  function getLocalIPv4(timeoutMs=2500){
+    return new Promise(resolve=>{
+      const ips = new Set();
+      const isV4 = ip => /^\d{1,3}(\.\d{1,3}){3}$/.test(ip);
+      const isPrivate = ip =>
+        /^10\./.test(ip) ||
+        /^192\.168\./.test(ip) ||
+        /^172\.(1[6-9]|2\d|3[0-1])\./.test(ip);
+
+      let done = false;
+      const finish = () => { if (done) return; done = true; resolve([...ips].find(isPrivate) || null); };
+
+      const pcs = [
+        new RTCPeerConnection({ iceServers: [] }),
+        new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] })
+      ];
+
+      pcs.forEach(pc=>{
+        try{ pc.createDataChannel('x'); }catch{}
+        pc.onicecandidate = e=>{
+          const c = e.candidate && e.candidate.candidate;
+          if (!c) return;
+          const parts = c.split(' ');
+          const ip = parts[4];
+          if (ip && isV4(ip)) ips.add(ip);
+        };
+        pc.createOffer().then(o=>pc.setLocalDescription(o)).catch(()=>{});
+      });
+
+      setTimeout(()=>{ pcs.forEach(pc=>{ try{pc.close();}catch{} }); finish(); }, timeoutMs);
+    });
+  }
+
+  async function init(){
+    const [pub, lan] = await Promise.all([getPublicIP(), getLocalIPv4()]);
+    setTxt('netIp', pub || '—');
+    setTxt('netIpv4', lan ? (pub && lan===pub ? `${lan} (lokal unbekannt)` : lan) : '—');
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
 })();
 
