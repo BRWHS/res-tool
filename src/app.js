@@ -1,3 +1,11 @@
+// --- global debounce shim (muss VOR jeder Nutzung stehen) ---
+if (typeof window.debounce !== 'function') {
+  window.debounce = function(fn, ms = 300) {
+    let t;
+    return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+  };
+}
+
 (() => {
   // === Canonical rates storage key (fixes undefined RATES_KEY / RKEY mismatch) ===
   var RATES_KEY = (typeof window !== 'undefined' && window.RATES_KEY) ? window.RATES_KEY : 'resTool.rates';
