@@ -12,6 +12,19 @@
   if (window.__RESTOOL_MODAL_CORE__) return;
   window.__RESTOOL_MODAL_CORE__ = true;
 
+  // --- COMPAT: ensure .hidden is removed when opening modals (for legacy markup)
+(function patchOpenModalToRemoveHidden(){
+  if (typeof window.openModal !== 'function') return;
+  const _open = window.openModal;
+  window.openModal = (target) => {
+    const el = (typeof target === 'string')
+      ? document.getElementById(target.replace(/^#/, ''))
+      : (target && target.nodeType ? target : null);
+    if (el && el.classList.contains('hidden')) el.classList.remove('hidden');
+    return _open(target);
+  };
+})();
+
   // === Drawer-Helper (nur für Gruppen-Drawer) ===
 function openDrawer(id){
   const el = document.getElementById(id);
@@ -127,6 +140,22 @@ function closeDrawer(id){
     e.preventDefault();
     closeModal(btn.closest('.modal'));
   }, { passive:false });
+
+  // --- Close buttons with custom data attributes
+document.addEventListener('click', (e) => {
+  const mBtn = e.target.closest('[data-close-modal]');
+  if (mBtn) {
+    const id = mBtn.getAttribute('data-close-modal');
+    if (id) closeModal(id);
+    return;
+  }
+  const dBtn = e.target.closest('[data-close-drawer]');
+  if (dBtn) {
+    const id = dBtn.getAttribute('data-close-drawer');
+    if (id && typeof closeDrawer === 'function') closeDrawer(id);
+  }
+}, { passive: true });
+
 })();
 
 // Legacy-Alias, damit alle vorhandenen Listener weiter funktionieren
@@ -4451,6 +4480,41 @@ if (grp_state.groups.length === 0){
   ].forEach(s => grp_state.res.push({ id: grp_uuid(), group_id: gid, ...s, created_at:new Date().toISOString(), updated_at:new Date().toISOString() }));
   grp_saveLS('groups', grp_state.groups);
   grp_saveLS('group_reservations', grp_state.res);
+
+  // --- Gruppenreservierungen: open modal, open drawer, fill selects
+document.addEventListener('DOMContentLoaded', () => {
+  // Toolbar-Button → Gruppen-Modal
+  const btnGroups = document.getElementById('btnGroups');
+  if (btnGroups && !btnGroups.__bound) {
+    btnGroups.__bound = true;
+    btnGroups.addEventListener('click', () => {
+      openModal('groupDetailModal');   // entfernt .hidden via Patch
+    });
+  }
+
+  // "Zimmer hinzufügen" → Drawer rechts
+  const btnAddRooming = document.getElementById('btnAddRooming');
+  if (btnAddRooming && !btnAddRooming.__bound) {
+    btnAddRooming.__bound = true;
+    btnAddRooming.addEventListener('click', () => {
+      if (typeof openDrawer === 'function') openDrawer('drawerQuickAdd'); // nutzt dein Drawer-Helper
+    });
+  }
+
+  // Hotel-Dropdown im Quick-Add füllen
+  const qaHotel = document.getElementById('qaHotel');
+  if (qaHotel && !qaHotel.__filled) {
+    qaHotel.__filled = true;
+    qaHotel.innerHTML = '';
+    (Array.isArray(window.HOTELS) ? window.HOTELS : []).forEach(h => {
+      const opt = document.createElement('option');
+      opt.value = h.code;
+      opt.textContent = `${h.group} - ${h.name.replace(/^.*? /,'')}`;
+      qaHotel.appendChild(opt);
+    });
+  }
+});
+
 }
 
   });
