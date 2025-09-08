@@ -3454,6 +3454,29 @@ document.addEventListener('DOMContentLoaded', ()=>{
     });
   }
 });
+  // --- Mini-Analytics robust starten ---
+(function initMiniAnalyticsSafe(){
+  // 1) beim Laden
+  window.addEventListener('load', () => {
+    try { buildMiniAnalytics(); } catch(e){ console.warn('mini chart load', e); }
+  });
+
+  // 2) nach relevanten Aktionen neu aufbauen
+  window.addEventListener('priceplan:saved', () => {
+    try { buildMiniAnalytics(); } catch(e){}
+  });
+  window.addEventListener('reservation:changed', () => {
+    try { buildMiniAnalytics(); } catch(e){}
+  });
+
+  // 3) Fallback alle 60s (nur wenn Dock existiert)
+  setInterval(() => {
+    if (document.getElementById('miniAnalyticsDock')) {
+      try { buildMiniAnalytics(); } catch(e){}
+    }
+  }, 60000);
+})();
+
 
 
 // ===== Hilfsfunktion aus Liste (wegen Scope) =====
