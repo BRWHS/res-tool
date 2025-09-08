@@ -34,6 +34,7 @@
         <button class="btn ghost"   id="btnReporting"  data-modal="#modalReporting">Reporting</button>
         <button class="btn ghost"   id="btnSettings"   data-modal="#modalSettings">Einstellungen</button>
         <button class="btn ghost"   id="btnSketch"     data-modal="#modalSketch">Hotelskizze</button>
+        <button id="btnGroups" class="btn ghost">Gruppenreservierungen</button>
       </div>
 
       <div class="toolbar-right mono">
@@ -1384,6 +1385,158 @@
   window.resToolI18n = {apply:applyI18n, getLang, setLang};
 })();
 </script>
+
+  <!-- ========== Gruppenreservierungen: Liste ========== -->
+<div id="groupsModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="groupsTitle">
+  <div class="modal-card xl">
+    <header class="modal-header">
+      <h3 id="groupsTitle">Gruppenreservierungen</h3>
+      <div class="modal-actions">
+        <button id="btnNewGroup" class="btn primary">Neue Gruppe anlegen</button>
+        <button class="btn icon" data-close-modal="groupsModal" aria-label="Schließen">✕</button>
+      </div>
+    </header>
+    <div class="modal-body split">
+      <aside class="sidebar">
+        <div class="sidebar-section">
+          <label class="label">Suchen</label>
+          <input id="groupsSearch" class="input" type="search" placeholder="Gruppennamen, Notizen, Hotel…" />
+        </div>
+        <div class="sidebar-section">
+          <label class="label">Häuser</label>
+          <div id="groupsHotelFilter" class="vlist"></div>
+        </div>
+        <div class="sidebar-section">
+          <label class="label">Status</label>
+          <div class="chips">
+            <button class="chip active" data-gfilter-status="">Alle</button>
+            <button class="chip" data-gfilter-status="open">Offen</button>
+            <button class="chip" data-gfilter-status="option">Option</button>
+            <button class="chip" data-gfilter-status="definite">Definitiv</button>
+            <button class="chip" data-gfilter-status="lost">Lost</button>
+          </div>
+        </div>
+      </aside>
+      <section class="content">
+        <div class="list-header">
+          <span class="col grow">Gruppe</span>
+          <span class="col">Zimmer</span>
+          <span class="col">RN</span>
+          <span class="col">ADR</span>
+          <span class="col">Umsatz</span>
+          <span class="col">Zeitraum</span>
+        </div>
+        <div id="groupsList" class="list"></div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<!-- ========== Gruppenreservierungen: Detail ========== -->
+<div id="groupDetailModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="groupDetailTitle">
+  <div class="modal-card lg">
+    <header class="modal-header">
+      <h3 id="groupDetailTitle">Gruppe</h3>
+      <div class="modal-actions">
+        <button id="btnAddRooming" class="btn">Zimmer hinzufügen</button>
+        <button class="btn icon" data-close-modal="groupDetailModal" aria-label="Schließen">✕</button>
+      </div>
+    </header>
+    <div class="modal-body">
+      <div class="grid two">
+        <div>
+          <label class="label">Beschreibung / Notizen</label>
+          <textarea id="groupNotes" class="input" rows="5" placeholder="Interne Notizen zur Gruppe"></textarea>
+        </div>
+        <div>
+          <div class="stats">
+            <div class="stat"><div class="stat-label">Zimmer</div><div id="gdRooms" class="stat-value">—</div></div>
+            <div class="stat"><div class="stat-label">Roomnights</div><div id="gdRN" class="stat-value">—</div></div>
+            <div class="stat"><div class="stat-label">ADR</div><div id="gdADR" class="stat-value">—</div></div>
+            <div class="stat"><div class="stat-label">Umsatz</div><div id="gdRevenue" class="stat-value">—</div></div>
+          </div>
+          <div class="meta mt-2" id="gdMeta">—</div>
+        </div>
+      </div>
+
+      <div class="table-wrap mt-3">
+        <table class="table" id="gdTable">
+          <thead>
+            <tr>
+              <th>Hotel</th>
+              <th>Gast</th>
+              <th>Anreise</th>
+              <th>Abreise</th>
+              <th>Pers.</th>
+              <th>Rate</th>
+              <th>Preis</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+    <footer class="modal-footer">
+      <button id="btnSaveGroup" class="btn primary">Änderungen speichern</button>
+    </footer>
+  </div>
+</div>
+
+<!-- ========== Drawer: Schnell Zimmer hinzufügen ========== -->
+<div id="drawerQuickAdd" class="drawer hidden" aria-hidden="true">
+  <div class="drawer-card">
+    <header class="drawer-header">
+      <h4>Schnell Zimmer hinzufügen</h4>
+      <button class="btn icon" data-close-drawer="drawerQuickAdd" aria-label="Schließen">✕</button>
+    </header>
+    <div class="drawer-body">
+      <form id="quickAddForm" class="grid three">
+        <div>
+          <label class="label">Hotel</label>
+          <select name="hotel" class="input" id="qaHotel"></select>
+        </div>
+        <div>
+          <label class="label">Vorname</label>
+          <input name="first_name" class="input" required />
+        </div>
+        <div>
+          <label class="label">Nachname</label>
+          <input name="last_name" class="input" required />
+        </div>
+        <div>
+          <label class="label">Anreise</label>
+          <input name="arrival" type="date" class="input" required />
+        </div>
+        <div>
+          <label class="label">Abreise</label>
+          <input name="departure" type="date" class="input" required />
+        </div>
+        <div>
+          <label class="label">Personen</label>
+          <input name="persons" type="number" min="1" value="1" class="input" required />
+        </div>
+        <div>
+          <label class="label">Rate</label>
+          <input name="rate_name" class="input rate-editor" placeholder="z.B. Flex" />
+          <small class="hint">Klicke den Preis an, um Tagespreise zu setzen</small>
+        </div>
+        <div>
+          <label class="label">Preis / Nacht (€)</label>
+          <input name="price" type="number" min="0" step="0.01" class="input" />
+        </div>
+        <div>
+          <label class="label">x Zimmer</label>
+          <input name="count" type="number" min="1" value="1" class="input" />
+        </div>
+      </form>
+      <div class="rate-days mt-2" id="qaRateDays" hidden></div>
+    </div>
+    <footer class="drawer-footer">
+      <button id="btnQAAdd" class="btn primary">Zimmer hinzufügen</button>
+    </footer>
+  </div>
+</div>
+
 
 </body>
 </html>
