@@ -4470,27 +4470,39 @@ function grp_buildMeta(groupId){
 // Initial anzeigen
 grp_renderGroupsList();
 
-// Demo-Seed nur beim ersten Mal (optional, kannst du löschen):
-if (grp_state.groups.length === 0){
-  const gid = grp_uuid();
-  grp_state.groups.push({ id: gid, name:'Messegruppe Light+Building', status:'open', notes:'VIP-Kontingent 10 Zi.', created_at:new Date().toISOString(), updated_at:new Date().toISOString() });
-  [{ hotel_code: grp_hotels()[0]?.code || '', first_name:'Anna',  last_name:'Maier', arrival:'2025-10-02', departure:'2025-10-05', persons:1, rate_name:'Flex', price:109 },
-   { hotel_code: grp_hotels()[1]?.code || '', first_name:'Chris', last_name:'Bauer', arrival:'2025-10-03', departure:'2025-10-05', persons:1, rate_name:'Flex', price:119 },
-   { hotel_code: grp_hotels()[2]?.code || '', first_name:'Marc',  last_name:'Weber', arrival:'2025-10-02', departure:'2025-10-04', persons:2, rate_name:'BB',   price:null, per_day:{'2025-10-02':129,'2025-10-03':149} },
-  ].forEach(s => grp_state.res.push({ id: grp_uuid(), group_id: gid, ...s, created_at:new Date().toISOString(), updated_at:new Date().toISOString() }));
-  grp_saveLS('groups', grp_state.groups);
-  grp_saveLS('group_reservations', grp_state.res);
-
-  // --- Gruppenreservierungen: open modal, open drawer, fill selects
+// ... direkt NACH grp_renderGroupsList(); ODER ganz unten der Datei:
 document.addEventListener('DOMContentLoaded', () => {
   // Toolbar-Button → Gruppen-Modal
   const btnGroups = document.getElementById('btnGroups');
   if (btnGroups && !btnGroups.__bound) {
     btnGroups.__bound = true;
     btnGroups.addEventListener('click', () => {
-      openModal('groupDetailModal');   // entfernt .hidden via Patch
+      openModal('groupDetailModal');   // .hidden wird durch Patch entfernt
     });
   }
+
+  // "Zimmer hinzufügen" → Drawer öffnen
+  const btnAddRooming = document.getElementById('btnAddRooming');
+  if (btnAddRooming && !btnAddRooming.__bound) {
+    btnAddRooming.__bound = true;
+    btnAddRooming.addEventListener('click', () => {
+      if (typeof openDrawer === 'function') openDrawer('drawerQuickAdd');
+    });
+  }
+
+  // Hotel-Dropdown im Quick-Add füllen
+  const qaHotel = document.getElementById('qaHotel');
+  if (qaHotel && !qaHotel.__filled) {
+    qaHotel.__filled = true;
+    qaHotel.innerHTML = '';
+    (Array.isArray(window.HOTELS) ? window.HOTELS : []).forEach(h => {
+      const opt = document.createElement('option');
+      opt.value = h.code;
+      opt.textContent = `${h.group} - ${h.name.replace(/^.*? /,'')}`;
+      qaHotel.appendChild(opt);
+    });
+  }
+});
 
   // "Zimmer hinzufügen" → Drawer rechts
   const btnAddRooming = document.getElementById('btnAddRooming');
