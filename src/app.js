@@ -4221,6 +4221,86 @@ async function copyToClipboard(txt){
 })();
 
 /* ===========================
+
+// === Ausgelagerter Async-Handler für Fast-Booker ===
+async function fbAddClicked(){
+  try{
+    if (typeof supabase === 'undefined' || !supabase?.from) {
+      alert('Supabase-Client nicht initialisiert.');
+      return;
+    }
+    const g = groups.find(x => x.id === currentId);
+    if (!g) { alert('Keine aktive Gruppe.'); return; }
+
+    const hotel = els.geHotel.value;
+    const last  = els.fbLast.value.trim();
+    const first = els.fbFirst.value.trim();
+    const pax   = Number(els.fbPax.value)||1;
+    const arr   = els.fbArr.value;
+    const dep   = els.fbDep.value;
+    const rateN = (document.getElementById('fbRateSel')?.value || '').trim();
+    const price = Number(els.fbPrice.value)||0;
+
+    if (!hotel || !arr || !dep || !last){
+      alert('Bitte mind. Hotel, An-/Abreise und Nachname ausfüllen.');
+      return;
+    }
+
+    // Hotelname aus HOTELS ableiten
+    const hUI  = (window.HOTELS||[]).find(h => h.code===hotel);
+    const hName = hUI ? `${hUI.group || ''} ${hUI.name || hUI.display_name || ''}`.trim() : hotel;
+
+    // Sichere Felder (ohne group_id, bis Spalte sicher existiert)
+    const payload = {
+      reservation_number: 'G'+Date.now().toString(36).toUpperCase(),
+      status: 'active',
+      hotel_code: hotel,
+      hotel_name: hName,
+      arrival: arr,
+      departure: dep,
+      guests: pax,
+      guests_adults: pax,
+      guests_children: 0,
+      category: null,
+      rate_name: rateN || null,
+      rate_price: price,
+      guest_first_name: first || null,
+      guest_last_name:  last  || null,
+      notes: `Gruppe: ${g.name || g.id}`
+    };
+
+    const { data, error } = await supabase.from('reservations').insert([payload]).select('id');
+    if (error) {
+      console.error('[FastBooker] Insert error:', error);
+      alert('Speichern fehlgeschlagen: ' + (error.message || 'Unbekannter Fehler'));
+      return;
+    }
+
+    // lokale KPIs-Daten füttern
+    (books[g.id] ||= []).push({ last, first, pax, arr, dep, rate: rateN, price });
+    saveBooks(books);
+
+    // UI reset + refresh
+    els.fbLast.value = els.fbFirst.value = '';
+    els.fbPax.value = 1;
+    renderEdit();
+    renderList();
+
+    // globale KPIs / Listen
+    try {
+      await autoRollPastToDone?.();
+      await loadReservations?.();
+      await loadKpisToday?.();
+      await loadKpisNext?.();
+    } catch(_) {}
+    window.dispatchEvent(new Event('reservation:changed'));
+  }catch(e){
+    console.error('[FastBooker] Exception:', e);
+    alert('Speichern fehlgeschlagen: ' + (e.message || e));
+  }
+}
+
+
    GruppenResa — Prototype v1
    Storage: localStorage (resTool.groups / resTool.groupBookings)
    =========================== */
@@ -4460,21 +4540,13 @@ els.geHotel?.addEventListener('change', (e)=>{
 
    // Fast-Booker: hinzufügen (→ echte Reservierung in Supabase + lokale Gruppenzuordnung)
 if (t.id === 'fbAdd'){
-  e.preventDefault();
-  const g = groups.find(x => x.id === currentId); if (!g) return;
-
-  const hotel = els.geHotel.value;
-  const last  = els.fbLast.value.trim();
-  const first = els.fbFirst.value.trim();
-  const pax   = Number(els.fbPax.value)||1;
-  const arr   = els.fbArr.value;
-  const dep   = els.fbDep.value;
-  const rateN = document.getElementById('fbRateSel')?.value || els.fbRate.value.trim(); // Fallback
-  const price = Number(els.fbPrice.value)||0;
-
-  if (!hotel || !arr || !dep || !last){
-    alert('Bitte mind. Hotel, An-/Abreise und Nachname ausfüllen.'); return;
-  }
+      e.preventDefault();
+      fbAddClicked().catch(err => {
+        console.error('fbAddClicked failed', err);
+        alert('Speichern fehlgeschlagen: ' + (err?.message || err));
+      });
+      return;
+    }
 
   // 1) sofort Supabase einsetzen
   const hUI = (window.HOTELS||[]).find(h => h.code===hotel);
