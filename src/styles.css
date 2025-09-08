@@ -913,3 +913,21 @@ html.modal-open { overflow: hidden; }
 .kpi-line{display:flex;align-items:center;justify-content:space-between;border-bottom:1px dashed rgba(0,255,255,.14);padding:6px 0}
 .kpi-line b{font-size:18px}
 
+/* GruppenResa – Header-Button ist schon stilistisch ok */
+
+/* Fast-Booker in einer Zeile */
+.fast-row{
+  display:grid;
+  grid-template-columns: repeat(8, minmax(0,1fr));
+  gap:8px;
+  align-items:end;
+}
+.fast-row label{display:flex;flex-direction:column;gap:6px}
+.fast-actions{display:flex;justify-content:flex-end}
+@media (max-width: 1100px){
+  .fast-row{ grid-template-columns: repeat(4, minmax(0,1fr)); }
+}
+@media (max-width: 680px){
+  .fast-row{ grid-template-columns: repeat(2, minmax(0,1fr)); }
+}
+
