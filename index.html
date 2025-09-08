@@ -34,6 +34,7 @@
         <button class="btn ghost"   id="btnReporting"  data-modal="#modalReporting">Reporting</button>
         <button class="btn ghost"   id="btnSettings"   data-modal="#modalSettings">Einstellungen</button>
         <button class="btn ghost"   id="btnSketch"     data-modal="#modalSketch">Hotelskizze</button>
+        <button class="btn ghost" id="btnGroups" data-modal="#modalGroups">GruppenResa</button>
       </div>
 
       <div class="toolbar-right mono">
@@ -1147,10 +1148,130 @@
   </div>
 </div>
 
+  <!-- GruppenResa: Liste / Filter -->
+<section class="modal" id="modalGroups" role="dialog" aria-labelledby="groupsTitle" aria-modal="true" aria-hidden="true">
+  <header>
+    <h3 id="groupsTitle" class="mono"><span class="set-logo" aria-hidden="true"></span> GruppenResa</h3>
+    <button class="btn" data-close>Schließen</button>
+  </header>
+  <div class="body">
+    <div class="groups-wrap">
+      <!-- Linke Filterleiste -->
+      <aside class="groups-side">
+        <label class="mono muted tiny" style="margin-bottom:6px;display:block">Hotel-Filter</label>
+        <select id="grpHotelFilter" class="input theme-select"></select>
+
+        <label class="mono muted tiny" style="margin:10px 0 6px;display:block">Suche</label>
+        <input id="grpSearch" class="input" placeholder="Gruppenname oder Notiz …" />
+
+        <div class="grow"></div>
+        <button id="btnNewGroup" class="btn primary">+ Neue Gruppe</button>
+      </aside>
+
+      <!-- Rechte Hauptfläche -->
+      <section class="groups-main card">
+        <div class="content">
+          <div class="card-head">
+            <h3 class="mono" id="grpListTitle">Gruppen</h3>
+          </div>
+          <div class="table-wrap" id="grpBoard" data-max-rows="100">
+            <table class="resv">
+              <thead>
+                <tr>
+                  <th>Gruppe</th>
+                  <th>Hotel</th>
+                  <th>Zimmer</th>
+                  <th>Roomnights</th>
+                  <th>Revenue</th>
+                  <th>ADR</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="grpBody"></tbody>
+            </table>
+            <p class="muted tiny" style="margin-top:6px">Max. 100 Einträge.</p>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+</section>
+
+  <!-- Gruppe erstellen / bearbeiten -->
+<section class="modal" id="modalGroupEdit" role="dialog" aria-labelledby="groupEditTitle" aria-modal="true" aria-hidden="true">
+  <header>
+    <h3 id="groupEditTitle" class="mono"><span class="set-logo" aria-hidden="true"></span> Gruppe</h3>
+    <button class="btn" data-close>Schließen</button>
+  </header>
+  <div class="body">
+    <div class="grid-compact-2" style="align-items:start">
+      <div class="form-col">
+        <h4 class="mono section" style="margin-top:0">Stammdaten</h4>
+        <div class="grid-compact">
+          <label>Gruppenname
+            <input id="geName" class="input" placeholder="z. B. ACME Sales Kickoff" />
+          </label>
+          <label>Hotel
+            <select id="geHotel" class="input theme-select"></select>
+          </label>
+          <label style="grid-column:1 / -1">Beschreibung / Notizen
+            <textarea id="geNotes" class="input" rows="4" placeholder="Interne Notizen …"></textarea>
+          </label>
+        </div>
+
+        <h4 class="mono section">Fast-Booker</h4>
+        <div class="grid-compact" id="fastForm">
+          <label>Nachname <input id="fbLast" class="input" /></label>
+          <label>Vorname <input id="fbFirst" class="input" /></label>
+          <label>Personen <input id="fbPax" type="number" min="1" value="1" class="input" /></label>
+          <label>Anreise <input id="fbArr" type="date" class="input" /></label>
+          <label>Abreise <input id="fbDep" type="date" class="input" /></label>
+          <label>Rate <input id="fbRate" class="input" placeholder="z. B. FLEX" /></label>
+          <label>Preis/Nacht (€) <input id="fbPrice" type="number" step="1" min="0" class="input" value="0" /></label>
+          <div style="display:flex;align-items:end">
+            <button id="fbAdd" class="btn">+ Buchung hinzufügen</button>
+          </div>
+        </div>
+
+        <div class="table-wrap" style="margin-top:10px">
+          <table class="resv">
+            <thead>
+              <tr>
+                <th>Nachname</th><th>Vorname</th><th>Pax</th><th>Arr</th><th>Dep</th><th>Rate</th><th>Preis</th><th></th>
+              </tr>
+            </thead>
+            <tbody id="fbBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="content">
+          <div class="card-head">
+            <h3 class="mono">Gruppen KPIs</h3>
+            <span class="pill">live</span>
+          </div>
+          <div class="kpi-col">
+            <div class="kpi-line"><span>Zimmer</span><b id="gkRooms">0</b></div>
+            <div class="kpi-line"><span>Roomnights</span><b id="gkRN">0</b></div>
+            <div class="kpi-line"><span>Revenue</span><b id="gkRev">0 €</b></div>
+            <div class="kpi-line"><span>ADR</span><b id="gkADR">0 €</b></div>
+          </div>
+          <div class="set-footer" style="margin-top:10px;gap:8px;justify-content:flex-end">
+            <button class="btn" id="btnGroupDelete">Gruppe löschen</button>
+            <button class="btn primary" id="btnGroupSave">Speichern</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
 
   <div id="appToast" class="toast hidden" role="status" aria-live="polite"></div>
 
   <script>
+    
 /* ===== Inline i18n for res-tool (DE/EN) ===== */
 (function(){
   const LS_KEY = 'resTool.lang';
