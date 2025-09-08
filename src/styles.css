@@ -902,3 +902,14 @@ html.modal-open { overflow: hidden; }
 #userSettings input.input { width:100%; }
 #userSettings .btn.small { padding:6px 10px; font-size:.9rem; }
 
+/* GruppenResa Layout */
+.groups-wrap{display:grid;grid-template-columns:220px 1fr;gap:12px}
+.groups-side{display:flex;flex-direction:column;gap:8px;min-height:360px}
+.groups-side .grow{flex:1}
+.groups-main .row{cursor:pointer}
+@media (max-width:900px){ .groups-wrap{grid-template-columns:1fr} .groups-side{flex-direction:row;align-items:stretch} .groups-side .grow{display:none} }
+
+.kpi-col{display:flex;flex-direction:column;gap:8px}
+.kpi-line{display:flex;align-items:center;justify-content:space-between;border-bottom:1px dashed rgba(0,255,255,.14);padding:6px 0}
+.kpi-line b{font-size:18px}
+
