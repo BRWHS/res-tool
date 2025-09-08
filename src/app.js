@@ -4163,6 +4163,240 @@ async function copyToClipboard(txt){
   });
 })();
 
+/* ===========================
+   GruppenResa — Prototype v1
+   Storage: localStorage (resTool.groups / resTool.groupBookings)
+   =========================== */
+(function(){
+  // Guard
+  if (window.__RESTOOL_GROUPS__) return; window.__RESTOOL_GROUPS__ = true;
+
+  const LS_GROUPS  = 'resTool.groups';
+  const LS_BOOKS   = 'resTool.groupBookings'; // bookings per groupId
+  const $ = (s,el=document)=>el.querySelector(s);
+  const $$ = (s,el=document)=>Array.from(el.querySelectorAll(s));
+
+  // --- Data helpers ---
+  const getHotels = () => (window.HOTELS || []).map(h => ({ code: h.code || h.hotel_code || h.id, name: h.display_name || h.name || h.code }));
+  const hotelByCode = (code) => getHotels().find(h => h.code === code);
+
+  const loadGroups = () => JSON.parse(localStorage.getItem(LS_GROUPS) || '[]');
+  const saveGroups = (list) => localStorage.setItem(LS_GROUPS, JSON.stringify(list));
+  const loadBooks  = () => JSON.parse(localStorage.getItem(LS_BOOKS)  || '{}');
+  const saveBooks  = (obj) => localStorage.setItem(LS_BOOKS,  JSON.stringify(obj));
+
+  const uid = () => Math.random().toString(36).slice(2,9);
+
+  // --- KPIs for a group ---
+  function calcKPIs(rows){
+    // rows: [{arr, dep, price, ...}]
+    let rooms = rows.length;
+    let rn = 0, rev = 0;
+    for (const r of rows){
+      const arr = new Date(r.arr); const dep = new Date(r.dep);
+      const nights = Math.max( (dep - arr) / (1000*60*60*24), 0 );
+      rn += nights;
+      rev += (Number(r.price)||0) * nights;
+    }
+    const adr = rn > 0 ? (rev / rn) : 0;
+    return { rooms, rn, rev, adr };
+  }
+
+  // --- DOM refs (lazy on open) ---
+  let els = {};
+  function cacheEls(){
+    els = {
+      modalList:     $('#modalGroups'),
+      modalEdit:     $('#modalGroupEdit'),
+      hotelFilter:   $('#grpHotelFilter'),
+      search:        $('#grpSearch'),
+      body:          $('#grpBody'),
+      btnNew:        $('#btnNewGroup'),
+
+      geName:   $('#geName'),
+      geHotel:  $('#geHotel'),
+      geNotes:  $('#geNotes'),
+      fbLast:   $('#fbLast'), fbFirst: $('#fbFirst'), fbPax: $('#fbPax'),
+      fbArr:    $('#fbArr'),  fbDep:   $('#fbDep'),
+      fbRate:   $('#fbRate'), fbPrice: $('#fbPrice'),
+      fbAdd:    $('#fbAdd'),  fbBody:  $('#fbBody'),
+      gkRooms:  $('#gkRooms'), gkRN: $('#gkRN'), gkRev: $('#gkRev'), gkADR: $('#gkADR'),
+      btnSave:  $('#btnGroupSave'), btnDel: $('#btnGroupDelete'),
+    };
+  }
+
+  // --- State ---
+  let groups = loadGroups(); // [{id,name,hotel,notes,createdAt}]
+  let books  = loadBooks();  // { [groupId]: [ {last,first,pax,arr,dep,rate,price} ] }
+  let currentId = null;
+
+  // --- Render helpers ---
+  function fillHotels(selectEl){
+    const hotels = getHotels();
+    selectEl.innerHTML = hotels.map(h => `<option value="${h.code}">${h.name || h.code}</option>`).join('');
+  }
+
+  function renderList(){
+    const q = (els.search?.value || '').toLowerCase();
+    const hf = els.hotelFilter?.value || '';
+    const hotels = getHotels();
+
+    const rows = groups
+      .filter(g => (!hf || g.hotel === hf))
+      .filter(g => !q || (g.name?.toLowerCase().includes(q) || g.notes?.toLowerCase().includes(q)))
+      .map(g => {
+        const rws = books[g.id] || [];
+        const { rooms, rn, rev, adr } = calcKPIs(rws);
+        const hName = (hotels.find(h => h.code === g.hotel)?.name) || g.hotel || '—';
+        return `
+          <tr data-id="${g.id}">
+            <td><b>${g.name||'—'}</b><div class="muted tiny">${g.notes||''}</div></td>
+            <td>${hName}</td>
+            <td>${rooms}</td>
+            <td>${rn}</td>
+            <td>${fmtEUR(rev)}</td>
+            <td>${fmtEUR(adr)}</td>
+            <td><button class="btn sm" data-edit="${g.id}">Bearbeiten</button></td>
+          </tr>`;
+      }).join('');
+
+    els.body.innerHTML = rows || `<tr><td colspan="7" class="muted tiny">Keine Gruppen gefunden.</td></tr>`;
+  }
+
+  function renderEdit(){
+    const g = groups.find(x => x.id === currentId);
+    if (!g) return;
+
+    els.geName.value  = g.name || '';
+    els.geHotel.value = g.hotel || '';
+    els.geNotes.value = g.notes || '';
+
+    const rws = books[g.id] || [];
+    els.fbBody.innerHTML = rws.map((r,idx)=>`
+      <tr>
+        <td>${esc(r.last)}</td><td>${esc(r.first)}</td>
+        <td>${Number(r.pax)||1}</td>
+        <td>${r.arr}</td><td>${r.dep}</td>
+        <td>${esc(r.rate||'')}</td>
+        <td>${fmtEUR(r.price||0)}</td>
+        <td><button class="btn sm" data-delrow="${idx}">×</button></td>
+      </tr>
+    `).join('');
+
+    const { rooms, rn, rev, adr } = calcKPIs(rws);
+    els.gkRooms.textContent = String(rooms);
+    els.gkRN.textContent    = String(rn);
+    els.gkRev.textContent   = fmtEUR(rev);
+    els.gkADR.textContent   = fmtEUR(adr);
+  }
+
+  // --- Utils ---
+  const esc = (s='') => String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  function fmtEUR(v){ const n = Number(v)||0; return n.toLocaleString('de-DE',{style:'currency',currency:'EUR',maximumFractionDigits:0}); }
+
+  // --- Openers ---
+  function openGroups(){
+    cacheEls();
+    fillHotels(els.hotelFilter);
+    renderList();
+    window.openModal('modalGroups'); // nutzt deinen Modal-Core
+  }
+
+  function openEdit(id){
+    cacheEls();
+    // Neuer Datensatz?
+    if (!id){
+      const defHotel = $('#grpHotelFilter')?.value || (getHotels()[0]?.code || '');
+      const g = { id: uid(), name: '', hotel: defHotel, notes: '', createdAt: new Date().toISOString() };
+      groups.unshift(g); currentId = g.id; saveGroups(groups);
+      if (!books[g.id]) { books[g.id] = []; saveBooks(books); }
+    } else {
+      currentId = id;
+    }
+    fillHotels(els.geHotel);
+    renderEdit();
+    window.openModal('modalGroupEdit');
+  }
+
+  // --- Event wiring (once) ---
+  document.getElementById('btnGroups')?.addEventListener('click', openGroups);
+
+  document.addEventListener('click', (e)=>{
+    const t = e.target;
+
+    // Öffnen über Liste
+    const editId = t.closest('[data-edit]')?.getAttribute('data-edit');
+    if (editId){ e.preventDefault(); openEdit(editId); return; }
+
+    // Neue Gruppe
+    if (t.id === 'btnNewGroup'){ e.preventDefault(); openEdit(null); return; }
+
+    // Fast-Booker: hinzufügen
+    if (t.id === 'fbAdd'){
+      e.preventDefault();
+      const g = groups.find(x => x.id === currentId); if (!g) return;
+      const row = {
+        last:  els.fbLast.value.trim(),
+        first: els.fbFirst.value.trim(),
+        pax:   Number(els.fbPax.value)||1,
+        arr:   els.fbArr.value,
+        dep:   els.fbDep.value,
+        rate:  els.fbRate.value.trim(),
+        price: Number(els.fbPrice.value)||0
+      };
+      (books[g.id] ||= []).push(row);
+      saveBooks(books);
+      // reset minimal
+      els.fbLast.value = els.fbFirst.value = els.fbRate.value = '';
+      els.fbPax.value = 1; els.fbPrice.value = 0;
+      renderEdit(); renderList();
+      return;
+    }
+
+    // Fast-Booker: Zeile löschen
+    const delIdx = t.closest('[data-delrow]')?.getAttribute('data-delrow');
+    if (delIdx != null){
+      const g = groups.find(x => x.id === currentId); if (!g) return;
+      (books[g.id] ||= []).splice(Number(delIdx),1);
+      saveBooks(books);
+      renderEdit(); renderList();
+      return;
+    }
+
+    // Gruppe speichern
+    if (t.id === 'btnGroupSave'){
+      const g = groups.find(x => x.id === currentId); if (!g) return;
+      g.name  = els.geName.value.trim();
+      g.hotel = els.geHotel.value;
+      g.notes = els.geNotes.value.trim();
+      saveGroups(groups);
+      renderList();
+      window.closeModal('modalGroupEdit');
+      return;
+    }
+
+    // Gruppe löschen
+    if (t.id === 'btnGroupDelete'){
+      const g = groups.find(x => x.id === currentId); if (!g) return;
+      if (confirm(`Gruppe „${g.name||g.id}“ wirklich löschen?`)){
+        groups = groups.filter(x => x.id !== g.id); saveGroups(groups);
+        delete books[g.id]; saveBooks(books);
+        renderList();
+        window.closeModal('modalGroupEdit');
+      }
+      return;
+    }
+  }, { passive:false });
+
+  // Filter / Suche live
+  document.addEventListener('input', (e)=>{
+    if (e.target?.id === 'grpHotelFilter' || e.target?.id === 'grpSearch'){
+      renderList();
+    }
+  });
+
+})();
+
 
 
 (function keyboardShortcuts(){
