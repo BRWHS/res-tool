@@ -1113,42 +1113,7 @@
   </div>
 </section>
 
-  
-  <!-- Libraries + App -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.5/dist/umd/supabase.js" crossorigin="anonymous"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
-
-  <!-- Build erwartet /src/app.js -->
-  <script src="/src/app.js"></script>
-  <script src="/src/i18n.js"></script>
-  <script src="/src/auth.js"></script>
-  <!-- Confirmations-Popup -->
-<div id="confirmEmailModal" class="modal hidden" aria-hidden="true">
-  <div class="modal__backdrop" data-close="confirmEmailModal"></div>
-  <div class="modal__panel">
-    <div class="modal__header">
-      <h3>Reservierungsbestätigung versenden</h3>
-      <button class="modal__close" data-close="confirmEmailModal" aria-label="Schließen">×</button>
-    </div>
-
-    <div class="modal__body">
-      <label class="form__label">Empfänger-E-Mail</label>
-      <input id="confirmEmailTo" type="email" class="form__input" placeholder="kunde@example.com" />
-
-      <label class="form__label" style="margin-top:12px;">Nachricht (bearbeitbar)</label>
-      <textarea id="confirmEmailBody" class="form__textarea" rows="8" placeholder="Ihre Buchungsbestätigung …"></textarea>
-    </div>
-
-    <div class="modal__footer">
-      <div style="margin-right:auto; display:flex; gap:8px;"><button class="btn btn--ghost" id="btnCopyEmail" type="button" title="E-Mail kopieren">E-Mail kopieren</button><button class="btn btn--ghost" id="btnCopyConfirmation" type="button" title="Text kopieren">Text kopieren</button></div><button class="btn btn--ghost" data-close="confirmEmailModal">Abbrechen</button>
-      <button id="btnSendConfirmationNow" class="btn btn--primary">Reservierungsbestätigung versenden</button>
-    </div>
-  </div>
-</div>
-
-  <!-- GruppenResa: Liste / Filter -->
+    <!-- GruppenResa: Liste / Filter -->
 <section class="modal" id="modalGroups" role="dialog" aria-labelledby="groupsTitle" aria-modal="true" aria-hidden="true">
   <header>
     <h3 id="groupsTitle" class="mono"><span class="set-logo" aria-hidden="true"></span> GruppenResa</h3>
@@ -1267,6 +1232,41 @@
     </div>
   </div>
 </section>
+
+  
+  <!-- Libraries + App -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.5/dist/umd/supabase.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
+
+  <!-- Build erwartet /src/app.js -->
+  <script src="/src/app.js"></script>
+  <script src="/src/i18n.js"></script>
+  <script src="/src/auth.js"></script>
+  <!-- Confirmations-Popup -->
+<div id="confirmEmailModal" class="modal hidden" aria-hidden="true">
+  <div class="modal__backdrop" data-close="confirmEmailModal"></div>
+  <div class="modal__panel">
+    <div class="modal__header">
+      <h3>Reservierungsbestätigung versenden</h3>
+      <button class="modal__close" data-close="confirmEmailModal" aria-label="Schließen">×</button>
+    </div>
+
+    <div class="modal__body">
+      <label class="form__label">Empfänger-E-Mail</label>
+      <input id="confirmEmailTo" type="email" class="form__input" placeholder="kunde@example.com" />
+
+      <label class="form__label" style="margin-top:12px;">Nachricht (bearbeitbar)</label>
+      <textarea id="confirmEmailBody" class="form__textarea" rows="8" placeholder="Ihre Buchungsbestätigung …"></textarea>
+    </div>
+
+    <div class="modal__footer">
+      <div style="margin-right:auto; display:flex; gap:8px;"><button class="btn btn--ghost" id="btnCopyEmail" type="button" title="E-Mail kopieren">E-Mail kopieren</button><button class="btn btn--ghost" id="btnCopyConfirmation" type="button" title="Text kopieren">Text kopieren</button></div><button class="btn btn--ghost" data-close="confirmEmailModal">Abbrechen</button>
+      <button id="btnSendConfirmationNow" class="btn btn--primary">Reservierungsbestätigung versenden</button>
+    </div>
+  </div>
+</div>
 
   <div id="appToast" class="toast hidden" role="status" aria-live="polite"></div>
 
