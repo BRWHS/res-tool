@@ -4424,8 +4424,8 @@ async function fbAddClicked(){
     els.gkRooms.textContent = String(rooms);
     els.gkRN.textContent    = String(rn);
     els.gkRev.textContent   = fmtEUR(rev);
-    els.gkADR.textContent   = fmtEUR(adr);
-  }
+      els.gkADR.textContent   = fmtEUR(adr);
+}
 
   // --- Utils ---
   const esc = (s='') => String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
