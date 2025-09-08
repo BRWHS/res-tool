@@ -350,6 +350,32 @@ const euro = v=>{
     useGrouping: true
   }).format(Number(v));
 };
+  
+// Gibt gemappte Raten für Hotel+*Kategorie* zurück; wir brauchen hier nur Name/Preis.
+// Fallback: Default-Dummy
+function getRatesForHotel(hotelCode){
+  try {
+    // Versuch: gemappte Raten über bestehende Funktion (falls vorhanden)
+    const cats = getCategoriesForHotel(hotelCode).map(c=>c.name);
+    const uniq = new Map();
+    cats.forEach(c=>{
+      const list = getMappedRatesFor(hotelCode, c) || [];
+      list.forEach(r => uniq.set(r.name, { name: r.name, price: r.price }));
+    });
+    const arr = [...uniq.values()];
+    if (arr.length) return arr;
+  } catch(e){}
+  // Fallback
+  return (window.HOTEL_RATES?.default || []).map(r => ({ name:r.name, price:r.price }));
+}
+
+function fillRatesDropdown(sel, hotelCode){
+  if (!sel) return;
+  const list = getRatesForHotel(hotelCode);
+  sel.innerHTML = list.map(r=>`<option value="${r.name}" data-price="${r.price}">${r.name} (${r.price.toLocaleString('de-DE')} €)</option>`).join('');
+}
+
+  
 
   const pct  = v=>v==null?'—%':`${v}%`;
   const soD = d=>{const x=new Date(d); x.setHours(0,0,0,0); return x;};
@@ -4347,6 +4373,22 @@ async function copyToClipboard(txt){
     fillHotels(els.geHotel);
     renderEdit();
     window.openModal('modalGroupEdit');
+
+    // Raten-Dropdown initial passend zum Hotel
+fillRatesDropdown(document.getElementById('fbRateSel'), els.geHotel.value);
+
+// Preis auf Rate ändern
+document.getElementById('fbRateSel')?.addEventListener('change', (e)=>{
+  const p = e.target.selectedOptions[0]?.dataset.price;
+  if (p != null) els.fbPrice.value = Number(p);
+});
+
+// Wenn das Gruppen-Hotel geändert wird → Raten neu
+els.geHotel?.addEventListener('change', (e)=>{
+  fillRatesDropdown(document.getElementById('fbRateSel'), e.target.value);
+  const p = document.getElementById('fbRateSel')?.selectedOptions?.[0]?.dataset.price;
+  if (p != null) els.fbPrice.value = Number(p);
+});
   }
 
   // --- Event wiring (once) ---
@@ -4362,27 +4404,68 @@ async function copyToClipboard(txt){
     // Neue Gruppe
     if (t.id === 'btnNewGroup'){ e.preventDefault(); openEdit(null); return; }
 
-    // Fast-Booker: hinzufügen
-    if (t.id === 'fbAdd'){
-      e.preventDefault();
-      const g = groups.find(x => x.id === currentId); if (!g) return;
-      const row = {
-        last:  els.fbLast.value.trim(),
-        first: els.fbFirst.value.trim(),
-        pax:   Number(els.fbPax.value)||1,
-        arr:   els.fbArr.value,
-        dep:   els.fbDep.value,
-        rate:  els.fbRate.value.trim(),
-        price: Number(els.fbPrice.value)||0
-      };
-      (books[g.id] ||= []).push(row);
-      saveBooks(books);
-      // reset minimal
-      els.fbLast.value = els.fbFirst.value = els.fbRate.value = '';
-      els.fbPax.value = 1; els.fbPrice.value = 0;
-      renderEdit(); renderList();
-      return;
-    }
+   // Fast-Booker: hinzufügen (→ echte Reservierung in Supabase + lokale Gruppenzuordnung)
+if (t.id === 'fbAdd'){
+  e.preventDefault();
+  const g = groups.find(x => x.id === currentId); if (!g) return;
+
+  const hotel = els.geHotel.value;
+  const last  = els.fbLast.value.trim();
+  const first = els.fbFirst.value.trim();
+  const pax   = Number(els.fbPax.value)||1;
+  const arr   = els.fbArr.value;
+  const dep   = els.fbDep.value;
+  const rateN = document.getElementById('fbRateSel')?.value || els.fbRate.value.trim(); // Fallback
+  const price = Number(els.fbPrice.value)||0;
+
+  if (!hotel || !arr || !dep || !last){
+    alert('Bitte mind. Hotel, An-/Abreise und Nachname ausfüllen.'); return;
+  }
+
+  // 1) sofort Supabase einsetzen
+  const hUI = (window.HOTELS||[]).find(h => h.code===hotel);
+  const payload = {
+    reservation_number: 'G'+Date.now().toString(36).toUpperCase(),
+    status: 'active',
+    hotel_code: hotel,
+    hotel_name: hUI ? `${hUI.group} - ${hUI.name.replace(/^.*? /,'')}` : hotel,
+    arrival: arr,
+    departure: dep,
+    guests: pax,
+    guests_adults: pax,
+    guests_children: 0,
+    category: null,               // kann später bearbeitet werden
+    rate_name: rateN,
+    rate_price: price,
+    guest_first_name: first || null,
+    guest_last_name:  last  || null,
+    notes: `Gruppe: ${g.name || g.id}`,
+    // Optional: wenn du eine Spalte in reservations hast, kannst du die Gruppe speichern:
+    group_id: g.id  // ← funktioniert nur, wenn Spalte existiert. Sonst ignoriert Supabase das Feld.
+  };
+
+  try{
+    const { error } = await supabase.from('reservations').insert(payload);
+    if (error) { console.warn(error); alert('Speichern fehlgeschlagen.'); return; }
+  }catch(e){
+    console.error(e); alert('Speichern fehlgeschlagen.'); return;
+  }
+
+  // 2) lokale Roomingliste mitführen (für KPIs der Gruppe)
+  (books[g.id] ||= []).push({ last:first?last:last, first, pax, arr, dep, rate: rateN, price });
+  saveBooks(books);
+
+  // 3) UI -> Reset & Refresh
+  els.fbLast.value = els.fbFirst.value = '';
+  els.fbPax.value = 1;
+  // rate & price auf Dropdown-Default lassen
+  renderEdit(); renderList();
+
+  // 4) globale Listen/KPIs aktualisieren
+  try { await autoRollPastToDone(); await loadReservations(); await loadKpisToday(); await loadKpisNext(); } catch(_){}
+  window.dispatchEvent(new Event('reservation:changed'));
+  return;
+}
 
     // Fast-Booker: Zeile löschen
     const delIdx = t.closest('[data-delrow]')?.getAttribute('data-delrow');
