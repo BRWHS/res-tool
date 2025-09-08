@@ -902,35 +902,3 @@ html.modal-open { overflow: hidden; }
 #userSettings input.input { width:100%; }
 #userSettings .btn.small { padding:6px 10px; font-size:.9rem; }
 
-/* ===== Modals: by default hidden; show only when .open ===== */
-.modal{
-  position: fixed;
-  inset: 0;
-  display: none;                 /* <- WICHTIG: standardmäßig unsichtbar */
-  align-items: center;
-  justify-content: center;
-  background: rgba(5,10,16,.6);
-  backdrop-filter: blur(6px);
-}
-.modal.open{                      /* <- WICHTIG: nur geöffnet sichtbar */
-  display: flex;
-}
-.modal.hidden{ display:none; }    /* fallback für alte Stellen */
-
-/* Karten & Layout bleiben wie gehabt */
-.modal-card{ background:#0a121a; border:1px solid #133243; border-radius:18px; width:min(1200px,96vw); box-shadow:0 8px 26px rgba(0,0,0,.45); }
-.modal-card.lg{ width:min(1000px,96vw) }
-.modal-header,.modal-footer{ display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-bottom:1px solid #102a3b; }
-.modal-footer{ border-top:1px solid #102a3b; border-bottom:0 }
-.modal-body{ padding:14px 16px; }
-
-.split{ display:grid; grid-template-columns:280px 1fr; gap:12px; }
-.sidebar{ background:#0a171f; border:1px solid #123043; border-radius:14px; padding:12px; height:64vh; overflow:auto; }
-.sidebar-section + .sidebar-section{ margin-top:12px; }
-.vlist{ display:flex; flex-direction:column; gap:6px; }
-.chips{ display:flex; gap:8px; flex-wrap:wrap }
-.chip{ padding:6px 10px; border-radius:999px; background:#0d1a22; border:1px solid #173346; color:#9fd1dc; cursor:pointer }
-.chip.active{ background:linear-gradient(90deg,#173346,#204c5e); color:#c7eef5 }
-
-
-
