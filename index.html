@@ -1176,42 +1176,40 @@
     <button class="btn" data-close>Schließen</button>
   </header>
   <div class="body">
-    <div class="grid-compact-2" style="align-items:start">
-      <div class="form-col">
-        <h4 class="mono section" style="margin-top:0">Stammdaten</h4>
-        <div class="grid-compact">
-          <label>Gruppenname
-            <input id="geName" class="input" placeholder="z. B. ACME Sales Kickoff" />
-          </label>
-          <label>Hotel
-            <select id="geHotel" class="input theme-select"></select>
-          </label>
-          <label style="grid-column:1 / -1">Beschreibung / Notizen
-            <textarea id="geNotes" class="input" rows="4" placeholder="Interne Notizen …"></textarea>
-          </label>
-        </div>
+  <div class="grid-compact-2">
 
-      <div class="card">
-        <div class="content">
-          <div class="card-head">
-            <h3 class="mono">Gruppen KPIs</h3>
-            <span class="pill">live</span>
-          </div>
-          <div class="kpi-col">
-            <div class="kpi-line"><span>Zimmer</span><b id="gkRooms">0</b></div>
-            <div class="kpi-line"><span>Roomnights</span><b id="gkRN">0</b></div>
-            <div class="kpi-line"><span>Revenue</span><b id="gkRev">0 €</b></div>
-            <div class="kpi-line"><span>ADR</span><b id="gkADR">0 €</b></div>
-          </div>
-          <div class="set-footer" style="margin-top:10px;gap:8px;justify-content:flex-end">
-            <button class="btn" id="btnGroupDelete">Gruppe löschen</button>
-            <button class="btn primary" id="btnGroupSave">Speichern</button>
-          </div>
-        </div>
+  <!-- 1) LINKE SPALTE: Stammdaten-Form -->
+  <div class="form-col">
+    <!-- (dein bestehendes Formular: Gruppenname, Hotel, Beschreibung/Notizen) -->
+  </div>
+
+  <!-- 2) RECHTE SPALTE: KPI-Card -->
+  <div class="card kpi-card">
+    <div class="content">
+      <div class="card-head">
+        <h3 class="mono">Gruppen KPIs</h3>
+        <span class="pill">live</span>
       </div>
-
+      <div class="kpi-col">
+        <div class="kpi-line"><span>Zimmer</span><b id="gkRooms">0</b></div>
+        <div class="kpi-line"><span>Roomnights</span><b id="gkRN">0</b></div>
+        <div class="kpi-line"><span>Revenue</span><b id="gkRev">0 €</b></div>
+        <div class="kpi-line"><span>ADR</span><b id="gkADR">0 €</b></div>
+      </div>
+      <div class="set-footer" style="margin-top:10px;gap:8px;justify-content:flex-end">
+        <button class="btn" id="btnGroupDelete">Gruppe löschen</button>
+        <button class="btn primary" id="btnGroupSave">Speichern</button>
+      </div>
     </div>
   </div>
+
+  <!-- 3) VOLLBREITE: Fast-Booker -->
+  <div class="fast-block">
+    <!-- dein Fast-Booker Block (mit .fast-row, Tabelle etc.) -->
+  </div>
+
+</div>
+
   
   <!-- Fast-Booker (volle Breite unter beiden Spalten) -->
 <div class="fast-block">
