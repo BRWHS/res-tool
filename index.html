@@ -1118,10 +1118,15 @@
 
     <!-- GruppenResa: Liste / Filter -->
 <section class="modal" id="modalGroups" role="dialog" aria-labelledby="groupsTitle" aria-modal="true" aria-hidden="true">
-  <header>
-    <h3 id="groupsTitle" class="mono"><span class="set-logo" aria-hidden="true"></span> GruppenResa</h3>
+ <header>
+  <h3 id="groupsTitle" class="mono">
+    <span class="set-logo" aria-hidden="true"></span> GruppenResa
+  </h3>
+  <div class="row wrap">
+    <button id="btnNewGroup" class="btn primary">+ Neue Gruppe</button>
     <button class="btn" data-close>Schließen</button>
-  </header>
+  </div>
+</header>
   <div class="body">
     <div class="groups-wrap">
       <!-- Linke Filterleiste -->
@@ -1133,7 +1138,6 @@
         <input id="grpSearch" class="input" placeholder="Gruppenname oder Notiz …" />
 
         <div class="grow"></div>
-        <button id="btnNewGroup" class="btn primary">+ Neue Gruppe</button>
       </aside>
 
       <!-- Rechte Hauptfläche -->
@@ -1188,18 +1192,23 @@
         </div>
 
         <h4 class="mono section">Fast-Booker</h4>
-        <div class="grid-compact" id="fastForm">
-          <label>Nachname <input id="fbLast" class="input" /></label>
-          <label>Vorname <input id="fbFirst" class="input" /></label>
-          <label>Personen <input id="fbPax" type="number" min="1" value="1" class="input" /></label>
-          <label>Anreise <input id="fbArr" type="date" class="input" /></label>
-          <label>Abreise <input id="fbDep" type="date" class="input" /></label>
-          <label>Rate <input id="fbRate" class="input" placeholder="z. B. FLEX" /></label>
-          <label>Preis/Nacht (€) <input id="fbPrice" type="number" step="1" min="0" class="input" value="0" /></label>
-          <div style="display:flex;align-items:end">
-            <button id="fbAdd" class="btn">+ Buchung hinzufügen</button>
-          </div>
-        </div>
+<div id="fastForm" class="fast-row">
+  <label>Nachname <input id="fbLast" class="input" /></label>
+  <label>Vorname <input id="fbFirst" class="input" /></label>
+  <label>Personen <input id="fbPax" type="number" min="1" value="1" class="input" /></label>
+  <label>Anreise <input id="fbArr" type="date" class="input" /></label>
+  <label>Abreise <input id="fbDep" type="date" class="input" /></label>
+  <label>Rate
+    <select id="fbRateSel" class="input theme-select"></select>
+  </label>
+  <label>Preis/Nacht (€)
+    <input id="fbPrice" type="number" step="1" min="0" class="input" value="0" />
+  </label>
+  <div class="fast-actions">
+    <button id="fbAdd" class="btn">+ Buchung hinzufügen</button>
+  </div>
+</div>
+
 
         <div class="table-wrap" style="margin-top:10px">
           <table class="resv">
