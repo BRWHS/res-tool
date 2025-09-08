@@ -4374,8 +4374,62 @@ async function copyToClipboard(txt){
     renderEdit();
     window.openModal('modalGroupEdit');
 
-    // Raten-Dropdown initial passend zum Hotel
+    // Raten passend zum aktuellen Hotel füllen
 fillRatesDropdown(document.getElementById('fbRateSel'), els.geHotel.value);
+
+// Beim Ratenwechsel Preis spiegeln
+document.getElementById('fbRateSel')?.addEventListener('change', (e)=>{
+  const p = e.target.selectedOptions[0]?.dataset.price;
+  if (p != null) els.fbPrice.value = Number(p);
+});
+
+// Wenn das Gruppen-Hotel geändert wird → Raten neu füllen + Preis setzen
+els.geHotel?.addEventListener('change', (e)=>{
+  fillRatesDropdown(document.getElementById('fbRateSel'), e.target.value);
+  const p = document.getElementById('fbRateSel')?.selectedOptions?.[0]?.dataset.price;
+  if (p != null) els.fbPrice.value = Number(p);
+});
+
+
+    // === Rates robust holen (lokal gespeicherte Raten → Fallback Dummy) ===
+function getRatesForHotel(hotelCode){
+  // Versuche: readRates() (aus Ratentool) → nur dieses Hotel
+  try{
+    if (typeof readRates === 'function'){
+      const list = (readRates() || []).filter(r => r.hotel_code === hotelCode);
+      if (list.length){
+        return list.map(r => ({
+          name:  r.name || r.rate_name || r.ratecode || 'Rate',
+          price: Number(r.price || r.rate_price || 0)
+        }));
+      }
+    }
+    // Fallback: direkter Zugriff auf LocalStorage (RATES_KEY)
+    const key = (typeof window !== 'undefined' && window.RATES_KEY) ? window.RATES_KEY : 'resTool.rates';
+    const raw = JSON.parse(localStorage.getItem(key) || '[]')
+                  .filter(r => r.hotel_code === hotelCode);
+    if (raw.length){
+      return raw.map(r => ({
+        name:  r.name || r.rate_name || r.ratecode || 'Rate',
+        price: Number(r.price || r.rate_price || 0)
+      }));
+    }
+  }catch(e){ /* ignore */ }
+
+  // Finaler Fallback: Dummy
+  return (window.HOTEL_RATES?.default || []).map(r => ({
+    name: r.name, price: Number(r.price||0)
+  }));
+}
+
+function fillRatesDropdown(sel, hotelCode){
+  if (!sel) return;
+  const list = getRatesForHotel(hotelCode);
+  sel.innerHTML = list.map(r =>
+    `<option value="${r.name}" data-price="${r.price}">${r.name} (${r.price.toLocaleString('de-DE')} €)</option>`
+  ).join('');
+}
+
 
 // Preis auf Rate ändern
 document.getElementById('fbRateSel')?.addEventListener('change', (e)=>{
