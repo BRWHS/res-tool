@@ -1191,37 +1191,6 @@
           </label>
         </div>
 
-        <h4 class="mono section">Fast-Booker</h4>
-<div id="fastForm" class="fast-row">
-  <label>Nachname <input id="fbLast" class="input" /></label>
-  <label>Vorname <input id="fbFirst" class="input" /></label>
-  <label>Personen <input id="fbPax" type="number" min="1" value="1" class="input" /></label>
-  <label>Anreise <input id="fbArr" type="date" class="input" /></label>
-  <label>Abreise <input id="fbDep" type="date" class="input" /></label>
-  <label>Rate
-    <select id="fbRateSel" class="input theme-select"></select>
-  </label>
-  <label>Preis/Nacht (€)
-    <input id="fbPrice" type="number" step="1" min="0" class="input" value="0" />
-  </label>
-  <div class="fast-actions">
-    <button id="fbAdd" class="btn">+ Buchung hinzufügen</button>
-  </div>
-</div>
-
-
-        <div class="table-wrap" style="margin-top:10px">
-          <table class="resv">
-            <thead>
-              <tr>
-                <th>Nachname</th><th>Vorname</th><th>Pax</th><th>Arr</th><th>Dep</th><th>Rate</th><th>Preis</th><th></th>
-              </tr>
-            </thead>
-            <tbody id="fbBody"></tbody>
-          </table>
-        </div>
-      </div>
-
       <div class="card">
         <div class="content">
           <div class="card-head">
@@ -1243,6 +1212,39 @@
 
     </div>
   </div>
+  
+  <!-- Fast-Booker (volle Breite unter beiden Spalten) -->
+<div class="fast-block">
+  <h4 class="mono section" style="margin-top:0">Fast-Booker</h4>
+  <div id="fastForm" class="fast-row">
+    <label>Nachname <input id="fbLast" class="input" /></label>
+    <label>Vorname <input id="fbFirst" class="input" /></label>
+    <label>Personen <input id="fbPax" type="number" min="1" value="1" class="input" /></label>
+    <label>Anreise <input id="fbArr" type="date" class="input" /></label>
+    <label>Abreise <input id="fbDep" type="date" class="input" /></label>
+    <label>Rate
+      <select id="fbRateSel" class="input theme-select"></select>
+    </label>
+    <label>Preis/Nacht (€)
+      <input id="fbPrice" type="number" step="1" min="0" class="input" value="0" />
+    </label>
+    <div class="fast-actions">
+      <button id="fbAdd" class="btn">+ Buchung hinzufügen</button>
+    </div>
+  </div>
+
+  <div class="table-wrap" style="margin-top:10px">
+    <table class="resv">
+      <thead>
+      <tr>
+        <th>Nachname</th><th>Vorname</th><th>Pax</th><th>Arr</th><th>Dep</th><th>Rate</th><th>Preis</th><th></th>
+      </tr>
+      </thead>
+      <tbody id="fbBody"></tbody>
+    </table>
+  </div>
+</div>
+
 </section>
 
   
