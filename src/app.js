@@ -138,25 +138,19 @@ window.addEventListener('keydown', (e)=>{ if (e.key === 'Escape') window.closeMo
   /***** Supabase *****/
   const SB_URL = "https://kytuiodojfcaggkvizto.supabase.co";
   const SB_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt5dHVpb2RvamZjYWdna3ZpenRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ4MzA0NjgsImV4cCI6MjA3MDQwNjQ2OH0.YobQZnCQ7LihWtewynoCJ6ZTjqetkGwh82Nd2mmmhLU";
-  // Robust: nur 1x erzeugen, und defensiv, falls supabase.js noch nicht da ist
-const supabase = (window.__SB__ ||= (
-  window.supabase && typeof window.supabase.createClient === 'function'
-    ? window.supabase.createClient(SB_URL, SB_ANON_KEY)
-    : null
-));
-if (!supabase) {
-  console.error('[res-tool] Supabase JS nicht geladen – bitte Script-Reihenfolge prüfen.');
-  alert('Supabase-Bibliothek fehlt. Bitte index.html: supabase.js vor app.js einbinden.');
-}
-  (async () => {
-  try {
-    if (!supabase) return;
-    const ping = await supabase.from('reservations').select('id', { head: true, count: 'exact' });
-    if (ping.error) console.warn('[res-tool] Supabase Ping-Fehler:', ping.error.message);
-  } catch (e) {
-    console.warn('[res-tool] Supabase Ping Exception:', e);
+// ---- Supabase Client robust & konfliktfrei ----
+(function ensureSbClient(){
+  const NS = window.supabase;
+  if (!NS || typeof NS.createClient !== 'function') {
+    console.error('[res-tool] Supabase-Bibliothek fehlt oder falsche Reihenfolge.');
+    alert('Supabase-Bibliothek fehlt. Bitte index.html prüfen (supabase.js vor app.js).');
+    return;
   }
+  // Einmalig erstellen und global stabil ablegen
+  window.__SBCLIENT__ = window.__SBCLIENT__ || NS.createClient(SB_URL, SB_ANON_KEY);
 })();
+const sb = window.__SBCLIENT__;
+
 
 
 
