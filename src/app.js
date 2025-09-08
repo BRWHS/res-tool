@@ -813,7 +813,7 @@ q('#btnRateSave')?.addEventListener('click', ()=>{
   }));
 
   
-  document.addEventListener('click', function (e) {
+  document.addEventListener('click', async function(e){
   const btn = e.target.closest('#btnRates, [data-modal="#modalRates"]');
   if (!btn) return;
   e.preventDefault();
@@ -1392,7 +1392,7 @@ if (allApply && !allApply.__bound){
 
   // Schließen
   allCancel.onclick = ()=> popAll.classList.add('hidden');
-  document.addEventListener('click', (e)=>{
+  document.addEventListener('click', async (e)=>{
     if (popAll.classList.contains('hidden')) return;
     const inside = e.target.closest('#planAllPopupDyn') || e.target.closest('#btnPlanAll');
     if (!inside) popAll.classList.add('hidden');
@@ -2857,7 +2857,7 @@ function bindChannelSync(){
 }
 
 // Beim Öffnen des Channel-Modals binden
-document.addEventListener('click', (e)=>{
+document.addEventListener('click', async (e)=>{
   const b = e.target.closest('#btnChannel');
   if (!b) return;
   setTimeout(bindChannelSync, 50);
@@ -4068,7 +4068,7 @@ setTimeout(()=>{ try{ refreshNewResRates(); }catch(e){} }, 0);
 
 
 // --- Safe delegation for '+ weitere Kategorie' buttons (Create/Edit) ---
-document.addEventListener('click', (e)=>{
+document.addEventListener('click', async (e)=>{
   const btn = e.target.closest('#crAddCatRow, #erAddCatRow');
   if (!btn) return;
   e.preventDefault();
@@ -4394,7 +4394,7 @@ els.geHotel?.addEventListener('change', (e)=>{
   // --- Event wiring (once) ---
   document.getElementById('btnGroups')?.addEventListener('click', openGroups);
 
-  document.addEventListener('click', (e)=>{
+  document.addEventListener('click', async (e)=>{
     const t = e.target;
 
     // Öffnen über Liste
