@@ -12,6 +12,16 @@
   if (window.__RESTOOL_MODAL_CORE__) return;
   window.__RESTOOL_MODAL_CORE__ = true;
 
+  // === Drawer-Helper (nur für Gruppen-Drawer) ===
+function openDrawer(id){
+  const el = document.getElementById(id);
+  if (el) el.classList.remove('hidden');
+}
+function closeDrawer(id){
+  const el = document.getElementById(id);
+  if (el) el.classList.add('hidden');
+}
+
   function ensureBackdrop(){
     let b = document.getElementById('backdrop') || document.querySelector('.modal-backdrop');
     if (!b){
@@ -304,6 +314,21 @@ async function sendConfirmationEmail({ to, subject, body, context }) {
   };
   const displayHotel = (h) => h ? `${h.group} - ${hotelCity(h.name)}` : '—';
   window.HOTELS = HOTELS;
+
+  // === [Gruppen] State & Storage ===
+const grp_state = {
+  groups: grp_loadLS('groups', []),
+  res:    grp_loadLS('group_reservations', []),
+  filters: { hotels:new Set(), status:'' },
+  activeGroupId: null,
+};
+
+function grp_saveLS(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch{} }
+function grp_loadLS(k, fb){ try{ return JSON.parse(localStorage.getItem(k) || '') ?? fb; }catch{ return fb } }
+
+// Hotel-Access über deine bestehende Liste
+function grp_hotels(){ return Array.isArray(window.HOTELS) ? window.HOTELS : []; }
+function grp_hotelName(code){ return grp_hotels().find(h=>h.code===code)?.name || code; }
 
   /* Alias-Keyword für Filter-Fallback per hotel_name */
   const HOTEL_KEYWORD = {
@@ -4188,6 +4213,245 @@ async function copyToClipboard(txt){
   // Falls die Seite schon geladen ist und ein User existiert:
   try { setInlineUser(window.getCurrentUser && window.getCurrentUser()); } catch {}
 })();
+    // === [Gruppen] Render & Logik ===
+function grp_onNewGroup(){
+  const name = prompt('Name der neuen Gruppe:');
+  if (!name) return;
+  const id = grp_uuid();
+  const now = new Date().toISOString();
+  grp_state.groups.unshift({ id, name, status:'open', notes:'', created_at:now, updated_at:now });
+  grp_saveLS('groups', grp_state.groups);
+  grp_state.activeGroupId = id;
+  grp_renderGroupsList();
+  grp_openGroupDetail(id);
+}
+
+function grp_renderGroupsList(){
+  const host = document.getElementById('groupsList'); if (!host) return;
+  host.innerHTML = '';
+  const q = (document.getElementById('groupsSearch')?.value || '').toLowerCase();
+  const rows = grp_state.groups.filter(g => {
+    const matchesQ = !q || [g.name, g.notes].join(' ').toLowerCase().includes(q);
+    const matchesStatus = !grp_state.filters.status || g.status === grp_state.filters.status;
+    const hotels = grp_groupHotels(g.id);
+    const matchesHotel = grp_state.filters.hotels.size === 0 || hotels.some(code => grp_state.filters.hotels.has(code));
+    return matchesQ && matchesStatus && matchesHotel;
+  });
+  if (!rows.length){
+    const empty = document.createElement('div');
+    empty.className = 'list-item';
+    empty.textContent = 'Keine Gruppen gefunden.';
+    host.appendChild(empty);
+    return;
+  }
+  rows.forEach(g => {
+    const k = grp_calcKPIs(g.id);
+    const span = grp_groupDateSpan(g.id);
+    const row = document.createElement('div');
+    row.className = 'list-item';
+    row.innerHTML = `
+      <span class="col grow"><strong>${grp_escape(g.name)}</strong><small style="color:#8fbfd0;margin-left:8px">${g.status}</small></span>
+      <span class="col">${k.rooms}</span>
+      <span class="col">${k.rn}</span>
+      <span class="col">${grp_fmtADR(k.adr)}</span>
+      <span class="col">${grp_fmtCur(k.revenue)}</span>
+      <span class="col">${span || '—'}</span>
+    `;
+    row.addEventListener('click', () => grp_openGroupDetail(g.id));
+    host.appendChild(row);
+  });
+}
+
+function grp_openGroupDetail(groupId){
+  grp_state.activeGroupId = groupId;
+  const g = grp_state.groups.find(x => x.id === groupId); if (!g) return;
+  document.getElementById('groupDetailTitle').textContent = `Gruppe: ${g.name}`;
+  document.getElementById('groupNotes').value = g.notes || '';
+  const k = grp_calcKPIs(groupId);
+  document.getElementById('gdRooms').textContent    = k.rooms;
+  document.getElementById('gdRN').textContent       = k.rn;
+  document.getElementById('gdADR').textContent      = grp_fmtADR(k.adr);
+  document.getElementById('gdRevenue').textContent  = grp_fmtCur(k.revenue);
+  document.getElementById('gdMeta').textContent     = grp_buildMeta(groupId);
+
+  const tbody = document.querySelector('#gdTable tbody');
+  tbody.innerHTML = '';
+  grp_groupRes(groupId).forEach(r => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${grp_escape(grp_hotelName(r.hotel_code))}</td>
+      <td>${grp_escape(r.last_name)}, ${grp_escape(r.first_name)}</td>
+      <td>${grp_fmtDate(r.arrival)}</td>
+      <td>${grp_fmtDate(r.departure)}</td>
+      <td>${r.persons || 1}</td>
+      <td>${grp_escape(r.rate_name || '')}</td>
+      <td><button class="btn tiny" data-grp-edit-rate="${r.id}">${grp_fmtCur(grp_resTotal(r))}</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  // einmalig anklemmen
+  document.getElementById('gdTable')?.addEventListener('click', grp_onRateEditClick, { once:true });
+
+  openModal('groupDetailModal');
+}
+
+function grp_onRateEditClick(e){
+  const btn = e.target.closest('button[data-grp-edit-rate]');
+  if (!btn){
+    document.getElementById('gdTable')?.addEventListener('click', grp_onRateEditClick, { once:true });
+    return;
+  }
+  const id = btn.dataset.grpEditRate;
+  const r = grp_state.res.find(x => x.id === id); if (!r) return;
+
+  // Drawer mit bestehenden Werten füllen
+  openDrawer('drawerQuickAdd');
+  const f = document.getElementById('quickAddForm');
+  f.hotel.value = r.hotel_code;
+  f.first_name.value = r.first_name;
+  f.last_name.value = r.last_name;
+  f.arrival.value = r.arrival;
+  f.departure.value = r.departure;
+  f.persons.value = r.persons || 1;
+  f.rate_name.value = r.rate_name || '';
+  f.price.value = r.price ?? '';
+
+  // Tagespreise bauen + einsetzen
+  (function rebuild(){
+    const evt = new Event('change'); f.arrival.dispatchEvent(evt); f.departure.dispatchEvent(evt);
+    const nights = grp_eachDate(r.arrival, r.departure);
+    nights.forEach(d => {
+      const inp = document.querySelector(`#qaRateDays input[data-day="${d}"]`);
+      if (inp){
+        const v = r.per_day?.[d];
+        if (v != null){ inp.value = v; inp.dataset.touched = "1"; }
+      }
+    });
+  })();
+
+  // Button temporär zu "Preisplan speichern" umfunktionieren
+  const addBtn = document.getElementById('btnQAAdd');
+  const originalText = addBtn.textContent;
+  const originalHandler = grp_onQuickAddSubmit;
+
+  const once = () => {
+    r.per_day = grp_buildPerDayFromUI();
+    r.updated_at = new Date().toISOString();
+    grp_saveLS('group_reservations', grp_state.res);
+    closeDrawer('drawerQuickAdd');
+    grp_openGroupDetail(grp_state.activeGroupId);
+    addBtn.textContent = originalText;
+    addBtn.removeEventListener('click', once);
+    addBtn.addEventListener('click', originalHandler, { once:true });
+  };
+
+  addBtn.textContent = 'Preisplan speichern';
+  addBtn.removeEventListener('click', originalHandler);
+  addBtn.addEventListener('click', once, { once:true });
+}
+
+function grp_onQuickAddSubmit(){
+  const f = document.getElementById('quickAddForm');
+  const count = Math.max(1, Number(f.count.value || 1));
+  const perDay = grp_buildPerDayFromUI();
+  for (let i=0;i<count;i++){
+    grp_state.res.push({
+      id: grp_uuid(),
+      group_id: grp_state.activeGroupId,
+      hotel_code: f.hotel.value,
+      first_name: f.first_name.value.trim(),
+      last_name: f.last_name.value.trim(),
+      arrival: f.arrival.value,
+      departure: f.departure.value,
+      persons: Number(f.persons.value || 1),
+      rate_name: f.rate_name.value.trim(),
+      price: f.price.value ? Number(f.price.value) : null,
+      per_day: Object.keys(perDay).length ? perDay : null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    });
+  }
+  grp_saveLS('group_reservations', grp_state.res);
+  closeDrawer('drawerQuickAdd');
+  grp_openGroupDetail(grp_state.activeGroupId);
+}
+
+function grp_onSaveGroupDetail(){
+  const id = grp_state.activeGroupId; if (!id) return;
+  const g = grp_state.groups.find(x => x.id === id); if (!g) return;
+  g.notes = document.getElementById('groupNotes').value || '';
+  g.updated_at = new Date().toISOString();
+  grp_saveLS('groups', grp_state.groups);
+  grp_renderGroupsList();
+  alert('Gruppe gespeichert.');
+}
+
+// ===== Helper / KPIs =====
+function grp_groupRes(groupId){ return grp_state.res.filter(r => r.group_id === groupId); }
+function grp_groupHotels(groupId){ return Array.from(new Set(grp_groupRes(groupId).map(r => r.hotel_code))); }
+function grp_groupDateSpan(groupId){
+  const list = grp_groupRes(groupId); if (!list.length) return '';
+  const arr = list.map(r=>r.arrival).sort(); const dep = list.map(r=>r.departure).sort();
+  return `${grp_fmtDate(arr[0])} – ${grp_fmtDate(dep[dep.length-1])}`;
+}
+function grp_calcKPIs(groupId){
+  const list = grp_groupRes(groupId);
+  const rooms = list.length;
+  let rn = 0, revenue = 0;
+  list.forEach(r => {
+    const nights = Math.max(0, grp_diffNights(r.arrival, r.departure));
+    rn += nights;
+    if (r.per_day && Object.keys(r.per_day).length){
+      revenue += Object.values(r.per_day).reduce((a,b)=>a + (Number(b)||0),0);
+    } else if (r.price != null){
+      revenue += nights * Number(r.price);
+    }
+  });
+  const adr = rn > 0 ? (revenue / rn) : 0;
+  return { rooms, rn, revenue, adr };
+}
+function grp_resTotal(r){
+  const nights = Math.max(0, grp_diffNights(r.arrival, r.departure));
+  if (r.per_day && Object.keys(r.per_day).length) return Object.values(r.per_day).reduce((a,b)=>a+(+b||0),0);
+  if (r.price != null) return nights * Number(r.price);
+  return 0;
+}
+
+// ===== Format/Date =====
+function grp_fmtCur(v){ try{ return new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'}).format(v||0) }catch{return `${(v||0).toFixed(2)} €`} }
+function grp_fmtADR(v){ return isFinite(v) ? grp_fmtCur(v) : '—'; }
+function grp_fmtDate(v){ try{ return new Date(v).toLocaleDateString('de-DE') }catch{return v} }
+function grp_diffNights(a,b){ return Math.max(0, (new Date(b)-new Date(a)) / 86400000); }
+function grp_eachDate(from,to){ const out=[]; if(!from||!to) return out; let d=new Date(from), end=new Date(to); while(d<end){ out.push(d.toISOString().slice(0,10)); d.setDate(d.getDate()+1);} return out; }
+function grp_escape(s){ return (s||'').replace(/[&<>\"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])) }
+function grp_uuid(){
+  if (crypto?.getRandomValues){ const a=new Uint8Array(16); crypto.getRandomValues(a); return Array.from(a).map(x=>x.toString(16).padStart(2,'0')).join(''); }
+  return Math.random().toString(16).slice(2)+Date.now().toString(16);
+}
+function grp_buildPerDayFromUI(){
+  const map={}; document.querySelectorAll('#qaRateDays input[data-day]').forEach(inp => { if (inp.value!=='') map[inp.dataset.day]=Number(inp.value); });
+  return map;
+}
+function grp_buildMeta(groupId){
+  const hotels = grp_groupHotels(groupId).map(c => grp_hotelName(c));
+  return hotels.length ? `Häuser: ${hotels.join(', ')}` : '—';
+}
+
+// Initial anzeigen
+grp_renderGroupsList();
+
+// Demo-Seed nur beim ersten Mal (optional, kannst du löschen):
+if (grp_state.groups.length === 0){
+  const gid = grp_uuid();
+  grp_state.groups.push({ id: gid, name:'Messegruppe Light+Building', status:'open', notes:'VIP-Kontingent 10 Zi.', created_at:new Date().toISOString(), updated_at:new Date().toISOString() });
+  [{ hotel_code: grp_hotels()[0]?.code || '', first_name:'Anna',  last_name:'Maier', arrival:'2025-10-02', departure:'2025-10-05', persons:1, rate_name:'Flex', price:109 },
+   { hotel_code: grp_hotels()[1]?.code || '', first_name:'Chris', last_name:'Bauer', arrival:'2025-10-03', departure:'2025-10-05', persons:1, rate_name:'Flex', price:119 },
+   { hotel_code: grp_hotels()[2]?.code || '', first_name:'Marc',  last_name:'Weber', arrival:'2025-10-02', departure:'2025-10-04', persons:2, rate_name:'BB',   price:null, per_day:{'2025-10-02':129,'2025-10-03':149} },
+  ].forEach(s => grp_state.res.push({ id: grp_uuid(), group_id: gid, ...s, created_at:new Date().toISOString(), updated_at:new Date().toISOString() }));
+  grp_saveLS('groups', grp_state.groups);
+  grp_saveLS('group_reservations', grp_state.res);
+}
 
   });
 })();
