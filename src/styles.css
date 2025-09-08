@@ -931,3 +931,26 @@ html.modal-open { overflow: hidden; }
   .fast-row{ grid-template-columns: repeat(2, minmax(0,1fr)); }
 }
 
+/* Fast-Booker vollbreit unter den zwei Spalten */
+.grid-compact-2 > .fast-block{ grid-column: 1 / -1; }
+
+/* Einzeilige Fast-Row mit Wrap auf kleineren Screens */
+.fast-row{
+  display:grid;
+  grid-template-columns: repeat(8, minmax(0,1fr));
+  gap:8px;
+  align-items:end;
+}
+.fast-row label{display:flex;flex-direction:column;gap:6px}
+.fast-actions{display:flex;justify-content:flex-end}
+@media (max-width: 1100px){
+  .fast-row{ grid-template-columns: repeat(4, minmax(0,1fr)); }
+}
+@media (max-width: 680px){
+  .fast-row{ grid-template-columns: repeat(2, minmax(0,1fr)); }
+}
+
+/* Mehr Platz für die Beschreibung */
+#geNotes{ min-height: 150px; }
+
+
