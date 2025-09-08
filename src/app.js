@@ -4221,7 +4221,7 @@ async function copyToClipboard(txt){
 })();
 
 /* ===========================
-   
+
 // === Ausgelagerter Async-Handler für Fast-Booker ===
 async function fbAddClicked(){
   try{
@@ -4246,9 +4246,11 @@ async function fbAddClicked(){
       return;
     }
 
+    // Hotelname aus HOTELS ableiten
     const hUI  = (window.HOTELS||[]).find(h => h.code===hotel);
     const hName = hUI ? `${hUI.group || ''} ${hUI.name || hUI.display_name || ''}`.trim() : hotel;
 
+    // Sichere Felder (ohne group_id, bis Spalte sicher existiert)
     const payload = {
       reservation_number: 'G'+Date.now().toString(36).toUpperCase(),
       status: 'active',
@@ -4274,14 +4276,17 @@ async function fbAddClicked(){
       return;
     }
 
+    // lokale KPIs-Daten füttern
     (books[g.id] ||= []).push({ last, first, pax, arr, dep, rate: rateN, price });
     saveBooks(books);
 
+    // UI reset + refresh
     els.fbLast.value = els.fbFirst.value = '';
     els.fbPax.value = 1;
     renderEdit();
     renderList();
 
+    // globale KPIs / Listen
     try {
       await autoRollPastToDone?.();
       await loadReservations?.();
@@ -4294,7 +4299,9 @@ async function fbAddClicked(){
     alert('Speichern fehlgeschlagen: ' + (e.message || e));
   }
 }
-GruppenResa — Prototype v1
+
+
+   GruppenResa — Prototype v1
    Storage: localStorage (resTool.groups / resTool.groupBookings)
    =========================== */
 (function(){
