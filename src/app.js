@@ -119,7 +119,7 @@ if (typeof window.debounce !== 'function') {
   ensureBackdrop().addEventListener('click', ()=> closeModal());
 
   // [data-close] Buttons
-  document.addEventListener('click', (e)=>{
+  document.addEventListener('click', async (e)=>{
     const btn = e.target.closest('[data-close]');
     if (!btn) return;
     e.preventDefault();
