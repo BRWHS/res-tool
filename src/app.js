@@ -136,9 +136,17 @@ window.addEventListener('keydown', (e)=>{ if (e.key === 'Escape') window.closeMo
 
 
   /***** Supabase *****/
-  const SB_URL = "https://kytuiodojfcaggkvizto.supabase.co";
-  const SB_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt5dHVpb2RvamZjYWdna3ZpenRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ4MzA0NjgsImV4cCI6MjA3MDQwNjQ2OH0.YobQZnCQ7LihWtewynoCJ6ZTjqetkGwh82Nd2mmmhLU";
-  const supabase = window.supabase.createClient(SB_URL, SB_ANON_KEY);
+const SB_URL = "https://kytuiodojfcaggkvizto.supabase.co";
+const SB_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt5dHVpb2RvamZjYWdna3ZpenRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ4MzA0NjgsImV4cCI6MjA3MDQwNjQ2OH0.YobQZnCQ7LihWtewynoCJ6ZTjqetkGwh82Nd2mmmhLU";
+if (!window.__sb) {
+  if (!window.supabase || typeof window.supabase.createClient !== 'function') {
+    console.error('Supabase UMD nicht geladen – Script-Reihenfolge prüfen!');
+  } else {
+    window.__sb = window.supabase.createClient(SB_URL, SB_ANON_KEY);
+  }
+}
+const supa = window.__sb;
+
 
   // ===== Confirmation: Templates & Modal Control =====
 
@@ -605,7 +613,9 @@ function buildSketch(){
 
  /***** Mini-Analytics — YoY (heute vs. heute vor 1 Jahr) *****/
 async function buildMiniAnalytics(){
-  const list = q('#miniAnalyticsDock'); if (!list) return; list.innerHTML = '';
+  const dock = q('#miniAnalyticsDock'); if (!dock) return;
+  const list = dock.querySelector('.dock-list') || dock;
+  list.innerHTML = '';
 
   // Heute (Start/Ende)
   const today = soD(new Date());                       // 00:00:00 heute
