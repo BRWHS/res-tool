@@ -949,6 +949,39 @@ html.modal-open { overflow: hidden; }
 @media (max-width: 680px){
   .fast-row{ grid-template-columns: repeat(2, minmax(0,1fr)); }
 }
+/* Gruppen-Modal: 2 Spalten + Vollbreite-Fastbooker */
+.grid-compact-2{
+  display:grid;
+  grid-template-columns: 2fr 1fr;   /* links groß, rechts kompakt */
+  gap:16px;
+  align-items:start;
+}
+.grid-compact-2 > .form-col{ grid-column: 1; }
+.grid-compact-2 > .kpi-card{ grid-column: 2; }
+.grid-compact-2 > .fast-block{ grid-column: 1 / -1; }
+
+/* Beschreibung größer / weniger gequetscht */
+#geNotes{ min-height: 180px; }
+
+/* Fast-Booker in einer Zeile mit Wrap */
+.fast-row{
+  display:grid;
+  grid-template-columns: repeat(8, minmax(0,1fr));
+  gap:8px;
+  align-items:end;
+}
+.fast-row label{ display:flex; flex-direction:column; gap:6px; }
+.fast-actions{ display:flex; justify-content:flex-end; }
+
+/* Responsiv: Spalten umbrechen */
+@media (max-width: 1100px){
+  .grid-compact-2{ grid-template-columns: 1fr; }
+  .grid-compact-2 > .kpi-card{ grid-column: 1; }
+  .fast-row{ grid-template-columns: repeat(4, minmax(0,1fr)); }
+}
+@media (max-width: 680px){
+  .fast-row{ grid-template-columns: repeat(2, minmax(0,1fr)); }
+}
 
 
 
