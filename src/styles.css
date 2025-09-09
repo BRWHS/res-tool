@@ -983,47 +983,49 @@ html.modal-open { overflow: hidden; }
   .fast-row{ grid-template-columns: repeat(2, minmax(0,1fr)); }
 }
 
-/* === Mini Analytics Dock (fixed bottom-right) === */
+/* Mini-Analytics: oben links, ohne Scrollbar */
 .analytics-dock {
-  position: fixed;
-  right: 16px;
-  bottom: 0;
-  width: 300px;
-  max-height: 260px;
+  position: fixed !important;
+  left: 16px !important;
+  top: 92px !important;
+  right: auto !important;
+  bottom: auto !important;
+  width: 260px; /* hier passts du die Breite an */
   background: rgba(10, 26, 31, 0.92);
-  border-top-left-radius: 12px;
   border: 1px solid var(--line, rgba(0,255,255,0.2));
-  border-right: none;
-  border-bottom: none;
-  box-shadow: 0 -4px 18px rgba(0,0,0,.45);
+  border-top-right-radius: 12px;
+  box-shadow: 0 6px 18px rgba(0,0,0,.35);
   color: var(--text, #d7fdfd);
   backdrop-filter: blur(8px);
   z-index: 40;
 }
+
 .analytics-dock .dock-head {
   display:flex; justify-content:space-between; align-items:center;
   padding:8px 10px;
   border-bottom:1px solid var(--line, rgba(0,255,255,0.2));
 }
-.analytics-dock .dock-head h4 {
-  margin:0; font-size:12px; letter-spacing:.3px; color: var(--accent, #00FFFF);
-}
+
 .analytics-dock .dock-list {
   padding: 8px;
   display: flex;
   flex-direction: column;
   gap: 4px;
-  max-height: 100vh; /* geht bis zur Bildschirmhöhe */
-  overflow-y: visible; /* keine Scrollbar */
-  }
-  
+  /* keine Höhe begrenzen, keine Scrollbar */
+  max-height: none;
+  overflow-y: visible;
+}
+
 .dock-item { display:flex; align-items:center; justify-content:space-between; padding:6px 0; gap:8px; }
 .dock-name { flex:1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .spark { width: 64px; height: 22px; color: var(--accent, #00FFFF); }
 .dock-arrow { font-weight:700; margin-left: 4px; }
+
+/* Auf kleinen Screens ganz ausblenden (bestehende Logik) */
 @media (max-width: 1024px) {
-  .analytics-dock { display: none; }
+  .analytics-dock { display: none !important; }
 }
+
 
 
 
