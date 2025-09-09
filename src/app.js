@@ -146,6 +146,133 @@ window.addEventListener('keydown', (e)=>{ if (e.key === 'Escape') window.closeMo
   // >>> EINZEILER EINFÜGEN (globaler Alias, damit Handler außerhalb vom Closure SB finden)
 window.SB = SB;
 
+  // === User Management (Supabase: app_users; Fallback: LocalStorage) ===
+const USERS_TABLE = 'app_users';
+const LS_USERS_KEY = 'resTool.users';
+
+// Privater Cache
+let __users = [];
+
+// LocalStorage-Fallback laden/speichern
+function readUsersLS(){
+  try { return JSON.parse(localStorage.getItem(LS_USERS_KEY) || '[]'); } catch(_) { return []; }
+}
+function writeUsersLS(list){
+  try { localStorage.setItem(LS_USERS_KEY, JSON.stringify(list||[])); } catch(_) {}
+}
+
+// Normalisiere Datensatz
+function normalizeUser(u){
+  return {
+    id: u.id || crypto.randomUUID?.() || ('u_'+Date.now()),
+    name: (u.name||'').trim(),
+    email: (u.email||'').trim().toLowerCase(),
+    role: u.role || 'agent',
+    active: (typeof u.active==='boolean') ? u.active : String(u.active) !== 'false',
+    created_at: u.created_at || new Date().toISOString()
+  };
+}
+
+  async function loadUsers(){
+  // 1) Versuch: Supabase
+  try{
+    const { data, error } = await SB.from(USERS_TABLE).select('*').order('created_at',{ascending:false});
+    if (!error && Array.isArray(data)){
+      __users = data.map(normalizeUser);
+      renderUsers();
+      return;
+    }
+  }catch(_){ /* noop */ }
+
+  // 2) Fallback: LocalStorage
+  __users = readUsersLS().map(normalizeUser);
+  renderUsers();
+}
+
+function renderUsers(){
+  const tbody = document.getElementById('usrBody');
+  if (!tbody) return;
+
+  const term = (document.getElementById('usrSearch')?.value || '').toLowerCase();
+  const roleF = (document.getElementById('usrRoleFilter')?.value || 'all');
+
+  const rows = __users.filter(u=>{
+    const okRole = roleF==='all' || u.role===roleF;
+    const okTerm = !term || u.name.toLowerCase().includes(term) || u.email.toLowerCase().includes(term);
+    return okRole && okTerm;
+  });
+
+  tbody.innerHTML = rows.map(u => `
+    <tr data-id="${u.id}">
+      <td>${escapeHtml(u.name||'')}</td>
+      <td>${escapeHtml(u.email||'')}</td>
+      <td>${escapeHtml(u.role||'')}</td>
+      <td>${u.active ? 'ja' : 'nein'}</td>
+      <td>${new Date(u.created_at).toLocaleString('de-DE')}</td>
+      <td class="row-actions">
+        <button class="btn sm ghost" data-usr-toggle="${u.id}">${u.active?'Deaktivieren':'Aktivieren'}</button>
+        <button class="btn sm danger" data-usr-del="${u.id}">Löschen</button>
+      </td>
+    </tr>
+  `).join('') || `<tr><td colspan="6" class="muted">Keine Benutzer gefunden.</td></tr>`;
+}
+
+// simples Escaping
+function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m])); }
+
+  async function createUser(u){
+  const rec = normalizeUser(u);
+
+  // Supabase zuerst versuchen
+  try{
+    const { error } = await SB.from(USERS_TABLE).insert({
+      id: rec.id, name: rec.name, email: rec.email,
+      role: rec.role, active: rec.active, created_at: rec.created_at
+    });
+    if (!error) return rec;
+    // wenn 42P01 (relation does not exist) → Fallback
+  }catch(_){}
+
+  // Fallback: LocalStorage
+  const list = readUsersLS();
+  list.unshift(rec);
+  writeUsersLS(list);
+  return rec;
+}
+  async function deleteUser(id){
+  // Supabase
+  try{
+    const { error } = await SB.from(USERS_TABLE).delete().eq('id', id);
+    if (!error){ __users = __users.filter(u=>u.id!==id); renderUsers(); return true; }
+  }catch(_){}
+
+  // Fallback
+  const list = readUsersLS().filter(u=>u.id!==id);
+  writeUsersLS(list);
+  __users = list;
+  renderUsers();
+  return true;
+}
+
+async function toggleUserActive(id){
+  const u = __users.find(x=>x.id===id);
+  if (!u) return false;
+  const next = !u.active;
+
+  // Supabase
+  try{
+    const { error } = await SB.from(USERS_TABLE).update({ active: next }).eq('id', id);
+    if (!error){ u.active = next; renderUsers(); return true; }
+  }catch(_){}
+
+  // Fallback
+  const list = readUsersLS();
+  const idx = list.findIndex(x=>x.id===id); if (idx>=0){ list[idx].active = next; writeUsersLS(list); }
+  u.active = next; renderUsers(); return true;
+}
+
+
+
 
   // ===== Confirmation: Templates & Modal Control =====
 
@@ -4624,6 +4751,57 @@ const payload = {
       }
       return;
     }
+        // Einstellungen → Benutzereinstellungen öffnen
+    if (t.id === 'btnUserPrefs'){ 
+      openModal('modalUserPrefs'); 
+      try { await loadUsers(); } catch(_){}
+      return;
+    }
+
+    // Benutzer erstellen
+    if (t.id === 'btnUserCreate'){
+      const name  = (document.getElementById('usrName')?.value||'').trim();
+      const email = (document.getElementById('usrEmail')?.value||'').trim();
+      const role  = document.getElementById('usrRole')?.value || 'agent';
+      const active= (document.getElementById('usrActive')?.value||'true') !== 'false';
+      const info  = document.getElementById('usrInfo');
+
+      if (!name || !email || !/^[^@]+@[^@]+\.[^@]+$/.test(email)){
+        if (info) info.textContent = 'Bitte Name und gültige E-Mail angeben.'; 
+        return;
+      }
+      t.disabled = true;
+      try{
+        await createUser({ name, email, role, active });
+        document.getElementById('usrName').value='';
+        document.getElementById('usrEmail').value='';
+        document.getElementById('usrRole').value='agent';
+        document.getElementById('usrActive').value='true';
+        if (info) info.textContent = 'Benutzer erstellt.';
+        await loadUsers();
+      }catch(e){
+        console.error(e);
+        if (info) info.textContent = 'Fehler beim Erstellen.';
+      }finally{
+        t.disabled = false;
+      }
+      return;
+    }
+
+    // Benutzerliste: Refresh
+    if (t.id === 'btnUsersRefresh'){ await loadUsers(); return; }
+
+    // Benutzerliste: Toggle Aktiv
+    const tid = t.getAttribute('data-usr-toggle');
+    if (tid){ await toggleUserActive(tid); return; }
+
+    // Benutzerliste: Löschen
+    const did = t.getAttribute('data-usr-del');
+    if (did){ 
+      if (confirm('Benutzer wirklich löschen?')) await deleteUser(did);
+      return; 
+    }
+
   }, { passive:false });
 
   // Filter / Suche live
