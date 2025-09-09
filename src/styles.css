@@ -611,6 +611,13 @@ select[disabled]{opacity:.6; pointer-events:none
 
 /* --- Fix: Smaller 'Neue Rate' editor modal & backdrop alias --- */
 #modalRateEdit{ max-width:860px; width:min(95vw,860px); }
+
+/* Breiteres Layout für Gruppen-Edit (damit Fast-Booker in eine Zeile passt) */
+#modalGroupEdit{
+  max-width: 1280px;
+  width: min(96vw, 1280px);
+}
+
 .backdrop{ position:fixed; inset:0; background:rgba(0,8,10,.35); display:none; align-items:center; justify-content:center; z-index:40; }
 
 /* Quick-Links auf kleinen Screens ausblenden */
@@ -918,7 +925,7 @@ html.modal-open { overflow: hidden; }
 /* Fast-Booker in einer Zeile */
 .fast-row{
   display:grid;
-  grid-template-columns: repeat(8, minmax(0,1fr));
+  grid-template-columns: repeat(9, minmax(0,1fr));
   gap:8px;
   align-items:end;
 }
@@ -937,7 +944,7 @@ html.modal-open { overflow: hidden; }
 /* Einzeilige Fast-Row mit Wrap auf kleineren Screens */
 .fast-row{
   display:grid;
-  grid-template-columns: repeat(8, minmax(0,1fr));
+  grid-template-columns: repeat(9, minmax(0,1fr));
   gap:8px;
   align-items:end;
 }
@@ -966,7 +973,7 @@ html.modal-open { overflow: hidden; }
 /* Fast-Booker in einer Zeile mit Wrap */
 .fast-row{
   display:grid;
-  grid-template-columns: repeat(8, minmax(0,1fr));
+  grid-template-columns: repeat(9, minmax(0,1fr));
   gap:8px;
   align-items:end;
 }
