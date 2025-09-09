@@ -1501,16 +1501,18 @@
 })();
 </script>
 
-      <!-- Mini Analytics Dock -->
-    <div class="analytics-dock" id="miniAnalyticsDockContainer" role="complementary" aria-label="Mini Analytics">
-      <div class="dock-head">
-        <h4 class="mono">Mini-Analytics</h4>
-        <button id="dockToggle" class="btn sm ghost" type="button" aria-expanded="true" aria-controls="miniAnalyticsDock">–</button>
-      </div>
-      <div id="miniAnalyticsDock" class="dock-list">
-        <!-- Wird dynamisch von buildMiniAnalytics() gefüllt -->
-      </div>
-    </div>
+     <!-- Mini Analytics Dock -->
+<aside class="analytics-dock" id="miniAnalyticsDockContainer" role="complementary" aria-label="Mini-Analytics">
+  <div class="dock-head">
+    <h4 class="mono">Mini-Analytics</h4>
+    <button id="dockToggle" class="btn sm ghost" type="button" aria-expanded="true" aria-controls="miniAnalyticsDock">–</button>
+  </div>
+  <!-- WICHTIG: hier KEIN class="analytics-dock" -->
+  <div id="miniAnalyticsDock" class="dock-list">
+    <!-- wird von buildMiniAnalytics() gefüllt -->
+  </div>
+</aside>
+
 
   <script>
 document.addEventListener('DOMContentLoaded', function(){
