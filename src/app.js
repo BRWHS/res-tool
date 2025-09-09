@@ -143,6 +143,9 @@ window.addEventListener('keydown', (e)=>{ if (e.key === 'Escape') window.closeMo
   if (!SB?.from) {
   console.error('Supabase-Client nicht initialisiert – prüfe Script-Einbindung!');
 }
+  // >>> EINZEILER EINFÜGEN (globaler Alias, damit Handler außerhalb vom Closure SB finden)
+window.SB = SB;
+
 
   // ===== Confirmation: Templates & Modal Control =====
 
@@ -1907,8 +1910,11 @@ q('#btnNext')?.addEventListener('click', ()=>{
 
     // 3) Speichern
     const { error } = await SB.from('reservations').insert(payload);
-    if (q('#newInfo')) q('#newInfo').textContent = error ? ('Fehler: ' + error.message) : 'Reservierung gespeichert.';
-    if (error) return;
+if (error) {
+  console.warn(error);
+  alert('Speichern fehlgeschlagen: ' + (error.message || 'unbekannter Fehler'));
+  return;
+}
 
     // 4) Optional: non-blocking Push an HNS (wenn Channel konfiguriert)
     (async ()=>{
