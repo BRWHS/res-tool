@@ -4539,34 +4539,38 @@ if (t.id === 'fbAdd'){
   }
 
   // 1) sofort Supabase einsetzen
-  const hUI = (window.HOTELS||[]).find(h => h.code===hotel);
-  const payload = {
-    reservation_number: 'G'+Date.now().toString(36).toUpperCase(),
-    status: 'active',
-    hotel_code: hotel,
-    hotel_name: hUI ? `${hUI.group} - ${hUI.name.replace(/^.*? /,'')}` : hotel,
-    arrival: arr,
-    departure: dep,
-    guests: pax,
-    guests_adults: pax,
-    guests_children: 0,
-    category: catName,            // Kategorie-Name
-    category_code: catCode,       // optional, falls Spalte existiert
-    rate_name: rateN,
-    rate_price: price,
-    guest_first_name: first || null,
-    guest_last_name:  last  || null,
-    notes: `Gruppe: ${g.name || g.id}`,
-    // Optional: wenn du eine Spalte in reservations hast, kannst du die Gruppe speichern:
-    group_id: g.id  // ← funktioniert nur, wenn Spalte existiert. Sonst ignoriert Supabase das Feld.
-  };
+const hUI = (window.HOTELS||[]).find(h => h.code===hotel);
+const payload = {
+  reservation_number: 'G'+Date.now().toString(36).toUpperCase(),
+  status: 'active',
+  hotel_code: hotel,
+  hotel_name: hUI ? `${hUI.group} - ${hUI.name.replace(/^.*? /,'')}` : hotel,
+  arrival: arr,
+  departure: dep,
+  guests: pax,
+  guests_adults: pax,
+  guests_children: 0,
+  category: catName,          // nur Name, kein category_code mitschicken
+  rate_name: rateN,
+  rate_price: price,
+  guest_first_name: first || null,
+  guest_last_name:  last  || null,
+  notes: `Gruppe: ${g.name || g.id}`
+  // KEIN group_id, KEIN category_code
+};
 
-  try{
-    const { error } = await SB.from('reservations').insert(payload);
-    if (error) { console.warn(error); alert('Speichern fehlgeschlagen.'); return; }
-  }catch(e){
-    console.error(e); alert('Speichern fehlgeschlagen.'); return;
+  try {
+  const { error } = await SB.from('reservations').insert(payload);
+  if (error) {
+    console.warn('Supabase insert error:', error);  // zeigt message/hint/details
+    alert('Speichern fehlgeschlagen.');
+    return;
   }
+} catch(e) {
+  console.error('Supabase insert exception:', e);
+  alert('Speichern fehlgeschlagen.');
+  return;
+}
 
   // 2) lokale Roomingliste mitführen (für KPIs der Gruppe)
   (books[g.id] ||= []).push({
