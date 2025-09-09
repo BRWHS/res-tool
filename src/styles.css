@@ -989,6 +989,10 @@ html.modal-open { overflow: hidden; }
 @media (max-width: 850px){
   .fast-row{ grid-template-columns: repeat(2, minmax(0,1fr)); }
 }
+/* Zentrierung des "+" Buttons im Fast-Booker */
+.fast-actions {
+  justify-self: center;   /* statt rechts */
+}
 
 /* ===== Mini-Analytics – polished glass look ===== */
 .analytics-dock {
