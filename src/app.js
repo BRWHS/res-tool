@@ -4439,19 +4439,43 @@ function fillRatesDropdown(sel, hotelCode){
     `<option value="${r.name}" data-price="${r.price}">${r.name} (${r.price.toLocaleString('de-DE')} €)</option>`
   ).join('');
 }
-    // NACH function fillRatesDropdown(sel, hotelCode){ ... } EINFÜGEN
+    // REPLACE: function fillFastBookerCats(hotelCode){ ... }
 function fillFastBookerCats(hotelCode){
   const sel = document.getElementById('fbCatSel');
   if (!sel) return;
-  const cats = (typeof getCategoriesForHotel === 'function')
-    ? getCategoriesForHotel(hotelCode)
-    : [];
+
+  // 1) Kategorien holen (V2)
+  let cats = [];
+  try {
+    cats = (typeof getCategoriesForHotel === 'function')
+      ? (getCategoriesForHotel(hotelCode) || [])
+      : [];
+  } catch(_) { cats = []; }
+
+  // 2) Fallback, wenn noch nichts in V2 liegt → aus HOTEL_CATEGORIES ableiten + in V2 persistieren
+  if (!cats || cats.length === 0){
+    const names = (window.HOTEL_CATEGORIES?.[hotelCode] || window.HOTEL_CATEGORIES?.default || []);
+    cats = names.map(n => {
+      const code = (n||'').normalize('NFD').replace(/[^\w]/g,'').toUpperCase().slice(0,3) || 'CAT';
+      const maxPax = /suite/i.test(n) ? 4 : 2;
+      return { name:n, code, maxPax };
+    });
+    try {
+      const map = (typeof readCatsV2 === 'function') ? readCatsV2() : {};
+      map[hotelCode] = cats;
+      if (typeof writeCatsV2 === 'function') writeCatsV2(map);
+      if (typeof refreshCategoryDependents === 'function') refreshCategoryDependents(hotelCode);
+    } catch(_) {}
+  }
+
+  // 3) Dropdown rendern
   sel.innerHTML = cats.map(c =>
     `<option value="${c.name}" data-code="${c.code}" data-max="${c.maxPax}">
        ${c.name} (${c.code} · max ${c.maxPax})
      </option>`
   ).join('');
 }
+
 
 
 
