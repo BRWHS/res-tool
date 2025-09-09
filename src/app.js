@@ -160,6 +160,12 @@ function readUsersLS(){
 function writeUsersLS(list){
   try { localStorage.setItem(LS_USERS_KEY, JSON.stringify(list||[])); } catch(_) {}
 }
+  const LS_CODES_KEY = 'resTool.userAccessCodes'; // { [userId]: "123456" }
+function readCodes(){ try { return JSON.parse(localStorage.getItem(LS_CODES_KEY)||'{}'); } catch(_) { return {}; } }
+function writeCodes(map){ try { localStorage.setItem(LS_CODES_KEY, JSON.stringify(map||{})); } catch(_){} }
+
+function generateCode(){ return String(Math.floor(100000 + Math.random()*900000)); } // 6-stellig
+
 
 // Normalisiere Datensatz
 function normalizeUser(u){
@@ -172,6 +178,34 @@ function normalizeUser(u){
     created_at: u.created_at || new Date().toISOString()
   };
 }
+  // --- Default-Admin seeden (falls Liste leer) ---
+async function ensureDefaultAdminSeed(){
+  // nur seeden, wenn gar keine Nutzer vorhanden
+  if ((__users||[]).length > 0) return;
+
+  const seed = normalizeUser({
+    name: 'Admin',
+    email: 'admin@local',  // rein informativ
+    role: 'admin',
+    active: true
+  });
+
+  // Supabase versuchen
+  try{
+    const { error } = await SB.from(USERS_TABLE).insert({
+      id: seed.id, name: seed.name, email: seed.email,
+      role: seed.role, active: seed.active, created_at: seed.created_at
+    });
+    if (!error) { __users = [seed]; return; }
+  }catch(_){}
+
+  // Fallback: LocalStorage
+  const list = readUsersLS();
+  list.unshift(seed);
+  writeUsersLS(list);
+  __users = list;
+}
+
 
   async function loadUsers(){
   // 1) Versuch: Supabase
@@ -179,6 +213,7 @@ function normalizeUser(u){
     const { data, error } = await SB.from(USERS_TABLE).select('*').order('created_at',{ascending:false});
     if (!error && Array.isArray(data)){
       __users = data.map(normalizeUser);
+      await ensureDefaultAdminSeed();
       renderUsers();
       return;
     }
@@ -210,9 +245,11 @@ function renderUsers(){
       <td>${u.active ? 'ja' : 'nein'}</td>
       <td>${new Date(u.created_at).toLocaleString('de-DE')}</td>
       <td class="row-actions">
-        <button class="btn sm ghost" data-usr-toggle="${u.id}">${u.active?'Deaktivieren':'Aktivieren'}</button>
-        <button class="btn sm danger" data-usr-del="${u.id}">Löschen</button>
-      </td>
+  <button class="btn sm ghost" data-usr-toggle="${u.id}">${u.active?'Deaktivieren':'Aktivieren'}</button>
+  <button class="btn sm" data-usr-code="${u.id}">Code setzen</button>
+  <button class="btn sm ghost" data-usr-code-del="${u.id}">Code löschen</button>
+  <button class="btn sm danger" data-usr-del="${u.id}">Löschen</button>
+</td>
     </tr>
   `).join('') || `<tr><td colspan="6" class="muted">Keine Benutzer gefunden.</td></tr>`;
 }
@@ -4766,10 +4803,14 @@ const payload = {
       const active= (document.getElementById('usrActive')?.value||'true') !== 'false';
       const info  = document.getElementById('usrInfo');
 
-      if (!name || !email || !/^[^@]+@[^@]+\.[^@]+$/.test(email)){
-        if (info) info.textContent = 'Bitte Name und gültige E-Mail angeben.'; 
-        return;
-      }
+     if (!name){
+  if (info) info.textContent = 'Bitte Name angeben.'; 
+  return;
+}
+if (email && !/^[^@]+@[^@]+\.[^@]+$/.test(email)){
+  if (info) info.textContent = 'E-Mail ist optional – wenn angegeben, dann gültig.'; 
+  return;
+}
       t.disabled = true;
       try{
         await createUser({ name, email, role, active });
