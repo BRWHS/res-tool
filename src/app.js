@@ -4330,15 +4330,17 @@ async function copyToClipboard(txt){
 
     const rws = books[g.id] || [];
     els.fbBody.innerHTML = rws.map((r,idx)=>`
-      <tr>
-        <td>${esc(r.last)}</td><td>${esc(r.first)}</td>
-        <td>${Number(r.pax)||1}</td>
-        <td>${r.arr}</td><td>${r.dep}</td>
-        <td>${esc(r.rate||'')}</td>
-        <td>${fmtEUR(r.price||0)}</td>
-        <td><button class="btn sm" data-delrow="${idx}">×</button></td>
-      </tr>
-    `).join('');
+  <tr>
+    <td>${esc(r.last)}</td><td>${esc(r.first)}</td>
+    <td>${Number(r.pax)||1}</td>
+    <td>${r.arr}</td><td>${r.dep}</td>
+    <td>${esc(r.cat||'')}</td>
+    <td>${esc(r.rate||'')}</td>
+    <td>${fmtEUR(r.price||0)}</td>
+    <td><button class="btn sm" data-delrow="${idx}">×</button></td>
+  </tr>
+`).join('');
+
 
     const { rooms, rn, rev, adr } = calcKPIs(rws);
     els.gkRooms.textContent = String(rooms);
@@ -4377,6 +4379,9 @@ async function copyToClipboard(txt){
     // Raten passend zum aktuellen Hotel füllen
 fillRatesDropdown(document.getElementById('fbRateSel'), els.geHotel.value);
 
+    // Kategorien passend zum aktuellen Hotel füllen
+fillFastBookerCats(els.geHotel.value);
+
 // Beim Ratenwechsel Preis spiegeln
 document.getElementById('fbRateSel')?.addEventListener('change', (e)=>{
   const p = e.target.selectedOptions[0]?.dataset.price;
@@ -4385,10 +4390,15 @@ document.getElementById('fbRateSel')?.addEventListener('change', (e)=>{
 
 // Wenn das Gruppen-Hotel geändert wird → Raten neu füllen + Preis setzen
 els.geHotel?.addEventListener('change', (e)=>{
+  // Raten neu
   fillRatesDropdown(document.getElementById('fbRateSel'), e.target.value);
   const p = document.getElementById('fbRateSel')?.selectedOptions?.[0]?.dataset.price;
   if (p != null) els.fbPrice.value = Number(p);
+
+  // Kategorien neu
+  fillFastBookerCats(e.target.value);
 });
+
 
 
     // === Rates robust holen (lokal gespeicherte Raten → Fallback Dummy) ===
@@ -4429,6 +4439,20 @@ function fillRatesDropdown(sel, hotelCode){
     `<option value="${r.name}" data-price="${r.price}">${r.name} (${r.price.toLocaleString('de-DE')} €)</option>`
   ).join('');
 }
+    // NACH function fillRatesDropdown(sel, hotelCode){ ... } EINFÜGEN
+function fillFastBookerCats(hotelCode){
+  const sel = document.getElementById('fbCatSel');
+  if (!sel) return;
+  const cats = (typeof getCategoriesForHotel === 'function')
+    ? getCategoriesForHotel(hotelCode)
+    : [];
+  sel.innerHTML = cats.map(c =>
+    `<option value="${c.name}" data-code="${c.code}" data-max="${c.maxPax}">
+       ${c.name} (${c.code} · max ${c.maxPax})
+     </option>`
+  ).join('');
+}
+
 
 
 // Preis auf Rate ändern
@@ -4472,6 +4496,10 @@ if (t.id === 'fbAdd'){
   const rateN = document.getElementById('fbRateSel')?.value || els.fbRate.value.trim(); // Fallback
   const price = Number(els.fbPrice.value)||0;
 
+  const catSel = document.getElementById('fbCatSel');
+  const catName = catSel?.value || null;
+  const catCode = catSel?.selectedOptions?.[0]?.dataset.code || null;
+
   if (!hotel || !arr || !dep || !last){
     alert('Bitte mind. Hotel, An-/Abreise und Nachname ausfüllen.'); return;
   }
@@ -4488,7 +4516,8 @@ if (t.id === 'fbAdd'){
     guests: pax,
     guests_adults: pax,
     guests_children: 0,
-    category: null,               // kann später bearbeitet werden
+    category: catName,            // Kategorie-Name
+    category_code: catCode,       // optional, falls Spalte existiert
     rate_name: rateN,
     rate_price: price,
     guest_first_name: first || null,
@@ -4506,7 +4535,10 @@ if (t.id === 'fbAdd'){
   }
 
   // 2) lokale Roomingliste mitführen (für KPIs der Gruppe)
-  (books[g.id] ||= []).push({ last:first?last:last, first, pax, arr, dep, rate: rateN, price });
+  (books[g.id] ||= []).push({
+  last:first?last:last, first, pax, arr, dep,
+  cat: catName, rate: rateN, price
+});
   saveBooks(books);
 
   // 3) UI -> Reset & Refresh
