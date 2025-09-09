@@ -1019,7 +1019,7 @@ html.modal-open { overflow: hidden; }
   
 .dock-item { display:flex; align-items:center; justify-content:space-between; padding:6px 0; gap:8px; }
 .dock-name { flex:1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.spark { width: 64px; height: 82px; color: var(--accent, #00FFFF); }
+.spark { width: 64px; height: 22px; color: var(--accent, #00FFFF); }
 .dock-arrow { font-weight:700; margin-left: 4px; }
 @media (max-width: 1024px) {
   .analytics-dock { display: none; }
