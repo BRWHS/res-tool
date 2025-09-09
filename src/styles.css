@@ -1009,9 +1009,11 @@ html.modal-open { overflow: hidden; }
   margin:0; font-size:12px; letter-spacing:.3px; color: var(--accent, #00FFFF);
 }
 .analytics-dock .dock-list {
-  max-height: 200px;
-  overflow: auto;
-  padding: 8px 10px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 100vh;
 }
 .dock-item { display:flex; align-items:center; justify-content:space-between; padding:6px 0; gap:8px; }
 .dock-name { flex:1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
