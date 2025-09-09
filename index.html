@@ -988,7 +988,7 @@
             <label>Name*
               <input id="usrName" class="input" placeholder="Max Mustermann">
             </label>
-            <label>E-Mail*
+            <label>E-Mail
               <input id="usrEmail" type="email" class="input" placeholder="max@example.com">
             </label>
             <label>Rolle*
@@ -1147,6 +1147,22 @@
         <details class="box"><summary class="mono">Wie exportiere ich Reporting-Daten?</summary>
           <p class="tiny">Im Menü <b>Reporting</b> Zeitraum und Hotel wählen → „Aktualisieren“. Rechts oben stehen <b>CSV/XLS/PDF</b> bereit.</p>
         </details>
+        <details class="box"><summary class="mono">Welche Bedeutung hat die Benutzer-Rolle aktuell?</summary>
+  <p class="tiny">Rollen sind derzeit <b>Platzhalter</b> ohne Rechtewirkung. Später werden damit Rechtepakete (z. B. Lesen/Schreiben/Reporting/Admin) verknüpft. Für jetzt dienen sie nur der Kennzeichnung.</p>
+</details>
+
+<details class="box"><summary class="mono">Wie funktioniert „Passwort“/Login?</summary>
+  <p class="tiny">
+    Aktuell gibt es <b>keine</b> echte Passwortverwaltung. Stattdessen kann pro Benutzer ein <b>lokaler Zugangscode</b> gesetzt werden (nur zu Demo-/Operativzwecken, nicht sicherheitskritisch nutzen).
+    Für ein echtes Login mit Passwort/Reset empfehle ich die Integration von <b>Supabase Auth</b> (E-Mail/Passwort oder Magic Links). Das kann ich als nächsten Schritt einbauen.
+  </p>
+</details>
+
+<details class="box"><summary class="mono">Warum sehe ich meinen Admin-User nicht?</summary>
+  <p class="tiny">
+    Wenn noch keine Nutzer in der Tabelle <code>app_users</code> oder im lokalen Speicher vorhanden sind, legt das System beim ersten Öffnen der Benutzereinstellungen einen <b>Default-Admin</b> an (Name: „Admin“, E-Mail: „admin@local“).
+  </p>
+</details>
       </div>
     </div>
   </section>
