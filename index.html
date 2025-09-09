@@ -1512,6 +1512,22 @@
       </div>
     </div>
 
+  <script>
+document.addEventListener('DOMContentLoaded', function(){
+  const btn = document.getElementById('dockToggle');
+  const list = document.getElementById('miniAnalyticsDock');
+  if (btn && list) {
+    btn.addEventListener('click', () => {
+      const hidden = list.style.display === 'none';
+      list.style.display = hidden ? '' : 'none';
+      btn.setAttribute('aria-expanded', String(hidden));
+      btn.textContent = hidden ? '–' : '+';
+    });
+  }
+});
+</script>
+
+
 
 </body>
 </html>
