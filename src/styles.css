@@ -1048,13 +1048,16 @@ html.modal-open { overflow: hidden; }
 
 /* Liste – keine Scrollbar, zeigt alle Hotels */
 .analytics-dock .dock-list {
-  padding: 8px 10px;
+  padding: 8px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  max-height: none;        /* keine harte Höhe */
-  overflow: visible;       /* keine Scrollbar */
+  gap: 4px;
+
+  /* Höhe beschränken auf den Bildschirm */
+  max-height: calc(100vh - 140px); /* 100vh = gesamte Höhe, minus Abstand oben + Header */
+  overflow-y: auto;                /* Scrollbar nur wenn wirklich nötig */
 }
+
 
 /* Item-Karte */
 .dock-item {
