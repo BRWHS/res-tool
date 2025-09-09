@@ -52,14 +52,17 @@
     </nav>
   </header>
 
-  <!-- Mini-Charts (YoY) -->
-  <aside class="analytics-dock" aria-label="Mini-Charts">
+  <!-- Mini Analytics Dock -->
+<aside class="analytics-dock">
   <div class="dock-head">
-    <span class="mono">YoY - Daily</span>
-    <button class="btn sm" id="dockToggle" title="Ein-/Ausblenden">–</button>
+    <h4 class="mono">Mini-Analytics</h4>
+    <button id="dockToggle" class="btn sm ghost">–</button>
   </div>
-  <div id="miniAnalyticsDock" class="dock-list"></div>
+  <div id="miniAnalyticsDock" class="dock-list">
+    <!-- Items werden dynamisch durch buildMiniAnalytics() gerendert -->
+  </div>
 </aside>
+
 
 
   <main class="container" aria-live="polite">
