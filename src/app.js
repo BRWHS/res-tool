@@ -140,6 +140,35 @@ window.addEventListener('keydown', (e)=>{ if (e.key === 'Escape') window.closeMo
   const SB_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt5dHVpb2RvamZjYWdna3ZpenRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ4MzA0NjgsImV4cCI6MjA3MDQwNjQ2OH0.YobQZnCQ7LihWtewynoCJ6ZTjqetkGwh82Nd2mmmhLU";
   const SB = window.supabase.createClient(SB_URL, SB_ANON_KEY);
 
+  // === User-Passwörter (lokal, gehashed) ===
+const LS_PW_KEY = 'resTool.userPw';
+
+function readPwMap(){
+  try { return JSON.parse(localStorage.getItem(LS_PW_KEY) || '{}'); }
+  catch { return {}; }
+}
+function writePwMap(map){
+  try { localStorage.setItem(LS_PW_KEY, JSON.stringify(map||{})); } catch {}
+}
+
+// SHA-256-Hash (Hex)
+async function sha256Hex(str){
+  const buf = new TextEncoder().encode(str);
+  const hash = await crypto.subtle.digest('SHA-256', buf);
+  return Array.from(new Uint8Array(hash)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+// Passwort setzen/entfernen (pw == null → löschen)
+async function setUserPassword(userId, pw){
+  const map = readPwMap();
+  if (pw == null) { delete map[userId]; writePwMap(map); return true; }
+  const hex = await sha256Hex(pw);
+  map[userId] = hex;
+  writePwMap(map);
+  return true;
+}
+
+
   if (!SB?.from) {
   console.error('Supabase-Client nicht initialisiert – prüfe Script-Einbindung!');
 }
@@ -4842,6 +4871,33 @@ if (email && !/^[^@]+@[^@]+\.[^@]+$/.test(email)){
       if (confirm('Benutzer wirklich löschen?')) await deleteUser(did);
       return; 
     }
+        // Benutzerliste: Passwort SETZEN
+    const pid = t.getAttribute && t.getAttribute('data-usr-pass');
+    if (pid){
+      const pw = prompt('Neues Passwort für diesen Benutzer (min. 4 Zeichen):');
+      if (!pw || pw.length < 4) return;
+      try {
+        await setUserPassword(pid, pw);
+        alert('Passwort gesetzt.');
+      } catch(e){
+        console.error(e); alert('Konnte Passwort nicht setzen.');
+      }
+      return;
+    }
+
+    // Benutzerliste: Passwort LÖSCHEN
+    const pdid = t.getAttribute && t.getAttribute('data-usr-pass-del');
+    if (pdid){
+      if (!confirm('Passwort wirklich löschen?')) return;
+      try {
+        await setUserPassword(pdid, null);
+        alert('Passwort gelöscht.');
+      } catch(e){
+        console.error(e); alert('Konnte Passwort nicht löschen.');
+      }
+      return;
+    }
+
 
   }, { passive:false });
 
