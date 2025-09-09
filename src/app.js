@@ -138,7 +138,11 @@ window.addEventListener('keydown', (e)=>{ if (e.key === 'Escape') window.closeMo
   /***** Supabase *****/
   const SB_URL = "https://kytuiodojfcaggkvizto.supabase.co";
   const SB_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt5dHVpb2RvamZjYWdna3ZpenRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ4MzA0NjgsImV4cCI6MjA3MDQwNjQ2OH0.YobQZnCQ7LihWtewynoCJ6ZTjqetkGwh82Nd2mmmhLU";
-  const supabase = window.supabase.createClient(SB_URL, SB_ANON_KEY);
+  const SB = window.supabase.createClient(SB_URL, SB_ANON_KEY);
+
+  if (!SB?.from) {
+  console.error('Supabase-Client nicht initialisiert – prüfe Script-Einbindung!');
+}
 
   // ===== Confirmation: Templates & Modal Control =====
 
@@ -577,8 +581,8 @@ function buildSketch(){
     tick(); setInterval(tick,1000);
   }
   async function refreshStatus(){
-    const a = await supabase.from('reservations').select('id',{head:true,count:'exact'});
-    const b = await supabase.from('availability').select('date',{head:true,count:'exact'});
+    const a = await SB.from('reservations').select('id',{head:true,count:'exact'});
+    const b = await SB.from('availability').select('date',{head:true,count:'exact'});
     setChip(q('#chipSb'), !a.error && !b.error);
     // HNS ist noch nicht verbunden → hart auf rot (lvl-2)
     const chipH = q('#chipHns');
@@ -589,13 +593,13 @@ function buildSketch(){
   /***** Auto-Roll: Vergangenheit → done *****/
   async function autoRollPastToDone(){
     const today = isoDate(soD(new Date()));
-    await supabase.from('reservations')
+    await SB.from('reservations')
       .update({ status:'done' })
       .lt('departure', today)
       .neq('status','canceled')
       .or('status.eq.active,status.eq.confirmed,status.is.null');
 
-    await supabase.from('reservations')
+    await SB.from('reservations')
       .update({ status:'done' })
       .is('departure', null)
       .lt('arrival', today)
@@ -622,11 +626,11 @@ async function buildMiniAnalytics(){
   const prevEndISO = prevEnd.toISOString();
 
   // Buchungen (created_at) für heute / Vorjahr laden
-  const cur = await supabase.from('reservations')
+  const cur = await SB.from('reservations')
     .select('hotel_code,created_at')
     .gte('created_at', todayStartISO).lt('created_at', todayEndISO);
 
-  const prv = await supabase.from('reservations')
+  const prv = await SB.from('reservations')
     .select('hotel_code,created_at')
     .gte('created_at', prevStartISO).lt('created_at', prevEndISO);
 
@@ -935,7 +939,7 @@ async function loadKpisToday(){
     const startISO = new Date(new Date().setHours(0,0,0,0)).toISOString();
     const nowISO   = new Date().toISOString();
 
-    let qb = supabase.from('reservations').select('id,created_at').gte('created_at', startISO).lte('created_at', nowISO);
+    let qb = SB.from('reservations').select('id,created_at').gte('created_at', startISO).lte('created_at', nowISO);
     if (codeSel!=='all') qb = qb.eq('hotel_code', codeSel);
     const rB = await qb;
     const bookingsToday = (rB.data||[]).length;
@@ -950,13 +954,13 @@ async function loadKpisToday(){
     // Auslastung (heute) unverändert aus availability
     let occ = null;
     if (codeSel!=='all'){
-      const r = await supabase.from('availability').select('capacity,booked').eq('hotel_code', codeSel).eq('date', todayISO);
+      const r = await SB.from('availability').select('capacity,booked').eq('hotel_code', codeSel).eq('date', todayISO);
       if (!r.error && r.data?.length){
         const a = r.data[0], cap=Math.max(1,Number(a.capacity||0)), bok=Math.max(0,Number(a.booked||0));
         occ = Math.round(Math.min(100,(bok/cap)*100));
       }
     } else {
-      const r = await supabase.from('availability').select('capacity,booked').eq('date', todayISO);
+      const r = await SB.from('availability').select('capacity,booked').eq('date', todayISO);
       if (!r.error && r.data?.length){
         const avg = r.data.reduce((s,a)=> s + Math.min(100, Math.round((Math.max(0,Number(a.booked||0))/Math.max(1,Number(a.capacity||0)))*100)),0)/r.data.length;
         occ = Math.round(avg);
@@ -1007,7 +1011,7 @@ async function loadKpisNext(){
     // Ø Auslastung im Fenster wie gehabt
     let nOcc = null;
     if (codeSel!=='all'){
-      const r = await supabase.from('availability').select('capacity,booked')
+      const r = await SB.from('availability').select('capacity,booked')
         .eq('hotel_code', codeSel).gte('date', startISO).lte('date', endISO);
       if (!r.error && r.data?.length){
         const avg = r.data.reduce((s,a)=>{
@@ -1017,7 +1021,7 @@ async function loadKpisNext(){
         nOcc = Math.round(avg);
       }
     } else {
-      const r = await supabase.from('availability').select('capacity,booked')
+      const r = await SB.from('availability').select('capacity,booked')
         .gte('date', startISO).lte('date', endISO);
       if (!r.error && r.data?.length){
         const avg = r.data.reduce((s,a)=>{
@@ -1088,19 +1092,19 @@ async function loadKpisNext(){
     let data = [], count = 0, error = null;
 
     if (fHotel === 'all'){
-      let q1 = supabase.from('reservations').select(selectCols, { count:'exact' })
+      let q1 = SB.from('reservations').select(selectCols, { count:'exact' })
         .order('arrival', { ascending: true })
         .range(from, to);
       q1 = applyFilters(q1);
       const r = await q1;
       data = r.data || []; count = r.count || 0; error = r.error || null;
     } else {
-      let qCode = supabase.from('reservations').select(selectCols).order('arrival',{ascending:true}).range(from,to);
+      let qCode = SB.from('reservations').select(selectCols).order('arrival',{ascending:true}).range(from,to);
       qCode = applyFilters(qCode.eq('hotel_code', fHotel));
       const r1 = await qCode;
 
       const needle = HOTEL_KEYWORD[fHotel] || hotelCity(HOTELS.find(h=>h.code===fHotel)?.name || '');
-      let qName = supabase.from('reservations').select(selectCols).order('arrival',{ascending:true}).range(from,to);
+      let qName = SB.from('reservations').select(selectCols).order('arrival',{ascending:true}).range(from,to);
       qName = applyFilters(qName.ilike('hotel_name', `%${needle}%`));
       const r2 = await qName;
 
@@ -1307,7 +1311,7 @@ if (allApply && !allApply.__bound){
 
     // 2) persistieren
     const payload = { priceplan: plan };
-    const { error } = await supabase
+    const { error } = await SB
       .from('reservations')
       .update(payload)
       .eq('id', resRow.id);
@@ -1408,7 +1412,7 @@ if (allApply && !allApply.__bound){
     plan.forEach(n => n.price = v);
 
     // 2) persistieren
-    const { error } = await supabase
+    const { error } = await SB
       .from('reservations')
       .update({ priceplan: plan })
       .eq('id', resRow.id);
@@ -1485,7 +1489,7 @@ if (allApply && !allApply.__bound){
         arrival:   slice[0].from,
         departure: slice[slice.length-1].to
       };
-      const { error } = await supabase.from('reservations').update(payload).eq('id', resRow.id);
+      const { error } = await SB.from('reservations').update(payload).eq('id', resRow.id);
       info.textContent = error ? ('Fehler: ' + error.message) : 'Aufenthalt verkürzt & gespeichert.';
       if (!error){
         plan = slice; trimMode = false; trimSel = null;
@@ -1500,7 +1504,7 @@ if (allApply && !allApply.__bound){
   if (btnSave){
     btnSave.onclick = async ()=>{
       const payload = { priceplan: plan };
-      const { error } = await supabase.from('reservations').update(payload).eq('id', resRow.id);
+      const { error } = await SB.from('reservations').update(payload).eq('id', resRow.id);
       info.textContent = error ? ('Fehler: ' + error.message) : 'Preisplan gespeichert.';
       if (!error){
         try{ await loadKpisToday(); await loadKpisNext(); await loadReservations(); }catch{}
@@ -1513,7 +1517,7 @@ if (allApply && !allApply.__bound){
   if (elNotes && !elNotes.__bound){
     elNotes.__bound = true;
     elNotes.addEventListener('input', debounce(async (e)=>{
-      await supabase.from('reservations').update({ notes: e.target.value }).eq('id', resRow.id);
+      await SB.from('reservations').update({ notes: e.target.value }).eq('id', resRow.id);
     }, 350));
   }
 }
@@ -1523,7 +1527,7 @@ if (allApply && !allApply.__bound){
 
   /***** Edit-Dialog *****/
   async function openEdit(id){
-    const { data, error } = await supabase.from('reservations').select('*').eq('id', id).maybeSingle();
+    const { data, error } = await SB.from('reservations').select('*').eq('id', id).maybeSingle();
     if (error || !data) return alert('Konnte Reservierung nicht laden.');
 
     q('#eResNo') && (q('#eResNo').value = data.reservation_number || '');
@@ -1560,7 +1564,7 @@ if (allApply && !allApply.__bound){
   rate_price: Number(q('#ePrice')?.value || 0),
   notes: q('#eNotes') ? q('#eNotes').value : null
 };
-      const { error } = await supabase.from('reservations').update(payload).eq('id', id);
+      const { error } = await SB.from('reservations').update(payload).eq('id', id);
       q('#editInfo').textContent = error ? ('Fehler: '+error.message) : createdAtTxt;
       await autoRollPastToDone(); await loadReservations();
     });
@@ -1572,12 +1576,12 @@ if (allApply && !allApply.__bound){
         cc_exp_month: q('#eCcExpM').value ? Number(q('#eCcExpM').value) : null,
         cc_exp_year:  q('#eCcExpY').value ? Number(q('#eCcExpY').value) : null
       };
-      const { error } = await supabase.from('reservations').update(payload).eq('id', id);
+      const { error } = await SB.from('reservations').update(payload).eq('id', id);
       q('#editInfo').textContent = error ? ('Fehler: '+error.message) : createdAtTxt;
     });
 
     q('#btnCancelRes') && (q('#btnCancelRes').onclick = async ()=>{
-      const { error } = await supabase.from('reservations').update({ status:'canceled', canceled_at: new Date().toISOString() }).eq('id', id);
+      const { error } = await SB.from('reservations').update({ status:'canceled', canceled_at: new Date().toISOString() }).eq('id', id);
       q('#editInfo').textContent = error ? ('Fehler: '+error.message) : createdAtTxt;
       await loadReservations();
     });
@@ -1606,7 +1610,7 @@ if (allApply && !allApply.__bound){
 
     // Details-Tab: Notizen & Gesamtpreis initialisieren/sperren
 q('#editNotes')?.addEventListener?.('input', debounce(async (e)=>{
-  await supabase.from('reservations').update({ notes: e.target.value }).eq('id', data.id);
+  await SB.from('reservations').update({ notes: e.target.value }).eq('id', data.id);
 }, 400));
 const sumField = q('#editTotalPrice');
 if (sumField){ // falls kein Preisplan: Basispreis * Nächte
@@ -1902,7 +1906,7 @@ q('#btnNext')?.addEventListener('click', ()=>{
     };
 
     // 3) Speichern
-    const { error } = await supabase.from('reservations').insert(payload);
+    const { error } = await SB.from('reservations').insert(payload);
     if (q('#newInfo')) q('#newInfo').textContent = error ? ('Fehler: ' + error.message) : 'Reservierung gespeichert.';
     if (error) return;
 
@@ -1969,7 +1973,7 @@ q('#btnCreate')?.addEventListener('click', createReservation);
 
     for (const h of HOTELS){
       const tr=el('tr'); tr.append(el('td',{class:'sticky'}, displayHotel(h)));
-      const { data } = await supabase.from('availability')
+      const { data } = await SB.from('availability')
         .select('date,capacity,booked')
         .eq('hotel_code', h.code)
         .gte('date', from).lte('date', to)
@@ -2125,7 +2129,7 @@ async function runReport(){
   body.innerHTML = '';
 
   // (1) Reservierungen laden (Buchungen, Umsatz, ADR)
-  let qRes = supabase.from('reservations')
+  let qRes = SB.from('reservations')
     .select('hotel_name,hotel_code,rate_price,arrival,departure,status,channel,created_at')
     .gte('arrival', from).lte('arrival', to)
     .neq('status','canceled');
@@ -2134,7 +2138,7 @@ async function runReport(){
   if (resErr){ body.append(el('tr',{}, el('td',{colspan:'5'}, 'Fehler beim Laden (Reservierungen)'))); return; }
 
   // (2) Availability laden (Belegungsrate)
-  let qAv = supabase.from('availability')
+  let qAv = SB.from('availability')
     .select('date,hotel_code,capacity,booked')
     .gte('date', from).lte('date', to);
   if (code !== 'all') qAv = qAv.eq('hotel_code', code);
@@ -2779,7 +2783,7 @@ document.getElementById('btnCats')?.addEventListener('click', ()=>{
 
     const resp = await hnsFetch('/reservations', { method:'POST', body: payload });
     // Optional: externe ID zurückspeichern
-    // await supabase.from('reservations').update({ hns_id: resp.id }).eq('reservation_number', resRow.reservation_number);
+    // await SB.from('reservations').update({ hns_id: resp.id }).eq('reservation_number', resRow.reservation_number);
     return resp;
   }
 
@@ -2794,7 +2798,7 @@ document.getElementById('btnCats')?.addEventListener('click', ()=>{
       // Erwartete HNS-Antwort: [{date:'YYYY-MM-DD', capacity:100, booked:67}, …]
       const data = await hnsFetch(`/availability?hotel=${encodeURIComponent(id)}&from=${from}&days=${days}`);
       for (const r of (data||[])){
-        await supabase.from('availability').upsert({
+        await SB.from('availability').upsert({
           hotel_code: h.code,
           date: r.date,
           capacity: Number(r.capacity||0),
@@ -3644,7 +3648,7 @@ async function loadDailyPricesWindow(startISO, endISO, hotelCodeOrAll='all'){
   const DAY   = 86400000;
 
   // 1) Kandidaten-Reservierungen, die das Fenster berühren
-  let q = supabase.from('reservations')
+  let q = SB.from('reservations')
     .select('id,hotel_code,arrival,departure,status,rate_price,priceplan')
     .neq('status','canceled')
     .lte('arrival', endISO)
@@ -3652,7 +3656,7 @@ async function loadDailyPricesWindow(startISO, endISO, hotelCodeOrAll='all'){
   if (hotelCodeOrAll !== 'all') q = q.eq('hotel_code', hotelCodeOrAll);
 
   // zusätzlich offene Departures zulassen
-  let qOpen = supabase.from('reservations')
+  let qOpen = SB.from('reservations')
     .select('id,hotel_code,arrival,departure,status,rate_price,priceplan')
     .neq('status','canceled')
     .lte('arrival', endISO)
@@ -3669,7 +3673,7 @@ async function loadDailyPricesWindow(startISO, endISO, hotelCodeOrAll='all'){
   async function tryLoadDaily(table){
     const ids = rows.map(r=>r.id);
     if (!ids.length) return [];
-    return supabase.from(table)
+    return SB.from(table)
       .select('reservation_id,date,price')
       .in('reservation_id', ids)
       .gte('date', startISO)
@@ -4552,7 +4556,7 @@ if (t.id === 'fbAdd'){
   };
 
   try{
-    const { error } = await supabase.from('reservations').insert(payload);
+    const { error } = await SB.from('reservations').insert(payload);
     if (error) { console.warn(error); alert('Speichern fehlgeschlagen.'); return; }
   }catch(e){
     console.error(e); alert('Speichern fehlgeschlagen.'); return;
