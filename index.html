@@ -976,11 +976,80 @@
       <h3 id="userPrefsTitle" class="mono"><span class="set-logo" aria-hidden="true"></span> Benutzereinstellungen</h3>
       <button class="btn" data-close>Schließen</button>
     </header>
-    <div class="body">
-      <div class="box">
-        <p class="muted">Platzhalter für persönliche Einstellungen (z. B. Standardhotel, Standardzeitraum, Shortcuts …).</p>
-      </div>
+     <div class="body" style="min-width:980px;max-width:96vw;">
+    <div class="grid2" style="align-items:start;">
+      <!-- Linke Seite: Neuen Benutzer anlegen -->
+      <section class="card">
+        <div class="content">
+          <div class="card-head">
+            <h3 class="mono" style="margin:0">Neuen Benutzer anlegen</h3>
+          </div>
+          <div class="grid2">
+            <label>Name*
+              <input id="usrName" class="input" placeholder="Max Mustermann">
+            </label>
+            <label>E-Mail*
+              <input id="usrEmail" type="email" class="input" placeholder="max@example.com">
+            </label>
+            <label>Rolle*
+              <select id="usrRole" class="input theme-select">
+                <option value="agent">Agent</option>
+                <option value="lead">Lead</option>
+                <option value="admin">Admin</option>
+              </select>
+            </label>
+            <label>Aktiv
+              <select id="usrActive" class="input theme-select">
+                <option value="true" selected>ja</option>
+                <option value="false">nein</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="set-footer" style="justify-content:flex-end;gap:8px;">
+            <span id="usrInfo" class="muted tiny" style="align-self:center;"></span>
+            <button class="btn primary" id="btnUserCreate">Benutzer erstellen</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Rechte Seite: Benutzerliste -->
+      <section class="card">
+        <div class="content">
+          <div class="card-head">
+            <h3 class="mono" style="margin:0">Benutzerliste</h3>
+            <div class="row" style="gap:8px;align-items:center;">
+              <input id="usrSearch" class="input sm" placeholder="Suchen: Name oder E-Mail">
+              <select id="usrRoleFilter" class="input sm theme-select">
+                <option value="all">Alle Rollen</option>
+                <option value="agent">Agent</option>
+                <option value="lead">Lead</option>
+                <option value="admin">Admin</option>
+              </select>
+              <button class="btn sm" id="btnUsersRefresh">Aktualisieren</button>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table class="resv">
+              <thead>
+                <tr>
+                  <th style="width:160px;">Name</th>
+                  <th>E-Mail</th>
+                  <th style="width:110px;">Rolle</th>
+                  <th style="width:90px;">Aktiv</th>
+                  <th style="width:140px;">Erstellt</th>
+                  <th style="width:160px;">Aktionen</th>
+                </tr>
+              </thead>
+              <tbody id="usrBody"></tbody>
+            </table>
+            <p class="muted tiny" style="margin-top:6px;">Hinweis: Datenquelle <code>app_users</code> (Supabase). Fallback LocalStorage, falls Tabelle fehlt.</p>
+          </div>
+        </div>
+      </section>
     </div>
+  </div>
   </section>
 
 
@@ -1055,6 +1124,28 @@
         </details>
         <details class="box"><summary class="mono">Werden Systeminfos gespeichert?</summary>
           <p class="tiny">Nein. IP/Standort/OS werden nur lokal angezeigt.</p>
+        </details>
+                <details class="box"><summary class="mono">Warum kann ich im Fast-Booker nicht speichern?</summary>
+          <p class="tiny">Prüfe, ob die Supabase-Einbindung grün ist (Header-Chip „SB“). 400-Fehler deuten oft auf Felder hin, die in der Tabelle <code>reservations</code> nicht existieren. Entferne nicht vorhandene Keys im Payload oder lege sie in Supabase an.</p>
+        </details>
+
+        <details class="box"><summary class="mono">Wieso sehe ich keine Kategorien?</summary>
+          <p class="tiny">Das Tool nutzt pro Hotel V2-Kategorien. Falls noch keine gepflegt sind, greift ein Fallback (Standard: Standard/Superior/Suite). Pflege Kategorien unter <b>Einstellungen → Kategorieverwaltung</b>.</p>
+        </details>
+
+        <details class="box"><summary class="mono">Wie pflege ich Raten inkl. Zuordnung zu Kategorien?</summary>
+          <p class="tiny">Unter <b>Einstellungen → Rateneinstellungen</b> kannst du je Hotel Raten anlegen, Kategorien zuordnen, Policies hinterlegen und Preise setzen. Im Wizard/Fast-Booker wird die gemappte Rate automatisch angeboten.</p>
+        </details>
+
+        <details class="box"><summary class="mono">Welche Tabellen nutzt das System?</summary>
+          <p class="tiny">
+            <code>reservations</code> (Buchungen), <code>availability</code> (Verfügbarkeiten), <code>app_users</code> (Benutzer, optional).<br>
+            Bei fehlender <code>app_users</code> Tabelle fällt die App für Benutzerverwaltung auf LocalStorage zurück.
+          </p>
+        </details>
+
+        <details class="box"><summary class="mono">Wie exportiere ich Reporting-Daten?</summary>
+          <p class="tiny">Im Menü <b>Reporting</b> Zeitraum und Hotel wählen → „Aktualisieren“. Rechts oben stehen <b>CSV/XLS/PDF</b> bereit.</p>
         </details>
       </div>
     </div>
