@@ -1131,14 +1131,21 @@ async function loadKpisToday(){
     const codeSel = q('#kpiFilterToday')?.value || 'all';
     const todayISO = isoDateLocal(soD(new Date()));
 
-    // Buchungen (eingegangen) heute wie gehabt
-    const startISO = new Date(new Date().setHours(0,0,0,0)).toISOString();
-    const nowISO   = new Date().toISOString();
+   // Buchungen (eingegangen) heute – echte Gesamtzahl ohne 1000er-Cap
+const startISO = new Date(new Date().setHours(0,0,0,0)).toISOString();
+const nowISO   = new Date().toISOString();
 
-    let qb = SB.from('reservations').select('id,created_at').gte('created_at', startISO).lte('created_at', nowISO);
-    if (codeSel!=='all') qb = qb.eq('hotel_code', codeSel);
-    const rB = await qb;
-    const bookingsToday = (rB.data||[]).length;
+let qb = SB
+  .from('reservations')
+  .select('id', { count: 'exact', head: true })
+  .gte('created_at', startISO)
+  .lte('created_at', nowISO);
+
+if (codeSel !== 'all') qb = qb.eq('hotel_code', codeSel);
+
+const rB = await qb;
+const bookingsToday = rB.count || 0;
+
 
     // Umsatz HEUTE aus Daily-Prices
     const { byDay, bookings } = await loadDailyPricesWindow(todayISO, todayISO, codeSel);
