@@ -2334,14 +2334,18 @@ async function runReport(){
   const body = q('#repBody'); if (!body) return;
   body.innerHTML = '';
 
-  // (1) Reservierungen laden (Buchungen, Umsatz, ADR)
-  let qRes = SB.from('reservations')
-    .select('hotel_name,hotel_code,rate_price,arrival,departure,status,channel,created_at')
-    .gte('arrival', from).lte('arrival', to)
-    .neq('status','canceled');
-  if (code !== 'all') qRes = qRes.eq('hotel_code', code);
-  const { data: resRows, error: resErr } = await qRes;
-  if (resErr){ body.append(el('tr',{}, el('td',{colspan:'5'}, 'Fehler beim Laden (Reservierungen)'))); return; }
+ // (1) Reservierungen laden (alle, die den Zeitraum ÜBERLAPPEN)
+let qRes = SB.from('reservations')
+  .select('hotel_name,hotel_code,rate_price,arrival,departure,status,channel,created_at')
+  // overlap: arrival <= to  AND  (departure IS NULL OR departure >= from)
+  .lte('arrival', to)
+  .or(`departure.is.null,departure.gte.${from}`)
+  .neq('status','canceled');
+
+if (code !== 'all') qRes = qRes.eq('hotel_code', code);
+
+const { data: resRows, error: resErr } = await qRes;
+
 
   // (2) Availability laden (Belegungsrate)
   let qAv = SB.from('availability')
