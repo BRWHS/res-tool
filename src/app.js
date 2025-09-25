@@ -175,6 +175,76 @@ async function setUserPassword(userId, pw){
   // >>> EINZEILER EINFÜGEN (globaler Alias, damit Handler außerhalb vom Closure SB finden)
 window.SB = SB;
 
+  // ===== Auth/Rollen – Minimal-Layer =====
+// Quelle für aktuellen User: bevorzugt window.__AUTH_USER__ (aus auth.js), sonst LocalStorage-Fallback
+function getCurrentUser(){
+  try {
+    if (window.__AUTH_USER__ && window.__AUTH_USER__.username) return window.__AUTH_USER__;
+    const raw = localStorage.getItem('resTool.user');
+    if (raw) return JSON.parse(raw);
+  } catch(e){}
+  return { username: 'viewer', role: 'viewer' };
+}
+
+// UI-Badge rechts oben füllen
+function syncAuthUi(){
+  const u = getCurrentUser();
+  const n = document.getElementById('authUserInline');
+  if (n) n.textContent = u?.username ? `${u.username} (${u.role||'viewer'})` : '—';
+}
+syncAuthUi();
+window.addEventListener('auth:login', syncAuthUi);
+window.addEventListener('auth:logout', syncAuthUi);
+
+// Role-Gates: Elemente mit data-role-required="admin" o.ä. sperren/ausblenden
+function enforceRoleGates(){
+  const u = getCurrentUser();
+  const roleRank = { viewer:1, agent:2, admin:3 };
+  const rank = roleRank[u.role] || 1;
+
+  // admin-only / agent-only / viewer-only
+  document.querySelectorAll('[data-role-required]').forEach(el=>{
+    const need = String(el.dataset.roleRequired||'').toLowerCase();
+    const needRank = roleRank[need] || 99;
+    const allow = rank >= needRank;
+    el.style.display = allow ? '' : 'none';
+    el.disabled = !allow;
+    el.setAttribute('aria-disabled', String(!allow));
+  });
+
+  // read-only für viewer: Buttons, Inputs sperren (aber Anzeigen erlauben)
+  const isViewer = (u.role||'viewer') === 'viewer';
+  document.querySelectorAll('button, input, select, textarea').forEach(el=>{
+    if (isViewer){
+      // Ausnahmen: reine Navigation/Modals
+      const okIds = new Set(['btnAvail','btnReporting']);
+      const isNav = okIds.has(el.id) || el.closest('#modalReporting');
+      if (!isNav) {
+        el.disabled = el.tagName==='BUTTON' || el.tagName==='INPUT' || el.tagName==='SELECT' || el.tagName==='TEXTAREA';
+      }
+    }
+  });
+}
+enforceRoleGates();
+window.addEventListener('auth:login', enforceRoleGates);
+window.addEventListener('auth:logout', enforceRoleGates);
+
+// Globales Audit-Log (schreibt nach Supabase.activity_log); fällt auf console zurück
+async function logActivity(type, action, meta){
+  try {
+    const u = getCurrentUser();
+    await SB.from('activity_log').insert({
+      user_name: u?.username || null,
+      user_role: u?.role || null,
+      type, action, meta
+    });
+  } catch(e){
+    console.warn('logActivity fallback', {type, action, meta, err:String(e)});
+  }
+}
+window.logActivity = logActivity;
+
+
   // === User Management (Supabase: app_users; Fallback: LocalStorage) ===
 const USERS_TABLE = 'app_users';
 const LS_USERS_KEY = 'resTool.users';
