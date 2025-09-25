@@ -183,6 +183,23 @@ function ensureBadge(){
     replaceAnonymousEverywhere(user.id);
     setAppBlurred(false);
     showOverlay(false);
+     // --- BEGIN: Res-Tool Bridge (Rollen + Events + Logging) ---
+try {
+  // Rolle ableiten oder defaulten (falls im auth-Overlay keine Rolle gepflegt wird)
+  const role = user.role || (user.id === 'Admin' ? 'admin' : 'agent');
+
+  // Für app.js: globalen User setzen + Fallback-Speicher
+  window.__AUTH_USER__ = { username: user.id, role };
+  localStorage.setItem('resTool.user', JSON.stringify(window.__AUTH_USER__));
+
+  // Zusätzliche (simple) Events, die app.js ebenfalls hört
+  window.dispatchEvent(new Event('auth:login'));
+
+  // Audit-Log (wenn bereits geladen)
+  if (window.logActivity) window.logActivity('system', 'login', { username: user.id, role });
+} catch(e){ console.warn('auth bridge (login) failed', e); }
+// --- END: Res-Tool Bridge ---
+
     dispatch('auth:login', { user });
   }
 
@@ -191,6 +208,18 @@ function ensureBadge(){
     updateBadge(null);
     setAppBlurred(true);
     showOverlay(true);
+     // --- BEGIN: Res-Tool Bridge (Logout) ---
+try {
+  window.__AUTH_USER__ = null;
+  localStorage.removeItem('resTool.user');
+
+  // Zusätzlicher (simpler) Event für app.js
+  window.dispatchEvent(new Event('auth:logout'));
+
+  if (window.logActivity) window.logActivity('system', 'logout', {});
+} catch(e){ console.warn('auth bridge (logout) failed', e); }
+// --- END: Res-Tool Bridge ---
+
     dispatch('auth:logout', {});
   }
 
