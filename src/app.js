@@ -369,9 +369,9 @@ function renderUsers(){
       <td>${new Date(u.created_at).toLocaleString('de-DE')}</td>
       <td class="row-actions">
   <button class="btn sm ghost" data-usr-toggle="${u.id}">${u.active?'Deaktivieren':'Aktivieren'}</button>
-  <button class="btn sm" data-usr-code="${u.id}">Code setzen</button>
-  <button class="btn sm ghost" data-usr-code-del="${u.id}">Code löschen</button>
-  <button class="btn sm danger" data-usr-del="${u.id}">Löschen</button>
+<button class="btn sm" data-usr-pass="${u.id}">Passwort setzen</button>
+<button class="btn sm ghost" data-usr-pass-del="${u.id}">Passwort löschen</button>
+<button class="btn sm danger" data-usr-del="${u.id}">Löschen</button>
 </td>
     </tr>
   `).join('') || `<tr><td colspan="6" class="muted">Keine Benutzer gefunden.</td></tr>`;
