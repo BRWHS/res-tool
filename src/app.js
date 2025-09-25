@@ -175,6 +175,10 @@ async function setUserPassword(userId, pw){
   // >>> EINZEILER EINFÜGEN (globaler Alias, damit Handler außerhalb vom Closure SB finden)
 window.SB = SB;
 
+  if (!window.SB?.from) {
+  console.error('Supabase-Client nicht initialisiert – prüfe Script-Einbindung!');
+}
+
   // ===== Auth/Rollen – Minimal-Layer =====
 // Quelle für aktuellen User: bevorzugt window.__AUTH_USER__ (aus auth.js), sonst LocalStorage-Fallback
 function getCurrentUser(){
@@ -374,9 +378,7 @@ function renderUsers(){
 }
 
 // simples Escaping
-function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m])); }
-
-  async function createUser(u){
+async function createUser(u){
   const rec = normalizeUser(u);
 
   // Supabase zuerst versuchen
@@ -386,7 +388,6 @@ function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, m=>({ '&':'&amp
       role: rec.role, active: rec.active, created_at: rec.created_at
     });
     if (!error) return rec;
-    // wenn 42P01 (relation does not exist) → Fallback
   }catch(_){}
 
   // Fallback: LocalStorage
@@ -395,6 +396,7 @@ function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, m=>({ '&':'&amp
   writeUsersLS(list);
   return rec;
 }
+
   async function deleteUser(id){
   // Supabase
   try{
@@ -3708,20 +3710,29 @@ function renderMappingAmpel(){
     });
   }
 
-  // Wenn Settings-Modal geöffnet wird, UI füllen
+ // Wenn Settings-Modal geöffnet wird, UI lazy füllen (einmalig + nach dem Öffnen)
+(function(){
   const btnChannel = document.getElementById('btnChannel');
-  if (btnChannel){
-    btnChannel.addEventListener('click', ()=>{
-      setTimeout(()=>{
+  if (!btnChannel || btnChannel.__wired) return;
+  btnChannel.__wired = true;
+
+  btnChannel.addEventListener('click', ()=>{
+    requireAdmin(()=>{
+      openModal('modalChannel');               // 1) erst öffnen
+      requestIdleCallback?.(()=>{              // 2) UI-Aufbau in Idle
         try{
-          bindOnce();
+          if (!window.__channelBound){         // 3) einmalig binden
+            bindOnce();
+            window.__channelBound = true;
+          }
           switchChannelTab('api');
           applyToUi(readChannel());
           try{ renderMappingAmpel(); }catch(e){}
         }catch(e){}
-      }, 0);
+      }, {timeout:150});
     });
-  }
+    logActivity('channel','open_settings');
+  });
 })();
 
 document.addEventListener('DOMContentLoaded', ()=>{
