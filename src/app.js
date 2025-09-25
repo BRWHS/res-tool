@@ -4207,10 +4207,9 @@ function rsSetType(type){
       el('td', {}, EUR.format(Number(r.price||0))),
       el('td', {}, mappedTxt)
     );
-      tr.dataset.rateId = r.id;                    // ID an die Zeile hängen
-      tr.addEventListener('click', () => openRateEditor(r.id));  // Editor öffnen
+    tr.dataset.rateId = r.id;                     // ID an die Zeile hängen
+    tr.addEventListener('click', () => openRateEditor(r.id)); // Editor öffnen
     tbody.append(tr);
-    
   });
 }
 
