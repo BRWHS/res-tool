@@ -4170,12 +4170,14 @@ function rsFillHotelFilter(){
   sel.append(el('option',{value:'all'},'Alle Hotels'));
   HOTELS.forEach(h => sel.append(el('option',{value:h.code}, `${h.group} - ${h.name.replace(/^.*? /,'')}`)));
 }
+
 function rsSetType(type){
   window.__rsType = type;
   q('#rsTitle') && (q('#rsTitle').textContent = `Raten – ${type}`);
   rsRender();
 }
-  function rsRender(){
+
+function rsRender(){
   const tbody = q('#rsBody'); if (!tbody) return;
 
   const qStr  = (q('#rsSearch')?.value || '').trim().toLowerCase();
@@ -4195,7 +4197,7 @@ function rsSetType(type){
 
   list.forEach(r=>{
     const hotel = HOTELS.find(h=>h.code===r.hotel_code);
-    const nameHotel = hotel ? `${hotel.group} - ${hotelCity(hotel.name)}` : r.hotel_code || '—';
+    const nameHotel = hotel ? `${hotel.group} - ${hotel.name.replace(/^.*? /,'')}` : (r.hotel_code || '—');
     const cats = (r.categories && r.categories.length ? r.categories : ['*']).join(', ');
     const mappedTxt = r.mapped ? 'Ja' : 'Nein';
 
@@ -4207,11 +4209,11 @@ function rsSetType(type){
       el('td', {}, EUR.format(Number(r.price||0))),
       el('td', {}, mappedTxt)
     );
-    tr.dataset.rateId = r.id;                     // ID an die Zeile hängen
-    tr.addEventListener('click', () => openRateEditor(r.id)); // Editor öffnen
+    tr.addEventListener('click', ()=> openRateEditor(r.id));
     tbody.append(tr);
   });
 }
+
 
 // --- Edit flow (Ratename editierbar; Typ/Hotel/Ratecode fix) ---
 window.__rateEditId = window.__rateEditId || null;
