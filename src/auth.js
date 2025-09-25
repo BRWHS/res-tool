@@ -123,6 +123,17 @@ function ensureBadge(){
   }
 }
 
+   // Fallback: setAppBlurred global absichern (falls noch nicht vorhanden)
+if (typeof window.setAppBlurred !== 'function') {
+  window.setAppBlurred = function(blur){
+    const root = document.querySelector('#app') || document.querySelector('main') || document.querySelector('#root') || document.body;
+    document.documentElement.classList.toggle('auth-lock', !!blur);
+    document.body.classList.toggle('auth-lock', !!blur);
+    if (root) root.classList.toggle('app-blurred', !!blur);
+  };
+}
+
+
   function updateBadge(user){
     ensureBadge();
     const badge = qs('#authUserBadge');
