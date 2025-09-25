@@ -654,10 +654,10 @@
     <!-- Buttons direkt darunter, klein -->
     <div class="set-tiles">
       <button class="btn tile" id="btnUserPrefs">Benutzereinstellungen</button>
-      <button class="btn tile" id="btnChannel">Channel – Einstellungen</button>
+      <button class="btn tile" id="btnChannel" data-role-required="admin">Channel – Einstellungen</button>
       <button class="btn tile" id="btnLog">Log Activity</button>
-      <button class="btn tile" id="btnCats">Kategorieverwaltung</button>
-      <button class="btn tile" id="btnRates" data-modal="#modalRates">Rateneinstellungen</button>
+      <button class="btn tile" id="btnCats" data-role-required="admin">Kategorieverwaltung</button>
+      <button class="btn tile" id="btnRates" data-modal="#modalRates" data-role-required="admin">Rateneinstellungen</button>
       <button class="btn tile" id="btnHelp">Hilfe & FAQ</button>
     </div>
   </div>
