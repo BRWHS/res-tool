@@ -243,6 +243,26 @@ async function logActivity(type, action, meta){
   }
 }
 window.logActivity = logActivity;
+  
+async function loadActivityLog({qText='', qType='', from=null, to=null}={}){
+  let qb = SB.from('activity_log').select('*').order('ts',{ascending:false}).limit(200);
+  if (qType) qb = qb.eq('type', qType);
+  if (from)  qb = qb.gte('ts', from);
+  if (to)    qb = qb.lte('ts', to);
+  if (qText) qb = qb.or(`action.ilike.%${qText}%,user_name.ilike.%${qText}%`);
+
+  const { data, error } = await qb;
+  const ul = document.getElementById('chErrorList') || document.getElementById('logList');
+  if (!ul) return;
+  ul.innerHTML = error ? `<li class="tiny">Fehler: ${error.message}</li>` :
+    (data||[]).map(r => `<li>[${new Date(r.ts).toLocaleString('de-DE')}] <b>${r.user_name||'—'}</b> (${r.user_role||'—'}) · <i>${r.type}/${r.action}</i> – ${r.meta ? JSON.stringify(r.meta) : ''}</li>`).join('');
+}
+window.loadActivityLog = loadActivityLog;
+
+// Beim Öffnen „Log Activity“-Modal aktualisieren:
+document.getElementById('btnLog')?.addEventListener('click', ()=> {
+  setTimeout(()=> loadActivityLog().catch(()=>{}), 50);
+});
 
 
   // === User Management (Supabase: app_users; Fallback: LocalStorage) ===
@@ -1069,6 +1089,11 @@ q('#btnRateSave')?.addEventListener('click', ()=>{
     created_at: now, updated_at: now
   });
 
+  logActivity('rate','save',{
+  hotel_code, ratecode, ratetype, name, price, mapped,
+  categories: catsSel
+});
+
   q('#rateInfo').textContent = 'Rate gespeichert.';
   // Falls du ein Raten-Board auf der Startmaske hast, hier refreshen:
   try {
@@ -1842,6 +1867,12 @@ if (allApply && !allApply.__bound){
       await autoRollPastToDone(); await loadReservations();
     });
 
+    logActivity('reservation','update',{
+  id,
+  fields: ['guest_last_name','arrival','departure','category','rate_name','rate_price','notes']
+});
+
+
     q('#btnSavePay') && (q('#btnSavePay').onclick = async ()=>{
       const payload = {
         cc_holder: q('#eCcHolder').value || null,
@@ -1857,7 +1888,10 @@ if (allApply && !allApply.__bound){
       const { error } = await SB.from('reservations').update({ status:'canceled', canceled_at: new Date().toISOString() }).eq('id', id);
       q('#editInfo').textContent = error ? ('Fehler: '+error.message) : createdAtTxt;
       await loadReservations();
+      logActivity('reservation','cancel',{ id });
     });
+
+    
 
     // Aktionen-Tab: "Bestätigung erneut senden" anbinden
 (function bindResendConfirmation(){
@@ -2197,6 +2231,17 @@ await autoRollPastToDone();
 await loadKpisToday();
 await loadKpisNext();
 await loadReservations();
+
+    // Audit
+logActivity('reservation','create',{
+  reservation_number: payload.reservation_number,
+  hotel_code: payload.hotel_code,
+  arrival: payload.arrival,
+  departure: payload.departure,
+  guest: { last_name: payload.guest_last_name, first_name: payload.guest_first_name },
+  rate: { name: payload.rate_name, price: payload.rate_price }
+});
+
 
 // 6) Context für Bestätigungsmodal setzen (payload reicht hier)
 window.__lastReservationContext = {
@@ -3618,6 +3663,7 @@ function renderMappingAmpel(){
     document.getElementById('btnSaveChannel')?.addEventListener('click', ()=>{
       const data = readFromUi();
       saveChannel(data);
+      logActivity('channel','save',{ scope: 'channel' });
       document.getElementById('channelInfo').textContent = 'Einstellungen gespeichert.';
     });
 
@@ -3709,6 +3755,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
   if (btnSave){
     btnSave.addEventListener('click', ()=>{
       const s = getSettings(); saveSettings(s); applySettings();
+      logActivity('settings','save',{ scope: 'app' });
       alert(t('ui.saved'));
     });
   }
