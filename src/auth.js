@@ -55,6 +55,10 @@
     overlay.append(modal);
     document.body.append(overlay);
 
+     // Overlay soll Eingaben zulassen, selbst wenn Body gesperrt ist
+overlay.style.pointerEvents = 'auto';
+overlay.style.userSelect = 'auto';
+
     // Events
     btnCancel.addEventListener('click', () => {
       iUser.value = ''; iPw.value = '';
@@ -100,21 +104,24 @@ function ensureBadge(){
 
 
   function showOverlay(active){
-    const overlay = qs('#authOverlay');
-    if(!overlay) return;
-    overlay.classList.toggle('active', !!active);
-  }
+  const overlay = qs('#authOverlay');
+  if(!overlay) return;
+  overlay.classList.toggle('active', !!active);
 
-  function setAppBlurred(blur){
-    const root = qs('#app') || qs('main') || qs('#root') || qs('body > div');
-    document.documentElement.classList.toggle('auth-lock', !!blur);
-    document.body.classList.toggle('auth-lock', !!blur);
-    if(root){
-      root.classList.toggle('app-blurred', !!blur);
-    } else {
-      document.body.classList.toggle('app-blurred', !!blur);
-    }
+  // Overlay muss klick-/tippbar sein, auch wenn <html>/<body> auth-lock haben
+  overlay.style.pointerEvents = active ? 'auto' : '';
+  overlay.style.userSelect    = active ? 'auto' : '';
+
+  if (active){
+    // Fokus sicher auf das Username-Feld
+    setTimeout(()=>{
+      const iUser = qs('#authUser');
+      if (iUser) { iUser.removeAttribute('disabled'); iUser.focus(); }
+      const iPw = qs('#authPass');
+      if (iPw) iPw.removeAttribute('disabled');
+    }, 0);
   }
+}
 
   function updateBadge(user){
     ensureBadge();
