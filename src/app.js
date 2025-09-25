@@ -2331,7 +2331,7 @@ q('#btnCreate')?.addEventListener('click', createReservation);
   tr.append(el('td', {}, pill));
 });
 
-     // ---- Availability Tooltip Helpers ----
+       // ---- Availability Tooltip Helpers ----
 let __availTT = null;
 function ensureAvailTooltip(){
   if (__availTT) return __availTT;
@@ -2363,13 +2363,17 @@ function hideAvailTooltip(){
   tt.style.display = 'none';
 }
 function splitDummyCategories(avail){
-  // Verteile die Verfügbarkeit grob auf Standard/Superior/Suite (50/30/20)
-  const a = Math.max(0, Number(avail) || 0);
+  // Verteile die Verfügbarkeit (cap - booked) grob auf Standard/Superior/Suite (50/30/20)
+  const a = Math.max(0, Number(avail)||0);
   const std = Math.max(0, Math.floor(a * 0.5));
   const sup = Math.max(0, Math.floor(a * 0.3));
   const sui = Math.max(0, a - std - sup);
   return { Standard: std, Superior: sup, Suite: sui };
 }
+      body.append(tr);
+    }
+  }
+  q('#availRun')?.addEventListener('click', buildMatrix);
 
 
   /***** Reporting *****/
