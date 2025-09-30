@@ -406,21 +406,32 @@ async function toggleUserActive(id){
   const idx = list.findIndex(x=>x.id===id); if (idx>=0){ list[idx].active = next; writeUsersLS(list); }
   u.active = next; renderUsers(); return true;
 }
-  // === Benutzerverwaltung: UI-Bindings (öffnet Modal, lädt Liste, Events) ===
-(function bindUserAdminUI(){
-  // 1) Öffner aus dem Einstellungs-Modal
-  const openUsers = async ()=>{
-    if (typeof openModal === 'function') openModal('modalUsers');
-    else document.getElementById('modalUsers')?.classList.add('open');
-    try { await loadUsers(); } catch(_) {}
-  };
-  document.getElementById('btnUserPrefs')?.addEventListener('click', openUsers);
+  // === Benutzerverwaltung im Einstellungen-Modal (Panel) ===
+(function bindUserAdminPanel(){
+  const panel = document.getElementById('userAdminPanel');
+  const btnOpen = document.getElementById('btnUserPrefs');
+  const btnClose = document.getElementById('btnUserPanelClose');
 
-  // 2) Filter & Suche
+  if (!panel || !btnOpen) return;
+
+  // Öffnen über "Benutzereinstellungen"
+  btnOpen.addEventListener('click', async ()=>{
+    panel.classList.remove('hidden');
+    try { await loadUsers(); } catch(_) {}
+    // etwas scrollen, damit Panel im Blick ist
+    panel.scrollIntoView({ behavior:'smooth', block:'start' });
+  });
+
+  // Panel schließen (blend only)
+  btnClose?.addEventListener('click', ()=>{
+    panel.classList.add('hidden');
+  });
+
+  // Suche & Rollenfilter
   document.getElementById('usrSearch')?.addEventListener('input', debounce(()=>renderUsers(), 200));
   document.getElementById('usrRoleFilter')?.addEventListener('change', ()=>renderUsers());
 
-  // 3) Neuer Benutzer
+  // Neuanlage
   document.getElementById('btnUserCreate')?.addEventListener('click', async ()=>{
     const name  = (document.getElementById('newUserName')?.value || '').trim();
     const email = (document.getElementById('newUserEmail')?.value || '').trim();
@@ -429,28 +440,24 @@ async function toggleUserActive(id){
 
     if (!name){ alert('Bitte Login-Name angeben.'); return; }
 
-    // anlegen (Supabase bevorzugt, sonst LS)
     const rec = await createUser({ name, email, role, active:true });
 
-    // optional: lokales Passwort setzen (SHA-256)
     if (pw) { try { await setUserPassword(name, pw); } catch(_) {} }
 
-    // Audit-Log
     try { await logActivity('settings','user_create',{ name, role, via:'ui' }); } catch(_){}
 
-    // UI refresh
-    document.getElementById('newUserPw').value = '';
-    document.getElementById('newUserName').value = '';
-    document.getElementById('newUserEmail').value = '';
+    // Felder leeren + Liste neu
+    const ids = ['newUserPw','newUserName','newUserEmail'];
+    ids.forEach(id => { const n = document.getElementById(id); if (n) n.value=''; });
     await loadUsers();
   });
 
-  // 4) Tabellenaktionen (Event Delegation)
+  // Tabellenaktionen via Event Delegation
   document.addEventListener('click', async (e)=>{
     const t = e.target;
 
     // Aktivieren/Deaktivieren
-    const tgl = t.closest('[data-usr-toggle]');
+    const tgl = t.closest?.('[data-usr-toggle]');
     if (tgl){
       e.preventDefault();
       const id = tgl.getAttribute('data-usr-toggle');
@@ -460,24 +467,22 @@ async function toggleUserActive(id){
     }
 
     // Einmalcode setzen (6-stellig)
-    const setCode = t.closest('[data-usr-code]');
+    const setCode = t.closest?.('[data-usr-code]');
     if (setCode){
       e.preventDefault();
       const id = setCode.getAttribute('data-usr-code');
-      const code = String(Math.floor(100000 + Math.random()*900000));
-      // Codes in LocalStorage hinterlegt (siehe vorhandene readCodes/writeCodes)
       try {
         const map = (function(){ try { return JSON.parse(localStorage.getItem('resTool.userAccessCodes')||'{}'); } catch { return {}; } })();
-        map[id] = code;
+        map[id] = String(Math.floor(100000 + Math.random()*900000));
         localStorage.setItem('resTool.userAccessCodes', JSON.stringify(map));
+        try { await logActivity('settings','user_code_set',{ id }); } catch(_){}
+        alert('Zugangscode gesetzt.');
       } catch(_){}
-      try { await logActivity('settings','user_code_set',{ id }); } catch(_){}
-      alert(`Zugangscode für Benutzer gesetzt: ${code}`);
       return;
     }
 
     // Einmalcode löschen
-    const delCode = t.closest('[data-usr-code-del]');
+    const delCode = t.closest?.('[data-usr-code-del]');
     if (delCode){
       e.preventDefault();
       const id = delCode.getAttribute('data-usr-code-del');
@@ -485,14 +490,14 @@ async function toggleUserActive(id){
         const map = (function(){ try { return JSON.parse(localStorage.getItem('resTool.userAccessCodes')||'{}'); } catch { return {}; } })();
         delete map[id];
         localStorage.setItem('resTool.userAccessCodes', JSON.stringify(map));
+        try { await logActivity('settings','user_code_del',{ id }); } catch(_){}
+        alert('Zugangscode gelöscht.');
       } catch(_){}
-      try { await logActivity('settings','user_code_del',{ id }); } catch(_){}
-      alert('Zugangscode gelöscht.');
       return;
     }
 
     // Benutzer löschen
-    const del = t.closest('[data-usr-del]');
+    const del = t.closest?.('[data-usr-del]');
     if (del){
       e.preventDefault();
       const id = del.getAttribute('data-usr-del');
@@ -503,6 +508,7 @@ async function toggleUserActive(id){
     }
   });
 })();
+
 
   // ===== Confirmation: Templates & Modal Control =====
 
