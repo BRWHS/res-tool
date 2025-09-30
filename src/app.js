@@ -3840,7 +3840,12 @@ document.addEventListener('DOMContentLoaded', ()=>{
   }
 
     // UserPrefs modal
-  if (btnUserPrefs){ btnUserPrefs.addEventListener('click', ()=> openModal('modalUserPrefs')); }
+  if (btnUserPrefs){
+  btnUserPrefs.addEventListener('click', async ()=>{
+    openModal('modalUserPrefs');
+    try { await loadUsers(); } catch(e){}
+  });
+}
 
   // Log Filter Events
   const btnApply = document.getElementById('logApply');
