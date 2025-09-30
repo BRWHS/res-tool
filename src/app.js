@@ -3846,6 +3846,111 @@ document.addEventListener('DOMContentLoaded', ()=>{
     try { await loadUsers(); } catch(e){}
   });
 }
+  // === Benutzereinstellungen Modal – direkte UI-Bindings ===
+(function bindUserPrefsUi(){
+  const box   = document.getElementById('usrCreate');
+  const tgl   = document.getElementById('btnUserFormToggle');
+  const create= document.getElementById('btnUserCreate');
+  const refresh = document.getElementById('btnUsersRefresh');
+  const search  = document.getElementById('usrSearch');
+  const roleF   = document.getElementById('usrRoleFilter');
+  const tbody   = document.getElementById('usrBody');
+
+  // Toggle "Neuer Benutzer"
+  tgl?.addEventListener('click', (e)=>{
+    e.preventDefault(); e.stopPropagation();
+    if (!box) return;
+    const hidden = box.classList.toggle('hidden');
+    if (!hidden) document.getElementById('usrName')?.focus();
+  });
+
+  // Neuer Benutzer anlegen
+  create?.addEventListener('click', async (e)=>{
+    e.preventDefault(); e.stopPropagation();
+    const name   = (document.getElementById('usrName')?.value||'').trim();
+    const email  = (document.getElementById('usrEmail')?.value||'').trim();
+    const role   = document.getElementById('usrRole')?.value || 'agent';
+    const active = (document.getElementById('usrActive')?.value||'true') !== 'false';
+    const info   = document.getElementById('usrInfo');
+
+    if (!name){ if (info) info.textContent = 'Bitte Name angeben.'; return; }
+    if (email && !/^[^@]+@[^@]+\.[^@]+$/.test(email)){
+      if (info) info.textContent = 'E-Mail ist optional – wenn angegeben, dann gültig.'; return;
+    }
+
+    try{
+      create.disabled = true;
+      await createUser({ name, email, role, active });
+      // Felder leeren
+      const ids = ['usrName','usrEmail']; ids.forEach(id=>{ const n=document.getElementById(id); if(n) n.value=''; });
+      document.getElementById('usrRole')?.value='agent';
+      document.getElementById('usrActive')?.value='true';
+      if (info) info.textContent = 'Benutzer erstellt.';
+      box?.classList.add('hidden');
+      await loadUsers();
+    } catch(err){
+      console.error(err);
+      if (info) info.textContent = 'Fehler beim Erstellen.';
+    } finally {
+      create.disabled = false;
+    }
+  });
+
+  // Liste aktualisieren
+  refresh?.addEventListener('click', async (e)=>{
+    e.preventDefault(); e.stopPropagation();
+    await loadUsers();
+  });
+
+  // Suche/Filter live
+  search?.addEventListener('input',  ()=> debounce(()=>renderUsers(),200)());
+  roleF ?.addEventListener('change', ()=> renderUsers());
+
+  // Tabellen-Aktionen (nur im Body), mit stopPropagation
+  tbody?.addEventListener('click', async (e)=>{
+    const btn = e.target.closest('button'); if (!btn) return;
+    e.preventDefault(); e.stopPropagation();
+
+    if (btn.dataset.usrToggle){
+      await toggleUserActive(btn.dataset.usrToggle);
+      return;
+    }
+    if (btn.dataset.usrDel){
+      if (confirm('Benutzer wirklich löschen?')) await deleteUser(btn.dataset.usrDel);
+      return;
+    }
+    if (btn.dataset.usrCode){
+      try{
+        const map = (function(){ try { return JSON.parse(localStorage.getItem('resTool.userAccessCodes')||'{}'); } catch { return {}; } })();
+        map[btn.dataset.usrCode] = String(Math.floor(100000 + Math.random()*900000));
+        localStorage.setItem('resTool.userAccessCodes', JSON.stringify(map));
+        alert('Zugangscode gesetzt.');
+      }catch(_){}
+      return;
+    }
+    if (btn.dataset.usrCodeDel){
+      try{
+        const map = (function(){ try { return JSON.parse(localStorage.getItem('resTool.userAccessCodes')||'{}'); } catch { return {}; } })();
+        delete map[btn.dataset.usrCodeDel];
+        localStorage.setItem('resTool.userAccessCodes', JSON.stringify(map));
+        alert('Zugangscode gelöscht.');
+      }catch(_){}
+      return;
+    }
+    if (btn.dataset.usrPass){
+      const pw = prompt('Neues Passwort (min. 4 Zeichen):');
+      if (!pw || pw.length<4) return;
+      try{ await setUserPassword(btn.dataset.usrPass, pw); alert('Passwort gesetzt.'); }catch(e){ alert('Konnte Passwort nicht setzen.'); }
+      return;
+    }
+    if (btn.dataset.usrPassDel){
+      if (!confirm('Passwort wirklich löschen?')) return;
+      try{ await setUserPassword(btn.dataset.usrPassDel, null); alert('Passwort gelöscht.'); }catch(e){ alert('Konnte Passwort nicht löschen.'); }
+      return;
+    }
+  });
+})();
+
 
   // Log Filter Events
   const btnApply = document.getElementById('logApply');
