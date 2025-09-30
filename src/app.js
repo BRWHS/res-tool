@@ -4410,7 +4410,6 @@ setTimeout(()=>{ try{ refreshNewResRates(); }catch(e){} }, 0);
   setTimeout(()=>{ try{ window.refreshNewResRates(); }catch(e){} }, 0);
 
 })();
-})();
 
 
 // --- Safe delegation for '+ weitere Kategorie' buttons (Create/Edit) ---
