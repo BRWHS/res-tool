@@ -1126,6 +1126,23 @@ html.modal-open { overflow: hidden; }
   .analytics-dock { display: none !important; }
 }
 
+/* === Modal: Benutzereinstellungen – Layout tidy === */
+#modalUserPrefs .body { min-width: 980px; max-width: 96vw; }
+#modalUserPrefs .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-items: start; }
+#modalUserPrefs .card .content { padding: 12px; }
+#modalUserPrefs .card-head { margin-bottom: 8px; }
+#modalUserPrefs .set-footer { margin-top: 8px; }
+#modalUserPrefs .row { gap: 8px; align-items: center; flex-wrap: wrap; }
+#modalUserPrefs .table-wrap { max-height: 52vh; overflow: auto; }
+#modalUserPrefs table.resv th, 
+#modalUserPrefs table.resv td { padding: 8px 10px; white-space: nowrap; }
+#modalUserPrefs table.resv td:nth-child(2) { white-space: normal; } /* E-Mail darf umbrechen */
+#modalUserPrefs .row-actions .btn { margin-right: 4px; }
+
+/* responsive fallback */
+@media (max-width: 980px){
+  #modalUserPrefs .grid2 { grid-template-columns: 1fr; }
+}
 
 
 
