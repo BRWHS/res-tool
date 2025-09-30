@@ -306,22 +306,41 @@ async function ensureDefaultAdminSeed(){
 }
 
 
-  async function loadUsers(){
-  // 1) Versuch: Supabase
-  try{
+async function loadUsers(){
+  // Beide Quellen laden
+  let sbList = [];
+  try {
     const { data, error } = await SB.from(USERS_TABLE).select('*').order('created_at',{ascending:false});
-    if (!error && Array.isArray(data)){
-      __users = data.map(normalizeUser);
-      await ensureDefaultAdminSeed();
-      renderUsers();
-      return;
+    if (!error && Array.isArray(data)) {
+      sbList = data.map(normalizeUser);
     }
-  }catch(_){ /* noop */ }
+  } catch(_) {}
 
-  // 2) Fallback: LocalStorage
-  __users = readUsersLS().map(normalizeUser);
+  const lsList = readUsersLS().map(normalizeUser);
+
+  // „Tombstones“ (lokal gelöschte IDs), damit aus Supabase kommendes nicht „wieder auftaucht“
+  const removed = (function(){
+    try { return JSON.parse(localStorage.getItem('resTool.usersRemoved')||'[]'); }
+    catch { return []; }
+  })();
+  const removedSet = new Set(removed);
+
+  // Merge: Supabase bevorzugen, LocalStorage ergänzen, Entfernte filtern
+  const map = new Map();
+  for (const u of sbList) { if (!removedSet.has(u.id)) map.set(u.id, u); }
+  for (const u of lsList) { if (!removedSet.has(u.id) && !map.has(u.id)) map.set(u.id, u); }
+
+  __users = Array.from(map.values())
+    .sort((a,b)=> String(b.created_at).localeCompare(String(a.created_at)));
+
+  // Falls komplett leer → Default-Admin säen
+  if ((__users||[]).length === 0) {
+    await ensureDefaultAdminSeed();
+  }
+
   renderUsers();
 }
+
 
 function renderUsers(){
   const tbody = document.getElementById('usrBody');
@@ -343,10 +362,10 @@ function renderUsers(){
       <td>${escapeHtml(u.role||'')}</td>
       <td>${u.active ? 'ja' : 'nein'}</td>
       <td>${new Date(u.created_at).toLocaleString('de-DE')}</td>
-      <td class="row-actions">
+     <td class="row-actions">
   <button class="btn sm ghost" data-usr-toggle="${u.id}">${u.active?'Deaktivieren':'Aktivieren'}</button>
-  <button class="btn sm" data-usr-code="${u.id}">Code setzen</button>
-  <button class="btn sm ghost" data-usr-code-del="${u.id}">Code löschen</button>
+  <button class="btn sm" data-usr-pass="${u.id}">Passwort setzen</button>
+  <button class="btn sm ghost" data-usr-pass-del="${u.id}">Passwort löschen</button>
   <button class="btn sm danger" data-usr-del="${u.id}">Löschen</button>
 </td>
     </tr>
@@ -379,16 +398,24 @@ function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, m=>({ '&':'&amp
   // Supabase
   try{
     const { error } = await SB.from(USERS_TABLE).delete().eq('id', id);
-    if (!error){ __users = __users.filter(u=>u.id!==id); renderUsers(); return true; }
+    if (!error){
+      __users = __users.filter(u=>u.id!==id);
+      renderUsers();
+      return true;
+    }
   }catch(_){}
 
-  // Fallback
+  // Fallback + Tombstone
   const list = readUsersLS().filter(u=>u.id!==id);
+  try { localStorage.setItem('resTool.usersRemoved',
+    JSON.stringify([...(JSON.parse(localStorage.getItem('resTool.usersRemoved')||'[]')), id])
+  ); } catch(_){}
   writeUsersLS(list);
   __users = list;
   renderUsers();
   return true;
 }
+
 
 async function toggleUserActive(id){
   const u = __users.find(x=>x.id===id);
@@ -5163,32 +5190,37 @@ if (email && !/^[^@]+@[^@]+\.[^@]+$/.test(email)){
       return; 
     }
         // Benutzerliste: Passwort SETZEN
-    const pid = t.getAttribute && t.getAttribute('data-usr-pass');
-    if (pid){
-      const pw = prompt('Neues Passwort für diesen Benutzer (min. 4 Zeichen):');
-      if (!pw || pw.length < 4) return;
-      try {
-        await setUserPassword(pid, pw);
-        alert('Passwort gesetzt.');
-      } catch(e){
-        console.error(e); alert('Konnte Passwort nicht setzen.');
-      }
-      return;
-    }
+const pid = t.getAttribute && t.getAttribute('data-usr-pass');
+if (pid){
+  e.preventDefault();
+  const u = (__users||[]).find(x=>x.id===pid);
+  if (!u){ alert('User nicht gefunden'); return; }
+  const pw = prompt(`Neues Passwort für "${u.name}" (min. 4 Zeichen):`);
+  if (!pw || pw.length < 4) return;
+  try {
+    await setUserPassword(u.name, pw); // <<< Schlüssel = Login-Name!
+    alert('Passwort gesetzt.');
+  } catch(e){
+    console.error(e); alert('Konnte Passwort nicht setzen.');
+  }
+  return;
+}
 
     // Benutzerliste: Passwort LÖSCHEN
-    const pdid = t.getAttribute && t.getAttribute('data-usr-pass-del');
-    if (pdid){
-      if (!confirm('Passwort wirklich löschen?')) return;
-      try {
-        await setUserPassword(pdid, null);
-        alert('Passwort gelöscht.');
-      } catch(e){
-        console.error(e); alert('Konnte Passwort nicht löschen.');
-      }
-      return;
-    }
-
+const pdid = t.getAttribute && t.getAttribute('data-usr-pass-del');
+if (pdid){
+  e.preventDefault();
+  const u = (__users||[]).find(x=>x.id===pdid);
+  if (!u){ alert('User nicht gefunden'); return; }
+  if (!confirm(`Passwort von "${u.name}" wirklich löschen?`)) return;
+  try {
+    await setUserPassword(u.name, null); // <<< Schlüssel = Login-Name!
+    alert('Passwort gelöscht.');
+  } catch(e){
+    console.error(e); alert('Konnte Passwort nicht löschen.');
+  }
+  return;
+}
 
   }, { passive:false });
 
