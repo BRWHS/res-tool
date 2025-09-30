@@ -660,6 +660,7 @@
       <button class="btn tile" id="btnRates" data-modal="#modalRates" data-role-required="admin">Rateneinstellungen</button>
       <button class="btn tile" id="btnHelp">Hilfe & FAQ</button>
     </div>
+  </div>
 
   <!-- RECHTER BLOCK: Live-Systeminfo (kleiner, transparenter) -->
   <aside class="box set-sys" id="netBox">
@@ -685,7 +686,64 @@
     </div>
   </section>
 
- 
+  <!-- Benutzerverwaltung (unter Einstellungen -> "Benutzereinstellungen") -->
+<section class="modal" id="modalUsers" role="dialog" aria-labelledby="usersTitle" aria-modal="true" aria-hidden="true">
+  <header>
+    <h3 id="usersTitle" class="mono"><span class="set-logo" aria-hidden="true"></span> Benutzerverwaltung</h3>
+    <button class="btn" data-close>Schließen</button>
+  </header>
+  <div class="body" style="min-width:880px; max-width:96vw;">
+    <!-- Tools-Zeile -->
+    <div class="row wrap" style="gap:8px; align-items:flex-end;">
+      <input id="usrSearch" class="input" placeholder="Suche… (Name/E-Mail)" style="width:240px;">
+      <label>Rolle
+        <select id="usrRoleFilter" class="input theme-select" style="width:160px;">
+          <option value="all">alle</option>
+          <option value="admin">admin</option>
+          <option value="agent">agent</option>
+          <option value="viewer">viewer</option>
+        </select>
+      </label>
+      <div style="flex:1 1 auto;"></div>
+      <div class="box" style="padding:8px; border:1px solid var(--line,#17414b); border-radius:10px;">
+        <div class="mono tiny muted" style="margin-bottom:6px;">Neuen Benutzer anlegen</div>
+        <div class="grid-compact" style="grid-template-columns:repeat(5,minmax(120px,1fr)); gap:8px;">
+          <input id="newUserName"  class="input" placeholder="Login-Name (z. B. Agent01)">
+          <input id="newUserEmail" class="input" placeholder="E-Mail (optional)">
+          <select id="newUserRole" class="input theme-select">
+            <option value="agent">agent</option>
+            <option value="viewer">viewer</option>
+            <option value="admin">admin</option>
+          </select>
+          <input id="newUserPw"   class="input" placeholder="Passwort (optional)">
+          <button id="btnUserCreate" class="btn primary">Anlegen</button>
+        </div>
+        <p class="tiny muted" style="margin-top:6px;">Passwort wird lokal per SHA-256 gehasht gespeichert. (Optional – kann später gesetzt werden.)</p>
+      </div>
+    </div>
+
+    <!-- Tabelle -->
+    <div class="table-wrap" style="margin-top:10px;">
+      <table class="resv">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>E-Mail</th>
+            <th>Rolle</th>
+            <th>Aktiv</th>
+            <th>Angelegt</th>
+            <th>Aktionen</th>
+          </tr>
+        </thead>
+        <tbody id="usrBody"></tbody>
+      </table>
+    </div>
+
+    <p class="muted tiny" id="usrInfo" style="margin-top:6px;">Nur für Admins sichtbar. Änderungen werden in das Audit-Log geschrieben.</p>
+  </div>
+</section>
+
+
 <!-- Modal: Channel Settings (admin) – NEU -->
 <section class="modal" id="modalChannel" role="dialog" aria-labelledby="channelTitle" aria-modal="true">
   <header>
