@@ -3883,8 +3883,8 @@ document.addEventListener('DOMContentLoaded', ()=>{
       await createUser({ name, email, role, active });
       // Felder leeren
       const ids = ['usrName','usrEmail']; ids.forEach(id=>{ const n=document.getElementById(id); if(n) n.value=''; });
-      document.getElementById('usrRole')?.value='agent';
-      document.getElementById('usrActive')?.value='true';
+      const roleEl = document.getElementById('usrRole');    if (roleEl) roleEl.value = 'agent';
+      const actEl  = document.getElementById('usrActive');  if (actEl) actEl.value = 'true';
       if (info) info.textContent = 'Benutzer erstellt.';
       box?.classList.add('hidden');
       await loadUsers();
@@ -3904,7 +3904,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
 
   // Suche/Filter live
   search?.addEventListener('input',  ()=> debounce(()=>renderUsers(),200)());
-  roleF ?.addEventListener('change', ()=> renderUsers());
+  roleF?.addEventListener('change', ()=> renderUsers());
 
   // Tabellen-Aktionen (nur im Body), mit stopPropagation
   tbody?.addEventListener('click', async (e)=>{
