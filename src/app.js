@@ -2347,6 +2347,8 @@ function showAvailTooltip(evt, title, lines){
   <div class="tt-title">${title}</div>
   ${lines.map(([label, val]) => `<div class="tt-line"><span>${label}</span><span>${val}</span></div>`).join('')}
 `;
+tt.style.display = 'block';
+moveAvailTooltip(evt);
 
   moveAvailTooltip(evt);
 }
