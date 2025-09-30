@@ -3810,13 +3810,17 @@ document.addEventListener('DOMContentLoaded', ()=>{
   const btnClear = document.getElementById('logClear');
   if (btnApply){
     btnApply.addEventListener('click', ()=>{
-      const q   = document.getElementById('logSearch').value.trim();
-      const type= document.getElementById('logType').value;
-      const from= document.getElementById('logFrom').value;
-      const to  = document.getElementById('logTo').value;
-      renderLogTable(filterLog({q,type,from,to}));
-    });
-  }
+  const q    = document.getElementById('logSearch').value.trim();
+  const type = document.getElementById('logType').value;
+  const from = document.getElementById('logFrom').value;
+  const to   = document.getElementById('logTo').value;
+      
+  // optional: immer auf Seite 1 springen
+  window.__logState = window.__logState || { page: 1 };
+  window.__logState.page = 1;
+  renderLogTable(filterLog({ q, type, from, to }));
+});
+
   if (btnClear){
     btnClear.addEventListener('click', ()=>{
       document.getElementById('logSearch').value = '';
