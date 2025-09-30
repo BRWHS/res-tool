@@ -1144,5 +1144,12 @@ html.modal-open { overflow: hidden; }
   #modalUserPrefs .grid2 { grid-template-columns: 1fr; }
 }
 
+#modalUserPrefs .body { min-width: 1080px; max-width: 96vw; }
+#usrCreate .grid2 { grid-template-columns: 1fr 1fr; gap: 10px; }
+@media (max-width: 1080px){
+  #usrCreate .grid2 { grid-template-columns: 1fr; }
+}
+
+
 
 
