@@ -1126,61 +1126,48 @@ html.modal-open { overflow: hidden; }
   .analytics-dock { display: none !important; }
 }
 
-/* === Modal: Benutzereinstellungen – Layout tidy === */
-#modalUserPrefs .body { min-width: 980px; max-width: 96vw; }
-#modalUserPrefs .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-items: start; }
-#modalUserPrefs .card .content { padding: 12px; }
-#modalUserPrefs .card-head { margin-bottom: 8px; }
-#modalUserPrefs .set-footer { margin-top: 8px; }
-#modalUserPrefs .row { gap: 8px; align-items: center; flex-wrap: wrap; }
-#modalUserPrefs .table-wrap { max-height: 52vh; overflow: auto; }
-#modalUserPrefs table.resv th, 
-#modalUserPrefs table.resv td { padding: 8px 10px; white-space: nowrap; }
-#modalUserPrefs table.resv td:nth-child(2) { white-space: normal; } /* E-Mail darf umbrechen */
-#modalUserPrefs .row-actions .btn { margin-right: 4px; }
-
-/* responsive fallback */
-@media (max-width: 980px){
-  #modalUserPrefs .grid2 { grid-template-columns: 1fr; }
-}
-
-#modalUserPrefs .body { min-width: 1080px; max-width: 96vw; }
-#usrCreate .grid2 { grid-template-columns: 1fr 1fr; gap: 10px; }
-@media (max-width: 1080px){
-  #usrCreate .grid2 { grid-template-columns: 1fr; }
-}
-/* === UserPrefs Layout Polish === */
-#modalUserPrefs .body {
-  min-width: 1020px;
+/* === Benutzereinstellungen (clean) === */
+#modalUserPrefs .body{
+  min-width: 1040px;
   max-width: 96vw;
 }
 
-#modalUserPrefs .body > .grid2 {
+#modalUserPrefs .body > .grid2{
   display: grid;
-  grid-template-columns: minmax(380px, 420px) 1fr; /* links Formular fix, rechts Liste flexibel */
-  gap: 12px;
+  grid-template-columns: minmax(420px, 520px) 1fr; /* links Formular breiter, rechts Liste flexibel */
+  gap: 16px;
   align-items: start;
 }
 
-#modalUserPrefs .card .grid2 {
-  grid-template-columns: 1fr 1fr; /* Felder im Formular zweispaltig statt zu eng */
-  gap: 8px;
+#modalUserPrefs .card .content{ padding: 14px; }
+#modalUserPrefs .card-head{ margin-bottom: 8px; }
+
+/* Formular links: einspaltig, damit nichts gequetscht */
+#modalUserPrefs .card:first-of-type .grid2{
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
 }
 
-#modalUserPrefs .card .grid2 label {
-  display: flex;
-  flex-direction: column;
+#modalUserPrefs .row{ gap: 8px; align-items: center; flex-wrap: wrap; }
+
+#modalUserPrefs .table-wrap{
+  max-height: 60vh;         /* Liste scrollt, Formular bleibt sichtbar */
+  overflow: auto;
 }
 
-#modalUserPrefs .table-wrap {
-  max-height: 60vh;
-  overflow: auto; /* Liste scrollt, Formular bleibt luftig */
+#modalUserPrefs table.resv th,
+#modalUserPrefs table.resv td{
+  padding: 8px 10px;
+  white-space: nowrap;
+}
+#modalUserPrefs table.resv td:nth-child(2){
+  white-space: normal;      /* E-Mail darf umbrechen */
 }
 
 @media (max-width: 1100px){
-  #modalUserPrefs .body > .grid2 { grid-template-columns: 1fr; }
+  #modalUserPrefs .body > .grid2{ grid-template-columns: 1fr; }
 }
-
 
 
 
