@@ -2344,10 +2344,10 @@ function ensureAvailTooltip(){
 function showAvailTooltip(evt, title, lines){
   const tt = ensureAvailTooltip();
   tt.innerHTML = `
-    <div class="tt-title">${title}</div>
-    ${lines.map(([label, val]) => `<div class="tt-line"><span>${label}</span><span>${val}</span></div>`).join('')}
-  `;
-  tt.style.display = 'block';
+  <div class="tt-title">${title}</div>
+  ${lines.map(([label, val]) => `<div class="tt-line"><span>${label}</span><span>${val}</span></div>`).join('')}
+`;
+
   moveAvailTooltip(evt);
 }
 function moveAvailTooltip(evt){
