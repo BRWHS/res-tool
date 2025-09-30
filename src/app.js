@@ -175,10 +175,6 @@ async function setUserPassword(userId, pw){
   // >>> EINZEILER EINFÜGEN (globaler Alias, damit Handler außerhalb vom Closure SB finden)
 window.SB = SB;
 
-  if (!window.SB?.from) {
-  console.error('Supabase-Client nicht initialisiert – prüfe Script-Einbindung!');
-}
-
   // ===== Auth/Rollen – Minimal-Layer =====
 // Quelle für aktuellen User: bevorzugt window.__AUTH_USER__ (aus auth.js), sonst LocalStorage-Fallback
 function getCurrentUser(){
@@ -247,26 +243,6 @@ async function logActivity(type, action, meta){
   }
 }
 window.logActivity = logActivity;
-  
-async function loadActivityLog({qText='', qType='', from=null, to=null}={}){
-  let qb = SB.from('activity_log').select('*').order('ts',{ascending:false}).limit(200);
-  if (qType) qb = qb.eq('type', qType);
-  if (from)  qb = qb.gte('ts', from);
-  if (to)    qb = qb.lte('ts', to);
-  if (qText) qb = qb.or(`action.ilike.%${qText}%,user_name.ilike.%${qText}%`);
-
-  const { data, error } = await qb;
-  const ul = document.getElementById('chErrorList') || document.getElementById('logList');
-  if (!ul) return;
-  ul.innerHTML = error ? `<li class="tiny">Fehler: ${error.message}</li>` :
-    (data||[]).map(r => `<li>[${new Date(r.ts).toLocaleString('de-DE')}] <b>${r.user_name||'—'}</b> (${r.user_role||'—'}) · <i>${r.type}/${r.action}</i> – ${r.meta ? JSON.stringify(r.meta) : ''}</li>`).join('');
-}
-window.loadActivityLog = loadActivityLog;
-
-// Beim Öffnen „Log Activity“-Modal aktualisieren:
-document.getElementById('btnLog')?.addEventListener('click', ()=> {
-  setTimeout(()=> loadActivityLog().catch(()=>{}), 50);
-});
 
 
   // === User Management (Supabase: app_users; Fallback: LocalStorage) ===
@@ -369,16 +345,18 @@ function renderUsers(){
       <td>${new Date(u.created_at).toLocaleString('de-DE')}</td>
       <td class="row-actions">
   <button class="btn sm ghost" data-usr-toggle="${u.id}">${u.active?'Deaktivieren':'Aktivieren'}</button>
-<button class="btn sm" data-usr-pass="${u.id}">Passwort setzen</button>
-<button class="btn sm ghost" data-usr-pass-del="${u.id}">Passwort löschen</button>
-<button class="btn sm danger" data-usr-del="${u.id}">Löschen</button>
+  <button class="btn sm" data-usr-code="${u.id}">Code setzen</button>
+  <button class="btn sm ghost" data-usr-code-del="${u.id}">Code löschen</button>
+  <button class="btn sm danger" data-usr-del="${u.id}">Löschen</button>
 </td>
     </tr>
   `).join('') || `<tr><td colspan="6" class="muted">Keine Benutzer gefunden.</td></tr>`;
 }
 
 // simples Escaping
-async function createUser(u){
+function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m])); }
+
+  async function createUser(u){
   const rec = normalizeUser(u);
 
   // Supabase zuerst versuchen
@@ -388,6 +366,7 @@ async function createUser(u){
       role: rec.role, active: rec.active, created_at: rec.created_at
     });
     if (!error) return rec;
+    // wenn 42P01 (relation does not exist) → Fallback
   }catch(_){}
 
   // Fallback: LocalStorage
@@ -396,7 +375,6 @@ async function createUser(u){
   writeUsersLS(list);
   return rec;
 }
-
   async function deleteUser(id){
   // Supabase
   try{
@@ -1090,11 +1068,6 @@ q('#btnRateSave')?.addEventListener('click', ()=>{
     name, policy, price, mapped,
     created_at: now, updated_at: now
   });
-
-  logActivity('rate','save',{
-  hotel_code, ratecode, ratetype, name, price, mapped,
-  categories: catsSel
-});
 
   q('#rateInfo').textContent = 'Rate gespeichert.';
   // Falls du ein Raten-Board auf der Startmaske hast, hier refreshen:
@@ -1869,12 +1842,6 @@ if (allApply && !allApply.__bound){
       await autoRollPastToDone(); await loadReservations();
     });
 
-    logActivity('reservation','update',{
-  id,
-  fields: ['guest_last_name','arrival','departure','category','rate_name','rate_price','notes']
-});
-
-
     q('#btnSavePay') && (q('#btnSavePay').onclick = async ()=>{
       const payload = {
         cc_holder: q('#eCcHolder').value || null,
@@ -1890,10 +1857,7 @@ if (allApply && !allApply.__bound){
       const { error } = await SB.from('reservations').update({ status:'canceled', canceled_at: new Date().toISOString() }).eq('id', id);
       q('#editInfo').textContent = error ? ('Fehler: '+error.message) : createdAtTxt;
       await loadReservations();
-      logActivity('reservation','cancel',{ id });
     });
-
-    
 
     // Aktionen-Tab: "Bestätigung erneut senden" anbinden
 (function bindResendConfirmation(){
@@ -2234,17 +2198,6 @@ await loadKpisToday();
 await loadKpisNext();
 await loadReservations();
 
-    // Audit
-logActivity('reservation','create',{
-  reservation_number: payload.reservation_number,
-  hotel_code: payload.hotel_code,
-  arrival: payload.arrival,
-  departure: payload.departure,
-  guest: { last_name: payload.guest_last_name, first_name: payload.guest_first_name },
-  rate: { name: payload.rate_name, price: payload.rate_price }
-});
-
-
 // 6) Context für Bestätigungsmodal setzen (payload reicht hier)
 window.__lastReservationContext = {
   hotel: { code: payload.hotel_code, display_name: payload.hotel_name },
@@ -2344,12 +2297,10 @@ function ensureAvailTooltip(){
 function showAvailTooltip(evt, title, lines){
   const tt = ensureAvailTooltip();
   tt.innerHTML = `
-  <div class="tt-title">${title}</div>
-  ${lines.map(([label, val]) => `<div class="tt-line"><span>${label}</span><span>${val}</span></div>`).join('')}
-`;
-tt.style.display = 'block';
-moveAvailTooltip(evt);
-
+    <div class="tt-title">${title}</div>
+    ${lines.map(([label, val]) => `<div class="tt-line"><span>${label}</span><span>${val}</span></div>`).join('')}
+  `;
+  tt.style.display = 'block';
   moveAvailTooltip(evt);
 }
 function moveAvailTooltip(evt){
@@ -2365,8 +2316,8 @@ function hideAvailTooltip(){
   tt.style.display = 'none';
 }
 function splitDummyCategories(avail){
-  // Verteile die Verfügbarkeit grob auf Standard/Superior/Suite (50/30/20)
-  const a = Math.max(0, Number(avail) || 0);
+  // Verteile die Verfügbarkeit (cap - booked) grob auf Standard/Superior/Suite (50/30/20)
+  const a = Math.max(0, Number(avail)||0);
   const std = Math.max(0, Math.floor(a * 0.5));
   const sup = Math.max(0, Math.floor(a * 0.3));
   const sui = Math.max(0, a - std - sup);
@@ -2376,8 +2327,6 @@ function splitDummyCategories(avail){
     }
   }
   q('#availRun')?.addEventListener('click', buildMatrix);
-
-
 
   /***** Reporting *****/
 
@@ -3669,7 +3618,6 @@ function renderMappingAmpel(){
     document.getElementById('btnSaveChannel')?.addEventListener('click', ()=>{
       const data = readFromUi();
       saveChannel(data);
-      logActivity('channel','save',{ scope: 'channel' });
       document.getElementById('channelInfo').textContent = 'Einstellungen gespeichert.';
     });
 
@@ -3714,31 +3662,21 @@ function renderMappingAmpel(){
     });
   }
 
- // Wenn Settings-Modal geöffnet wird, UI lazy füllen (einmalig + nach dem Öffnen)
-(function(){
+  // Wenn Settings-Modal geöffnet wird, UI füllen
   const btnChannel = document.getElementById('btnChannel');
-  if (!btnChannel || btnChannel.__wired) return;
-  btnChannel.__wired = true;
-
-  btnChannel.addEventListener('click', ()=>{
-    requireAdmin(()=>{
-      openModal('modalChannel');               // 1) erst öffnen
-      requestIdleCallback?.(()=>{              // 2) UI-Aufbau in Idle
+  if (btnChannel){
+    btnChannel.addEventListener('click', ()=>{
+      setTimeout(()=>{
         try{
-          if (!window.__channelBound){         // 3) einmalig binden
-            bindOnce();
-            window.__channelBound = true;
-          }
+          bindOnce();
           switchChannelTab('api');
           applyToUi(readChannel());
           try{ renderMappingAmpel(); }catch(e){}
         }catch(e){}
-      }, {timeout:150});
+      }, 0);
     });
-    logActivity('channel','open_settings');
-  });
+  }
 })();
-
 
 document.addEventListener('DOMContentLoaded', ()=>{
   // Controls referenzieren
@@ -3771,7 +3709,6 @@ document.addEventListener('DOMContentLoaded', ()=>{
   if (btnSave){
     btnSave.addEventListener('click', ()=>{
       const s = getSettings(); saveSettings(s); applySettings();
-      logActivity('settings','save',{ scope: 'app' });
       alert(t('ui.saved'));
     });
   }
@@ -3810,17 +3747,13 @@ document.addEventListener('DOMContentLoaded', ()=>{
   const btnClear = document.getElementById('logClear');
   if (btnApply){
     btnApply.addEventListener('click', ()=>{
-  const q    = document.getElementById('logSearch').value.trim();
-  const type = document.getElementById('logType').value;
-  const from = document.getElementById('logFrom').value;
-  const to   = document.getElementById('logTo').value;
-      
-  // optional: immer auf Seite 1 springen
-  window.__logState = window.__logState || { page: 1 };
-  window.__logState.page = 1;
-  renderLogTable(filterLog({ q, type, from, to }));
-});
-
+      const q   = document.getElementById('logSearch').value.trim();
+      const type= document.getElementById('logType').value;
+      const from= document.getElementById('logFrom').value;
+      const to  = document.getElementById('logTo').value;
+      renderLogTable(filterLog({q,type,from,to}));
+    });
+  }
   if (btnClear){
     btnClear.addEventListener('click', ()=>{
       document.getElementById('logSearch').value = '';
@@ -4176,14 +4109,12 @@ function rsFillHotelFilter(){
   sel.append(el('option',{value:'all'},'Alle Hotels'));
   HOTELS.forEach(h => sel.append(el('option',{value:h.code}, `${h.group} - ${h.name.replace(/^.*? /,'')}`)));
 }
-
 function rsSetType(type){
   window.__rsType = type;
   q('#rsTitle') && (q('#rsTitle').textContent = `Raten – ${type}`);
   rsRender();
 }
-
-function rsRender(){
+  function rsRender(){
   const tbody = q('#rsBody'); if (!tbody) return;
 
   const qStr  = (q('#rsSearch')?.value || '').trim().toLowerCase();
@@ -4203,7 +4134,7 @@ function rsRender(){
 
   list.forEach(r=>{
     const hotel = HOTELS.find(h=>h.code===r.hotel_code);
-    const nameHotel = hotel ? `${hotel.group} - ${hotel.name.replace(/^.*? /,'')}` : (r.hotel_code || '—');
+    const nameHotel = hotel ? `${hotel.group} - ${hotelCity(hotel.name)}` : r.hotel_code || '—';
     const cats = (r.categories && r.categories.length ? r.categories : ['*']).join(', ');
     const mappedTxt = r.mapped ? 'Ja' : 'Nein';
 
@@ -4215,11 +4146,12 @@ function rsRender(){
       el('td', {}, EUR.format(Number(r.price||0))),
       el('td', {}, mappedTxt)
     );
-    tr.addEventListener('click', ()=> openRateEditor(r.id));
+      tr.dataset.rateId = r.id;                    // ID an die Zeile hängen
+      tr.addEventListener('click', () => openRateEditor(r.id));  // Editor öffnen
     tbody.append(tr);
+    
   });
 }
-
 
 // --- Edit flow (Ratename editierbar; Typ/Hotel/Ratecode fix) ---
 window.__rateEditId = window.__rateEditId || null;
@@ -4415,6 +4347,7 @@ setTimeout(()=>{ try{ refreshNewResRates(); }catch(e){} }, 0);
   // Initial füllen
   setTimeout(()=>{ try{ window.refreshNewResRates(); }catch(e){} }, 0);
 
+})();
 })();
 
 
@@ -5086,4 +5019,3 @@ if (email && !/^[^@]+@[^@]+\.[^@]+$/.test(email)){
 
   });
 })();
-
