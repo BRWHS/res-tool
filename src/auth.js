@@ -76,28 +76,41 @@ overlay.style.userSelect = 'auto';
     return;
   }
 
-  // 2) Lokale Passwörter (SHA-256) – Key = LOGIN-NAME
+    // 2) Lokale Passwörter (SHA-256) – Key = LOGIN-NAME (Fallback: E-Mail → Name)
   try {
     const map = JSON.parse(localStorage.getItem('resTool.userPw') || '{}');
-    const hexExpect = map[u];
+
+    // Benutzerliste laden (für Mapping Name/E-Mail)
+    let list = [];
+    try {
+      list = (window.__users || JSON.parse(localStorage.getItem('resTool.users')||'[]')) || [];
+    } catch(_) {}
+
+    // Tipp: Name case-insensitive + E-Mail erlaubt
+    const uLower = u.toLowerCase();
+    const rec = Array.isArray(list)
+      ? list.find(x => (x.name && String(x.name).toLowerCase() === uLower) || (x.email && String(x.email).toLowerCase() === uLower))
+      : null;
+
+    const key = rec?.name || u;           // Primär: Login-Name aus Datensatz, sonst Eingabe
+    const hexExpect = map[key] || map[u];  // Falls direkt unter Eingabe gespeichert, erlauben wir das auch
+
     if (hexExpect){
       const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(p));
       const hex = Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
 
       if (hex === hexExpect){
-        // Rolle aus Userliste ableiten (falls vorhanden), sonst 'agent'
+        // Rolle aus Datensatz ableiten (wenn vorhanden), sonst 'agent'
         let role = 'agent';
-        try {
-          const list = (window.__users || JSON.parse(localStorage.getItem('resTool.users')||'[]'));
-          const rec = Array.isArray(list) ? list.find(x=>x.name===u) : null;
-          if (rec && rec.role) role = rec.role;
-        } catch(_){}
+        if (rec && rec.role) role = rec.role;
+
         err.classList.remove('active');
-        signIn({ id: u, role });
+        signIn({ id: key, role });
         return;
       }
     }
   } catch(_){}
+
 
   // 3) Fail
   err.classList.add('active');
