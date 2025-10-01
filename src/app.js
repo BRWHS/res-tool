@@ -5197,7 +5197,7 @@ if (email) {
 // Felder leeren
 if (pwField) pwField.value = '';
 
-        await setUserPassword(name, chosenPw);  // Passworthash unter LOGIN-NAME speichernw
+        await setUserPassword(name, chosenPw);  // Passworthash unter LOGIN-NAME speichern
         document.getElementById('usrName').value='';
         if (email) { await setUserPassword(email.toLowerCase(), chosenPw); } // Alias: Login über E-Mail erlauben
         document.getElementById('usrEmail').value='';
@@ -5238,11 +5238,24 @@ if (pid){
   if (pw == null) return;
   if (pw.length < 4){ alert('Mindestens 4 Zeichen.'); return; }
 
-  try{
-    // WICHTIG: unter dem LOGIN-NAMEN speichern, nicht unter der ID
+  try {
+  if (pw.length === 0){
+    await setUserPassword(u.name, null);
+    if (u.email) await setUserPassword(u.email.toLowerCase(), null);
+    alert('Passwort gelöscht.');
+  } else if (pw.length < 4){
+    alert('Mindestens 4 Zeichen.');
+    return;
+  } else {
     await setUserPassword(u.name, pw);
+    if (u.email) await setUserPassword(u.email.toLowerCase(), pw);
     alert('Passwort gesetzt.');
-  }catch(e){
+  }
+} catch(e){
+  console.error(e); alert('Konnte Passwort nicht setzen.');
+}
+    
+  catch(e){
     console.error(e); alert('Konnte Passwort nicht setzen.');
   }
   return;
