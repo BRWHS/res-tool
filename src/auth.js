@@ -75,7 +75,7 @@ try { map = JSON.parse(localStorage.getItem('resTool.userPw') || '{}'); } catch 
 
 // WICHTIG: Wenn für 'Admin' ein eigenes Passwort gesetzt ist,
 // dann die 6764-Backdoor deaktivieren:
-const adminOverridden = !!map['Admin'];
+const adminOverridden = !!(map['Admin'] || map['admin']);
 if (!adminOverridden && u === ADMIN_ID && p === ADMIN_PW){
   err.classList.remove('active');
   signIn({ id: u, role: 'admin' });
@@ -114,14 +114,16 @@ try {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(p));
   const hex = Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
 
-  // Treffer?
-  const okKey = [...candidates].find(k => map[k] && map[k] === hex);
-  if (okKey){
-    const role = rec?.role || (uInput === 'Admin' ? 'admin' : 'agent');
-    err.classList.remove('active');
-    signIn({ id: rec?.name || uInput, role });
-    return;
-  }
+ // Match?
+const okKey = [...candidates].find(k => map[k] && map[k] === hex);
+if (okKey){
+  const id = rec?.name || okKey;
+  const role = (rec?.role) || (String(id).toLowerCase() === 'admin' ? 'admin' : 'agent');
+  err.classList.remove('active');
+  signIn({ id, role });
+  return;
+}
+
 } catch(_){}
 
   // 3) Fail
