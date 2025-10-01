@@ -5251,10 +5251,7 @@ if (pid){
     if (u.email) await setUserPassword(u.email.toLowerCase(), pw);
     alert('Passwort gesetzt.');
   }
-} catch(e){
-  console.error(e); alert('Konnte Passwort nicht setzen.');
-}
-    
+}     
   catch(e){
     console.error(e); alert('Konnte Passwort nicht setzen.');
   }
