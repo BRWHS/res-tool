@@ -3912,14 +3912,38 @@ document.addEventListener('DOMContentLoaded', ()=>{
 
     try{
       create.disabled = true;
-      await createUser({ name, email, role, active });
-      // Felder leeren
-      const ids = ['usrName','usrEmail']; ids.forEach(id=>{ const n=document.getElementById(id); if(n) n.value=''; });
-      const roleEl = document.getElementById('usrRole');    if (roleEl) roleEl.value = 'agent';
-      const actEl  = document.getElementById('usrActive');  if (actEl) actEl.value = 'true';
-      if (info) info.textContent = 'Benutzer erstellt.';
-      box?.classList.add('hidden');
-      await loadUsers();
+     await createUser({ name, email, role, active });
+
+// Passwort übernehmen (oder E-Mail als Fallback)
+const pwField  = document.getElementById('usrPw');
+const inputPw  = (pwField?.value || '').trim();
+const chosenPw = inputPw || (email || '').trim();
+
+if (!chosenPw || chosenPw.length < 4){
+  if (info) info.textContent = 'Bitte Passwort (≥4) eingeben – oder E-Mail ausfüllen (wird als Passwort verwendet).';
+  t.disabled = false;
+  return;
+}
+
+// 1) unter LOGIN-NAME speichern
+await setUserPassword(name, chosenPw);
+
+// 2) optionaler Alias: auch unter E-Mail (lowercase) speichern,
+//    damit Login mit E-Mail funktioniert (wenn vorhanden)
+if (email) {
+  await setUserPassword(email.toLowerCase(), chosenPw);
+}
+
+// Felder leeren
+if (pwField) pwField.value = '';
+document.getElementById('usrName').value='';
+document.getElementById('usrEmail').value='';
+document.getElementById('usrRole').value='agent';
+document.getElementById('usrActive').value='true';
+
+if (info) info.textContent = 'Benutzer erstellt.';
+await loadUsers();
+
     } catch(err){
       console.error(err);
       if (info) info.textContent = 'Fehler beim Erstellen.';
@@ -5234,24 +5258,30 @@ if (pid){
   const u = (__users||[]).find(x=>x.id===pid);
   if (!u){ alert('User nicht gefunden'); return; }
 
-  const pw = prompt(`Neues Passwort für "${u.name}" (min. 4 Zeichen):`);
-  if (pw == null) return;
-  if (pw.length < 4){ alert('Mindestens 4 Zeichen.'); return; }
-
-  try {
-  if (pw.length === 0){
-    await setUserPassword(u.name, null);
-    if (u.email) await setUserPassword(u.email.toLowerCase(), null);
-    alert('Passwort gelöscht.');
-  } else if (pw.length < 4){
-    alert('Mindestens 4 Zeichen.');
+   const pw = prompt(`Neues Passwort für ${u.name} eingeben:`, '');
+  if (!pw || pw.trim().length < 4){
+    alert('Abbruch – Passwort muss mindestens 4 Zeichen haben.');
     return;
-  } else {
-    await setUserPassword(u.name, pw);
-    if (u.email) await setUserPassword(u.email.toLowerCase(), pw);
-    alert('Passwort gesetzt.');
   }
-}     
+  const val = pw.trim();
+
+  // Unter Login-Name speichern
+  await setUserPassword(u.name, val);
+
+  // E-Mail-Alias (lowercase) zusätzlich speichern, falls vorhanden
+  if (u.email) {
+    await setUserPassword(String(u.email).toLowerCase(), val);
+  }
+
+  // Spezialfall: Admin – schreibe sicher unter Key 'Admin', damit die 6764-Backdoor deaktiviert wird
+  if (u.name === 'Admin') {
+    await setUserPassword('Admin', val);
+  }
+
+  alert('Passwort gesetzt.');
+  return;
+}
+
   catch(e){
     console.error(e); alert('Konnte Passwort nicht setzen.');
   }
