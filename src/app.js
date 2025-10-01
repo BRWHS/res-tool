@@ -5174,6 +5174,29 @@ if (email && !/^[^@]+@[^@]+\.[^@]+$/.test(email)){
       t.disabled = true;
       try{
         await createUser({ name, email, role, active });
+
+        // Passwort übernehmen (oder E-Mail als Fallback)
+const pwField  = document.getElementById('usrPw');
+const inputPw  = (pwField?.value || '').trim();
+const chosenPw = inputPw || (email || '').trim();
+
+if (!chosenPw || chosenPw.length < 4){
+  if (info) info.textContent = 'Bitte Passwort (≥4) eingeben – oder E-Mail ausfüllen (wird als Passwort verwendet).';
+  return;
+}
+
+// 1) unter LOGIN-NAME speichern
+await setUserPassword(name, chosenPw);
+
+// 2) optionaler Alias: auch unter E-Mail (lowercase) speichern,
+//    damit Login mit E-Mail funktioniert (wenn vorhanden)
+if (email) {
+  await setUserPassword(email.toLowerCase(), chosenPw);
+}
+
+// Felder leeren
+if (pwField) pwField.value = '';
+
         await setUserPassword(name, chosenPw);  // Passworthash unter LOGIN-NAME speichernw
         document.getElementById('usrName').value='';
         if (email) { await setUserPassword(email.toLowerCase(), chosenPw); } // Alias: Login über E-Mail erlauben
@@ -5205,31 +5228,26 @@ if (email && !/^[^@]+@[^@]+\.[^@]+$/.test(email)){
       if (confirm('Benutzer wirklich löschen?')) await deleteUser(did);
       return; 
     }
-        // Benutzerliste: Passwort SETZEN
+       // Benutzerliste: Passwort SETZEN
 const pid = t.getAttribute && t.getAttribute('data-usr-pass');
 if (pid){
-  e.preventDefault();
   const u = (__users||[]).find(x=>x.id===pid);
   if (!u){ alert('User nicht gefunden'); return; }
-     const pw = prompt(`Passwort für "${u.name}" (leer = löschen, ≥4 Zeichen = setzen):`);
-  if (pw === null) return;
-  try {
-    if (pw.length === 0){
-      await setUserPassword(u.name, null);   // löschen
-      alert('Passwort gelöscht.');
-    } else if (pw.length < 4){
-      alert('Mindestens 4 Zeichen.');
-      return;
-    } else {
-      await setUserPassword(u.name, pw);     // setzen unter LOGIN-NAME
-      alert('Passwort gesetzt.');
-    }
 
-  } catch(e){
+  const pw = prompt(`Neues Passwort für "${u.name}" (min. 4 Zeichen):`);
+  if (pw == null) return;
+  if (pw.length < 4){ alert('Mindestens 4 Zeichen.'); return; }
+
+  try{
+    // WICHTIG: unter dem LOGIN-NAMEN speichern, nicht unter der ID
+    await setUserPassword(u.name, pw);
+    alert('Passwort gesetzt.');
+  }catch(e){
     console.error(e); alert('Konnte Passwort nicht setzen.');
   }
   return;
 }
+
 
   }, { passive:false });
 
