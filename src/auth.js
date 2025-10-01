@@ -76,40 +76,45 @@ overlay.style.userSelect = 'auto';
     return;
   }
 
-    // 2) Lokale Passwörter (SHA-256) – Key = LOGIN-NAME (Fallback: E-Mail → Name)
+      // 2) Lokale Passwörter (SHA-256) – Name (case-insensitive) ODER E-Mail
   try {
     const map = JSON.parse(localStorage.getItem('resTool.userPw') || '{}');
 
-    // Benutzerliste laden (für Mapping Name/E-Mail)
+    // Userliste laden für Mapping Name/E-Mail
     let list = [];
     try {
       list = (window.__users || JSON.parse(localStorage.getItem('resTool.users')||'[]')) || [];
-    } catch(_) {}
+    } catch(_){}
 
-    // Tipp: Name case-insensitive + E-Mail erlaubt
-    const uLower = u.toLowerCase();
-    const rec = Array.isArray(list)
-      ? list.find(x => (x.name && String(x.name).toLowerCase() === uLower) || (x.email && String(x.email).toLowerCase() === uLower))
-      : null;
+    const uInput = (u || '').trim();
+    const uLower = uInput.toLowerCase();
 
-    const key = rec?.name || u;           // Primär: Login-Name aus Datensatz, sonst Eingabe
-    const hexExpect = map[key] || map[u];  // Falls direkt unter Eingabe gespeichert, erlauben wir das auch
+    // passenden Datensatz über Name ODER E-Mail finden (case-insensitive)
+    const rec = Array.isArray(list) ? list.find(x =>
+      (x.name  && String(x.name).toLowerCase()  === uLower) ||
+      (x.email && String(x.email).toLowerCase() === uLower)
+    ) : null;
 
-    if (hexExpect){
-      const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(p));
-      const hex = Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+    // Kandidaten-Schlüssel im Passwort-Store
+    const keys = [];
+    if (rec?.name)  keys.push(rec.name);                  // canonical: Login-Name
+    keys.push(uInput);                                    // exakt eingegebener String
+    if (rec?.email) keys.push(String(rec.email).toLowerCase()); // E-Mail-Alias (lowercased)
 
-      if (hex === hexExpect){
-        // Rolle aus Datensatz ableiten (wenn vorhanden), sonst 'agent'
-        let role = 'agent';
-        if (rec && rec.role) role = rec.role;
+    // Hash der Eingabe berechnen
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(p));
+    const hex = Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
 
-        err.classList.remove('active');
-        signIn({ id: key, role });
-        return;
-      }
+    // Treffer?
+    const okKey = keys.find(k => map[k] && map[k] === hex);
+    if (okKey){
+      const role = rec?.role || 'agent';
+      err.classList.remove('active');
+      signIn({ id: rec?.name || uInput, role });
+      return;
     }
   } catch(_){}
+
 
 
   // 3) Fail
