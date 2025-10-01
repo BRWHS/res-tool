@@ -5281,14 +5281,6 @@ if (pid){
   alert('Passwort gesetzt.');
   return;
 }
-
-  catch(e){
-    console.error(e); alert('Konnte Passwort nicht setzen.');
-  }
-  return;
-}
-
-
   }, { passive:false });
 
   // Filter / Suche live
