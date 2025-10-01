@@ -394,7 +394,7 @@ function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, m=>({ '&':'&amp
   return rec;
 }
   async function deleteUser(id){
-  // Supabase
+  // Supabase versuchen
   try{
     const { error } = await SB.from(USERS_TABLE).delete().eq('id', id);
     if (!error){
@@ -404,16 +404,22 @@ function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, m=>({ '&':'&amp
     }
   }catch(_){}
 
-  // Fallback + Tombstone
+  // LocalStorage-List anpassen
   const list = readUsersLS().filter(u=>u.id!==id);
-  try { localStorage.setItem('resTool.usersRemoved',
-    JSON.stringify([...(JSON.parse(localStorage.getItem('resTool.usersRemoved')||'[]')), id])
-  ); } catch(_){}
   writeUsersLS(list);
-  __users = list;
+
+  // Tombstone setzen
+  let removed = [];
+  try { removed = JSON.parse(localStorage.getItem('resTool.usersRemoved')||'[]'); } catch(_){}
+  if (!removed.includes(id)) removed.push(id);
+  try { localStorage.setItem('resTool.usersRemoved', JSON.stringify(removed)); } catch(_){}
+
+  // UI
+  __users = __users.filter(u=>u.id!==id);
   renderUsers();
   return true;
 }
+
 
 
 async function toggleUserActive(id){
@@ -5149,6 +5155,14 @@ const payload = {
       const active= (document.getElementById('usrActive')?.value||'true') !== 'false';
       const info  = document.getElementById('usrInfo');
 
+        const pw    = (document.getElementById('usrPw')?.value||'').trim();
+  const chosenPw = pw || email; // wenn leer, nutzen wir die E-Mail als Passwort
+  if (!chosenPw || chosenPw.length < 4){
+    if (info) info.textContent = 'Bitte Passwort (≥4) eingeben – oder E-Mail ausfüllen (wird als Passwort verwendet).';
+    return;
+  }
+
+
      if (!name){
   if (info) info.textContent = 'Bitte Name angeben.'; 
   return;
@@ -5160,10 +5174,12 @@ if (email && !/^[^@]+@[^@]+\.[^@]+$/.test(email)){
       t.disabled = true;
       try{
         await createUser({ name, email, role, active });
+        await setUserPassword(name, chosenPw);  // Passworthash unter LOGIN-NAME speichernw
         document.getElementById('usrName').value='';
         document.getElementById('usrEmail').value='';
         document.getElementById('usrRole').value='agent';
         document.getElementById('usrActive').value='true';
+        document.getElementById('usrPw')?.value='';
         if (info) info.textContent = 'Benutzer erstellt.';
         await loadUsers();
       }catch(e){
@@ -5194,11 +5210,22 @@ if (pid){
   e.preventDefault();
   const u = (__users||[]).find(x=>x.id===pid);
   if (!u){ alert('User nicht gefunden'); return; }
-  const pw = prompt(`Neues Passwort für "${u.name}" (min. 4 Zeichen):`);
-  if (!pw || pw.length < 4) return;
+   const u = (__users||[]).find(x=>x.id===pid);
+  if (!u){ alert('User nicht gefunden'); return; }
+  const pw = prompt(`Passwort für "${u.name}" (leer = löschen, ≥4 Zeichen = setzen):`);
+  if (pw === null) return;
   try {
-    await setUserPassword(u.name, pw); // <<< Schlüssel = Login-Name!
-    alert('Passwort gesetzt.');
+    if (pw.length === 0){
+      await setUserPassword(u.name, null);   // löschen
+      alert('Passwort gelöscht.');
+    } else if (pw.length < 4){
+      alert('Mindestens 4 Zeichen.');
+      return;
+    } else {
+      await setUserPassword(u.name, pw);     // setzen unter LOGIN-NAME
+      alert('Passwort gesetzt.');
+    }
+
   } catch(e){
     console.error(e); alert('Konnte Passwort nicht setzen.');
   }
