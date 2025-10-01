@@ -69,7 +69,7 @@ overlay.style.userSelect = 'auto';
   const u = (iUser.value || '').trim();
   const p = iPw.value || '';
 
-  // Passwort-Map zuerst lesen
+ // Passwort-Map zuerst lesen
 let map = {};
 try { map = JSON.parse(localStorage.getItem('resTool.userPw') || '{}'); } catch {}
 
@@ -82,18 +82,17 @@ if (!adminOverridden && u === ADMIN_ID && p === ADMIN_PW){
   return;
 }
 
-
-   // 2) Lokale Passwörter (SHA-256) – Name (case-insensitive) ODER E-Mail
+  // 2) Lokale Passwörter (SHA-256) – Name (case-insensitive) ODER E-Mail
 try {
-  // map aus 1A weiterverwenden
+  // map aus oben weiterverwenden
   const uInput = (u || '').trim();
   const uLower = uInput.toLowerCase();
 
-  // Userliste (wenn schon da) nur als Bonus für Mapping
+  // Userliste (wenn vorhanden) nur für Mapping nutzen
   let list = [];
   try { list = (window.__users || JSON.parse(localStorage.getItem('resTool.users')||'[]')) || []; } catch {}
 
-  // aus Liste passenden Datensatz suchen (Name ODER E-Mail, case-insensitive)
+  // passenden Datensatz über Name ODER E-Mail finden (case-insensitive)
   const rec = Array.isArray(list) ? list.find(x =>
     (x.name  && String(x.name).toLowerCase()  === uLower) ||
     (x.email && String(x.email).toLowerCase() === uLower)
@@ -101,31 +100,29 @@ try {
 
   // Kandidaten-Keys im Store bauen:
   const candidates = new Set();
-  candidates.add(uInput); // exakt eingegebener String
-  // case-insensitive Treffer direkt aus der Map heraussuchen
+  candidates.add(uInput); // exakt eingegebener String (falls PW unter der sichtbaren Eingabe abgelegt wurde)
+
+  // case-insensitive Treffer direkt aus der Map suchen (falls Key-Kleinschreibung differt)
   const mapKeyCi = Object.keys(map).find(k => String(k).toLowerCase() === uLower);
   if (mapKeyCi) candidates.add(mapKeyCi);
-  // Liste (falls vorhanden)
+
+  // aus Liste (falls vorhanden)
   if (rec?.name)  candidates.add(rec.name);
   if (rec?.email) candidates.add(String(rec.email).toLowerCase());
 
-  // Passwort hashen
+  // Hash der Eingabe berechnen
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(p));
   const hex = Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
 
-  // Match?
+  // Treffer?
   const okKey = [...candidates].find(k => map[k] && map[k] === hex);
   if (okKey){
-    const id = rec?.name || okKey;   // als signed-in ID immer den Login-Namen nehmen, wenn möglich
+    const role = rec?.role || (uInput === 'Admin' ? 'admin' : 'agent');
     err.classList.remove('active');
-    signIn({ id });                  // Rolle setzt signIn() intern (Admin → admin), passt.
+    signIn({ id: rec?.name || uInput, role });
     return;
   }
-} catch {}
-
-
-
-
+} catch(_){}
 
   // 3) Fail
   err.classList.add('active');
