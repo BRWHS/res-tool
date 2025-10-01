@@ -118,9 +118,9 @@ try {
 const okKey = [...candidates].find(k => map[k] && map[k] === hex);
 if (okKey){
   const id = rec?.name || okKey;
-  const role = (rec?.role) || (String(id).toLowerCase() === 'admin' ? 'admin' : 'agent');
-  err.classList.remove('active');
-  signIn({ id, role });
+  const role = String((rec?.role) || (String(id).toLowerCase() === 'admin' ? 'admin' : 'agent')).toLowerCase();
+err.classList.remove('active');
+signIn({ id, role });
   return;
 }
 
@@ -259,7 +259,7 @@ if (typeof window.setAppBlurred !== 'function') {
      // --- BEGIN: Res-Tool Bridge (Rollen + Events + Logging) ---
 try {
   // Rolle ableiten oder defaulten (falls im auth-Overlay keine Rolle gepflegt wird)
-  const role = user.role || (user.id === 'Admin' ? 'admin' : 'agent');
+  const role = String(user.role || (user.id === 'Admin' ? 'admin' : 'agent')).toLowerCase();
 
   // Für app.js: globalen User setzen + Fallback-Speicher
   window.__AUTH_USER__ = { username: user.id, role };
