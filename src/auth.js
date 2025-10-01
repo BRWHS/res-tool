@@ -69,51 +69,60 @@ overlay.style.userSelect = 'auto';
   const u = (iUser.value || '').trim();
   const p = iPw.value || '';
 
-  // 1) Master-Admin
-  if (u === ADMIN_ID && p === ADMIN_PW){
-    err.classList.remove('active');
-    signIn({ id: u, role: 'admin' });
-    return;
-  }
+  // Passwort-Map zuerst lesen
+let map = {};
+try { map = JSON.parse(localStorage.getItem('resTool.userPw') || '{}'); } catch {}
 
-     // 2) Lokale Passwörter (SHA-256) – Name (case-insensitive) ODER E-Mail
+// WICHTIG: Wenn für 'Admin' ein eigenes Passwort gesetzt ist,
+// dann die 6764-Backdoor deaktivieren:
+const adminOverridden = !!map['Admin'];
+if (!adminOverridden && u === ADMIN_ID && p === ADMIN_PW){
+  err.classList.remove('active');
+  signIn({ id: u, role: 'admin' });
+  return;
+}
+
+
+   // 2) Lokale Passwörter (SHA-256) – Name (case-insensitive) ODER E-Mail
 try {
-  const map = JSON.parse(localStorage.getItem('resTool.userPw') || '{}');
-
-  // Userliste laden für Mapping Name/E-Mail
-  let list = [];
-  try {
-    list = (window.__users || JSON.parse(localStorage.getItem('resTool.users')||'[]')) || [];
-  } catch(_){}
-
+  // map aus 1A weiterverwenden
   const uInput = (u || '').trim();
   const uLower = uInput.toLowerCase();
 
-  // passenden Datensatz über Name ODER E-Mail finden (case-insensitive)
+  // Userliste (wenn schon da) nur als Bonus für Mapping
+  let list = [];
+  try { list = (window.__users || JSON.parse(localStorage.getItem('resTool.users')||'[]')) || []; } catch {}
+
+  // aus Liste passenden Datensatz suchen (Name ODER E-Mail, case-insensitive)
   const rec = Array.isArray(list) ? list.find(x =>
     (x.name  && String(x.name).toLowerCase()  === uLower) ||
     (x.email && String(x.email).toLowerCase() === uLower)
   ) : null;
 
-  // Kandidaten-Schlüssel im Passwort-Store
-  const keys = [];
-  if (rec?.name)  keys.push(rec.name);                       // Login-Name
-  keys.push(uInput);                                         // genau eingegebener String
-  if (rec?.email) keys.push(String(rec.email).toLowerCase()); // E-Mail-Alias
+  // Kandidaten-Keys im Store bauen:
+  const candidates = new Set();
+  candidates.add(uInput); // exakt eingegebener String
+  // case-insensitive Treffer direkt aus der Map heraussuchen
+  const mapKeyCi = Object.keys(map).find(k => String(k).toLowerCase() === uLower);
+  if (mapKeyCi) candidates.add(mapKeyCi);
+  // Liste (falls vorhanden)
+  if (rec?.name)  candidates.add(rec.name);
+  if (rec?.email) candidates.add(String(rec.email).toLowerCase());
 
-  // Hash der Eingabe
+  // Passwort hashen
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(p));
   const hex = Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
 
-  // Treffer?
-  const okKey = keys.find(k => map[k] && map[k] === hex);
+  // Match?
+  const okKey = [...candidates].find(k => map[k] && map[k] === hex);
   if (okKey){
-    const role = rec?.role || 'agent';
+    const id = rec?.name || okKey;   // als signed-in ID immer den Login-Namen nehmen, wenn möglich
     err.classList.remove('active');
-    signIn({ id: rec?.name || uInput, role });
+    signIn({ id });                  // Rolle setzt signIn() intern (Admin → admin), passt.
     return;
   }
-} catch(_){}
+} catch {}
+
 
 
 
