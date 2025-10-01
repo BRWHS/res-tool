@@ -3999,12 +3999,32 @@ await loadUsers();
       }catch(_){}
       return;
     }
-    if (btn.dataset.usrPass){
-      const pw = prompt('Neues Passwort (min. 4 Zeichen):');
-      if (!pw || pw.length<4) return;
-      try{ await setUserPassword(btn.dataset.usrPass, pw); alert('Passwort gesetzt.'); }catch(e){ alert('Konnte Passwort nicht setzen.'); }
-      return;
+ if (btn.dataset.usrPass){
+  const id = btn.dataset.usrPass;
+  const u  = (__users||[]).find(x=>x.id===id);
+  if (!u){ alert('User nicht gefunden'); return; }
+
+  const pw = prompt(`Neues Passwort für "${u.name}" (min. 4 Zeichen):`);
+  if (!pw || pw.length<4) return;
+
+  try{
+    // Hash unter Login-Name …
+    await setUserPassword(u.name, pw);
+    // … und unter E-Mail (lowercase) speichern
+    if (u.email) await setUserPassword(String(u.email).toLowerCase(), pw);
+    // Admin-Spezialfall: beide Alias-Keys schreiben
+    if (u.name && u.name.toLowerCase()==='admin'){
+      await setUserPassword('Admin', pw);
+      await setUserPassword('admin', pw);
     }
+    alert('Passwort gesetzt.');
+  }catch(e){
+    alert('Konnte Passwort nicht setzen.');
+  }
+  return;
+}
+
+
     if (btn.dataset.usrPassDel){
       if (!confirm('Passwort wirklich löschen?')) return;
       try{ await setUserPassword(btn.dataset.usrPassDel, null); alert('Passwort gelöscht.'); }catch(e){ alert('Konnte Passwort nicht löschen.'); }
@@ -5279,10 +5299,11 @@ if (pid){
     await setUserPassword(String(u.email).toLowerCase(), val);
   }
 
-  // Spezialfall: Admin – schreibe sicher unter Key 'Admin', damit die 6764-Backdoor deaktiviert wird
-  if (u.name === 'Admin') {
-    await setUserPassword('Admin', val);
-  }
+  // Admin-Spezialfall: beide Keys (Groß/klein) schreiben
+if (u.name && u.name.toLowerCase() === 'admin') {
+  await setUserPassword('Admin', val);
+  await setUserPassword('admin', val);
+}
 
   alert('Passwort gesetzt.');
   return;
