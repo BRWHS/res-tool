@@ -365,7 +365,6 @@ function renderUsers(){
      <td class="row-actions">
   <button class="btn sm ghost" data-usr-toggle="${u.id}">${u.active?'Deaktivieren':'Aktivieren'}</button>
   <button class="btn sm" data-usr-pass="${u.id}">Passwort setzen</button>
-  <button class="btn sm ghost" data-usr-pass-del="${u.id}">Passwort löschen</button>
   <button class="btn sm danger" data-usr-del="${u.id}">Löschen</button>
 </td>
     </tr>
@@ -5202,22 +5201,6 @@ if (pid){
     alert('Passwort gesetzt.');
   } catch(e){
     console.error(e); alert('Konnte Passwort nicht setzen.');
-  }
-  return;
-}
-
-    // Benutzerliste: Passwort LÖSCHEN
-const pdid = t.getAttribute && t.getAttribute('data-usr-pass-del');
-if (pdid){
-  e.preventDefault();
-  const u = (__users||[]).find(x=>x.id===pdid);
-  if (!u){ alert('User nicht gefunden'); return; }
-  if (!confirm(`Passwort von "${u.name}" wirklich löschen?`)) return;
-  try {
-    await setUserPassword(u.name, null); // <<< Schlüssel = Login-Name!
-    alert('Passwort gelöscht.');
-  } catch(e){
-    console.error(e); alert('Konnte Passwort nicht löschen.');
   }
   return;
 }
