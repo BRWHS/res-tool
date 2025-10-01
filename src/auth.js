@@ -76,44 +76,45 @@ overlay.style.userSelect = 'auto';
     return;
   }
 
-      // 2) Lokale Passwörter (SHA-256) – Name (case-insensitive) ODER E-Mail
+     // 2) Lokale Passwörter (SHA-256) – Name (case-insensitive) ODER E-Mail
+try {
+  const map = JSON.parse(localStorage.getItem('resTool.userPw') || '{}');
+
+  // Userliste laden für Mapping Name/E-Mail
+  let list = [];
   try {
-    const map = JSON.parse(localStorage.getItem('resTool.userPw') || '{}');
-
-    // Userliste laden für Mapping Name/E-Mail
-    let list = [];
-    try {
-      list = (window.__users || JSON.parse(localStorage.getItem('resTool.users')||'[]')) || [];
-    } catch(_){}
-
-    const uInput = (u || '').trim();
-    const uLower = uInput.toLowerCase();
-
-    // passenden Datensatz über Name ODER E-Mail finden (case-insensitive)
-    const rec = Array.isArray(list) ? list.find(x =>
-      (x.name  && String(x.name).toLowerCase()  === uLower) ||
-      (x.email && String(x.email).toLowerCase() === uLower)
-    ) : null;
-
-    // Kandidaten-Schlüssel im Passwort-Store
-    const keys = [];
-    if (rec?.name)  keys.push(rec.name);                  // canonical: Login-Name
-    keys.push(uInput);                                    // exakt eingegebener String
-    if (rec?.email) keys.push(String(rec.email).toLowerCase()); // E-Mail-Alias (lowercased)
-
-    // Hash der Eingabe berechnen
-    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(p));
-    const hex = Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
-
-    // Treffer?
-    const okKey = keys.find(k => map[k] && map[k] === hex);
-    if (okKey){
-      const role = rec?.role || 'agent';
-      err.classList.remove('active');
-      signIn({ id: rec?.name || uInput, role });
-      return;
-    }
+    list = (window.__users || JSON.parse(localStorage.getItem('resTool.users')||'[]')) || [];
   } catch(_){}
+
+  const uInput = (u || '').trim();
+  const uLower = uInput.toLowerCase();
+
+  // passenden Datensatz über Name ODER E-Mail finden (case-insensitive)
+  const rec = Array.isArray(list) ? list.find(x =>
+    (x.name  && String(x.name).toLowerCase()  === uLower) ||
+    (x.email && String(x.email).toLowerCase() === uLower)
+  ) : null;
+
+  // Kandidaten-Schlüssel im Passwort-Store
+  const keys = [];
+  if (rec?.name)  keys.push(rec.name);                       // Login-Name
+  keys.push(uInput);                                         // genau eingegebener String
+  if (rec?.email) keys.push(String(rec.email).toLowerCase()); // E-Mail-Alias
+
+  // Hash der Eingabe
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(p));
+  const hex = Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+
+  // Treffer?
+  const okKey = keys.find(k => map[k] && map[k] === hex);
+  if (okKey){
+    const role = rec?.role || 'agent';
+    err.classList.remove('active');
+    signIn({ id: rec?.name || uInput, role });
+    return;
+  }
+} catch(_){}
+
 
 
 
