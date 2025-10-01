@@ -5210,9 +5210,7 @@ if (pid){
   e.preventDefault();
   const u = (__users||[]).find(x=>x.id===pid);
   if (!u){ alert('User nicht gefunden'); return; }
-   const u = (__users||[]).find(x=>x.id===pid);
-  if (!u){ alert('User nicht gefunden'); return; }
-  const pw = prompt(`Passwort für "${u.name}" (leer = löschen, ≥4 Zeichen = setzen):`);
+     const pw = prompt(`Passwort für "${u.name}" (leer = löschen, ≥4 Zeichen = setzen):`);
   if (pw === null) return;
   try {
     if (pw.length === 0){
