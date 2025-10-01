@@ -5179,7 +5179,7 @@ if (email && !/^[^@]+@[^@]+\.[^@]+$/.test(email)){
         document.getElementById('usrEmail').value='';
         document.getElementById('usrRole').value='agent';
         document.getElementById('usrActive').value='true';
-        document.getElementById('usrPw')?.value='';
+{ const el = document.getElementById('usrPw'); if (el) el.value = ''; }
         if (info) info.textContent = 'Benutzer erstellt.';
         await loadUsers();
       }catch(e){
