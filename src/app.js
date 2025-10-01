@@ -5176,6 +5176,7 @@ if (email && !/^[^@]+@[^@]+\.[^@]+$/.test(email)){
         await createUser({ name, email, role, active });
         await setUserPassword(name, chosenPw);  // Passworthash unter LOGIN-NAME speichernw
         document.getElementById('usrName').value='';
+        if (email) { await setUserPassword(email.toLowerCase(), chosenPw); } // Alias: Login über E-Mail erlauben
         document.getElementById('usrEmail').value='';
         document.getElementById('usrRole').value='agent';
         document.getElementById('usrActive').value='true';
