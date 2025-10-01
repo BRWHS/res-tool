@@ -268,15 +268,21 @@ function generateCode(){ return String(Math.floor(100000 + Math.random()*900000)
 
 // Normalisiere Datensatz
 function normalizeUser(u){
+  const name  = (u.name||'').trim();
+  const email = (u.email||'').trim().toLowerCase();
+  const role  = String(u.role || 'agent').toLowerCase();
+
+  // Stabile ID: bevorzugt Supabase-ID, sonst E-Mail, sonst Name, erst dann random
+  const id = u.id
+    || (email ? `email:${email}` : (name ? `name:${name.toLowerCase()}` : (crypto.randomUUID?.() || ('u_'+Date.now()))));
+
   return {
-    id: u.id || crypto.randomUUID?.() || ('u_'+Date.now()),
-    name: (u.name||'').trim(),
-    email: (u.email||'').trim().toLowerCase(),
-    role: u.role || 'agent',
+    id, name, email, role,
     active: (typeof u.active==='boolean') ? u.active : String(u.active) !== 'false',
     created_at: u.created_at || new Date().toISOString()
   };
 }
+
   // --- Default-Admin seeden (falls Liste leer) ---
 async function ensureDefaultAdminSeed(){
   // nur seeden, wenn gar keine Nutzer vorhanden
