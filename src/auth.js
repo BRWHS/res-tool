@@ -65,16 +65,44 @@ overlay.style.userSelect = 'auto';
       iUser.focus();
     });
 
-    function tryLogin(){
-      const u = (iUser.value || '').trim();
-      const p = iPw.value || '';
-      if(u === ADMIN_ID && p === ADMIN_PW){
+   async function tryLogin(){
+  const u = (iUser.value || '').trim();
+  const p = iPw.value || '';
+
+  // 1) Master-Admin
+  if (u === ADMIN_ID && p === ADMIN_PW){
+    err.classList.remove('active');
+    signIn({ id: u, role: 'admin' });
+    return;
+  }
+
+  // 2) Lokale Passwörter (SHA-256) – Key = LOGIN-NAME
+  try {
+    const map = JSON.parse(localStorage.getItem('resTool.userPw') || '{}');
+    const hexExpect = map[u];
+    if (hexExpect){
+      const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(p));
+      const hex = Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+
+      if (hex === hexExpect){
+        // Rolle aus Userliste ableiten (falls vorhanden), sonst 'agent'
+        let role = 'agent';
+        try {
+          const list = (window.__users || JSON.parse(localStorage.getItem('resTool.users')||'[]'));
+          const rec = Array.isArray(list) ? list.find(x=>x.name===u) : null;
+          if (rec && rec.role) role = rec.role;
+        } catch(_){}
         err.classList.remove('active');
-        signIn({ id: u });
-      } else {
-        err.classList.add('active');
+        signIn({ id: u, role });
+        return;
       }
     }
+  } catch(_){}
+
+  // 3) Fail
+  err.classList.add('active');
+}
+
 
     btnLogin.addEventListener('click', tryLogin);
     iPw.addEventListener('keydown', (e)=>{ if(e.key === 'Enter') tryLogin(); });
