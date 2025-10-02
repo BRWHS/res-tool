@@ -216,12 +216,12 @@ function enforceRoleGates(){
   const isViewer = (u.role||'viewer') === 'viewer';
   document.querySelectorAll('button, input, select, textarea').forEach(el=>{
     if (isViewer){
-      // Ausnahmen: reine Navigation/Modals
-      const okIds = new Set(['btnAvail','btnReporting','btnRepSchedule']);
-      const isNav = okIds.has(el.id) || el.closest('#modalReporting') || el.closest('#modalRepScheduler');
-      if (!isNav) {
-        el.disabled = el.tagName==='BUTTON' || el.tagName==='INPUT' || el.tagName==='SELECT' || el.tagName==='TEXTAREA';
-      }
+     // Ausnahmen: reine Navigation/Modals + Scheduler
+const okIds = new Set(['btnAvail','btnReporting','btnRepSchedule','btnRepSave','btnRepTest']);
+const isNav = okIds.has(el.id) || el.closest('#modalReporting') || el.closest('#modalRepScheduler');
+if (!isNav) {
+  el.disabled = (el.tagName==='BUTTON' || el.tagName==='INPUT' || el.tagName==='SELECT' || el.tagName==='TEXTAREA');
+}
     }
   });
 }
