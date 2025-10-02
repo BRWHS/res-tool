@@ -2820,9 +2820,10 @@ document.getElementById('btnRepTest')?.addEventListener('click', async () => {
     // 1) Supabase SDK Invoke
     const { data, error } = await SB.functions.invoke('bright-task', {
       body: payload,
-      headers: {
-        Authorization: `Bearer ${SB_ANON_KEY}`,
-        'Content-Type': 'application/json'
+     headers: {
+      Authorization: `Bearer ${SB_ANON_KEY}`,
+      apikey: SB_ANON_KEY,
+      'Content-Type': 'application/json'
       }
     });
 
