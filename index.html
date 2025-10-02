@@ -592,6 +592,7 @@
         <button class="btn ghost" id="repCsv">Export CSV</button>
         <button class="btn ghost" id="repPdf">Export PDF</button>
       </div>
+      <button class="btn primary" id="btnRepSchedule">Automatischer Versand</button>
     </div>
 
     <!-- kompakte, gleich hohe Charts -->
@@ -622,6 +623,85 @@
     </div>
   </div>
 </section>
+
+  <!-- Modal: Report-Scheduler -->
+<section class="modal" id="modalRepScheduler" role="dialog" aria-labelledby="repSchedTitle" aria-modal="true" aria-hidden="true">
+  <header>
+    <h3 id="repSchedTitle" class="mono"><span class="rep-logo"></span> Automatischer Report-Versand</h3>
+    <button class="btn" data-close>Schließen</button>
+  </header>
+
+  <div class="body">
+    <div class="grid2">
+      <label>Aktiv
+        <select id="rsActive" class="input theme-select">
+          <option value="true">ja</option>
+          <option value="false">nein</option>
+        </select>
+      </label>
+
+      <label>Rhythmus
+        <select id="rsFreq" class="input theme-select">
+          <option value="daily">täglich</option>
+          <option value="weekly">wöchentlich</option>
+          <option value="monthly">monatlich</option>
+        </select>
+      </label>
+
+      <label>Uhrzeit (lokal)
+        <input id="rsTime" type="time" class="input" value="08:00" />
+      </label>
+
+      <label>Zeitraum
+        <select id="rsRange" class="input theme-select" title="Betrachteter Zeitraum im Report">
+          <option value="yesterday">Gestern</option>
+          <option value="today" selected>Heute</option>
+          <option value="next7">Nächste 7 Tage</option>
+          <option value="last7">Letzte 7 Tage</option>
+          <option value="custom">Benutzerdefiniert</option>
+        </select>
+      </label>
+
+      <label>Von (bei benutzerdefiniert)
+        <input id="rsFrom" type="date" class="input" />
+      </label>
+      <label>Bis (bei benutzerdefiniert)
+        <input id="rsTo" type="date" class="input" />
+      </label>
+
+      <label style="grid-column:1 / -1">Hotels (Mehrfachauswahl)
+        <select id="rsHotels" class="input theme-select" multiple size="6" style="width:100%"></select>
+      </label>
+
+      <label>Formate
+        <div class="row" style="gap:12px;">
+          <label><input type="checkbox" id="rsPdf" checked /> PDF</label>
+          <label><input type="checkbox" id="rsCsv" checked /> CSV</label>
+        </div>
+      </label>
+
+      <label style="grid-column:1 / -1">Empfänger (Kommagetrennt)
+        <textarea id="rsRecipients" class="input" rows="2" placeholder="anna@…, ben@…, team@…"></textarea>
+      </label>
+
+      <label style="grid-column:1 / -1">Betreff-Template
+        <input id="rsSubj" class="input" placeholder="Report {{range}} – {{date}} – {{hotels}}" />
+      </label>
+
+      <label style="grid-column:1 / -1">Body-Template
+        <textarea id="rsBody" class="input" rows="4" placeholder="Guten Morgen,\n anbei der automatisierte Report für {{range}} ({{date}}) – Hotels: {{hotels}}.\nViele Grüße\nReservierung"></textarea>
+      </label>
+    </div>
+
+    <div class="right" style="display:flex; gap:8px; margin-top:8px;">
+      <button class="btn" id="btnRepTest">Test senden</button>
+      <button class="btn primary" id="btnRepSave">Speichern</button>
+    </div>
+
+    <p class="muted tiny" id="rsInfo" style="margin-top:8px"></p>
+  </div>
+</section>
+
 
   <!-- Einstellungen -->
   <section class="modal" id="modalSettings" role="dialog" aria-labelledby="setTitle" aria-modal="true">
