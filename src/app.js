@@ -2788,7 +2788,7 @@ document.getElementById('btnRepSave')?.addEventListener('click', async ()=>{
   }
 });
 
- // Test senden (ruft die Edge Function sofort mit force=true auf)
+// Test senden (ruft die Edge Function sofort mit force=true auf)
 document.getElementById('btnRepTest')?.addEventListener('click', async () => {
   const info = document.getElementById('rsInfo');
   info.textContent = 'Sende Test…';
@@ -2796,6 +2796,7 @@ document.getElementById('btnRepTest')?.addEventListener('click', async () => {
   // Payload anreichern (hilft beim Debuggen/Backend)
   const recipients = (document.getElementById('rsRecipients').value || '')
     .split(',').map(s=>s.trim()).filter(Boolean);
+
   const payload = {
     force: true,
     range:  document.getElementById('rsRange').value,
@@ -2816,47 +2817,45 @@ document.getElementById('btnRepTest')?.addEventListener('click', async () => {
   };
 
   try {
+    // 1) Supabase SDK Invoke
     const { data, error } = await SB.functions.invoke('bright-task', {
-  body: payload,
-  headers: {
-    Authorization: `Bearer ${SB_ANON_KEY}`,
-    'Content-Type': 'application/json'
-  }
-});
-   
+      body: payload,
+      headers: {
+        Authorization: `Bearer ${SB_ANON_KEY}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
     if (error) {
-      // detailiertere Anzeige
       info.textContent = 'Fehler: ' + (error.message || JSON.stringify(error));
       console.warn('bright-task error', error);
       return;
     }
+
     const msg = typeof data === 'string' ? data : (data?.message || JSON.stringify(data));
     info.textContent = 'OK: ' + (msg || 'Test ausgelöst.');
   } catch (e) {
-  // 1) Nutzerfreundliche Meldung
-  info.textContent = 'Fehler: ' + (e.message || String(e));
+    // 2) SDK-Fehler → Diagnose-Fallback: Direktaufruf der Function-URL
+    info.textContent = 'Fehler: ' + (e.message || String(e));
+    console.error('bright-task invoke failed', e);
 
-  // 2) Zusätzliche Netz-Diagnose: Direktaufruf der Function-URL
-  try {
-    // ACHTUNG: Muss zum selben Supabase-Projekt wie SB_URL gehören
-    const resp = await fetch(`${SB_URL}/functions/v1/bright-task`, {
-      method: 'POST',
-headers: {
-  Authorization: `Bearer ${SB_ANON_KEY}`,
-  'Content-Type': 'application/json'
-},
-body: JSON.stringify({ ping: true })
-        
-    });
-    const text = await resp.text();
-    console.warn('Direct function call status', resp.status, 'body:', text);
-    info.textContent += ` | Direktaufruf: HTTP ${resp.status} – ${text?.slice(0,140) || ''}`;
-  } catch (e2) {
-    // Wenn sogar der Direktaufruf geblockt wird, ist es meist CORS/Projekt-Mismatch
-    console.warn('Direct function call failed:', e2);
-    info.textContent += ' | Direktaufruf fehlgeschlagen (CORS/Netzwerk).';
+    try {
+      const resp = await fetch(`${SB_URL}/functions/v1/bright-task`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${SB_ANON_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ ping: true })
+      });
+      const text = await resp.text();
+      console.warn('Direct function call status', resp.status, 'body:', text);
+      info.textContent += ` | Direktaufruf: HTTP ${resp.status} – ${text?.slice(0,140) || ''}`;
+    } catch (e2) {
+      console.warn('Direct call failed:', e2);
+      info.textContent += ' | Direktaufruf fehlgeschlagen (CORS/Netzwerk).';
+    }
   }
-}
 });
 
 // Beim Range-Wechsel From/To aktivieren/deaktivieren
