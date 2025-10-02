@@ -2816,6 +2816,13 @@ document.getElementById('btnRepTest')?.addEventListener('click', async () => {
   };
 
   try {
+    const { data, error } = await SB.functions.invoke('bright-task', {
+  body: payload,
+  headers: {
+    Authorization: `Bearer ${SB_ANON_KEY}`,
+    'Content-Type': 'application/json'
+  }
+});
    
     if (error) {
       // detailiertere Anzeige
@@ -2834,13 +2841,12 @@ document.getElementById('btnRepTest')?.addEventListener('click', async () => {
     // ACHTUNG: Muss zum selben Supabase-Projekt wie SB_URL gehören
     const resp = await fetch(`${SB_URL}/functions/v1/bright-task`, {
       method: 'POST',
-      headers: {
 headers: {
   Authorization: `Bearer ${SB_ANON_KEY}`,
   'Content-Type': 'application/json'
-}
-
-      body: JSON.stringify({ ping: true })
+},
+body: JSON.stringify({ ping: true })
+        
     });
     const text = await resp.text();
     console.warn('Direct function call status', resp.status, 'body:', text);
