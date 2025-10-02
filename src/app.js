@@ -2645,6 +2645,136 @@ const byHotel = new Map();
 // Buttons
 q('#repRun')?.addEventListener('click', runReport);
 
+  // === Report-Scheduler (Automatischer Versand) ===
+const REPORT_JOBS_TABLE = 'report_jobs'; // Supabase (optional); Fallback: LocalStorage
+const LS_REPORT_JOB_KEY = 'resTool.reportJob.v1';
+
+// Hotels in Multiselect füllen, wenn Modal geöffnet wird
+function fillRsHotels(){
+  const sel = document.getElementById('rsHotels');
+  if (!sel) return;
+  sel.innerHTML = '';
+  (window.HOTELS || []).forEach(h=>{
+    const opt = document.createElement('option');
+    opt.value = h.code;
+    opt.textContent = `${h.group} - ${h.name.replace(/^.*? /,'')}`;
+    sel.appendChild(opt);
+  });
+}
+
+// Load/Save – versucht Supabase, sonst LocalStorage
+async function loadReportJob(){
+  // Try Supabase
+  try{
+    const { data, error } = await SB.from(REPORT_JOBS_TABLE).select('*').limit(1);
+    if (!error && data && data[0]) return data[0];
+  }catch(_){}
+  // Fallback LS
+  try{ return JSON.parse(localStorage.getItem(LS_REPORT_JOB_KEY) || 'null') }catch{ return null; }
+}
+
+async function saveReportJob(job){
+  // Try Supabase: upsert single row (id = 'singleton')
+  try{
+    const withId = { id: 'singleton', ...job, updated_at: new Date().toISOString() };
+    const { error } = await SB.from(REPORT_JOBS_TABLE).upsert(withId).eq('id','singleton');
+    if (!error) return true;
+  }catch(_){}
+  // Fallback LS
+  try{ localStorage.setItem(LS_REPORT_JOB_KEY, JSON.stringify(job)); return true; }catch(_){ return false; }
+}
+
+// Öffnen
+document.getElementById('btnRepSchedule')?.addEventListener('click', async ()=>{
+  fillRsHotels();
+  const pref = await loadReportJob();
+
+  // defaults
+  document.getElementById('rsActive').value = String(pref?.active ?? true);
+  document.getElementById('rsFreq').value   = pref?.frequency || 'daily';
+  document.getElementById('rsTime').value   = pref?.time || '08:00';
+  document.getElementById('rsRange').value  = pref?.range || 'today';
+  document.getElementById('rsFrom').value   = pref?.from || '';
+  document.getElementById('rsTo').value     = pref?.to || '';
+  document.getElementById('rsPdf').checked  = pref?.formats?.pdf !== false;
+  document.getElementById('rsCsv').checked  = pref?.formats?.csv !== false;
+
+  document.getElementById('rsRecipients').value = (pref?.recipients || []).join(', ');
+  document.getElementById('rsSubj').value       = pref?.subject || 'Report {{range}} – {{date}} – {{hotels}}';
+  document.getElementById('rsBody').value       = pref?.body || 'Guten Morgen,\n anbei der automatisierte Report für {{range}} ({{date}}) – Hotels: {{hotels}}.\nViele Grüße\nReservierung';
+
+  // Hotels vorselektieren
+  const sel = document.getElementById('rsHotels');
+  const wanted = new Set(pref?.hotels || []);
+  Array.from(sel.options).forEach(o => { o.selected = wanted.has(o.value); });
+
+  openModal('modalRepScheduler');
+});
+
+// Speichern
+document.getElementById('btnRepSave')?.addEventListener('click', async ()=>{
+  const job = {
+    active: document.getElementById('rsActive').value === 'true',
+    frequency: document.getElementById('rsFreq').value,
+    time: document.getElementById('rsTime').value,
+    range: document.getElementById('rsRange').value,
+    from: document.getElementById('rsFrom').value || null,
+    to:   document.getElementById('rsTo').value   || null,
+    hotels: Array.from(document.getElementById('rsHotels').selectedOptions || []).map(o=>o.value),
+    formats: {
+      pdf: document.getElementById('rsPdf').checked,
+      csv: document.getElementById('rsCsv').checked
+    },
+    recipients: (document.getElementById('rsRecipients').value || '')
+      .split(',').map(s=>s.trim()).filter(Boolean),
+    subject: document.getElementById('rsSubj').value || '',
+    body:    document.getElementById('rsBody').value || '',
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'Europe/Berlin'
+  };
+
+  const ok = await saveReportJob(job);
+  const info = document.getElementById('rsInfo');
+  info.textContent = ok ? 'Gespeichert. (Scheduler-Konfig ist aktiv.)' : 'Konnte nicht speichern.';
+  if (ok) {
+    try { await logActivity('report','schedule_save', job); } catch(_){}
+  }
+});
+
+// Test senden – via mailto (ohne Attachments; echte Anhänge folgen mit Edge Function)
+document.getElementById('btnRepTest')?.addEventListener('click', async ()=>{
+  const hotels = Array.from(document.getElementById('rsHotels').selectedOptions || []).map(o=>o.textContent).join(', ');
+  const range  = document.getElementById('rsRange').value;
+  const dateS  = new Date().toLocaleDateString('de-DE');
+  const subjT  = document.getElementById('rsSubj').value || '';
+  const bodyT  = document.getElementById('rsBody').value || '';
+  const toList = (document.getElementById('rsRecipients').value || '').split(',').map(s=>s.trim()).filter(Boolean);
+
+  const subj = subjT.replace('{{range}}', range).replace('{{date}}', dateS).replace('{{hotels}}', hotels);
+  const body = bodyT.replace('{{range}}', range).replace('{{date}}', dateS).replace('{{hotels}}', hotels)
+    + '\n\n(Hinweis: Testversand ohne Attachments. PDF/CSV-Export bitte über die Buttons im Reporting; Auto-Anhänge folgen mit Backend-Cron.)';
+
+  const mailto = `mailto:${encodeURIComponent(toList.join(','))}?subject=${encodeURIComponent(subj)}&body=${encodeURIComponent(body)}`;
+  window.location.href = mailto;
+
+  try { await logActivity('report','schedule_test', { to: toList, range, hotels }); } catch(_){}
+});
+
+// Beim Range-Wechsel From/To aktivieren/deaktivieren
+(function bindRangeUi(){
+  const rangeSel = document.getElementById('rsRange');
+  const fromEl   = document.getElementById('rsFrom');
+  const toEl     = document.getElementById('rsTo');
+  if (!rangeSel) return;
+  function toggle(){
+    const custom = rangeSel.value === 'custom';
+    fromEl.disabled = toEl.disabled = !custom;
+    if (!custom){ fromEl.value=''; toEl.value=''; }
+  }
+  rangeSel.addEventListener('change', toggle);
+  toggle();
+})();
+
+
 q('#repCsv')?.addEventListener('click', ()=>{
   const tbody = Array.from(document.querySelectorAll('#repBody tr'));
   const rows = [['Hotel','Buchungen','Umsatz','ADR','Belegungsrate']];
