@@ -2726,6 +2726,7 @@ async function saveReportJob(job){
 // Öffnen
 document.getElementById('btnRepSchedule')?.addEventListener('click', async ()=>{
   fillRsHotels();
+  makeMultiSelectFriendly(document.getElementById('rsHotels'));
   const pref = await loadReportJob();
 
   // defaults
@@ -2818,7 +2819,10 @@ document.getElementById('btnRepTest')?.addEventListener('click', async () => {
     const { data, error } = await SB.functions.invoke('bright-task', {
       body: payload,
       // WICHTIG: explizit den Bearer mit dem ANON-KEY mitsenden
-      headers: { Authorization: `Bearer ${SB_ANON_KEY}` }
+      headers: {
+      Authorization: `Bearer ${SB_ANON_KEY}`,
+    ' Content-Type': 'application/json'
+}
     });
 
     if (error) {
