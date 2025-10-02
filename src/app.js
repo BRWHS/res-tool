@@ -2816,15 +2816,7 @@ document.getElementById('btnRepTest')?.addEventListener('click', async () => {
   };
 
   try {
-    const { data, error } = await SB.functions.invoke('bright-task', {
-      body: payload,
-      // WICHTIG: explizit den Bearer mit dem ANON-KEY mitsenden
-      headers: {
-      Authorization: `Bearer ${SB_ANON_KEY}`,
-    ' Content-Type': 'application/json'
-}
-    });
-
+   
     if (error) {
       // detailiertere Anzeige
       info.textContent = 'Fehler: ' + (error.message || JSON.stringify(error));
@@ -2843,9 +2835,11 @@ document.getElementById('btnRepTest')?.addEventListener('click', async () => {
     const resp = await fetch(`${SB_URL}/functions/v1/bright-task`, {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${SB_ANON_KEY}`,
-        'Content-Type': 'application/json'
-      },
+        headers: {
+  Authorization: `Bearer ${SB_ANON_KEY}`,
+  'Content-Type': 'application/json'
+}
+
       body: JSON.stringify({ ping: true })
     });
     const text = await resp.text();
