@@ -2835,7 +2835,7 @@ document.getElementById('btnRepTest')?.addEventListener('click', async () => {
     const resp = await fetch(`${SB_URL}/functions/v1/bright-task`, {
       method: 'POST',
       headers: {
-        headers: {
+headers: {
   Authorization: `Bearer ${SB_ANON_KEY}`,
   'Content-Type': 'application/json'
 }
