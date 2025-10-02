@@ -2834,9 +2834,29 @@ document.getElementById('btnRepTest')?.addEventListener('click', async () => {
     const msg = typeof data === 'string' ? data : (data?.message || JSON.stringify(data));
     info.textContent = 'OK: ' + (msg || 'Test ausgelöst.');
   } catch (e) {
-    info.textContent = 'Fehler: ' + (e.message || String(e));
-    console.error('bright-task invoke failed', e);
+  // 1) Nutzerfreundliche Meldung
+  info.textContent = 'Fehler: ' + (e.message || String(e));
+
+  // 2) Zusätzliche Netz-Diagnose: Direktaufruf der Function-URL
+  try {
+    // ACHTUNG: Muss zum selben Supabase-Projekt wie SB_URL gehören
+    const resp = await fetch(`${SB_URL}/functions/v1/bright-task`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${SB_ANON_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ ping: true })
+    });
+    const text = await resp.text();
+    console.warn('Direct function call status', resp.status, 'body:', text);
+    info.textContent += ` | Direktaufruf: HTTP ${resp.status} – ${text?.slice(0,140) || ''}`;
+  } catch (e2) {
+    // Wenn sogar der Direktaufruf geblockt wird, ist es meist CORS/Projekt-Mismatch
+    console.warn('Direct function call failed:', e2);
+    info.textContent += ' | Direktaufruf fehlgeschlagen (CORS/Netzwerk).';
   }
+}
 });
 
 // Beim Range-Wechsel From/To aktivieren/deaktivieren
