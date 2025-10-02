@@ -217,8 +217,8 @@ function enforceRoleGates(){
   document.querySelectorAll('button, input, select, textarea').forEach(el=>{
     if (isViewer){
       // Ausnahmen: reine Navigation/Modals
-      const okIds = new Set(['btnAvail','btnReporting']);
-      const isNav = okIds.has(el.id) || el.closest('#modalReporting');
+      const okIds = new Set(['btnAvail','btnReporting','btnRepSchedule']);
+      const isNav = okIds.has(el.id) || el.closest('#modalReporting') || el.closest('#modalRepScheduler');
       if (!isNav) {
         el.disabled = el.tagName==='BUTTON' || el.tagName==='INPUT' || el.tagName==='SELECT' || el.tagName==='TEXTAREA';
       }
@@ -2787,44 +2787,52 @@ document.getElementById('btnRepSave')?.addEventListener('click', async ()=>{
   }
 });
 
-  // Test senden (ruft die Edge Function sofort mit force=true auf)
+ // Test senden (ruft die Edge Function sofort mit force=true auf)
 document.getElementById('btnRepTest')?.addEventListener('click', async () => {
   const info = document.getElementById('rsInfo');
   info.textContent = 'Sende Test…';
+
+  // Payload anreichern (hilft beim Debuggen/Backend)
+  const recipients = (document.getElementById('rsRecipients').value || '')
+    .split(',').map(s=>s.trim()).filter(Boolean);
+  const payload = {
+    force: true,
+    range:  document.getElementById('rsRange').value,
+    from:   document.getElementById('rsFrom').value || null,
+    to:     document.getElementById('rsTo').value   || null,
+    hotels: (function(){
+      const sel = document.getElementById('rsHotels');
+      if (sel) return Array.from(sel.selectedOptions||[]).map(o=>o.value);
+      const grid = document.getElementById('rsHotelList');
+      if (grid) return Array.from(grid.querySelectorAll('input[type="checkbox"]:checked')).map(ch=>ch.dataset.code);
+      return [];
+    })(),
+    recipients,
+    formats: {
+      pdf: document.getElementById('rsPdf').checked,
+      csv: document.getElementById('rsCsv').checked
+    }
+  };
+
   try {
     const { data, error } = await SB.functions.invoke('bright-task', {
-      body: { force: true }
+      body: payload,
+      // WICHTIG: explizit den Bearer mit dem ANON-KEY mitsenden
+      headers: { Authorization: `Bearer ${SB_ANON_KEY}` }
     });
+
     if (error) {
+      // detailiertere Anzeige
       info.textContent = 'Fehler: ' + (error.message || JSON.stringify(error));
-    } else {
-      // data kann z.B. { ok:true, sent:n } oder eine Meldung enthalten
-      const msg = typeof data === 'string' ? data : (data?.message || JSON.stringify(data));
-      info.textContent = 'OK: ' + (msg || 'Test ausgelöst.');
+      console.warn('bright-task error', error);
+      return;
     }
+    const msg = typeof data === 'string' ? data : (data?.message || JSON.stringify(data));
+    info.textContent = 'OK: ' + (msg || 'Test ausgelöst.');
   } catch (e) {
-    info.textContent = 'Fehler: ' + e.message;
+    info.textContent = 'Fehler: ' + (e.message || String(e));
+    console.error('bright-task invoke failed', e);
   }
-});
-
-
-// Test senden – via mailto (ohne Attachments; echte Anhänge folgen mit Edge Function)
-document.getElementById('btnRepTest')?.addEventListener('click', async ()=>{
-  const hotels = getSelectedHotelLabels().join(', ');
-  const range  = document.getElementById('rsRange').value;
-  const dateS  = new Date().toLocaleDateString('de-DE');
-  const subjT  = document.getElementById('rsSubj').value || '';
-  const bodyT  = document.getElementById('rsBody').value || '';
-  const toList = (document.getElementById('rsRecipients').value || '').split(',').map(s=>s.trim()).filter(Boolean);
-
-  const subj = subjT.replace('{{range}}', range).replace('{{date}}', dateS).replace('{{hotels}}', hotels);
-  const body = bodyT.replace('{{range}}', range).replace('{{date}}', dateS).replace('{{hotels}}', hotels)
-    + '\n\n(Hinweis: Testversand ohne Attachments. PDF/CSV-Export bitte über die Buttons im Reporting; Auto-Anhänge folgen mit Backend-Cron.)';
-
-  const mailto = `mailto:${encodeURIComponent(toList.join(','))}?subject=${encodeURIComponent(subj)}&body=${encodeURIComponent(body)}`;
-  window.location.href = mailto;
-
-  try { await logActivity('report','schedule_test', { to: toList, range, hotels }); } catch(_){}
 });
 
 // Beim Range-Wechsel From/To aktivieren/deaktivieren
