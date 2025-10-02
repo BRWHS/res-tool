@@ -2787,6 +2787,27 @@ document.getElementById('btnRepSave')?.addEventListener('click', async ()=>{
   }
 });
 
+  // Test senden (ruft die Edge Function sofort mit force=true auf)
+document.getElementById('btnRepTest')?.addEventListener('click', async () => {
+  const info = document.getElementById('rsInfo');
+  info.textContent = 'Sende Test…';
+  try {
+    const { data, error } = await SB.functions.invoke('bright-task', {
+      body: { force: true }
+    });
+    if (error) {
+      info.textContent = 'Fehler: ' + (error.message || JSON.stringify(error));
+    } else {
+      // data kann z.B. { ok:true, sent:n } oder eine Meldung enthalten
+      const msg = typeof data === 'string' ? data : (data?.message || JSON.stringify(data));
+      info.textContent = 'OK: ' + (msg || 'Test ausgelöst.');
+    }
+  } catch (e) {
+    info.textContent = 'Fehler: ' + e.message;
+  }
+});
+
+
 // Test senden – via mailto (ohne Attachments; echte Anhänge folgen mit Edge Function)
 document.getElementById('btnRepTest')?.addEventListener('click', async ()=>{
   const hotels = getSelectedHotelLabels().join(', ');
