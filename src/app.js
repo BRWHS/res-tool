@@ -2649,18 +2649,57 @@ q('#repRun')?.addEventListener('click', runReport);
 const REPORT_JOBS_TABLE = 'report_jobs'; // Supabase (optional); Fallback: LocalStorage
 const LS_REPORT_JOB_KEY = 'resTool.reportJob.v1';
 
-// Hotels in Multiselect füllen, wenn Modal geöffnet wird
+// Hotels in Multiselect ODER Checkbox-Grid füllen
 function fillRsHotels(){
-  const sel = document.getElementById('rsHotels');
-  if (!sel) return;
-  sel.innerHTML = '';
-  (window.HOTELS || []).forEach(h=>{
-    const opt = document.createElement('option');
-    opt.value = h.code;
-    opt.textContent = `${h.group} - ${h.name.replace(/^.*? /,'')}`;
-    sel.appendChild(opt);
-  });
+  const sel  = document.getElementById('rsHotels');      // alte Variante (select multiple)
+  const grid = document.getElementById('rsHotelList');   // neue Variante (Checkboxen)
+  const list = (window.HOTELS || []);
+
+  if (sel){
+    sel.innerHTML = '';
+    list.forEach(h=>{
+      const opt = document.createElement('option');
+      opt.value = h.code;
+      opt.textContent = `${h.group} - ${h.name.replace(/^.*? /,'')}`;
+      sel.appendChild(opt);
+    });
+    return;
+  }
+
+  if (grid){
+    grid.innerHTML = '';
+    list.forEach(h=>{
+      const code = h.code;
+      const label = `${h.group} - ${h.name.replace(/^.*? /,'')}`;
+      const id = `rsH_${code}`;
+      const wrap = document.createElement('label');
+      wrap.className = 'row';
+      wrap.style.gap = '8px';
+      wrap.innerHTML = `
+        <input type="checkbox" data-code="${code}" id="${id}">
+        <span>${label}</span>
+      `;
+      grid.appendChild(wrap);
+    });
+  }
 }
+
+// Helper: Auswahl aus Select/Checkboxen lesen
+function getSelectedHotelCodes(){
+  const sel  = document.getElementById('rsHotels');
+  if (sel) return Array.from(sel.selectedOptions || []).map(o=>o.value);
+
+  const grid = document.getElementById('rsHotelList');
+  if (grid) return Array.from(grid.querySelectorAll('input[type="checkbox"]:checked')).map(ch=>ch.dataset.code);
+
+  return [];
+}
+function getSelectedHotelLabels(){
+  const codes = getSelectedHotelCodes();
+  const map = new Map((window.HOTELS||[]).map(h=>[h.code, `${h.group} - ${h.name.replace(/^.*? /,'')}`]));
+  return codes.map(c=> map.get(c) || c);
+}
+
 
 // Load/Save – versucht Supabase, sonst LocalStorage
 async function loadReportJob(){
@@ -2704,10 +2743,18 @@ document.getElementById('btnRepSchedule')?.addEventListener('click', async ()=>{
   document.getElementById('rsBody').value       = pref?.body || 'Guten Morgen,\n anbei der automatisierte Report für {{range}} ({{date}}) – Hotels: {{hotels}}.\nViele Grüße\nReservierung';
 
   // Hotels vorselektieren
-  const sel = document.getElementById('rsHotels');
-  const wanted = new Set(pref?.hotels || []);
+ const wanted = new Set(pref?.hotels || []);
+const sel = document.getElementById('rsHotels');
+if (sel){
   Array.from(sel.options).forEach(o => { o.selected = wanted.has(o.value); });
-
+} else {
+  const grid = document.getElementById('rsHotelList');
+  if (grid){
+    grid.querySelectorAll('input[type="checkbox"]').forEach(ch=>{
+      ch.checked = wanted.has(ch.dataset.code);
+    });
+  }
+}
   openModal('modalRepScheduler');
 });
 
@@ -2720,7 +2767,7 @@ document.getElementById('btnRepSave')?.addEventListener('click', async ()=>{
     range: document.getElementById('rsRange').value,
     from: document.getElementById('rsFrom').value || null,
     to:   document.getElementById('rsTo').value   || null,
-    hotels: Array.from(document.getElementById('rsHotels').selectedOptions || []).map(o=>o.value),
+    hotels: getSelectedHotelCodes(),
     formats: {
       pdf: document.getElementById('rsPdf').checked,
       csv: document.getElementById('rsCsv').checked
@@ -2742,7 +2789,7 @@ document.getElementById('btnRepSave')?.addEventListener('click', async ()=>{
 
 // Test senden – via mailto (ohne Attachments; echte Anhänge folgen mit Edge Function)
 document.getElementById('btnRepTest')?.addEventListener('click', async ()=>{
-  const hotels = Array.from(document.getElementById('rsHotels').selectedOptions || []).map(o=>o.textContent).join(', ');
+  const hotels = getSelectedHotelLabels().join(', ');
   const range  = document.getElementById('rsRange').value;
   const dateS  = new Date().toLocaleDateString('de-DE');
   const subjT  = document.getElementById('rsSubj').value || '';
