@@ -2855,13 +2855,15 @@ debug: true
 
     try {
       const resp = await fetch(`${SB_URL}/functions/v1/bright-task`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${SB_ANON_KEY}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ ping: true })
-      });
+  method: 'POST',
+  headers: {
+    Authorization: `Bearer ${SB_ANON_KEY}`,
+    apikey: SB_ANON_KEY,
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify(payload)
+});
+
       const text = await resp.text();
       console.warn('Direct function call status', resp.status, 'body:', text);
       info.textContent += ` | Direktaufruf: HTTP ${resp.status} – ${text?.slice(0,140) || ''}`;
