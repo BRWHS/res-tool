@@ -2797,6 +2797,11 @@ document.getElementById('btnRepTest')?.addEventListener('click', async () => {
   const recipients = (document.getElementById('rsRecipients').value || '')
     .split(',').map(s=>s.trim()).filter(Boolean);
 
+  if (!recipients.length) {
+  info.textContent = 'Bitte mindestens eine Empfänger-E-Mail eintragen.';
+  return;
+}
+
   const payload = {
     force: true,
     range:  document.getElementById('rsRange').value,
@@ -2814,17 +2819,25 @@ document.getElementById('btnRepTest')?.addEventListener('click', async () => {
       pdf: document.getElementById('rsPdf').checked,
       csv: document.getElementById('rsCsv').checked
     }
+    ,
+subject: document.getElementById('rsSubj').value || 'Report {{range}} – {{date}} – {{hotels}}',
+body:    document.getElementById('rsBody').value || 'Guten Morgen,\n anbei der automatisierte Report für {{range}} ({{date}}) – Hotels: {{hotels}}.\nViele Grüße\nReservierung',
+hotels_labels: (typeof getSelectedHotelLabels === 'function' ? getSelectedHotelLabels() : []),
+timezone: (Intl.DateTimeFormat().resolvedOptions().timeZone || 'Europe/Berlin'),
+debug: true
+
   };
+  
 
   try {
     // 1) Supabase SDK Invoke
     const { data, error } = await SB.functions.invoke('bright-task', {
       body: payload,
-     headers: {
-      Authorization: `Bearer ${SB_ANON_KEY}`,
-      apikey: SB_ANON_KEY,
-      'Content-Type': 'application/json'
-      }
+    headers: {
+  Authorization: `Bearer ${SB_ANON_KEY}`,
+  apikey: SB_ANON_KEY,
+  'Content-Type': 'application/json'
+}
     });
 
     if (error) {
