@@ -1043,37 +1043,63 @@ function hotelByCode(code){ return HOTELS.find(h=>h.code===code); }
 let __drag = { active:false, hotel:null, fromIdx:null, toIdx:null };
 
 function attachCellDragEvents(tableBody, dates){
+  // lokale Referenz auf dynamischen mouseup-Handler
+  let upHandler = null;
+
   tableBody.addEventListener('mousedown', (e)=>{
     const td = e.target.closest('td[data-hotel][data-idx]');
     if (!td) return;
-    __drag = { active:true, hotel: td.dataset.hotel, fromIdx: Number(td.dataset.idx), toIdx: Number(td.dataset.idx) };
+    // nur primäre Taste
+    if (e.button !== 0) return;
+
+    __drag = {
+      active: true,
+      hotel: td.dataset.hotel,
+      fromIdx: Number(td.dataset.idx),
+      toIdx:   Number(td.dataset.idx)
+    };
+
+    // Text-Selektion verhindern
     e.preventDefault();
+
+    // Mousemove auf tableBody (leichtgewichtiger) aktualisiert Auswahl
+    const moveHandler = (ev)=>{
+      if (!__drag.active) return;
+      const over = ev.target.closest && ev.target.closest('td[data-hotel][data-idx]');
+      if (!over || over.dataset.hotel !== __drag.hotel) return;
+      __drag.toIdx = Number(over.dataset.idx);
+      highlightDrag(tableBody);
+    };
+    tableBody.addEventListener('mousemove', moveHandler);
+
+    // Mouseup nur jetzt registrieren und nach Ende wieder entfernen
+    upHandler = async ()=>{
+      if (!__drag.active) { tableBody.removeEventListener('mousemove', moveHandler); document.removeEventListener('mouseup', upHandler); return; }
+
+      const { hotel, fromIdx, toIdx } = __drag;
+      __drag.active = false;
+
+      tableBody.removeEventListener('mousemove', moveHandler);
+      document.removeEventListener('mouseup', upHandler);
+      clearDragHighlight(tableBody);
+
+      const [a,b] = [Math.min(fromIdx,toIdx), Math.max(fromIdx,toIdx)];
+      const range = dates.slice(a, b+1);
+      if (!range.length) return;
+
+      const mode = window.prompt('Aktion: "block" (volle Belegung setzen) oder "free" (auf 0 setzen)?', 'block');
+      if (!mode || !['block','free'].includes(mode)) return;
+
+      // kleine UI-Rückmeldung
+      try { await applyAvailabilityAction(hotel, range, mode); }
+      catch(err){ console.warn('applyAvailabilityAction', err); alert('Fehler beim Anwenden.'); }
+
+      await runAvailability();
+    };
+    document.addEventListener('mouseup', upHandler);
   });
-  tableBody.addEventListener('mouseover', (e)=>{
-    if (!__drag.active) return;
-    const td = e.target.closest('td[data-hotel][data-idx]');
-    if (!td || td.dataset.hotel !== __drag.hotel) return;
-    __drag.toIdx = Number(td.dataset.idx);
-    highlightDrag(tableBody);
-  });
-  document.addEventListener('mouseup', async ()=>{
-    if (!__drag.active) return;
-    const { hotel, fromIdx, toIdx } = __drag;
-    __drag.active = false;
-    clearDragHighlight(tableBody);
-
-    const [a,b] = [Math.min(fromIdx,toIdx), Math.max(fromIdx,toIdx)];
-    const range = dates.slice(a, b+1);
-
-    // Aktion wählen
-    const mode = window.prompt('Aktion: "block" (volle Belegung setzen) oder "free" (auf 0 setzen)?', 'block');
-    if (!mode || !['block','free'].includes(mode)) return;
-
-    await applyAvailabilityAction(hotel, range, mode);
-    // neu laden
-    await runAvailability();
-  }, { once: true });
 }
+
 
 function highlightDrag(tbody){
   const { hotel, fromIdx, toIdx } = __drag;
@@ -1105,11 +1131,30 @@ async function applyAvailabilityAction(hotelCode, dateList, mode){
 
   // Updates nacheinander (einfach, robust)
   for (const d of dateList){
-    const payload = (mode==='block')
-      ? { booked: capByDate.get(d) ?? 0 }
-      : { booked: 0 };
-    await SB.from('availability').update(payload).eq('hotel_code', hotelCode).eq('date', d);
+  const cap = capByDate.get(d) ?? 0;
+  const payload = (mode==='block') ? { capacity: cap, booked: cap } : { capacity: cap, booked: 0 };
+
+  // erst versuchen zu updaten …
+  const { error } = await SB.from('availability')
+    .update(payload)
+    .eq('hotel_code', hotelCode)
+    .eq('date', d);
+
+  // … wenn 0 rows betroffen → insert (Upsert light)
+  if (error && !/row|match/i.test(error.message)) {
+    // echtes Fehlerobjekt – loggen; Insert trotzdem versuchen
+    console.warn('availability update error', error);
   }
+  if (!error) continue;
+
+  await SB.from('availability').insert({
+    hotel_code: hotelCode,
+    date: d,
+    capacity: payload.capacity,
+    booked: payload.booked
+  });
+}
+
 }
 
 function renderAvailabilityMatrix(avMap, startISO, days, activeOnly=false){
@@ -1154,6 +1199,8 @@ function renderAvailabilityMatrix(avMap, startISO, days, activeOnly=false){
       td.className = occClass(pct);
       td.style.textAlign = 'center';
       td.style.cursor = 'crosshair';
+      td.style.userSelect = 'none';
+      td.setAttribute('draggable', 'false');
       td.textContent = (rec.cap>0) ? `${pct}%` : '—';
       tr.appendChild(td);
     });
