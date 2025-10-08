@@ -1169,5 +1169,11 @@ html.modal-open { overflow: hidden; }
   #modalUserPrefs .body > .grid2{ grid-template-columns: 1fr; }
 }
 
+/* Drag-Select Markierung in Availability */
+#matrixBody td.drag-sel {
+  outline: 2px solid var(--accent, #00CCCC);
+  box-shadow: inset 0 0 0 9999px rgba(0, 204, 204, 0.1);
+}
+
 
 
