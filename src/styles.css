@@ -1174,6 +1174,11 @@ html.modal-open { overflow: hidden; }
   outline: 2px solid var(--accent, #00CCCC);
   box-shadow: inset 0 0 0 9999px rgba(0, 204, 204, 0.1);
 }
+/* smoother drag in der Matrix */
+.matrix table, #matrixBody td {
+  -webkit-user-select: none;
+  user-select: none;
+}
 
 
 
