@@ -829,6 +829,25 @@ function isoDateLocal(d){
   const da = String(d.getDate()).padStart(2,'0');
   return `${y}-${m}-${da}`;
 }
+  // Occupancy → Klasse für Farblegende
+function occClass(pct){
+  if (pct == null || isNaN(pct)) return '';
+  if (pct <= 64) return 'occ-g';
+  if (pct <= 89) return 'occ-o';
+  return 'occ-r';
+}
+// Datums-Range (lokal, inkl. beide Enden)
+function dateRange(startISO, days){
+  const out = [];
+  const [y,m,d] = startISO.split('-').map(Number);
+  const s = new Date(y, (m||1)-1, d||1);
+  for (let i=0;i<days;i++){
+    const x = new Date(s); x.setDate(s.getDate()+i);
+    out.push(isoDateLocal(x));
+  }
+  return out;
+}
+
 
   // ==== Priceplan Helpers ====
 const DAY_MS = 86400000;
@@ -993,6 +1012,172 @@ function buildSketch(){
     chipH?.classList.remove('lvl-0','lvl-1','lvl-2');
     chipH?.classList.add('lvl-2');
   }
+  // === Availability: Laden + Rendern + Interaktionen ===
+async function fetchAvailabilityWindow(startISO, days){
+  const dates = dateRange(startISO, days);
+  const endISO = dates[dates.length-1];
+
+  const { data, error } = await SB
+    .from('availability')
+    .select('hotel_code,date,capacity,booked')
+    .gte('date', startISO)
+    .lte('date', endISO)
+    .order('hotel_code', { ascending: true })
+    .order('date', { ascending: true });
+
+  if (error) { console.warn('availability error', error); return new Map(); }
+
+  // Map: hotel_code -> { dateISO -> {cap,booked} }
+  const map = new Map();
+  for (const row of (data||[])) {
+    const h = row.hotel_code || '—';
+    if (!map.has(h)) map.set(h, new Map());
+    map.get(h).set(row.date, { cap: Number(row.capacity||0), bok: Number(row.booked||0) });
+  }
+  return map;
+}
+
+function hotelByCode(code){ return HOTELS.find(h=>h.code===code); }
+
+// Drag-Select State
+let __drag = { active:false, hotel:null, fromIdx:null, toIdx:null };
+
+function attachCellDragEvents(tableBody, dates){
+  tableBody.addEventListener('mousedown', (e)=>{
+    const td = e.target.closest('td[data-hotel][data-idx]');
+    if (!td) return;
+    __drag = { active:true, hotel: td.dataset.hotel, fromIdx: Number(td.dataset.idx), toIdx: Number(td.dataset.idx) };
+    e.preventDefault();
+  });
+  tableBody.addEventListener('mouseover', (e)=>{
+    if (!__drag.active) return;
+    const td = e.target.closest('td[data-hotel][data-idx]');
+    if (!td || td.dataset.hotel !== __drag.hotel) return;
+    __drag.toIdx = Number(td.dataset.idx);
+    highlightDrag(tableBody);
+  });
+  document.addEventListener('mouseup', async ()=>{
+    if (!__drag.active) return;
+    const { hotel, fromIdx, toIdx } = __drag;
+    __drag.active = false;
+    clearDragHighlight(tableBody);
+
+    const [a,b] = [Math.min(fromIdx,toIdx), Math.max(fromIdx,toIdx)];
+    const range = dates.slice(a, b+1);
+
+    // Aktion wählen
+    const mode = window.prompt('Aktion: "block" (volle Belegung setzen) oder "free" (auf 0 setzen)?', 'block');
+    if (!mode || !['block','free'].includes(mode)) return;
+
+    await applyAvailabilityAction(hotel, range, mode);
+    // neu laden
+    await runAvailability();
+  }, { once: true });
+}
+
+function highlightDrag(tbody){
+  const { hotel, fromIdx, toIdx } = __drag;
+  if (hotel == null || fromIdx == null || toIdx == null) return;
+  const [a,b] = [Math.min(fromIdx,toIdx), Math.max(fromIdx,toIdx)];
+  tbody.querySelectorAll('td[data-hotel]').forEach(td => {
+    const idx = Number(td.dataset.idx);
+    td.classList.toggle('drag-sel', td.dataset.hotel===hotel && idx>=a && idx<=b);
+  });
+}
+function clearDragHighlight(tbody){
+  tbody.querySelectorAll('.drag-sel').forEach(td => td.classList.remove('drag-sel'));
+}
+
+async function applyAvailabilityAction(hotelCode, dateList, mode){
+  // Wir setzen:
+  // block → booked = capacity
+  // free  → booked = 0
+  // Für block brauchen wir pro Datum capacity → diese holen wir in einem Rutsch:
+  const { data, error } = await SB
+    .from('availability')
+    .select('date,capacity')
+    .eq('hotel_code', hotelCode)
+    .in('date', dateList);
+
+  if (error) { alert('Fehler beim Laden (apply): '+error.message); return; }
+
+  const capByDate = new Map((data||[]).map(r => [r.date, Number(r.capacity||0)]));
+
+  // Updates nacheinander (einfach, robust)
+  for (const d of dateList){
+    const payload = (mode==='block')
+      ? { booked: capByDate.get(d) ?? 0 }
+      : { booked: 0 };
+    await SB.from('availability').update(payload).eq('hotel_code', hotelCode).eq('date', d);
+  }
+}
+
+function renderAvailabilityMatrix(avMap, startISO, days, activeOnly=false){
+  const dates = dateRange(startISO, days);
+  const thead = document.querySelector('#matrixTable thead tr');
+  const tbody = document.getElementById('matrixBody');
+  if (!thead || !tbody) return;
+
+  // Header bauen
+  thead.innerHTML = `<th class="sticky">Hotel</th>` + dates.map((d,i)=>{
+    const dm = new Date(d).toLocaleDateString('de-DE',{ day:'2-digit', month:'2-digit' });
+    return `<th title="${d}">${dm}</th>`;
+  }).join('');
+
+  // Zeilen
+  tbody.innerHTML = '';
+  const hotels = HOTELS.slice(); // definierte Liste
+
+  for (const h of hotels){
+    const perDate = avMap.get(h.code) || new Map();
+
+    // Filter „nur aktive Hotels“
+    if (activeOnly){
+      const sumCap = dates.reduce((s,d)=> s + (perDate.get(d)?.cap || 0), 0);
+      const sumBok = dates.reduce((s,d)=> s + (perDate.get(d)?.bok || 0), 0);
+      if (sumCap === 0 && sumBok === 0) continue;
+    }
+
+    const tr = document.createElement('tr');
+    const th = document.createElement('th');
+    th.className = 'sticky';
+    th.textContent = `${h.group} - ${hotelCity(h.name)}`;
+    tr.appendChild(th);
+
+    dates.forEach((d, idx)=>{
+      const rec = perDate.get(d) || { cap:0, bok:0 };
+      const pct = rec.cap>0 ? Math.round(Math.min(100,(rec.bok/rec.cap)*100)) : 0;
+      const td = document.createElement('td');
+      td.dataset.hotel = h.code;
+      td.dataset.idx = String(idx);
+      td.title = `Datum: ${d}\nCapacity: ${rec.cap}\nBooked: ${rec.bok}\nOcc: ${pct}%`;
+      td.className = occClass(pct);
+      td.style.textAlign = 'center';
+      td.style.cursor = 'crosshair';
+      td.textContent = (rec.cap>0) ? `${pct}%` : '—';
+      tr.appendChild(td);
+    });
+
+    tbody.appendChild(tr);
+  }
+
+  // Drag-Select enable
+  attachCellDragEvents(tbody, dates);
+}
+
+async function runAvailability(){
+  const inpFrom = document.getElementById('availFrom');
+  const inpDays = document.getElementById('availDays');
+  const cbOnly  = document.getElementById('availActiveOnly');
+
+  const startISO = inpFrom?.value || isoDateLocal(new Date());
+  const days = Number(inpDays?.value || 14);
+  const activeOnly = !!cbOnly?.checked;
+
+  const map = await fetchAvailabilityWindow(startISO, days);
+  renderAvailabilityMatrix(map, startISO, days, activeOnly);
+}
+
 
   /***** Auto-Roll: Vergangenheit → done *****/
   async function autoRollPastToDone(){
@@ -4985,6 +5170,30 @@ async function copyToClipboard(txt){
     const ev = (el.tagName === 'SELECT' || el.type === 'date') ? 'change' : 'input';
     el.addEventListener(ev, debLoad);
   });
+
+  // === Availability UI binden ===
+(function initAvailabilityUI(){
+  const from = document.getElementById('availFrom');
+  const days = document.getElementById('availDays');
+  const run  = document.getElementById('availRun');
+  const only = document.getElementById('availActiveOnly');
+
+  if (!from || !days || !run) return;
+
+  // Defaults
+  if (!from.value){
+    from.value = isoDateLocal(new Date());
+  }
+  run.addEventListener('click', runAvailability);
+  days.addEventListener('change', runAvailability);
+  only?.addEventListener('change', runAvailability);
+
+  // Bei Öffnen des Modals direkt rendern
+  document.getElementById('btnAvail')?.addEventListener('click', ()=>{
+    setTimeout(runAvailability, 50);
+  });
+})();
+
 
   get('#btnClearFilters')?.addEventListener('click', () => {
     ['#searchInput','#filterHotel','#filterStatus','#filterResNo','#filterFrom','#filterTo'].forEach(sel => {
