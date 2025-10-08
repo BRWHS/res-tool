@@ -1193,16 +1193,24 @@ function renderAvailabilityMatrix(avMap, startISO, days, activeOnly=false){
       const rec = perDate.get(d) || { cap:0, bok:0 };
       const pct = rec.cap>0 ? Math.round(Math.min(100,(rec.bok/rec.cap)*100)) : 0;
       const td = document.createElement('td');
-      td.dataset.hotel = h.code;
-      td.dataset.idx = String(idx);
-      td.title = `Datum: ${d}\nCapacity: ${rec.cap}\nBooked: ${rec.bok}\nOcc: ${pct}%`;
-      td.className = occClass(pct);
-      td.style.textAlign = 'center';
-      td.style.cursor = 'crosshair';
-      td.style.userSelect = 'none';
-      td.setAttribute('draggable', 'false');
-      td.textContent = (rec.cap>0) ? `${pct}%` : '—';
-      tr.appendChild(td);
+td.dataset.hotel = h.code;
+td.dataset.idx = String(idx);
+td.dataset.date = d;
+td.dataset.cap  = String(rec.cap);
+td.dataset.bok  = String(rec.bok);
+td.dataset.pct  = String(pct);
+
+td.className = occClass(pct);
+td.style.textAlign = 'center';
+td.style.cursor = 'crosshair';
+
+// NEU: echte Pill + Hook fürs Tooltip (data-tt)
+td.innerHTML = (rec.cap > 0)
+  ? `<span class="pill ${occClass(pct)}" data-tt="1">${pct}%</span>`
+  : '—';
+
+tr.appendChild(td);
+
     });
 
     tbody.appendChild(tr);
@@ -1210,6 +1218,51 @@ function renderAvailabilityMatrix(avMap, startISO, days, activeOnly=false){
 
   // Drag-Select enable
   attachCellDragEvents(tbody, dates);
+
+  // --- Tooltip-Delegation für Availability (einmalig pro Tabelle) ---
+(function ensureAvailTooltipHandlers(){
+  if (tbody.__ttBound) return;
+  tbody.__ttBound = true;
+
+  let tt = document.getElementById('availTT');
+  if (!tt){
+    tt = document.createElement('div');
+    tt.id = 'availTT';
+    tt.className = 'avail-tt';
+    tt.style.display = 'none';
+    document.body.appendChild(tt);
+  }
+
+  function fillAndShow(e, td){
+    const d   = td.dataset.date;
+    const cap = Number(td.dataset.cap||0);
+    const bok = Number(td.dataset.bok||0);
+    const pct = Number(td.dataset.pct||0);
+    tt.innerHTML = `
+      <div class="tt-title">${d}</div>
+      <div class="tt-line"><span>Kapazität</span><span>${cap}</span></div>
+      <div class="tt-line"><span>Belegt</span><span>${bok}</span></div>
+      <div class="tt-line"><span>Auslastung</span><span>${pct}%</span></div>
+    `;
+    tt.style.left = (e.clientX + 14) + 'px';
+    tt.style.top  = (e.clientY + 14) + 'px';
+    tt.style.display = 'block';
+  }
+
+  function hide(){ tt.style.display = 'none'; }
+
+  // Delegation: nur wenn über einer Pill in der Matrix
+  tbody.addEventListener('mousemove', (e)=>{
+    const pill = e.target.closest('.pill[data-tt]');
+    if (!pill) { hide(); return; }
+    const td = pill.closest('td[data-hotel][data-idx]');
+    if (!td) { hide(); return; }
+    fillAndShow(e, td);
+  });
+
+  tbody.addEventListener('mouseleave', hide);
+})();
+
 }
 
 async function runAvailability(){
