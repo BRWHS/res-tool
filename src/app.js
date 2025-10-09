@@ -1390,18 +1390,19 @@ tr.appendChild(td);
 
   function fillAndShow(e, td){
   const d   = td.dataset.date;
-  const cap = Number(td.dataset.cap||0);
-  const bok = Number(td.dataset.bok||0);
-  const pct = Number(td.dataset.pct||0);
-  const md  = window.getManualDelta?.(td.dataset.hotel, d);
+const cap = Number(td.dataset.cap||0);
+const bok = Number(td.dataset.bok||0);
+const pct = Number(td.dataset.pct||0);
+const md  = window.getManualDelta?.(td.dataset.hotel, d);
+const over = Math.max(0, bok - cap);
 
-  tt.innerHTML = `
-    <div class="tt-title">${d}</div>
-    <div class="tt-line"><span>Kapazität</span><span>${cap}</span></div>
-    <div class="tt-line"><span>Belegt</span><span>${bok}</span></div>
-    <div class="tt-line"><span>Auslastung</span><span>${pct}%</span></div>
-    ${md!=null ? `<div class="tt-line"><span>Manuelle Anpassung</span><span>${md>=0?'+':''}${md}</span></div>` : ''}
-  `;
+tt.innerHTML = `
+  <div class="tt-title">${d}</div>
+  <div class="tt-line"><span>Kapazität</span><span>${cap}</span></div>
+  <div class="tt-line"><span>Belegt</span><span>${bok}${over>0 ? ` (OB +${over})` : ''}</span></div>
+  <div class="tt-line"><span>Auslastung</span><span>${pct}%</span></div>
+  ${md!=null ? `<div class="tt-line"><span>Manuell</span><span>${md>0?'+':''}${md}</span></div>` : ''}
+`;
   tt.style.left = (e.clientX + 14) + 'px';
   tt.style.top  = (e.clientY + 14) + 'px';
   tt.style.display = 'block';
