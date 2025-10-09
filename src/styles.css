@@ -1188,7 +1188,7 @@ html.modal-open { overflow: hidden; }
 .matrix th.sticky { position: sticky; left: 0; background: #03181b; z-index: 3; }
 #matrixBody td { text-align: center; cursor: crosshair; user-select: none; }
 
-/* Prozent-Pill */
+/* Prozent-Pill + Manual-Badge */
 .pill { display: inline-block; padding: .12rem .5rem; border-radius: 999px; min-width: 2.3rem; text-align: center; line-height: 1.15; }
 .occ-g { background: #0b2b2b; color: #a9ffef; }
 .occ-o { background: #2b1e0b; color: #ffd79a; }
@@ -1197,7 +1197,7 @@ html.modal-open { overflow: hidden; }
 /* Drag-Select Visual */
 #matrixBody td.drag-sel { outline: 2px solid rgba(0,255,255,.6); outline-offset: -2px; }
 
-/* Manual-Markierung: sichtbares Badge */
+/* Manual-Markierung sichtbar */
 .pill.manual { position: relative; box-shadow: inset 0 0 0 2px rgba(255, 215, 0, .35); }
 .pill.manual::after {
   content: "★";
@@ -1207,5 +1207,6 @@ html.modal-open { overflow: hidden; }
   filter: drop-shadow(0 1px 2px rgba(0,0,0,.5));
 }
 td.manual { background: rgba(255, 215, 0, .06); }
+
 
 
