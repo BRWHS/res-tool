@@ -1188,10 +1188,16 @@ function writeManualMarks(map){
 function markManual(hotel, dateISO, delta){
   const m = readManualMarks();
   const k = `${hotel}|${dateISO}`;
-  // speichere das LETZTE Delta; optional könntest du hier auch aufsummieren
-  m[k] = Number(delta)||0;
+  const v = Number(delta);
+  if (!isFinite(v) || v === 0) {
+    // „±0“ nicht behalten → Eintrag entfernen
+    delete m[k];
+  } else {
+    m[k] = v;
+  }
   writeManualMarks(m);
 }
+
 function getManualDelta(hotel, dateISO){
   const m = readManualMarks();
   const v = m[`${hotel}|${dateISO}`];
@@ -1301,8 +1307,9 @@ function renderAvailabilityMatrix(avMap, startISO, days, activeOnly=false){
     tr.appendChild(th);
 
     dates.forEach((d, idx)=>{
-      const rec = perDate.get(d) || { cap:0, bok:0 };
-      const pct = rec.cap>0 ? Math.round(Math.min(100,(rec.bok/rec.cap)*100)) : 0;
+const rec = perDate.get(d) || { cap:0, bok:0 };
+// echte % ohne Deckel (Overbooking sichtbar)
+const pct = rec.cap > 0 ? Math.round((rec.bok / rec.cap) * 100) : 0;
       const td = document.createElement('td');
 td.dataset.hotel = h.code;
 td.dataset.idx = String(idx);
@@ -1320,18 +1327,26 @@ td.innerHTML = (rec.cap > 0)
   ? `<span class="pill ${occClass(pct)}" data-tt="1">${pct}%</span>`
   : '—';
 
+      // Overbooking-Badge (oben rechts), wenn booked > capacity
+const over = Math.max(0, rec.bok - rec.cap);
+if (over > 0) {
+  td.classList.add('overbook');
+  const ob = document.createElement('div');
+  ob.className = 'avail-ob-badge';
+  ob.textContent = `OB +${over}`;
+  td.appendChild(ob);
+}
+      
 // Nach dem Setzen von td.innerHTML
 const md = window.getManualDelta?.(h.code, d);
 if (md != null) {
-  const deltaVal = window.getManualDelta ? window.getManualDelta(h.code, d) : null;
+ const deltaVal = window.getManualDelta ? window.getManualDelta(h.code, d) : null;
 if (deltaVal != null) {
+  td.classList.add('manual');
   const badge = document.createElement('div');
   badge.className = 'avail-delta-badge';
-  badge.textContent = `${deltaVal >= 0 ? '+' : ''}${deltaVal}`;
+  badge.textContent = `${deltaVal > 0 ? '+' : ''}${deltaVal}`;
   td.appendChild(badge);
-  td.classList.add('manual');
-  const pill = td.querySelector('.pill');
-  if (pill) pill.classList.add('manual');
 }
 
 
