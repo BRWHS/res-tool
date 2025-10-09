@@ -1289,9 +1289,11 @@ td.style.cursor = 'crosshair';
 
 // NEU: echte Pill + Hook fürs Tooltip (data-tt)
 td.innerHTML = (rec.cap > 0)
-td.addEventListener('click', () => handleCellAdjust(h.code, d, td));
   ? `<span class="pill ${occClass(pct)}" data-tt="1">${pct}%</span>`
   : '—';
+
+// Single-Click: Delta ± (nie < 0, Overbooking ok)
+td.addEventListener('click', () => window.handleCellAdjust?.(h.code, d, td));
 
     // Markierung "manuell" – entweder aus DB (falls Spalte existiert und du sie selektierst) oder per LocalStorage-Flag
 const wasManual = td.dataset.manual === '1' || isManualMarked(h.code, d);
