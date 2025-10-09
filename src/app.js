@@ -1115,84 +1115,95 @@ function clearDragHighlight(tbody){
 }
 
 async function applyAvailabilityAction(hotelCode, dateList, mode)
-// === Single-Click Delta-Anpassung (z.B. -57, +10) ===
-// Lokale Markierung für "manuell angepasst", falls die Spalte 'manual' in der DB (noch) fehlt
-const LS_MANUAL_KEY = 'resTool.availability.manualMarks';
-function readManualMarks(){
-  try { return JSON.parse(localStorage.getItem(LS_MANUAL_KEY) || '{}'); } catch { return {}; }
-}
-function writeManualMarks(map){
-  try { localStorage.setItem(LS_MANUAL_KEY, JSON.stringify(map||{})); } catch {}
-}
-function markManual(hotel, dateISO){
-  const m = readManualMarks();
-  const k = `${hotel}|${dateISO}`;
-  m[k] = true;
-  writeManualMarks(m);
-}
-function isManualMarked(hotel, dateISO){
-  const m = readManualMarks();
-  return !!m[`${hotel}|${dateISO}`];
-}
+/* === Single-Click Delta-Anpassung (isolated IIFE) === */
+(() => {
+  // Lokale Markierung für "manuell angepasst", falls 'manual' in DB (noch) fehlt
+  const LS_MANUAL_KEY = 'resTool.availability.manualMarks';
 
-async function handleCellAdjust(hotelCode, dateISO, tdEl){
-  // Drag-Select aktiv? Dann kein Single-Click-Dialog
-  if (window.__drag && window.__drag.on) return;
-
-  // 1) aktuellen Stand laden
-  let cap = 0, bok = 0;
-  try {
-    const q = await SB.from('availability')
-      .select('capacity, booked')
-      .eq('hotel_code', hotelCode)
-      .eq('date', dateISO)
-      .maybeSingle();
-    if (!q.error && q.data){
-      cap = Number(q.data.capacity || 0);
-      bok = Number(q.data.booked || 0);
-    }
-  } catch(_) {}
-
-  // 2) Eingabe-Dialog (Delta)
-  const curTxt = `${bok} belegt / Kap ${cap}`;
-  const val = window.prompt(`Änderung für ${dateISO} (${hotelCode})\nAktuell: ${curTxt}\n\nBitte Delta eingeben (z.B. 10 oder -57):`, '');
-  if (val == null) return; // abgebrochen
-  const delta = Number(String(val).replace(',', '.'));
-  if (!isFinite(delta)) { alert('Ungültige Zahl.'); return; }
-
-  // 3) Zielwert berechnen (nie < 0; Overbooking erlaubt)
-  const next = Math.max(0, bok + delta);
-
-  // 4) persistieren: update → fallback insert; optional 'manual' setzen, wenn Spalte existiert
-  //   Wir probieren manual:true in Update; wenn Spalte fehlt, ist egal.
-  let didUpdate = false;
-  try {
-    const { error, count } = await SB.from('availability')
-      .update({ booked: next, manual: true })
-      .eq('hotel_code', hotelCode)
-      .eq('date', dateISO)
-      .select('*', { count: 'exact' });
-    if (!error && count) didUpdate = true;
-  } catch(_) {}
-
-  if (!didUpdate){
-    try {
-      await SB.from('availability').insert({
-        hotel_code: hotelCode,
-        date: dateISO,
-        capacity: cap,       // vorhandene Kapazität übernehmen (falls 0 -> 0)
-        booked: next,
-        manual: true
-      });
-    } catch(_) {}
+  function readManualMarks(){
+    try { return JSON.parse(localStorage.getItem(LS_MANUAL_KEY) || '{}'); } catch { return {}; }
+  }
+  function writeManualMarks(map){
+    try { localStorage.setItem(LS_MANUAL_KEY, JSON.stringify(map||{})); } catch {}
+  }
+  function markManual(hotel, dateISO){
+    const m = readManualMarks();
+    const k = `${hotel}|${dateISO}`;
+    m[k] = true;
+    writeManualMarks(m);
+  }
+  function isManualMarked(hotel, dateISO){
+    const m = readManualMarks();
+    return !!m[`${hotel}|${dateISO}`];
   }
 
-  // 5) lokale Markierung für Optik
-  markManual(hotelCode, dateISO);
+  async function handleCellAdjust(hotelCode, dateISO, tdEl){
+    // Drag-Select aktiv? Dann kein Single-Click-Dialog
+    if (window.__drag && window.__drag.on) return;
 
-  // 6) UI neu laden
-  try { await runAvailability(); } catch(_){}
-}
+    // 1) aktuellen Stand laden
+    let cap = 0, bok = 0;
+    try {
+      const q = await SB.from('availability')
+        .select('capacity, booked')
+        .eq('hotel_code', hotelCode)
+        .eq('date', dateISO)
+        .maybeSingle();
+      if (!q.error && q.data){
+        cap = Number(q.data.capacity || 0);
+        bok = Number(q.data.booked || 0);
+      }
+    } catch(_) {}
+
+    // 2) Eingabe-Dialog (Delta: z.B. 10 oder -57)
+    const curTxt = `${bok} belegt / Kap ${cap}`;
+    const val = window.prompt(
+      `Änderung für ${dateISO} (${hotelCode})\nAktuell: ${curTxt}\n\nBitte Delta eingeben (z.B. 10 oder -57):`,
+      ''
+    );
+    if (val == null) return; // abgebrochen
+    const delta = Number(String(val).replace(',', '.'));
+    if (!isFinite(delta)) { alert('Ungültige Zahl.'); return; }
+
+    // 3) Zielwert: nie < 0; Overbooking erlaubt
+    const next = Math.max(0, bok + delta);
+
+    // 4) persistieren: update → fallback insert; optional 'manual' setzen
+    let didUpdate = false;
+    try {
+      const { error, count } = await SB.from('availability')
+        .update({ booked: next, manual: true })
+        .eq('hotel_code', hotelCode)
+        .eq('date', dateISO)
+        .select('*', { count: 'exact' });
+      if (!error && count) didUpdate = true;
+    } catch(_) {}
+
+    if (!didUpdate){
+      try {
+        await SB.from('availability').insert({
+          hotel_code: hotelCode,
+          date: dateISO,
+          capacity: cap,
+          booked: next,
+          manual: true
+        });
+      } catch(_) {}
+    }
+
+    // 5) lokale Markierung für Optik
+    markManual(hotelCode, dateISO);
+
+    // 6) UI neu laden
+    try { await runAvailability(); } catch(_){}
+  }
+
+  // Export in globalen Scope, damit dein Render-Listener ihn findet
+  window.handleCellAdjust = handleCellAdjust;
+  // Und die Marker-Helper, falls du sie im Render brauchst
+  window.isManualMarked = isManualMarked;
+})();
+
 
 
 {
