@@ -1255,7 +1255,10 @@ function getManualDelta(hotel, dateISO){
 
   // für Render/Click zugänglich machen
   window.handleCellAdjust = handleCellAdjust;
-  window.isManualMarked = isManualMarked;
+  window.getManualDelta = getManualDelta;
+// Backwards-Compat: alte Stellen, die isManualMarked nutzen
+window.isManualMarked = (hotel, dateISO) => (getManualDelta(hotel, dateISO) ?? null) !== null;
+
 })();
 
 
@@ -1331,14 +1334,26 @@ if (md != null) {
 // Single-Click: Delta ± (nie < 0, Overbooking ok)
 td.addEventListener('click', () => window.handleCellAdjust?.(h.code, d, td));
 
-    // Markierung "manuell" – entweder aus DB (falls Spalte existiert und du sie selektierst) oder per LocalStorage-Flag
-const wasManual = td.dataset.manual === '1' || isManualMarked(h.code, d);
+    // Manuelle Anpassung: Delta anzeigen (falls vorhanden) + Markierung setzen
+const deltaVal = window.getManualDelta ? window.getManualDelta(h.code, d) : null;
+const wasManual = td.dataset.manual === '1' || deltaVal != null;
+
 if (wasManual) {
   td.classList.add('manual');
   const pill = td.querySelector('.pill');
   if (pill) pill.classList.add('manual');
-}
 
+  // kleines ∆-Badge unter der Prozent-Pill
+  if (deltaVal != null) {
+    const badge = document.createElement('div');
+    badge.style.fontSize = '10px';
+    badge.style.opacity = '.85';
+    badge.style.marginTop = '2px';
+    badge.style.fontWeight = '700';
+    badge.textContent = `∆ ${deltaVal > 0 ? '+' + deltaVal : deltaVal}`;
+    td.appendChild(badge);
+  }
+}
 
 tr.appendChild(td);
 
