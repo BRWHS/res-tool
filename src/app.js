@@ -5366,6 +5366,15 @@ async function copyToClipboard(txt){
     el.addEventListener(ev, debLoad);
   });
 
+  // --- DATE HELPERS (local ISO, z.B. 2025-10-09)
+function isoDateLocal(d){
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const da = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${da}`;
+}
+
+
   // === Availability UI binden ===
 (function initAvailabilityUI(){
   const from = document.getElementById('availFrom');
@@ -5377,7 +5386,7 @@ async function copyToClipboard(txt){
 
   // Defaults
   if (!from.value){
-    from.value = isoDateLocal(new Date());
+    from.value = (typeof isoDateLocal === 'function' ? isoDateLocal : isoDate)(new Date());
   }
   run.addEventListener('click', runAvailability);
   days.addEventListener('change', runAvailability);
