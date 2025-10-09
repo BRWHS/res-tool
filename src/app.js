@@ -1072,31 +1072,48 @@ function attachCellDragEvents(tableBody, dates){
     };
     tableBody.addEventListener('mousemove', moveHandler);
 
-    // Mouseup nur jetzt registrieren und nach Ende wieder entfernen
-    upHandler = async ()=>{
-      if (!__drag.active) { tableBody.removeEventListener('mousemove', moveHandler); document.removeEventListener('mouseup', upHandler); return; }
+  // Mouseup nur jetzt registrieren und nach Ende wieder entfernen
+upHandler = async (ev)=>{
+  // Cleanup Move/Up
+  if (!__drag.active) {
+    tableBody.removeEventListener('mousemove', moveHandler);
+    document.removeEventListener('mouseup', upHandler);
+    return;
+  }
 
-      const { hotel, fromIdx, toIdx } = __drag;
-      __drag.active = false;
+  const { hotel, fromIdx, toIdx } = __drag;
+  __drag.active = false;
 
-      tableBody.removeEventListener('mousemove', moveHandler);
-      document.removeEventListener('mouseup', upHandler);
-      clearDragHighlight(tableBody);
+  tableBody.removeEventListener('mousemove', moveHandler);
+  document.removeEventListener('mouseup', upHandler);
 
-      const [a,b] = [Math.min(fromIdx,toIdx), Math.max(fromIdx,toIdx)];
-      const range = dates.slice(a, b+1);
-      if (!range.length) return;
+  // markiertes Highlight weg
+  clearDragHighlight(tableBody);
 
-      const mode = window.prompt('Aktion: "block" (volle Belegung setzen) oder "free" (auf 0 setzen)?', 'block');
-      if (!mode || !['block','free'].includes(mode)) return;
+  const [a,b] = [Math.min(fromIdx,toIdx), Math.max(fromIdx,toIdx)];
+  const range = dates.slice(a, b+1);
+  if (!range.length) return;
 
-      // kleine UI-Rückmeldung
-      try { await applyAvailabilityAction(hotel, range, mode); }
-      catch(err){ console.warn('applyAvailabilityAction', err); alert('Fehler beim Anwenden.'); }
+  // NEU: wenn nur EINE Zelle und faktisch kein Drag → behandle es wie Single-Click (nur 1 Prompt für Delta)
+  if (a === b) {
+    const td = tableBody.querySelector(`td[data-hotel="${hotel}"][data-idx="${a}"]`);
+    if (td) { 
+      await window.handleCellAdjust?.(hotel, td.dataset.date, td);
+    }
+    return;
+  }
 
-      await runAvailability();
-    };
-    document.addEventListener('mouseup', upHandler);
+  // ECHTES Drag (mehrere Zellen): einmalige Aktion abfragen
+  const mode = window.prompt('Aktion: "block" (volle Belegung setzen) oder "free" (auf 0 setzen)?', 'block');
+  if (!mode || !['block','free'].includes(mode)) return;
+
+  try { await applyAvailabilityAction(hotel, range, mode); }
+  catch(err){ console.warn('applyAvailabilityAction', err); alert('Fehler beim Anwenden.'); }
+
+  await runAvailability();
+};
+document.addEventListener('mouseup', upHandler);
+
   });
 }
 
@@ -1156,23 +1173,26 @@ async function applyAvailabilityAction(hotelCode, dateList, mode){
 }
   /* === Single-Click Delta-Anpassung (isolated IIFE) === */
 ;(() => {
-  const LS_MANUAL_KEY = 'resTool.availability.manualMarks';
+ const LS_MANUAL_KEY = 'resTool.availability.manualMarks';
 
-  function readManualMarks(){
-    try { return JSON.parse(localStorage.getItem(LS_MANUAL_KEY) || '{}'); } catch { return {}; }
-  }
-  function writeManualMarks(map){
-    try { localStorage.setItem(LS_MANUAL_KEY, JSON.stringify(map||{})); } catch {}
-  }
-  function markManual(hotel, dateISO){
-    const m = readManualMarks();
-    m[`${hotel}|${dateISO}`] = true;
-    writeManualMarks(m);
-  }
-  function isManualMarked(hotel, dateISO){
-    const m = readManualMarks();
-    return !!m[`${hotel}|${dateISO}`];
-  }
+function readManualMarks(){
+  try { return JSON.parse(localStorage.getItem(LS_MANUAL_KEY) || '{}'); } catch { return {}; }
+}
+function writeManualMarks(map){
+  try { localStorage.setItem(LS_MANUAL_KEY, JSON.stringify(map||{})); } catch {}
+}
+function markManual(hotel, dateISO, delta){
+  const m = readManualMarks();
+  const k = `${hotel}|${dateISO}`;
+  // speichere das LETZTE Delta; optional könntest du hier auch aufsummieren
+  m[k] = Number(delta)||0;
+  writeManualMarks(m);
+}
+function getManualDelta(hotel, dateISO){
+  const m = readManualMarks();
+  const v = m[`${hotel}|${dateISO}`];
+  return (typeof v === 'number' && isFinite(v)) ? v : null;
+}
 
   async function handleCellAdjust(hotelCode, dateISO){
     // bei aktivem Drag kein Single-Click
@@ -1226,7 +1246,7 @@ async function applyAvailabilityAction(hotelCode, dateList, mode){
       } catch(_) {}
     }
 
-    // lokale Marker für Optik
+    // 5) lokale Markierung inkl. Delta für Optik
     markManual(hotelCode, dateISO);
 
     // UI refresh
@@ -1292,6 +1312,22 @@ td.innerHTML = (rec.cap > 0)
   ? `<span class="pill ${occClass(pct)}" data-tt="1">${pct}%</span>`
   : '—';
 
+// Nach dem Setzen von td.innerHTML
+const md = window.getManualDelta?.(h.code, d);
+if (md != null) {
+  const badge = document.createElement('div');
+  badge.style.fontSize = '10px';
+  badge.style.opacity = '.85';
+  badge.style.marginTop = '2px';
+  badge.style.fontWeight = '700';
+  badge.textContent = `∆ ${md > 0 ? '+'+md : md}`;
+  td.appendChild(badge);
+  td.classList.add('manual');
+  const pill = td.querySelector('.pill');
+  if (pill) pill.classList.add('manual');
+}
+
+
 // Single-Click: Delta ± (nie < 0, Overbooking ok)
 td.addEventListener('click', () => window.handleCellAdjust?.(h.code, d, td));
 
@@ -1338,6 +1374,7 @@ tr.appendChild(td);
       <div class="tt-line"><span>Kapazität</span><span>${cap}</span></div>
       <div class="tt-line"><span>Belegt</span><span>${bok}</span></div>
       <div class="tt-line"><span>Auslastung</span><span>${pct}%</span></div>
+      ${md!=null ? `<div class="tt-line"><span>Manuelle Anpassung</span><span>∆ ${md>0?('+'+md):md}</span></div>` : ''}
     `;
     tt.style.left = (e.clientX + 14) + 'px';
     tt.style.top  = (e.clientY + 14) + 'px';
