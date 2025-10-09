@@ -1115,8 +1115,7 @@ function clearDragHighlight(tbody){
 }
 
 async function applyAvailabilityAction(hotelCode, dateList, mode)
-/* === Single-Click Delta-Anpassung (isolated IIFE) === */
-;(() => {
+
   // Lokale Markierung für "manuell angepasst", falls 'manual' in DB (noch) fehlt
   const LS_MANUAL_KEY = 'resTool.availability.manualMarks';
 
