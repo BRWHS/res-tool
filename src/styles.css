@@ -1180,80 +1180,44 @@ html.modal-open { overflow: hidden; }
 #matrixBody td.drag-sel { outline: 2px solid var(--accent, #3aa); background: rgba(0,0,0,.08); }
 #matrixBody td { cursor: crosshair; }
 
-/* Availability – saubere Table-Optik */
-.matrix { overflow: auto; max-height: 60vh; border: 1px solid #073b3b; border-radius: 8px; }
-.matrix table { border-collapse: separate; border-spacing: 0; width: 100%; font-variant-numeric: tabular-nums; }
-.matrix th, .matrix td { padding: .45rem .55rem; border-bottom: 1px solid #093e3e; background: transparent; }
-.matrix thead th { position: sticky; top: 0; background: #061f24; z-index: 2; }
-.matrix th.sticky { position: sticky; left: 0; background: #03181b; z-index: 3; }
-#matrixBody td { text-align: center; cursor: crosshair; user-select: none; }
+//* === Availability Grid (clean) === */
+.matrix { overflow:auto; max-height:60vh; border:1px solid #073b3b; border-radius:12px; }
+.matrix table { border-collapse:separate; border-spacing:0; width:100%; font-variant-numeric:tabular-nums; }
+.matrix thead th { position:sticky; top:0; background:#061f24; z-index:2; }
+.matrix th, .matrix td { padding:.50rem .55rem; border-bottom:1px solid #093e3e; }
+.matrix th.sticky { position:sticky; left:0; background:#03181b; z-index:3; }
+#matrixBody td { position:relative; text-align:center; user-select:none; }
 
-/* Prozent-Pill + Manual-Badge */
-.pill { display: inline-block; padding: .12rem .5rem; border-radius: 999px; min-width: 2.3rem; text-align: center; line-height: 1.15; }
-.occ-g { background: #0b2b2b; color: #a9ffef; }
-.occ-o { background: #2b1e0b; color: #ffd79a; }
-.occ-r { background: #2b0b0b; color: #ff9aa9; }
+/* Prozent-Pill */
+.pill { display:inline-block; min-width:46px; padding:4px 10px; border-radius:999px; font-weight:800; font-size:11px; line-height:1.15; }
+.occ-g { background:#0b2b2b; color:#a9ffef; }
+.occ-o { background:#2b1e0b; color:#ffd79a; }
+.occ-r { background:#2b0b0b; color:#ff9aa9; }
 
-/* Drag-Select Visual */
-#matrixBody td.drag-sel { outline: 2px solid rgba(0,255,255,.6); outline-offset: -2px; }
+/* Drag-Select */
+#matrixBody td.drag-sel { outline:2px solid rgba(0,255,255,.6); outline-offset:-2px; }
 
-/* Manual-Markierung sichtbar */
-.pill.manual { position: relative; box-shadow: inset 0 0 0 2px rgba(255, 215, 0, .35); }
-.pill.manual::after {
-  content: "★";
-  position: absolute;
-  top: -6px; right: -6px;
-  font-size: 10px;
-  filter: drop-shadow(0 1px 2px rgba(0,0,0,.5));
-}
-td.manual { background: rgba(255, 215, 0, .06); }
-
-/* Availability – ruhigeres Raster + klare Markierungen */
-table.matrix td{
-  position: relative;
-  vertical-align: middle;
-  padding: 8px 6px; /* etwas luftiger, aber kompakt */
+/* Manuelles Delta (kein Stern mehr) */
+.avail-delta-badge {
+  position:absolute; bottom:3px; left:50%; transform:translateX(-50%);
+  font:700 10px "JetBrains Mono", monospace; color:#7efcf8; opacity:.9; pointer-events:none;
 }
 
-table.matrix td .pill{
-  display:inline-block;
-  min-width: 44px;
-  padding: 4px 8px;
-  font-weight: 800;
-  font-size: 11px;
+/* Overbooking deutlich, aber nicht störend */
+.overbook .pill { box-shadow: inset 0 0 0 2px rgba(255,77,109,.7); }
+.avail-ob-badge {
+  position:absolute; top:4px; right:6px;
+  font:800 9px "JetBrains Mono", monospace;
+  padding:2px 6px; border-radius:999px;
+  border:1px solid rgba(255,77,109,.6);
+  background:rgba(255,77,109,.12); color:#ff94a6;
+  pointer-events:none;
 }
 
-table.matrix td.manual .pill{
-  box-shadow: inset 0 0 0 2px rgba(126,252,248,.45);
-}
+/* Tooltip (falls gebraucht) */
+.avail-tt { position:fixed; pointer-events:none; background:#03181b; border:1px solid #0a3d3d; border-radius:8px; padding:.5rem .6rem; font-size:.85rem; color:#cfffff; box-shadow:0 8px 20px rgba(0,0,0,.35) }
+.avail-tt .tt-line{ display:flex; justify-content:space-between; gap:1rem }
 
-.avail-delta-badge{
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  bottom: 3px;
-  font: 700 10px "JetBrains Mono", monospace;
-  color: var(--muted);
-  opacity: .9;
-  pointer-events: none;
-}
-
-.overbook .pill{
-  box-shadow: inset 0 0 0 2px rgba(255,77,109,.7);
-}
-
-.avail-ob-badge{
-  position: absolute;
-  top: 3px;
-  right: 4px;
-  font: 800 9px "JetBrains Mono", monospace;
-  padding: 2px 6px;
-  border-radius: 999px;
-  border: 1px solid rgba(255,77,109,.6);
-  background: rgba(255,77,109,.12);
-  color: #ff94a6;
-  pointer-events: none;
-}
 
 
 
