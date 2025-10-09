@@ -1347,28 +1347,6 @@ td.addEventListener('click', (ev) => {
   window.handleCellAdjust?.(h.code, d, td);
 });
 
-    // Manuelle Anpassung: Delta anzeigen (falls vorhanden) + Markierung setzen
-const deltaVal = window.getManualDelta ? window.getManualDelta(h.code, d) : null;
-const wasManual = td.dataset.manual === '1' || deltaVal != null;
-
-if (wasManual) {
-  td.classList.add('manual');
-  const pill = td.querySelector('.pill');
-  if (pill) pill.classList.add('manual');
-
-  // kleines ∆-Badge unter der Prozent-Pill
-  if (deltaVal != null) {
-  const deltaVal = window.getManualDelta ? window.getManualDelta(h.code, d) : null;
-if (deltaVal != null) {
-  const badge = document.createElement('div');
-  badge.className = 'avail-delta-badge';
-  badge.textContent = `${deltaVal >= 0 ? '+' : ''}${deltaVal}`;
-  td.appendChild(badge);
-  td.classList.add('manual');
-  const pill = td.querySelector('.pill');
-  if (pill) pill.classList.add('manual');
-}
-
 }
 
 tr.appendChild(td);
