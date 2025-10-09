@@ -2749,7 +2749,7 @@ function splitDummyCategories(avail){
       body.append(tr);
     }
   }
-  q('#availRun')?.addEventListener('click', buildMatrix);
+  q('#availRun')?.addEventListener('click', runAvailability);
 
   /***** Reporting *****/
 
@@ -3305,7 +3305,7 @@ q('#repPdf')?.addEventListener('click', async ()=>{
 q('#btnAvail')?.addEventListener('click', async ()=>{
   q('#availFrom') && (q('#availFrom').value = isoDate(new Date()));
   q('#availDays') && (q('#availDays').value = '14');
-  await buildMatrix();
+  await runAvailability();
   openModal('modalAvail');
 });
 q('#btnReporting')?.addEventListener('click', async ()=>{
