@@ -1094,11 +1094,15 @@ upHandler = async (ev)=>{
   const range = dates.slice(a, b+1);
   if (!range.length) return;
 
-  // NEU: wenn nur EINE Zelle und faktisch kein Drag → behandle es wie Single-Click (nur 1 Prompt für Delta)
+   // NEU: Single-Cell → hier behandeln und nachfolgende Clicks unterdrücken
   if (a === b) {
     const td = tableBody.querySelector(`td[data-hotel="${hotel}"][data-idx="${a}"]`);
-    if (td) { 
+    if (td) {
+      // Suppressor für das nachgelagerte 'click' auf der gleichen Zelle
+      window.__suppressNextClick = `${hotel}|${td.dataset.date}`;
       await window.handleCellAdjust?.(hotel, td.dataset.date, td);
+      // Suppressor nach Event-Loop-Runde wieder löschen
+      setTimeout(()=> { if (window.__suppressNextClick === `${hotel}|${td.dataset.date}`) window.__suppressNextClick = null; }, 0);
     }
     return;
   }
@@ -1246,8 +1250,9 @@ function getManualDelta(hotel, dateISO){
       } catch(_) {}
     }
 
-    // 5) lokale Markierung inkl. Delta für Optik
-    markManual(hotelCode, dateISO);
+   // 5) lokale Markierung inkl. Delta (positiv/negativ)
+const appliedDelta = next - bok;  // bok = alter Wert
+markManual(hotelCode, dateISO, appliedDelta);
 
     // UI refresh
     try { await runAvailability(); } catch(_) {}
@@ -1318,12 +1323,11 @@ td.innerHTML = (rec.cap > 0)
 // Nach dem Setzen von td.innerHTML
 const md = window.getManualDelta?.(h.code, d);
 if (md != null) {
+  const deltaVal = window.getManualDelta ? window.getManualDelta(h.code, d) : null;
+if (deltaVal != null) {
   const badge = document.createElement('div');
-  badge.style.fontSize = '10px';
-  badge.style.opacity = '.85';
-  badge.style.marginTop = '2px';
-  badge.style.fontWeight = '700';
-  badge.textContent = `∆ ${md > 0 ? '+'+md : md}`;
+  badge.className = 'avail-delta-badge';
+  badge.textContent = `${deltaVal >= 0 ? '+' : ''}${deltaVal}`;
   td.appendChild(badge);
   td.classList.add('manual');
   const pill = td.querySelector('.pill');
@@ -1331,8 +1335,17 @@ if (md != null) {
 }
 
 
+
 // Single-Click: Delta ± (nie < 0, Overbooking ok)
-td.addEventListener('click', () => window.handleCellAdjust?.(h.code, d, td));
+td.addEventListener('click', (ev) => {
+  const key = `${h.code}|${d}`;
+  if (window.__suppressNextClick === key) {
+    // der Mouseup in attachCellDragEvents hat den Klick bereits behandelt
+    window.__suppressNextClick = null;
+    return;
+  }
+  window.handleCellAdjust?.(h.code, d, td);
+});
 
     // Manuelle Anpassung: Delta anzeigen (falls vorhanden) + Markierung setzen
 const deltaVal = window.getManualDelta ? window.getManualDelta(h.code, d) : null;
@@ -1345,14 +1358,17 @@ if (wasManual) {
 
   // kleines ∆-Badge unter der Prozent-Pill
   if (deltaVal != null) {
-    const badge = document.createElement('div');
-    badge.style.fontSize = '10px';
-    badge.style.opacity = '.85';
-    badge.style.marginTop = '2px';
-    badge.style.fontWeight = '700';
-    badge.textContent = `∆ ${deltaVal > 0 ? '+' + deltaVal : deltaVal}`;
-    td.appendChild(badge);
-  }
+  const deltaVal = window.getManualDelta ? window.getManualDelta(h.code, d) : null;
+if (deltaVal != null) {
+  const badge = document.createElement('div');
+  badge.className = 'avail-delta-badge';
+  badge.textContent = `${deltaVal >= 0 ? '+' : ''}${deltaVal}`;
+  td.appendChild(badge);
+  td.classList.add('manual');
+  const pill = td.querySelector('.pill');
+  if (pill) pill.classList.add('manual');
+}
+
 }
 
 tr.appendChild(td);
@@ -1380,21 +1396,23 @@ tr.appendChild(td);
   }
 
   function fillAndShow(e, td){
-    const d   = td.dataset.date;
-    const cap = Number(td.dataset.cap||0);
-    const bok = Number(td.dataset.bok||0);
-    const pct = Number(td.dataset.pct||0);
-    tt.innerHTML = `
-      <div class="tt-title">${d}</div>
-      <div class="tt-line"><span>Kapazität</span><span>${cap}</span></div>
-      <div class="tt-line"><span>Belegt</span><span>${bok}</span></div>
-      <div class="tt-line"><span>Auslastung</span><span>${pct}%</span></div>
-      ${md!=null ? `<div class="tt-line"><span>Manuelle Anpassung</span><span>∆ ${md>0?('+'+md):md}</span></div>` : ''}
-    `;
-    tt.style.left = (e.clientX + 14) + 'px';
-    tt.style.top  = (e.clientY + 14) + 'px';
-    tt.style.display = 'block';
-  }
+  const d   = td.dataset.date;
+  const cap = Number(td.dataset.cap||0);
+  const bok = Number(td.dataset.bok||0);
+  const pct = Number(td.dataset.pct||0);
+  const md  = window.getManualDelta?.(td.dataset.hotel, d);
+
+  tt.innerHTML = `
+    <div class="tt-title">${d}</div>
+    <div class="tt-line"><span>Kapazität</span><span>${cap}</span></div>
+    <div class="tt-line"><span>Belegt</span><span>${bok}</span></div>
+    <div class="tt-line"><span>Auslastung</span><span>${pct}%</span></div>
+    ${md!=null ? `<div class="tt-line"><span>Manuelle Anpassung</span><span>${md>=0?'+':''}${md}</span></div>` : ''}
+  `;
+  tt.style.left = (e.clientX + 14) + 'px';
+  tt.style.top  = (e.clientY + 14) + 'px';
+  tt.style.display = 'block';
+}
 
   function hide(){ tt.style.display = 'none'; }
 
