@@ -1180,3 +1180,31 @@ html.modal-open { overflow: hidden; }
 #matrixBody td.drag-sel { outline: 2px solid var(--accent, #3aa); background: rgba(0,0,0,.08); }
 #matrixBody td { cursor: crosshair; }
 
+/* Availability – saubere Table-Optik */
+.matrix { overflow: auto; max-height: 60vh; border: 1px solid #073b3b; border-radius: 8px; }
+.matrix table { border-collapse: separate; border-spacing: 0; width: 100%; font-variant-numeric: tabular-nums; }
+.matrix th, .matrix td { padding: .45rem .55rem; border-bottom: 1px solid #093e3e; background: transparent; }
+.matrix thead th { position: sticky; top: 0; background: #061f24; z-index: 2; }
+.matrix th.sticky { position: sticky; left: 0; background: #03181b; z-index: 3; }
+#matrixBody td { text-align: center; cursor: crosshair; user-select: none; }
+
+/* Prozent-Pill */
+.pill { display: inline-block; padding: .12rem .5rem; border-radius: 999px; min-width: 2.3rem; text-align: center; line-height: 1.15; }
+.occ-g { background: #0b2b2b; color: #a9ffef; }
+.occ-o { background: #2b1e0b; color: #ffd79a; }
+.occ-r { background: #2b0b0b; color: #ff9aa9; }
+
+/* Drag-Select Visual */
+#matrixBody td.drag-sel { outline: 2px solid rgba(0,255,255,.6); outline-offset: -2px; }
+
+/* Manual-Markierung: sichtbares Badge */
+.pill.manual { position: relative; box-shadow: inset 0 0 0 2px rgba(255, 215, 0, .35); }
+.pill.manual::after {
+  content: "★";
+  position: absolute;
+  top: -6px; right: -6px;
+  font-size: 10px;
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,.5));
+}
+td.manual { background: rgba(255, 215, 0, .06); }
+
