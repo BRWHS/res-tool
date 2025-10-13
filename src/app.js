@@ -1219,65 +1219,55 @@ function renderAvailabilityMatrix(avMap, startISO, days, activeOnly=false){
     th.textContent = `${h.group} - ${hotelCity(h.name)}`;
     tr.appendChild(th);
 
-    dates.forEach((d, idx)=>{
-const rec = perDate.get(d) || { cap:0, bok:0 };
-// echte % ohne Deckel (Overbooking sichtbar)
-const pct = rec.cap > 0 ? Math.round((rec.bok / rec.cap) * 100) : 0;
-      const td = document.createElement('td');
-td.dataset.hotel = h.code;
-td.dataset.idx = String(idx);
-td.dataset.date = d;
-td.dataset.cap  = String(rec.cap);
-td.dataset.bok  = String(rec.bok);
-td.dataset.pct  = String(pct);
+   dates.forEach((d, idx)=>{
+  const rec = perDate.get(d) || { cap:0, bok:0 };
 
-td.className = occClass(pct);
-td.style.textAlign = 'center';
-td.style.cursor = 'crosshair';
+  // echte % (Overbooking sichtbar >100)
+  const pct = rec.cap > 0 ? Math.round((rec.bok / rec.cap) * 100) : 0;
 
-// NEU: echte Pill + Hook fürs Tooltip (data-tt)
-td.innerHTML = (rec.cap > 0)
-  ? `<span class="pill ${occClass(pct)}" data-tt="1">${pct}%</span>`
-  : '—';
+  const td = document.createElement('td');
+  td.dataset.hotel = h.code;
+  td.dataset.idx   = String(idx);
+  td.dataset.date  = d;
+  td.dataset.cap   = String(rec.cap);
+  td.dataset.bok   = String(rec.bok);
+  td.dataset.pct   = String(pct);
+  td.className     = occClass(pct);
+  td.style.textAlign = 'center';
 
-      // Overbooking-Badge (oben rechts), wenn booked > capacity
-const over = Math.max(0, rec.bok - rec.cap);
-if (over > 0) {
-  td.classList.add('overbook');
-  const ob = document.createElement('div');
-  ob.className = 'avail-ob-badge';
-  ob.textContent = `OB +${over}`;
-  td.appendChild(ob);
-}
-      
-// Nach dem Setzen von td.innerHTML
-const md = window.getManualDelta?.(h.code, d);
-if (md != null) {
- const deltaVal = window.getManualDelta ? window.getManualDelta(h.code, d) : null;
-if (deltaVal != null) {
-  td.classList.add('manual');
-  const badge = document.createElement('div');
-  badge.className = 'avail-delta-badge';
-  badge.textContent = `${deltaVal > 0 ? '+' : ''}${deltaVal}`;
-  td.appendChild(badge);
-}
+  // Prozent-Pill
+  td.innerHTML = (rec.cap > 0)
+    ? `<span class="pill ${occClass(pct)}" data-tt="1">${pct}%</span>`
+    : '—';
 
-
-
-// Single-Click: Delta ± (nie < 0, Overbooking ok)
-td.addEventListener('click', (ev) => {
-  const key = `${h.code}|${d}`;
-  if (window.__suppressNextClick === key) {
-    // der Mouseup in attachCellDragEvents hat den Klick bereits behandelt
-    window.__suppressNextClick = null;
-    return;
+  // Overbooking-Badge (oben rechts)
+  const over = Math.max(0, rec.bok - rec.cap);
+  if (over > 0) {
+    td.classList.add('overbook');
+    const ob = document.createElement('div');
+    ob.className = 'avail-ob-badge';
+    ob.textContent = `+${over}`;
+    td.appendChild(ob);
   }
-  window.handleCellAdjust?.(h.code, d, td);
+
+  // Manuelle Δ-Badge (unten rechts)
+  const md = window.getManualDelta?.(h.code, d);
+  if (md != null && md !== 0) {
+    td.classList.add('manual');
+    const badge = document.createElement('div');
+    badge.className = 'avail-delta-badge';
+    badge.textContent = `${md > 0 ? '+' : ''}${md}`;
+    td.appendChild(badge);
+  }
+
+  // <<< WICHTIG: Click-Handler IMMER registrieren (außerhalb der md-If)!
+  td.addEventListener('click', () => {
+    window.handleCellAdjust?.(h.code, d, td);
+  });
+
+  tr.appendChild(td);
 });
 
-}
-
-tr.appendChild(td);
 
     });
 
