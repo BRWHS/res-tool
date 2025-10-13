@@ -1269,7 +1269,7 @@ function renderAvailabilityMatrix(avMap, startISO, days, activeOnly=false){
 });
 
 
-    });
+    };
 
     tbody.appendChild(tr);
   }
