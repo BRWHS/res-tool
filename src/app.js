@@ -1347,6 +1347,8 @@ async function runAvailability(){
   renderAvailabilityMatrix(map, startISO, days, activeOnly);
 }
 
+  window.runAvailability = runAvailability;
+
 
   /***** Auto-Roll: Vergangenheit → done *****/
   async function autoRollPastToDone(){
@@ -5362,9 +5364,11 @@ function isoDateLocal(d){
   if (!from.value){
     from.value = (typeof isoDateLocal === 'function' ? isoDateLocal : isoDate)(new Date());
   }
-  run.addEventListener('click', runAvailability);
-  days.addEventListener('change', runAvailability);
-  only?.addEventListener('change', runAvailability);
+  // safe wrapper – greift erst auf window.runAvailability zu, wenn vorhanden
+const callAvail = () => { if (typeof window.runAvailability === 'function') window.runAvailability(); };
+run.addEventListener('click',   callAvail);
+days.addEventListener('change', callAvail);
+only?.addEventListener('change',callAvail);
 
   // Bei Öffnen des Modals direkt rendern
   document.getElementById('btnAvail')?.addEventListener('click', ()=>{
