@@ -1294,4 +1294,62 @@ table.matrix { width:100%; border-collapse:separate; border-spacing: 4px; } /* e
 /* Drag-Schatten entfernen (falls Klassen noch gesetzt werden) */
 .drag-sel{ outline: none !important; }
 
+/* === Availability – clean grid === */
+.matrix table.matrix { border-collapse: separate; border-spacing: 6px; }
+.matrix td, .matrix th:not(.sticky) {
+  border: 0;
+  background: rgba(0,255,255,.04);
+  border-radius: 10px;
+  position: relative;
+  min-width: 54px;
+  height: 36px;
+  vertical-align: middle;
+}
+
+/* Prozent-Pill kompakter, ohne Doppelrahmen */
+.matrix .pill {
+  display:inline-block;
+  padding: 4px 10px;
+  font-weight: 800;
+  border-radius: 999px;
+  border: 1px solid rgba(0,255,255,.20);
+  background: rgba(0,255,255,.06);
+  font-size: 11px;
+}
+
+/* Farbringe beibehalten, aber dezenter */
+.occ-g { box-shadow: inset 0 0 0 2px rgba(53,224,138,.35); }
+.occ-o { box-shadow: inset 0 0 0 2px rgba(255,209,102,.40); }
+.occ-r { box-shadow: inset 0 0 0 2px rgba(255,77,109,.55); }
+
+/* Overbooking-Badge (oben rechts, klein) */
+.avail-ob-badge{
+  position:absolute; top:4px; right:6px;
+  font-size:10px; font-weight:800; line-height:1;
+  padding: 2px 6px;
+  border-radius:8px;
+  color:#ff4d6d;
+  border:1px solid rgba(255,77,109,.55);
+  background:rgba(255,77,109,.10);
+}
+
+/* Manuelle Δ-Badge (unten rechts) */
+.avail-delta-badge{
+  position:absolute; bottom:4px; right:6px;
+  font-size:10px; font-weight:800; line-height:1;
+  padding: 2px 6px;
+  border-radius:8px;
+  color:#ffd166;
+  border:1px solid rgba(255,209,102,.55);
+  background:rgba(255,209,102,.10);
+}
+
+/* Sticky-Hotelspalte etwas ruhiger */
+table.matrix th.sticky{
+  background: linear-gradient(180deg,var(--panel),var(--panel-2));
+  border-right: 1px solid rgba(0,255,255,.12);
+  min-width: 220px;
+}
+
+
 
