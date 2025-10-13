@@ -1193,20 +1193,19 @@ function renderAvailabilityMatrix(avMap, startISO, days, activeOnly=false){
   const tbody = document.getElementById('matrixBody');
   if (!thead || !tbody) return;
 
-  // Header bauen
-  thead.innerHTML = `<th class="sticky">Hotel</th>` + dates.map((d,i)=>{
+  // Header
+  thead.innerHTML = `<th class="sticky">Hotel</th>` + dates.map((d)=> {
     const dm = new Date(d).toLocaleDateString('de-DE',{ day:'2-digit', month:'2-digit' });
     return `<th title="${d}">${dm}</th>`;
   }).join('');
 
-  // Zeilen
+  // Body
   tbody.innerHTML = '';
-  const hotels = HOTELS.slice(); // definierte Liste
+  const hotels = HOTELS.slice();
 
   for (const h of hotels){
     const perDate = avMap.get(h.code) || new Map();
 
-    // Filter „nur aktive Hotels“
     if (activeOnly){
       const sumCap = dates.reduce((s,d)=> s + (perDate.get(d)?.cap || 0), 0);
       const sumBok = dates.reduce((s,d)=> s + (perDate.get(d)?.bok || 0), 0);
@@ -1214,114 +1213,106 @@ function renderAvailabilityMatrix(avMap, startISO, days, activeOnly=false){
     }
 
     const tr = document.createElement('tr');
+
     const th = document.createElement('th');
     th.className = 'sticky';
     th.textContent = `${h.group} - ${hotelCity(h.name)}`;
     tr.appendChild(th);
 
-   dates.forEach((d, idx)=>{
-  const rec = perDate.get(d) || { cap:0, bok:0 };
+    dates.forEach((d, idx)=>{
+      const rec = perDate.get(d) || { cap:0, bok:0 };
+      // echte % ohne Deckelung → Overbooking sichtbar
+      const pct = rec.cap > 0 ? Math.round((rec.bok / rec.cap) * 100) : 0;
 
-  // echte % (Overbooking sichtbar >100)
-  const pct = rec.cap > 0 ? Math.round((rec.bok / rec.cap) * 100) : 0;
+      const td = document.createElement('td');
+      td.dataset.hotel = h.code;
+      td.dataset.idx   = String(idx);
+      td.dataset.date  = d;
+      td.dataset.cap   = String(rec.cap);
+      td.dataset.bok   = String(rec.bok);
+      td.dataset.pct   = String(pct);
+      td.className     = occClass(pct);
+      td.style.textAlign = 'center';
 
-  const td = document.createElement('td');
-  td.dataset.hotel = h.code;
-  td.dataset.idx   = String(idx);
-  td.dataset.date  = d;
-  td.dataset.cap   = String(rec.cap);
-  td.dataset.bok   = String(rec.bok);
-  td.dataset.pct   = String(pct);
-  td.className     = occClass(pct);
-  td.style.textAlign = 'center';
+      // Prozent-Pill
+      td.innerHTML = (rec.cap > 0)
+        ? `<span class="pill ${occClass(pct)}" data-tt="1">${pct}%</span>`
+        : '—';
 
-  // Prozent-Pill
-  td.innerHTML = (rec.cap > 0)
-    ? `<span class="pill ${occClass(pct)}" data-tt="1">${pct}%</span>`
-    : '—';
+      // Overbooking-Badge oben rechts
+      const over = Math.max(0, rec.bok - rec.cap);
+      if (over > 0) {
+        td.classList.add('overbook');
+        const ob = document.createElement('div');
+        ob.className = 'avail-ob-badge';
+        ob.textContent = `+${over}`;
+        td.appendChild(ob);
+      }
 
-  // Overbooking-Badge (oben rechts)
-  const over = Math.max(0, rec.bok - rec.cap);
-  if (over > 0) {
-    td.classList.add('overbook');
-    const ob = document.createElement('div');
-    ob.className = 'avail-ob-badge';
-    ob.textContent = `+${over}`;
-    td.appendChild(ob);
-  }
+      // Manuelle Δ-Badge unten rechts (nur wenn ≠ 0)
+      const md = window.getManualDelta?.(h.code, d);
+      if (md != null && md !== 0) {
+        td.classList.add('manual');
+        const badge = document.createElement('div');
+        badge.className = 'avail-delta-badge';
+        badge.textContent = `${md > 0 ? '+' : ''}${md}`;
+        td.appendChild(badge);
+      }
 
-  // Manuelle Δ-Badge (unten rechts)
-  const md = window.getManualDelta?.(h.code, d);
-  if (md != null && md !== 0) {
-    td.classList.add('manual');
-    const badge = document.createElement('div');
-    badge.className = 'avail-delta-badge';
-    badge.textContent = `${md > 0 ? '+' : ''}${md}`;
-    td.appendChild(badge);
-  }
+      // EINZIGER Klick-Handler (kein Drag)
+      td.addEventListener('click', () => window.handleCellAdjust?.(h.code, d, td));
 
-  // <<< WICHTIG: Click-Handler IMMER registrieren (außerhalb der md-If)!
-  td.addEventListener('click', () => {
-    window.handleCellAdjust?.(h.code, d, td);
-  });
-
-  tr.appendChild(td);
-});
-
-
-    };
+      tr.appendChild(td);
+    });
 
     tbody.appendChild(tr);
   }
 
-  // --- Tooltip-Delegation für Availability (einmalig pro Tabelle) ---
-(function ensureAvailTooltipHandlers(){
-  if (tbody.__ttBound) return;
-  tbody.__ttBound = true;
+  // --- Tooltip-Delegation (einmalig binden) ---
+  (function ensureAvailTooltipHandlers(){
+    if (tbody.__ttBound) return;
+    tbody.__ttBound = true;
 
-  let tt = document.getElementById('availTT');
-  if (!tt){
-    tt = document.createElement('div');
-    tt.id = 'availTT';
-    tt.className = 'avail-tt';
-    tt.style.display = 'none';
-    document.body.appendChild(tt);
-  }
+    let tt = document.getElementById('availTT');
+    if (!tt){
+      tt = document.createElement('div');
+      tt.id = 'availTT';
+      tt.className = 'avail-tt';
+      tt.style.display = 'none';
+      document.body.appendChild(tt);
+    }
 
-  function fillAndShow(e, td){
-  const d   = td.dataset.date;
-const cap = Number(td.dataset.cap||0);
-const bok = Number(td.dataset.bok||0);
-const pct = Number(td.dataset.pct||0);
-const md  = window.getManualDelta?.(td.dataset.hotel, d);
-const over = Math.max(0, bok - cap);
+    function fillAndShow(e, td){
+      const d   = td.dataset.date;
+      const cap = Number(td.dataset.cap||0);
+      const bok = Number(td.dataset.bok||0);
+      const pct = Number(td.dataset.pct||0);
+      const md  = window.getManualDelta?.(td.dataset.hotel, d);
+      const over= Math.max(0, bok - cap);
+      tt.innerHTML = `
+        <div class="tt-title">${d}</div>
+        <div class="tt-line"><span>Kapazität</span><span>${cap}</span></div>
+        <div class="tt-line"><span>Belegt</span><span>${bok}${over>0 ? ` (OB +${over})` : ''}</span></div>
+        <div class="tt-line"><span>Auslastung</span><span>${pct}%</span></div>
+        ${md!=null && md!==0 ? `<div class="tt-line"><span>Manuell</span><span>${md>0?'+':''}${md}</span></div>` : ''}
+      `;
+      tt.style.left = (e.clientX + 14) + 'px';
+      tt.style.top  = (e.clientY + 14) + 'px';
+      tt.style.display = 'block';
+    }
 
-tt.innerHTML = `
-  <div class="tt-title">${d}</div>
-  <div class="tt-line"><span>Kapazität</span><span>${cap}</span></div>
-  <div class="tt-line"><span>Belegt</span><span>${bok}${over>0 ? ` (OB +${over})` : ''}</span></div>
-  <div class="tt-line"><span>Auslastung</span><span>${pct}%</span></div>
-  ${md!=null ? `<div class="tt-line"><span>Manuell</span><span>${md>0?'+':''}${md}</span></div>` : ''}
-`;
-  tt.style.left = (e.clientX + 14) + 'px';
-  tt.style.top  = (e.clientY + 14) + 'px';
-  tt.style.display = 'block';
-}
+    function hide(){ tt.style.display = 'none'; }
 
-  function hide(){ tt.style.display = 'none'; }
-
-  // Delegation: nur wenn über einer Pill in der Matrix
-  tbody.addEventListener('mousemove', (e)=>{
-    const pill = e.target.closest('.pill[data-tt]');
-    if (!pill) { hide(); return; }
-    const td = pill.closest('td[data-hotel][data-idx]');
-    if (!td) { hide(); return; }
-    fillAndShow(e, td);
-  });
-
-  tbody.addEventListener('mouseleave', hide);
-})();
-
+    // nur über einer Pill anzeigen
+    tbody.addEventListener('mousemove', (e)=>{
+      const pill = e.target.closest('.pill[data-tt]');
+      if (!pill) { hide(); return; }
+      const td = pill.closest('td[data-hotel][data-idx]');
+      if (!td) { hide(); return; }
+      fillAndShow(e, td);
+    });
+    tbody.addEventListener('mouseleave', hide);
+  })();
 }
 
 async function runAvailability(){
@@ -1336,7 +1327,6 @@ async function runAvailability(){
   const map = await fetchAvailabilityWindow(startISO, days);
   renderAvailabilityMatrix(map, startISO, days, activeOnly);
 }
-
   window.runAvailability = runAvailability;
 
 
