@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ResTool - Import Test</title>
+  <style>
+    body {
+      background: #0a0a0a;
+      color: #fff;
+      font-family: monospace;
+      padding: 20px;
+    }
+    #log {
+      background: #1a1a1a;
+      padding: 20px;
+      border: 2px solid #3b82f6;
+      border-radius: 8px;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+    .log-line {
+      margin: 8px 0;
+      padding: 4px 8px;
+      border-left: 3px solid #10b981;
+    }
+    .log-error {
+      border-left-color: #ef4444;
+      color: #ef4444;
+    }
+    .log-warn {
+      border-left-color: #f59e0b;
+      color: #f59e0b;
+    }
+    .log-success {
+      border-left-color: #10b981;
+      color: #10b981;
+    }
+    h1 {
+      color: #3b82f6;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔍 ResTool Import Test</h1>
+  <p>Testet JEDEN einzelnen Module-Import...</p>
+  <div id="log"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <script type="module">
+    const logDiv = document.getElementById('log');
+    
+    function log(msg, type = 'info') {
+      const line = document.createElement('div');
+      line.className = 'log-line log-' + type;
+      line.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+      logDiv.appendChild(line);
+      logDiv.scrollTop = logDiv.scrollHeight;
+      console.log(msg);
+    }
+
+    log('🚀 Starting Import Tests...', 'success');
+
+    // Test each import individually
+    const imports = [
+      { name: 'Auth', path: './src/core/auth.js' },
+      { name: 'EventBus', path: './src/core/eventBus.js' },
+      { name: 'Supabase', path: './src/core/supabase.js' },
+      { name: 'Toast', path: './src/utils/toast.js' },
+      { name: 'ModalManager', path: './src/utils/modal.js' },
+      { name: 'Formatters', path: './src/utils/formatters.js' },
+      { name: 'Reservations', path: './src/services/reservations.js' },
+      { name: 'Hotels', path: './src/services/hotels.js' },
+      { name: 'TableManager', path: './src/components/tables/tableManager.js' }
+    ];
+
+    let failedImports = [];
+    let successCount = 0;
+
+    for (const imp of imports) {
+      try {
+        log(`📦 Testing import: ${imp.name}...`);
+        const module = await import(imp.path);
+        log(`✅ ${imp.name} imported successfully`, 'success');
+        successCount++;
+      } catch (err) {
+        log(`❌ ${imp.name} FAILED: ${err.message}`, 'error');
+        log(`   Path: ${imp.path}`, 'error');
+        log(`   Stack: ${err.stack?.split('\n')[0] || 'n/a'}`, 'error');
+        failedImports.push({ name: imp.name, error: err.message });
+      }
+    }
+
+    log('');
+    log('🎯 ERGEBNIS:', 'success');
+    log(`✅ Erfolgreiche Imports: ${successCount}/${imports.length}`, successCount === imports.length ? 'success' : 'warn');
+    
+    if (failedImports.length > 0) {
+      log(`❌ Fehlgeschlagene Imports: ${failedImports.length}`, 'error');
+      failedImports.forEach(imp => {
+        log(`   - ${imp.name}: ${imp.error}`, 'error');
+      });
+      log('');
+      log('🔧 LÖSUNG:', 'warn');
+      log('Die fehlgeschlagenen Module müssen repariert werden!', 'warn');
+      log('Überprüfe ob die Dateien existieren und keine Syntax-Fehler haben.', 'warn');
+    } else {
+      log('🎉 Alle Module wurden erfolgreich geladen!', 'success');
+      log('');
+      log('🤔 Wenn die App trotzdem hängt:', 'warn');
+      log('Das Problem liegt wahrscheinlich im App-Initialisierungs-Code', 'warn');
+      log('Öffne die Browser Console (F12) für mehr Details', 'warn');
+    }
+
+    // Now try to import and initialize the full app
+    log('');
+    log('🧪 Versuche die komplette App zu laden...', 'info');
+    
+    try {
+      const appModule = await import('./src/app.js');
+      log('✅ App-Modul geladen', 'success');
+      
+      // Check if app is initializing
+      setTimeout(() => {
+        const loadingScreen = document.querySelector('#loading-screen');
+        const loginScreen = document.querySelector('#login-screen');
+        const mainApp = document.querySelector('#main-app');
+        
+        log('');
+        log('🔍 Aktueller App-Status:', 'info');
+        
+        if (loadingScreen && !loadingScreen.classList.contains('hidden')) {
+          log('⚠️ Loading-Screen ist noch sichtbar', 'warn');
+          log('Die App hängt beim Initialisieren!', 'error');
+        }
+        
+        if (loginScreen && !loginScreen.classList.contains('hidden')) {
+          log('✅ Login-Screen ist sichtbar', 'success');
+          log('Die App funktioniert!', 'success');
+        }
+        
+        if (mainApp && !mainApp.classList.contains('hidden')) {
+          log('✅ Main-App ist sichtbar', 'success');
+          log('Die App funktioniert!', 'success');
+        }
+      }, 3000);
+      
+    } catch (err) {
+      log(`❌ App-Modul Fehler: ${err.message}`, 'error');
+      log(`Stack: ${err.stack}`, 'error');
+    }
+  </script>
+</body>
+</html>
