@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ResTool – Hotel Reservierungssystem</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
+  <!-- Styles -->
+  <link rel="stylesheet" href="src/styles.css">
+</head>
+<body>
+  <!-- Toast Container -->
+  <div id="toast-container"></div>
+
+  <!-- App Container -->
+  <div id="app">
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="loading-screen">
+      <div class="loading-spinner"></div>
+      <p>ResTool lädt...</p>
+    </div>
+
+    <!-- Login Screen -->
+    <div id="login-screen" class="login-screen hidden">
+      <div class="login-container">
+        <div class="login-header">
+          <div class="logo-circle"></div>
+          <h1>ResTool</h1>
+          <p>Hotel Reservierungssystem</p>
+        </div>
+        
+        <form id="login-form" class="login-form">
+          <div class="form-group">
+            <label for="login-email">E-Mail</label>
+            <input 
+              type="email" 
+              id="login-email" 
+              class="input"
+              placeholder="ihre@email.de"
+              required
+            >
+          </div>
+          
+          <div class="form-group">
+            <label for="login-password">Passwort</label>
+            <input 
+              type="password" 
+              id="login-password" 
+              class="input"
+              placeholder="••••••••"
+              required
+            >
+          </div>
+          
+          <button type="submit" class="btn btn-primary btn-block">
+            Anmelden
+          </button>
+          
+          <p class="text-center text-muted" style="margin-top: 16px; font-size: 13px;">
+            Demo: admin@restool.de / admin123
+          </p>
+        </form>
+      </div>
+    </div>
+
+    <!-- Main App -->
+    <div id="main-app" class="hidden">
+      <!-- Header -->
+      <header class="header">
+        <div class="header-content">
+          <div class="header-left">
+            <div class="logo-section">
+              <div class="logo-circle"></div>
+              <h1 class="logo-text">ResTool</h1>
+            </div>
+            
+            <nav class="header-nav">
+              <button class="btn btn-ghost btn-sm" data-action="new-reservation">
+                <span class="icon">+</span>
+                Neue Reservierung
+              </button>
+              <button class="btn btn-ghost btn-sm" data-modal="availability">
+                <span class="icon">📅</span>
+                Verfügbarkeit
+              </button>
+              <button class="btn btn-ghost btn-sm" data-modal="reporting">
+                <span class="icon">📊</span>
+                Reporting
+              </button>
+            </nav>
+          </div>
+          
+          <div class="header-right">
+            <div class="status-indicators">
+              <div class="status-indicator status-success" title="Supabase verbunden">
+                <span class="status-dot"></span>
+                <span class="status-label">DB</span>
+              </div>
+            </div>
+            
+            <div class="user-menu">
+              <button class="btn btn-ghost btn-icon" id="user-menu-trigger">
+                <span class="icon">👤</span>
+              </button>
+              <div class="dropdown-menu hidden" id="user-menu">
+                <div class="dropdown-header">
+                  <strong id="user-name">Admin</strong>
+                  <span id="user-email" class="text-muted">admin@restool.de</span>
+                </div>
+                <div class="dropdown-divider"></div>
+                <button class="dropdown-item" data-modal="settings">
+                  <span class="icon">⚙️</span>
+                  Einstellungen
+                </button>
+                <button class="dropdown-item" data-action="logout">
+                  <span class="icon">🚪</span>
+                  Abmelden
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Main Content -->
+      <main class="main-content">
+        <div class="container">
+          <!-- KPI Cards -->
+          <section class="kpi-section">
+            <div class="section-header">
+              <h2>Dashboard Übersicht</h2>
+              <div class="hotel-selector">
+                <select id="kpi-hotel-filter" class="select select-sm">
+                  <option value="">Alle Hotels</option>
+                </select>
+              </div>
+            </div>
+            
+            <div class="kpi-grid">
+              <div class="kpi-card">
+                <div class="kpi-header">
+                  <span class="kpi-icon">📈</span>
+                  <span class="kpi-label">Buchungen Heute</span>
+                </div>
+                <div class="kpi-value" id="kpi-bookings-today">-</div>
+                <div class="kpi-footer">
+                  <span class="kpi-change kpi-positive">+12%</span>
+                  <span class="kpi-sublabel">vs. gestern</span>
+                </div>
+              </div>
+              
+              <div class="kpi-card">
+                <div class="kpi-header">
+                  <span class="kpi-icon">💰</span>
+                  <span class="kpi-label">Umsatz Heute</span>
+                </div>
+                <div class="kpi-value" id="kpi-revenue-today">- €</div>
+                <div class="kpi-footer">
+                  <span class="kpi-change kpi-positive">+8%</span>
+                  <span class="kpi-sublabel">vs. gestern</span>
+                </div>
+              </div>
+              
+              <div class="kpi-card">
+                <div class="kpi-header">
+                  <span class="kpi-icon">🏨</span>
+                  <span class="kpi-label">Auslastung</span>
+                </div>
+                <div class="kpi-value" id="kpi-occupancy">-%</div>
+                <div class="kpi-footer">
+                  <span class="kpi-change kpi-neutral">±0%</span>
+                  <span class="kpi-sublabel">vs. gestern</span>
+                </div>
+              </div>
+              
+              <div class="kpi-card">
+                <div class="kpi-header">
+                  <span class="kpi-icon">💵</span>
+                  <span class="kpi-label">ADR</span>
+                </div>
+                <div class="kpi-value" id="kpi-adr">- €</div>
+                <div class="kpi-footer">
+                  <span class="kpi-change kpi-positive">+5%</span>
+                  <span class="kpi-sublabel">vs. gestern</span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Reservations Table -->
+          <section class="table-section">
+            <div class="section-header">
+              <h2>Reservierungen</h2>
+              <div class="section-actions">
+                <div class="search-box">
+                  <span class="search-icon">🔍</span>
+                  <input 
+                    type="text" 
+                    id="search-input" 
+                    class="search-input" 
+                    placeholder="Suchen..."
+                  >
+                </div>
+                <button class="btn btn-ghost btn-sm" data-action="filter">
+                  <span class="icon">⚡</span>
+                  Filter
+                </button>
+                <button class="btn btn-primary btn-sm" data-action="new-reservation">
+                  <span class="icon">+</span>
+                  Neue Reservierung
+                </button>
+              </div>
+            </div>
+            
+            <div class="card">
+              <div class="table-container" id="reservations-table-container">
+                <!-- Table will be injected here -->
+              </div>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Modal Backdrop -->
+  <div id="modal-backdrop" class="modal-backdrop"></div>
+
+  <!-- New Reservation Modal -->
+  <div id="modal-new-reservation" class="modal">
+    <div class="modal-container modal-lg">
+      <div class="modal-header">
+        <h3>Neue Reservierung</h3>
+        <button class="btn-close" data-close>&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="wizard">
+          <div class="wizard-steps">
+            <div class="wizard-step active" data-step="1">
+              <span class="step-number">1</span>
+              <span class="step-label">Zeitraum</span>
+            </div>
+            <div class="wizard-step" data-step="2">
+              <span class="step-number">2</span>
+              <span class="step-label">Zimmer</span>
+            </div>
+            <div class="wizard-step" data-step="3">
+              <span class="step-number">3</span>
+              <span class="step-label">Gast</span>
+            </div>
+            <div class="wizard-step" data-step="4">
+              <span class="step-number">4</span>
+              <span class="step-label">Bestätigung</span>
+            </div>
+          </div>
+          
+          <div class="wizard-content">
+            <!-- Step 1 -->
+            <div class="wizard-page active" data-page="1">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label>Hotel</label>
+                  <select id="wizard-hotel" class="select">
+                    <option value="">Hotel wählen...</option>
+                  </select>
+                </div>
+                
+                <div class="form-group">
+                  <label>Anzahl Personen</label>
+                  <input type="number" id="wizard-persons" class="input" value="2" min="1">
+                </div>
+                
+                <div class="form-group">
+                  <label>Anreise</label>
+                  <input type="date" id="wizard-checkin" class="input">
+                </div>
+                
+                <div class="form-group">
+                  <label>Abreise</label>
+                  <input type="date" id="wizard-checkout" class="input">
+                </div>
+              </div>
+            </div>
+            
+            <!-- Step 2 -->
+            <div class="wizard-page" data-page="2">
+              <div class="category-grid" id="category-grid">
+                <!-- Categories will be injected -->
+              </div>
+            </div>
+            
+            <!-- Step 3 -->
+            <div class="wizard-page" data-page="3">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label>Vorname</label>
+                  <input type="text" id="wizard-firstname" class="input">
+                </div>
+                
+                <div class="form-group">
+                  <label>Nachname</label>
+                  <input type="text" id="wizard-lastname" class="input">
+                </div>
+                
+                <div class="form-group">
+                  <label>E-Mail</label>
+                  <input type="email" id="wizard-email" class="input">
+                </div>
+                
+                <div class="form-group">
+                  <label>Telefon</label>
+                  <input type="tel" id="wizard-phone" class="input">
+                </div>
+                
+                <div class="form-group form-group-full">
+                  <label>Firma (optional)</label>
+                  <input type="text" id="wizard-company" class="input">
+                </div>
+                
+                <div class="form-group form-group-full">
+                  <label>Notizen</label>
+                  <textarea id="wizard-notes" class="input" rows="3"></textarea>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Step 4 -->
+            <div class="wizard-page" data-page="4">
+              <div class="summary-card">
+                <h4>Zusammenfassung</h4>
+                <div class="summary-content" id="wizard-summary">
+                  <!-- Summary will be injected -->
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="wizard-actions">
+            <button class="btn btn-ghost" id="wizard-prev" disabled>Zurück</button>
+            <button class="btn btn-primary" id="wizard-next">Weiter</button>
+            <button class="btn btn-primary hidden" id="wizard-submit">Reservierung erstellen</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Reservation Modal -->
+  <div id="modal-edit-reservation" class="modal">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3>Reservierung bearbeiten</h3>
+        <button class="btn-close" data-close>&times;</button>
+      </div>
+      <div class="modal-body" id="edit-reservation-content">
+        <!-- Content will be injected -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script type="module" src="src/app.js"></script>
+</body>
+</html>
