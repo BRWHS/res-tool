@@ -26,8 +26,17 @@ class AuthService {
     if (this.initialized) return;
 
     try {
-      // Check for existing session
-      const { data: { session } } = await supabase.auth.getSession();
+      // Check for existing session with timeout
+      const sessionPromise = supabase.auth.getSession();
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout')), 5000)
+      );
+      
+      const { data: { session } } = await Promise.race([sessionPromise, timeoutPromise])
+        .catch(err => {
+          console.warn('Supabase session check failed, using demo mode:', err.message);
+          return { data: { session: null } };
+        });
       
       if (session) {
         this.currentUser = {
@@ -56,8 +65,9 @@ class AuthService {
       });
 
       this.initialized = true;
-    } catch (error) {
+   } catch (error) {
       console.error('Auth initialization error:', error);
+      this.initialized = true; // Mark as initialized even on error
     }
   }
 
