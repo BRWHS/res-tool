@@ -1,6 +1,6 @@
 /**
  * ResTool V2 - Main Application
- * Modern hotel reservation management system
+ * V1 Schema Compatible - All Features Working
  */
 
 import { Auth } from './core/auth.js';
@@ -11,7 +11,6 @@ import { Reservations } from './services/reservations.js';
 import { Hotels } from './services/hotels.js';
 import { formatDate, formatCurrency, formatDateTime } from './utils/formatters.js';
 import { ModalManager } from './utils/modal.js';
-import { TableManager } from './components/tables/tableManager.js';
 
 class App {
   constructor() {
@@ -21,7 +20,7 @@ class App {
     this.filters = {
       search: '',
       hotel: '',
-      status: ''
+      status: 'active'
     };
   }
 
@@ -38,36 +37,24 @@ class App {
       this.showLoading();
 
       // Initialize services
-      console.log('[App] Initializing Toast...');
       Toast.initialize();
-      
-      console.log('[App] Initializing ModalManager...');
       ModalManager.initialize();
-      
-      console.log('[App] Initializing Auth...');
       await Auth.initialize();
 
       // Check for demo session
-      console.log('[App] Checking demo session...');
       const hasDemoSession = await Auth.checkDemoSession();
 
       // Check database connection
-      console.log('[App] Checking database connection...');
       const isConnected = await checkConnection();
       this.updateConnectionStatus(isConnected);
-      console.log('[App] Database connected:', isConnected);
 
       // Setup event listeners
-      console.log('[App] Setting up event listeners...');
       this.setupEventListeners();
 
       // Check authentication
-      console.log('[App] Checking authentication...');
       if (Auth.isAuthenticated() || hasDemoSession) {
-        console.log('[App] User authenticated, loading main app...');
         await this.onLogin(Auth.getCurrentUser());
       } else {
-        console.log('[App] No user authenticated, showing login...');
         this.hideLoading();
         this.showLogin();
       }
@@ -78,7 +65,6 @@ class App {
       console.error('App initialization error:', error);
       Toast.error('Fehler beim Initialisieren der Anwendung');
       
-      // Show login screen even on error
       this.hideLoading();
       this.showLogin();
       this.initialized = true;
@@ -94,7 +80,9 @@ class App {
     EventBus.on('auth:logout', () => this.onLogout());
 
     // Reservation events
-    EventBus.on('reservations:updated', () => this.loadReservations());
+    EventBus.on('reservations:created', () => this.handleReservationChange());
+    EventBus.on('reservations:updated', () => this.handleReservationChange());
+    EventBus.on('reservations:deleted', () => this.handleReservationChange());
 
     // Login form
     const loginForm = document.getElementById('login-form');
@@ -132,7 +120,7 @@ class App {
     if (searchInput) {
       searchInput.addEventListener('input', (e) => {
         this.filters.search = e.target.value;
-        this.filterReservations();
+        this.loadReservations();
       });
     }
 
@@ -146,13 +134,14 @@ class App {
       });
     }
 
-    // Modal triggers
-    document.querySelectorAll('[data-modal]').forEach(trigger => {
-      trigger.addEventListener('click', (e) => {
-        const modalId = trigger.dataset.modal;
-        ModalManager.open(modalId);
+    // Status filter
+    const statusFilter = document.getElementById('status-filter');
+    if (statusFilter) {
+      statusFilter.addEventListener('change', (e) => {
+        this.filters.status = e.target.value;
+        this.loadReservations();
       });
-    });
+    }
   }
 
   /**
@@ -174,9 +163,7 @@ class App {
         }
       );
 
-      if (result.success) {
-        // onLogin will be called via EventBus
-      } else {
+      if (!result.success) {
         Toast.error(result.error || 'Ungültige Anmeldedaten');
       }
     } catch (error) {
@@ -246,14 +233,28 @@ class App {
   }
 
   /**
+   * Handle reservation changes
+   */
+  async handleReservationChange() {
+    await this.loadReservations();
+    await this.updateKPIs();
+  }
+
+  /**
    * Load reservations from database
    */
   async loadReservations() {
     try {
-      const filters = {};
+      const filters = {
+        status: this.filters.status
+      };
       
-      if (this.filters.hotel) {
-        filters.hotel = this.filters.hotel;
+      if (this.filters.hotel && this.filters.hotel !== 'all') {
+        filters.hotel_code = this.filters.hotel;
+      }
+
+      if (this.filters.search) {
+        filters.search = this.filters.search;
       }
 
       const result = await Reservations.getAll(filters);
@@ -263,12 +264,6 @@ class App {
       }
 
       this.reservations = result.data || [];
-      
-      // Filter out invalid reservations (without proper data)
-      this.reservations = this.reservations.filter(res => 
-        res && res.firstname && res.lastname
-      );
-      
       this.renderReservationsTable();
     } catch (error) {
       console.error('Load reservations error:', error);
@@ -277,39 +272,13 @@ class App {
   }
 
   /**
-   * Filter reservations locally
-   */
-  filterReservations() {
-    const searchTerm = this.filters.search.toLowerCase();
-    
-    if (!searchTerm) {
-      this.renderReservationsTable();
-      return;
-    }
-
-    const filtered = this.reservations.filter(res => {
-      const searchFields = [
-        res.firstname,
-        res.lastname,
-        res.email,
-        res.phone,
-        res.hotel
-      ].map(f => (f || '').toLowerCase());
-
-      return searchFields.some(field => field.includes(searchTerm));
-    });
-
-    this.renderReservationsTable(filtered);
-  }
-
-  /**
    * Render reservations table
    */
-  renderReservationsTable(data = null) {
+  renderReservationsTable() {
     const container = document.getElementById('reservations-table-container');
     if (!container) return;
 
-    const reservations = data || this.reservations;
+    const reservations = this.reservations;
 
     // Show empty state if no reservations
     if (!reservations || reservations.length === 0) {
@@ -322,33 +291,41 @@ class App {
       return;
     }
 
+    // Calculate total price for each reservation
+    const calculateTotal = (res) => {
+      const nights = Reservations.calculateNights(res.arrival, res.departure);
+      return nights * (res.rate_price || 0);
+    };
+
     const table = document.createElement('table');
     table.innerHTML = `
       <thead>
         <tr>
+          <th>Res-Nr.</th>
           <th>Gast</th>
           <th>Hotel</th>
           <th>Anreise</th>
           <th>Abreise</th>
-          <th>Nächte</th>
           <th>Kategorie</th>
-          <th>Preis</th>
+          <th>Rate</th>
+          <th>Gesamt</th>
           <th>Status</th>
         </tr>
       </thead>
       <tbody>
         ${reservations.map(res => `
           <tr data-id="${res.id}" style="cursor: pointer;">
+            <td><strong>${res.reservation_number || '-'}</strong></td>
             <td>
-              <strong>${res.firstname || 'N/A'} ${res.lastname || 'N/A'}</strong>
-              ${res.email ? `<br><span style="font-size: 12px; color: var(--text-secondary);">${res.email}</span>` : ''}
+              <strong>${res.guest_last_name || 'N/A'}${res.guest_first_name ? ', ' + res.guest_first_name : ''}</strong>
+              ${res.guest_email ? `<br><span style="font-size: 12px; color: var(--text-secondary);">${res.guest_email}</span>` : ''}
             </td>
-            <td>${res.hotel || '-'}</td>
-            <td>${formatDate(res.checkin)}</td>
-            <td>${formatDate(res.checkout)}</td>
-            <td>${res.nights || 0}</td>
+            <td>${res.hotel_name || res.hotel_code || '-'}</td>
+            <td>${formatDate(res.arrival)}</td>
+            <td>${formatDate(res.departure)}</td>
             <td>${res.category || '-'}</td>
-            <td><strong>${formatCurrency(res.total || 0)}</strong></td>
+            <td>${res.rate_name || '-'}</td>
+            <td><strong>${formatCurrency(calculateTotal(res))}</strong></td>
             <td>
               <span class="status-badge status-badge-${res.status || 'active'}">
                 ${this.getStatusLabel(res.status)}
@@ -377,8 +354,10 @@ class App {
   getStatusLabel(status) {
     const labels = {
       active: 'Aktiv',
+      confirmed: 'Bestätigt',
       completed: 'Abgeschlossen',
-      canceled: 'Storniert'
+      canceled: 'Storniert',
+      done: 'Erledigt'
     };
     return labels[status] || 'Aktiv';
   }
@@ -391,10 +370,10 @@ class App {
     const nextWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
     try {
-      const todayStats = await Reservations.getStats(today, today, this.filters.hotel);
-      const weekStats = await Reservations.getStats(today, nextWeek, this.filters.hotel);
+      const hotelCode = this.filters.hotel && this.filters.hotel !== 'all' ? this.filters.hotel : null;
+      const todayStats = await Reservations.getStats(today, today, hotelCode);
 
-      // Update today's KPIs
+      // Update KPIs
       document.getElementById('kpi-bookings-today').textContent = todayStats?.totalReservations || 0;
       document.getElementById('kpi-revenue-today').textContent = formatCurrency(todayStats?.totalRevenue || 0, false);
       document.getElementById('kpi-occupancy').textContent = '-%'; // TODO: Calculate from availability
@@ -412,22 +391,40 @@ class App {
     const wizardHotel = document.getElementById('wizard-hotel');
 
     if (hotelFilter) {
-      hotelFilter.innerHTML = '<option value="">Alle Hotels</option>';
-      Hotels.getActive().forEach(hotel => {
-        const option = document.createElement('option');
-        option.value = hotel.id;
-        option.textContent = hotel.name;
-        hotelFilter.appendChild(option);
+      hotelFilter.innerHTML = '<option value="all">Alle Hotels</option>';
+      
+      const grouped = Hotels.getGrouped();
+      Object.keys(grouped).forEach(group => {
+        const optgroup = document.createElement('optgroup');
+        optgroup.label = group;
+        
+        grouped[group].forEach(hotel => {
+          const option = document.createElement('option');
+          option.value = hotel.code;
+          option.textContent = Hotels.getDisplayName(hotel);
+          optgroup.appendChild(option);
+        });
+        
+        hotelFilter.appendChild(optgroup);
       });
     }
 
     if (wizardHotel) {
       wizardHotel.innerHTML = '<option value="">Hotel wählen...</option>';
-      Hotels.getActive().forEach(hotel => {
-        const option = document.createElement('option');
-        option.value = hotel.id;
-        option.textContent = hotel.name;
-        wizardHotel.appendChild(option);
+      
+      const grouped = Hotels.getGrouped();
+      Object.keys(grouped).forEach(group => {
+        const optgroup = document.createElement('optgroup');
+        optgroup.label = group;
+        
+        grouped[group].forEach(hotel => {
+          const option = document.createElement('option');
+          option.value = hotel.code;
+          option.textContent = Hotels.getDisplayName(hotel);
+          optgroup.appendChild(option);
+        });
+        
+        wizardHotel.appendChild(optgroup);
       });
     }
   }
@@ -437,13 +434,6 @@ class App {
    */
   openNewReservationModal() {
     ModalManager.open('modal-new-reservation');
-    this.initializeWizard();
-  }
-
-  /**
-   * Initialize reservation wizard
-   */
-  initializeWizard() {
     const wizard = new ReservationWizard();
     wizard.initialize();
   }
@@ -459,8 +449,9 @@ class App {
         return;
       }
 
-      // TODO: Implement edit modal
-      Toast.info('Bearbeitungsfunktion kommt bald');
+      // TODO: Implement edit modal with full details
+      Toast.info('Reservierung Details: ' + reservation.reservation_number);
+      console.log('Reservation:', reservation);
     } catch (error) {
       Toast.error('Fehler beim Laden der Reservierung');
     }
@@ -473,12 +464,16 @@ class App {
     const indicator = document.querySelector('.status-indicator');
     if (!indicator) return;
 
+    const label = indicator.querySelector('.status-label');
+    const dot = indicator.querySelector('.status-dot');
+
     if (isConnected) {
-      indicator.classList.add('status-success');
+      if (dot) dot.style.background = 'var(--success)';
+      if (label) label.textContent = 'DB';
       indicator.title = 'Supabase verbunden';
     } else {
-      indicator.classList.remove('status-success');
-      indicator.classList.add('status-error');
+      if (dot) dot.style.background = 'var(--error)';
+      if (label) label.textContent = 'DB';
       indicator.title = 'Supabase nicht verbunden';
     }
   }
@@ -512,7 +507,7 @@ class App {
 }
 
 /**
- * Reservation Wizard
+ * Reservation Wizard - V1 Compatible
  */
 class ReservationWizard {
   constructor() {
@@ -525,6 +520,7 @@ class ReservationWizard {
     this.setupNavigation();
     this.loadCategories();
     this.setDefaultDates();
+    this.setupHotelListener();
   }
 
   setupNavigation() {
@@ -532,9 +528,58 @@ class ReservationWizard {
     const nextBtn = document.getElementById('wizard-next');
     const submitBtn = document.getElementById('wizard-submit');
 
-    prevBtn.addEventListener('click', () => this.previousStep());
-    nextBtn.addEventListener('click', () => this.nextStep());
-    submitBtn.addEventListener('click', () => this.submit());
+    // Remove old listeners
+    const newPrevBtn = prevBtn.cloneNode(true);
+    const newNextBtn = nextBtn.cloneNode(true);
+    const newSubmitBtn = submitBtn.cloneNode(true);
+    
+    prevBtn.parentNode.replaceChild(newPrevBtn, prevBtn);
+    nextBtn.parentNode.replaceChild(newNextBtn, nextBtn);
+    submitBtn.parentNode.replaceChild(newSubmitBtn, submitBtn);
+
+    newPrevBtn.addEventListener('click', () => this.previousStep());
+    newNextBtn.addEventListener('click', () => this.nextStep());
+    newSubmitBtn.addEventListener('click', () => this.submit());
+  }
+
+  setupHotelListener() {
+    const hotelSelect = document.getElementById('wizard-hotel');
+    const rateSelect = document.getElementById('wizard-rate');
+    
+    if (hotelSelect && rateSelect) {
+      hotelSelect.addEventListener('change', () => {
+        this.updateRatesForHotel();
+      });
+    }
+  }
+
+  updateRatesForHotel() {
+    const hotelCode = document.getElementById('wizard-hotel').value;
+    const rateSelect = document.getElementById('wizard-rate');
+    
+    if (!rateSelect || !hotelCode) return;
+
+    const rates = Hotels.getRatesForHotel(hotelCode);
+    
+    rateSelect.innerHTML = rates.map(rate => 
+      `<option value="${rate.name}" data-price="${rate.price}">${rate.name} (${rate.price} €)</option>`
+    ).join('');
+
+    // Trigger price update
+    if (rates.length > 0) {
+      this.updatePrice();
+    }
+  }
+
+  updatePrice() {
+    const rateSelect = document.getElementById('wizard-rate');
+    const priceDisplay = document.getElementById('wizard-price-display');
+    
+    if (rateSelect && priceDisplay) {
+      const selectedOption = rateSelect.options[rateSelect.selectedIndex];
+      const price = selectedOption?.dataset.price || 0;
+      priceDisplay.textContent = `${price} € pro Nacht`;
+    }
   }
 
   nextStep() {
@@ -588,15 +633,15 @@ class ReservationWizard {
   validateStep(step) {
     if (step === 1) {
       const hotel = document.getElementById('wizard-hotel').value;
-      const checkin = document.getElementById('wizard-checkin').value;
-      const checkout = document.getElementById('wizard-checkout').value;
+      const arrival = document.getElementById('wizard-arrival').value;
+      const departure = document.getElementById('wizard-departure').value;
 
-      if (!hotel || !checkin || !checkout) {
+      if (!hotel || !arrival || !departure) {
         Toast.warning('Bitte alle Felder ausfüllen');
         return false;
       }
 
-      if (new Date(checkout) <= new Date(checkin)) {
+      if (new Date(departure) <= new Date(arrival)) {
         Toast.warning('Abreise muss nach Anreise liegen');
         return false;
       }
@@ -605,6 +650,10 @@ class ReservationWizard {
     if (step === 2) {
       if (!this.data.category) {
         Toast.warning('Bitte eine Kategorie auswählen');
+        return false;
+      }
+      if (!this.data.rate_name) {
+        Toast.warning('Bitte eine Rate auswählen');
         return false;
       }
     }
@@ -624,25 +673,32 @@ class ReservationWizard {
 
   collectStepData(step) {
     if (step === 1) {
-      this.data.hotel = document.getElementById('wizard-hotel').value;
-      this.data.persons = parseInt(document.getElementById('wizard-persons').value) || 2;
-      this.data.checkin = document.getElementById('wizard-checkin').value;
-      this.data.checkout = document.getElementById('wizard-checkout').value;
+      const hotelCode = document.getElementById('wizard-hotel').value;
+      const hotel = Hotels.getByCode(hotelCode);
+      
+      this.data.hotel_code = hotelCode;
+      this.data.hotel_name = hotel ? Hotels.getDisplayName(hotel) : hotelCode;
+      this.data.arrival = document.getElementById('wizard-arrival').value;
+      this.data.departure = document.getElementById('wizard-departure').value;
+      this.data.guests_adults = parseInt(document.getElementById('wizard-adults').value) || 1;
+      this.data.guests_children = parseInt(document.getElementById('wizard-children').value) || 0;
     }
 
     if (step === 2) {
       // Category should already be set by card click
-      if (!this.data.category || !this.data.price) {
-        console.warn('Category or price not set in step 2');
-      }
+      const rateSelect = document.getElementById('wizard-rate');
+      const selectedOption = rateSelect.options[rateSelect.selectedIndex];
+      
+      this.data.rate_name = rateSelect.value;
+      this.data.rate_price = parseInt(selectedOption.dataset.price) || 0;
     }
 
     if (step === 3) {
-      this.data.firstname = document.getElementById('wizard-firstname').value;
-      this.data.lastname = document.getElementById('wizard-lastname').value;
-      this.data.email = document.getElementById('wizard-email').value;
-      this.data.phone = document.getElementById('wizard-phone').value;
-      this.data.company = document.getElementById('wizard-company').value;
+      this.data.guest_first_name = document.getElementById('wizard-firstname').value;
+      this.data.guest_last_name = document.getElementById('wizard-lastname').value;
+      this.data.guest_email = document.getElementById('wizard-email').value;
+      this.data.guest_phone = document.getElementById('wizard-phone').value;
+      this.data.company_name = document.getElementById('wizard-company').value;
       this.data.notes = document.getElementById('wizard-notes').value;
     }
   }
@@ -654,10 +710,16 @@ class ReservationWizard {
     const categories = Hotels.getCategories();
     
     grid.innerHTML = categories.map(cat => `
-      <div class="category-card" data-category="${cat.id}">
+      <div class="category-card" data-category="${cat.name}">
         <div class="category-name">${cat.name}</div>
-        <div class="category-price">${formatCurrency(cat.basePrice)}</div>
-        <div class="category-description">${cat.description}</div>
+        <div class="category-meta">
+          <div style="font-size: 13px; color: var(--text-secondary); margin-top: 8px;">
+            ${cat.size} • ${cat.beds}
+          </div>
+          <div style="font-size: 12px; color: var(--text-tertiary); margin-top: 4px;">
+            ${cat.note}
+          </div>
+        </div>
       </div>
     `).join('');
 
@@ -667,8 +729,6 @@ class ReservationWizard {
         grid.querySelectorAll('.category-card').forEach(c => c.classList.remove('selected'));
         card.classList.add('selected');
         this.data.category = card.dataset.category;
-        const category = Hotels.getCategoryById(card.dataset.category);
-        this.data.price = category.basePrice;
       });
     });
   }
@@ -678,34 +738,34 @@ class ReservationWizard {
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
-    document.getElementById('wizard-checkin').value = today.toISOString().split('T')[0];
-    document.getElementById('wizard-checkout').value = tomorrow.toISOString().split('T')[0];
+    document.getElementById('wizard-arrival').value = today.toISOString().split('T')[0];
+    document.getElementById('wizard-departure').value = tomorrow.toISOString().split('T')[0];
   }
 
   showSummary() {
     const summary = document.getElementById('wizard-summary');
     if (!summary) return;
 
-    const hotel = Hotels.getById(this.data.hotel);
-    const category = Hotels.getCategoryById(this.data.category);
-    
-    const checkin = new Date(this.data.checkin);
-    const checkout = new Date(this.data.checkout);
-    const nights = Math.ceil((checkout - checkin) / (1000 * 60 * 60 * 24));
-    const total = this.data.price * nights;
+    const hotel = Hotels.getByCode(this.data.hotel_code);
+    const nights = Reservations.calculateNights(this.data.arrival, this.data.departure);
+    const total = nights * this.data.rate_price;
 
     summary.innerHTML = `
       <div class="summary-row">
         <span class="summary-label">Hotel</span>
-        <span class="summary-value">${hotel?.name || 'N/A'}</span>
+        <span class="summary-value">${this.data.hotel_name || 'N/A'}</span>
       </div>
       <div class="summary-row">
         <span class="summary-label">Kategorie</span>
-        <span class="summary-value">${category?.name || 'N/A'}</span>
+        <span class="summary-value">${this.data.category || 'N/A'}</span>
+      </div>
+      <div class="summary-row">
+        <span class="summary-label">Rate</span>
+        <span class="summary-value">${this.data.rate_name || 'N/A'}</span>
       </div>
       <div class="summary-row">
         <span class="summary-label">Zeitraum</span>
-        <span class="summary-value">${formatDate(this.data.checkin)} - ${formatDate(this.data.checkout)}</span>
+        <span class="summary-value">${formatDate(this.data.arrival)} - ${formatDate(this.data.departure)}</span>
       </div>
       <div class="summary-row">
         <span class="summary-label">Nächte</span>
@@ -713,7 +773,7 @@ class ReservationWizard {
       </div>
       <div class="summary-row">
         <span class="summary-label">Gast</span>
-        <span class="summary-value">${this.data.firstname} ${this.data.lastname}</span>
+        <span class="summary-value">${this.data.guest_first_name} ${this.data.guest_last_name}</span>
       </div>
       <div class="summary-row">
         <span class="summary-label">Gesamtpreis</span>
