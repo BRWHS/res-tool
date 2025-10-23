@@ -1,6 +1,6 @@
 /**
- * Hotels Service
- * Manages hotel data and configurations
+ * Hotels Service - V1 Compatible
+ * Manages hotel data and configurations using V1 structure
  */
 
 import { EventBus } from '../core/eventBus.js';
@@ -8,171 +8,72 @@ import { EventBus } from '../core/eventBus.js';
 class HotelsService {
   constructor() {
     this.hotels = [];
-    this.categories = new Map();
-    this.rates = new Map();
+    this.categories = [];
+    this.rates = [];
     this.initialized = false;
   }
 
   /**
-   * Initialize with data from localStorage or defaults
+   * Initialize with V1 hotel data
    */
   async initialize() {
     if (this.initialized) return;
 
-    // Load from localStorage
-    this.loadFromStorage();
+    // V1 Hotels (from your working version)
+    this.hotels = [
+      { group: 'MASEVEN', name: 'MASEVEN München Dornach', code: 'MA7-M-DOR' },
+      { group: 'MASEVEN', name: 'MASEVEN München Trudering', code: 'MA7-M-TRU' },
+      { group: 'MASEVEN', name: 'MASEVEN Frankfurt', code: 'MA7-FRA' },
+      { group: 'MASEVEN', name: 'MASEVEN Stuttgart', code: 'MA7-STR' },
+      { group: 'Fidelity', name: 'Fidelity Robenstein', code: 'FID-ROB' },
+      { group: 'Fidelity', name: 'Fidelity Struck', code: 'FID-STR' },
+      { group: 'Fidelity', name: 'Fidelity Doerr', code: 'FID-DOE' },
+      { group: 'Fidelity', name: 'Fidelity Gr. Baum', code: 'FID-GRB' },
+      { group: 'Fidelity', name: 'Fidelity Landskron', code: 'FID-LAN' },
+      { group: 'Fidelity', name: 'Fidelity Pürgl', code: 'FID-PUE' },
+      { group: 'Fidelity', name: 'Fidelity Seppl', code: 'FID-SEP' },
+      { group: 'Tante Alma', name: 'Tante Alma Bonn', code: 'TAL-BON' },
+      { group: 'Tante Alma', name: 'Tante Alma Köln', code: 'TAL-KOE' },
+      { group: 'Tante Alma', name: 'Tante Alma Erfurt', code: 'TAL-ERF' },
+      { group: 'Tante Alma', name: 'Tante Alma Mannheim', code: 'TAL-MAN' },
+      { group: 'Tante Alma', name: 'Tante Alma Mülheim', code: 'TAL-MUE' },
+      { group: 'Tante Alma', name: 'Tante Alma Sonnen', code: 'TAL-SON' },
+      { group: 'Delta by Marriot', name: 'Delta by Marriot Offenbach', code: 'DBM-OF' },
+      { group: 'Villa Viva', name: 'Villa Viva Hamburg', code: 'VV-HH' }
+    ];
 
-    // If no hotels, create defaults
-    if (this.hotels.length === 0) {
-      this.createDefaults();
-    }
+    // V1 Categories
+    this.categories = [
+      { 
+        name: 'Standard',
+        size: '18–22 m²',
+        beds: 'Queen (160)',
+        note: 'Komfortabel, ruhig'
+      },
+      { 
+        name: 'Superior',
+        size: '22–28 m²',
+        beds: 'King (180)/Twin',
+        note: 'Mehr Platz, Sitzecke'
+      },
+      { 
+        name: 'Suite',
+        size: '35–45 m²',
+        beds: 'King (180)',
+        note: 'Separater Wohnbereich'
+      }
+    ];
+
+    // V1 Rates
+    this.rates = [
+      { name: 'Flex exkl. Frühstück', price: 89 },
+      { name: 'Flex inkl. Frühstück', price: 109 },
+      { name: 'Non-Refundable', price: 79 },
+      { name: 'Business Rate', price: 129 }
+    ];
 
     this.initialized = true;
     EventBus.emit('hotels:initialized', this.hotels);
-  }
-
-  /**
-   * Load data from localStorage
-   */
-  loadFromStorage() {
-    try {
-      const stored = localStorage.getItem('restool_hotels');
-      if (stored) {
-        const data = JSON.parse(stored);
-        this.hotels = data.hotels || [];
-        
-        // Rebuild maps
-        data.categories?.forEach(cat => {
-          this.categories.set(cat.id, cat);
-        });
-        
-        data.rates?.forEach(rate => {
-          this.rates.set(rate.id, rate);
-        });
-      }
-    } catch (error) {
-      console.error('Error loading hotels from storage:', error);
-    }
-  }
-
-  /**
-   * Save data to localStorage
-   */
-  saveToStorage() {
-    try {
-      const data = {
-        hotels: this.hotels,
-        categories: Array.from(this.categories.values()),
-        rates: Array.from(this.rates.values())
-      };
-      localStorage.setItem('restool_hotels', JSON.stringify(data));
-      EventBus.emit('hotels:saved');
-    } catch (error) {
-      console.error('Error saving hotels to storage:', error);
-    }
-  }
-
-  /**
-   * Create default hotels and categories
-   */
-  createDefaults() {
-    // Default hotels
-    this.hotels = [
-      {
-        id: 'hotel-1',
-        name: 'Grand Hotel Berlin',
-        code: 'GHB',
-        rooms: 120,
-        address: 'Unter den Linden 1, 10117 Berlin',
-        active: true
-      },
-      {
-        id: 'hotel-2',
-        name: 'City Hotel München',
-        code: 'CHM',
-        rooms: 80,
-        address: 'Marienplatz 5, 80331 München',
-        active: true
-      }
-    ];
-
-    // Default categories
-    const defaultCategories = [
-      {
-        id: 'cat-standard',
-        name: 'Standard',
-        description: 'Komfortables Standardzimmer mit allen Annehmlichkeiten',
-        basePrice: 89,
-        size: 22,
-        capacity: 2
-      },
-      {
-        id: 'cat-superior',
-        name: 'Superior',
-        description: 'Geräumiges Superior-Zimmer mit erhöhtem Komfort',
-        basePrice: 129,
-        size: 28,
-        capacity: 2
-      },
-      {
-        id: 'cat-deluxe',
-        name: 'Deluxe',
-        description: 'Luxuriöses Deluxe-Zimmer mit Premium-Ausstattung',
-        basePrice: 189,
-        size: 35,
-        capacity: 3
-      },
-      {
-        id: 'cat-suite',
-        name: 'Suite',
-        description: 'Exklusive Suite mit separatem Wohnbereich',
-        basePrice: 299,
-        size: 50,
-        capacity: 4
-      }
-    ];
-
-    defaultCategories.forEach(cat => {
-      this.categories.set(cat.id, cat);
-    });
-
-    // Default rates
-    const defaultRates = [
-      {
-        id: 'rate-standard',
-        name: 'Standardrate',
-        type: 'standard',
-        description: 'Flexible Buchung mit kostenfreier Stornierung',
-        cancellationPolicy: 'Kostenfreie Stornierung bis 24h vor Anreise',
-        categories: ['cat-standard', 'cat-superior', 'cat-deluxe', 'cat-suite'],
-        multiplier: 1.0
-      },
-      {
-        id: 'rate-nonrefundable',
-        name: 'Non-Refundable',
-        type: 'special',
-        description: 'Nicht stornierbar, 15% günstiger',
-        cancellationPolicy: 'Keine Stornierung möglich',
-        categories: ['cat-standard', 'cat-superior', 'cat-deluxe', 'cat-suite'],
-        multiplier: 0.85
-      },
-      {
-        id: 'rate-breakfast',
-        name: 'Mit Frühstück',
-        type: 'package',
-        description: 'Inkl. reichhaltigem Frühstücksbuffet',
-        cancellationPolicy: 'Kostenfreie Stornierung bis 24h vor Anreise',
-        categories: ['cat-standard', 'cat-superior', 'cat-deluxe', 'cat-suite'],
-        multiplier: 1.15,
-        extras: ['Frühstücksbuffet']
-      }
-    ];
-
-    defaultRates.forEach(rate => {
-      this.rates.set(rate.id, rate);
-    });
-
-    this.saveToStorage();
   }
 
   /**
@@ -183,199 +84,88 @@ class HotelsService {
   }
 
   /**
-   * Get active hotels
+   * Get hotel by code
    */
-  getActive() {
-    return this.hotels.filter(h => h.active);
+  getByCode(code) {
+    return this.hotels.find(h => h.code === code);
   }
 
   /**
-   * Get hotel by ID
+   * Get display name for hotel (V1 format: "Group - City")
    */
-  getById(id) {
-    return this.hotels.find(h => h.id === id);
+  getDisplayName(hotel) {
+    if (!hotel) return '—';
+    
+    const brandPrefixes = ['MASEVEN', 'Fidelity', 'Tante Alma', 'Delta by Marriot', 'Villa Viva'];
+    let city = hotel.name;
+    
+    for (const prefix of brandPrefixes) {
+      if (city.startsWith(prefix + ' ')) {
+        city = city.slice(prefix.length + 1);
+        break;
+      }
+    }
+    
+    return `${hotel.group} - ${city}`;
   }
 
   /**
    * Get categories
    */
   getCategories() {
-    return Array.from(this.categories.values());
+    return this.categories;
   }
 
   /**
-   * Get category by ID
+   * Get category by name
    */
-  getCategoryById(id) {
-    return this.categories.get(id);
+  getCategoryByName(name) {
+    return this.categories.find(c => c.name === name);
   }
 
   /**
    * Get rates
    */
   getRates() {
-    return Array.from(this.rates.values());
+    return this.rates;
   }
 
   /**
-   * Get rate by ID
+   * Get rate by name
    */
-  getRateById(id) {
-    return this.rates.get(id);
+  getRateByName(name) {
+    return this.rates.find(r => r.name === name);
   }
 
   /**
-   * Get rates for a specific category
+   * Get rates for hotel (all for now, can be customized per hotel)
    */
-  getRatesForCategory(categoryId) {
-    return this.getRates().filter(rate => 
-      rate.categories.includes(categoryId)
-    );
+  getRatesForHotel(hotelCode) {
+    return this.rates;
   }
 
   /**
-   * Calculate price for category and rate
+   * Group hotels by group
    */
-  calculatePrice(categoryId, rateId = 'rate-standard') {
-    const category = this.getCategoryById(categoryId);
-    const rate = this.getRateById(rateId);
-
-    if (!category || !rate) return 0;
-
-    return Math.round(category.basePrice * rate.multiplier);
+  getGrouped() {
+    const grouped = {};
+    
+    this.hotels.forEach(hotel => {
+      if (!grouped[hotel.group]) {
+        grouped[hotel.group] = [];
+      }
+      grouped[hotel.group].push(hotel);
+    });
+    
+    return grouped;
   }
 
   /**
-   * Add new hotel
+   * Get unique groups
    */
-  addHotel(hotelData) {
-    const hotel = {
-      id: 'hotel-' + Date.now(),
-      ...hotelData,
-      active: true
-    };
-
-    this.hotels.push(hotel);
-    this.saveToStorage();
-    EventBus.emit('hotels:added', hotel);
-
-    return hotel;
-  }
-
-  /**
-   * Update hotel
-   */
-  updateHotel(id, updates) {
-    const index = this.hotels.findIndex(h => h.id === id);
-    if (index === -1) return null;
-
-    this.hotels[index] = { ...this.hotels[index], ...updates };
-    this.saveToStorage();
-    EventBus.emit('hotels:updated', this.hotels[index]);
-
-    return this.hotels[index];
-  }
-
-  /**
-   * Delete hotel
-   */
-  deleteHotel(id) {
-    const index = this.hotels.findIndex(h => h.id === id);
-    if (index === -1) return false;
-
-    this.hotels.splice(index, 1);
-    this.saveToStorage();
-    EventBus.emit('hotels:deleted', id);
-
-    return true;
-  }
-
-  /**
-   * Add category
-   */
-  addCategory(categoryData) {
-    const category = {
-      id: 'cat-' + Date.now(),
-      ...categoryData
-    };
-
-    this.categories.set(category.id, category);
-    this.saveToStorage();
-    EventBus.emit('categories:added', category);
-
-    return category;
-  }
-
-  /**
-   * Update category
-   */
-  updateCategory(id, updates) {
-    const category = this.categories.get(id);
-    if (!category) return null;
-
-    const updated = { ...category, ...updates };
-    this.categories.set(id, updated);
-    this.saveToStorage();
-    EventBus.emit('categories:updated', updated);
-
-    return updated;
-  }
-
-  /**
-   * Delete category
-   */
-  deleteCategory(id) {
-    if (!this.categories.has(id)) return false;
-
-    this.categories.delete(id);
-    this.saveToStorage();
-    EventBus.emit('categories:deleted', id);
-
-    return true;
-  }
-
-  /**
-   * Add rate
-   */
-  addRate(rateData) {
-    const rate = {
-      id: 'rate-' + Date.now(),
-      ...rateData
-    };
-
-    this.rates.set(rate.id, rate);
-    this.saveToStorage();
-    EventBus.emit('rates:added', rate);
-
-    return rate;
-  }
-
-  /**
-   * Update rate
-   */
-  updateRate(id, updates) {
-    const rate = this.rates.get(id);
-    if (!rate) return null;
-
-    const updated = { ...rate, ...updates };
-    this.rates.set(id, updated);
-    this.saveToStorage();
-    EventBus.emit('rates:updated', updated);
-
-    return updated;
-  }
-
-  /**
-   * Delete rate
-   */
-  deleteRate(id) {
-    if (!this.rates.has(id)) return false;
-
-    this.rates.delete(id);
-    this.saveToStorage();
-    EventBus.emit('rates:deleted', id);
-
-    return true;
+  getGroups() {
+    const groups = new Set(this.hotels.map(h => h.group));
+    return Array.from(groups);
   }
 }
 
