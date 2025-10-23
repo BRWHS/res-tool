@@ -1,31 +1,112 @@
 /**
  * Reservations Service
  * Handles all reservation-related operations
+ * NOW WITH LOCALSTORAGE FALLBACK!
  */
 
 import { query, insert, update, remove, TABLES, subscribe } from '../core/supabase.js';
 import { EventBus } from '../core/eventBus.js';
 
+const STORAGE_KEY = 'restool_reservations';
+
 class ReservationsService {
   constructor() {
     this.cache = new Map();
     this.unsubscribe = null;
+    this.useLocalStorage = false;
   }
 
   /**
    * Initialize real-time subscriptions
    */
   initialize() {
-    this.unsubscribe = subscribe(TABLES.RESERVATIONS, (payload) => {
-      EventBus.emit('reservations:updated', payload);
-      this.invalidateCache();
-    });
+    // Try to determine if we should use localStorage
+    this.checkStorageMode();
+    
+    if (!this.useLocalStorage) {
+      this.unsubscribe = subscribe(TABLES.RESERVATIONS, (payload) => {
+        EventBus.emit('reservations:updated', payload);
+        this.invalidateCache();
+      });
+    }
+  }
+
+  /**
+   * Check if we should use localStorage (if Supabase is unavailable)
+   */
+  async checkStorageMode() {
+    try {
+      const testQuery = await query(TABLES.RESERVATIONS, { limit: 1 });
+      this.useLocalStorage = !!testQuery.error;
+      
+      if (this.useLocalStorage) {
+        console.log('[Reservations] Using localStorage fallback');
+        // Initialize localStorage if empty
+        if (!localStorage.getItem(STORAGE_KEY)) {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
+        }
+      }
+    } catch (error) {
+      console.log('[Reservations] Supabase unavailable, using localStorage');
+      this.useLocalStorage = true;
+      if (!localStorage.getItem(STORAGE_KEY)) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
+      }
+    }
+  }
+
+  /**
+   * Get all reservations from localStorage
+   */
+  getFromLocalStorage() {
+    try {
+      const data = localStorage.getItem(STORAGE_KEY);
+      return JSON.parse(data) || [];
+    } catch (error) {
+      console.error('Error reading from localStorage:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Save to localStorage
+   */
+  saveToLocalStorage(reservations) {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(reservations));
+      EventBus.emit('reservations:updated');
+    } catch (error) {
+      console.error('Error saving to localStorage:', error);
+    }
   }
 
   /**
    * Get all reservations with optional filters
    */
   async getAll(filters = {}) {
+    // LocalStorage mode
+    if (this.useLocalStorage) {
+      let reservations = this.getFromLocalStorage();
+      
+      // Apply filters
+      if (filters.hotel) {
+        reservations = reservations.filter(r => r.hotel === filters.hotel);
+      }
+      if (filters.status) {
+        reservations = reservations.filter(r => r.status === filters.status);
+      }
+      
+      // Sort by created_at desc
+      reservations.sort((a, b) => {
+        const dateA = new Date(a.created_at || 0);
+        const dateB = new Date(b.created_at || 0);
+        return dateB - dateA;
+      });
+      
+      return { data: reservations, error: null };
+    }
+
+    // Supabase mode
     const cacheKey = JSON.stringify(filters);
     
     if (this.cache.has(cacheKey)) {
@@ -61,6 +142,11 @@ class ReservationsService {
    * Get reservation by ID
    */
   async getById(id) {
+    if (this.useLocalStorage) {
+      const reservations = this.getFromLocalStorage();
+      return reservations.find(r => r.id === id) || null;
+    }
+
     const result = await query(TABLES.RESERVATIONS, {
       filters: { id },
       limit: 1
@@ -73,6 +159,22 @@ class ReservationsService {
    * Get reservations for a specific date range
    */
   async getByDateRange(startDate, endDate, hotelId = null) {
+    if (this.useLocalStorage) {
+      let reservations = this.getFromLocalStorage();
+      
+      reservations = reservations.filter(r => {
+        const checkin = r.checkin;
+        const checkout = r.checkout;
+        return checkin >= startDate && checkout <= endDate;
+      });
+      
+      if (hotelId) {
+        reservations = reservations.filter(r => r.hotel === hotelId);
+      }
+      
+      return { data: reservations, error: null };
+    }
+
     try {
       let query = `
         checkin >= '${startDate}' 
@@ -114,13 +216,28 @@ class ReservationsService {
       const nights = Math.ceil((checkout - checkin) / (1000 * 60 * 60 * 24));
 
       const data = {
+        id: 'res-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),
         ...reservationData,
         nights,
         total: (reservationData.price || 0) * nights,
         status: 'active',
-        created_at: new Date().toISOString()
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       };
 
+      // LocalStorage mode
+      if (this.useLocalStorage) {
+        const reservations = this.getFromLocalStorage();
+        reservations.push(data);
+        this.saveToLocalStorage(reservations);
+        
+        EventBus.emit('reservations:created', data);
+        this.invalidateCache();
+        
+        return { data: [data], error: null };
+      }
+
+      // Supabase mode
       const result = await insert(TABLES.RESERVATIONS, data);
       
       if (result.error) throw result.error;
@@ -140,11 +257,43 @@ class ReservationsService {
    */
   async update(id, updates) {
     try {
+      // LocalStorage mode
+      if (this.useLocalStorage) {
+        const reservations = this.getFromLocalStorage();
+        const index = reservations.findIndex(r => r.id === id);
+        
+        if (index === -1) throw new Error('Reservation not found');
+        
+        const current = reservations[index];
+        
+        // Recalculate if dates or price changed
+        if (updates.checkin || updates.checkout || updates.price) {
+          const checkin = new Date(updates.checkin || current.checkin);
+          const checkout = new Date(updates.checkout || current.checkout);
+          const nights = Math.ceil((checkout - checkin) / (1000 * 60 * 60 * 24));
+          const price = updates.price || current.price || 0;
+
+          updates.nights = nights;
+          updates.total = price * nights;
+        }
+
+        updates.updated_at = new Date().toISOString();
+        
+        reservations[index] = { ...current, ...updates };
+        this.saveToLocalStorage(reservations);
+        
+        EventBus.emit('reservations:updated', reservations[index]);
+        this.invalidateCache();
+        
+        return { data: [reservations[index]], error: null };
+      }
+
+      // Supabase mode
+      const current = await this.getById(id);
+      if (!current) throw new Error('Reservation not found');
+
       // Recalculate if dates or price changed
       if (updates.checkin || updates.checkout || updates.price) {
-        const current = await this.getById(id);
-        if (!current) throw new Error('Reservation not found');
-
         const checkin = new Date(updates.checkin || current.checkin);
         const checkout = new Date(updates.checkout || current.checkout);
         const nights = Math.ceil((checkout - checkin) / (1000 * 60 * 60 * 24));
@@ -174,6 +323,17 @@ class ReservationsService {
    * Delete reservation
    */
   async delete(id) {
+    if (this.useLocalStorage) {
+      const reservations = this.getFromLocalStorage();
+      const filtered = reservations.filter(r => r.id !== id);
+      this.saveToLocalStorage(filtered);
+      
+      EventBus.emit('reservations:deleted', id);
+      this.invalidateCache();
+      
+      return { error: null };
+    }
+
     const result = await remove(TABLES.RESERVATIONS, id);
     
     if (!result.error) {
@@ -198,6 +358,24 @@ class ReservationsService {
    * Search reservations
    */
   async search(query) {
+    if (this.useLocalStorage) {
+      const searchTerm = query.toLowerCase();
+      let reservations = this.getFromLocalStorage();
+      
+      reservations = reservations.filter(r => {
+        const searchFields = [
+          r.firstname,
+          r.lastname,
+          r.email,
+          r.phone
+        ].map(f => (f || '').toLowerCase());
+        
+        return searchFields.some(field => field.includes(searchTerm));
+      });
+      
+      return { data: reservations, error: null };
+    }
+
     try {
       const searchTerm = query.toLowerCase();
       
@@ -265,6 +443,21 @@ class ReservationsService {
   async getTodayDepartures(hotelId = null) {
     const today = new Date().toISOString().split('T')[0];
     
+    if (this.useLocalStorage) {
+      let reservations = this.getFromLocalStorage();
+      
+      reservations = reservations.filter(r => {
+        const checkout = r.checkout?.split('T')[0];
+        return checkout === today;
+      });
+      
+      if (hotelId) {
+        reservations = reservations.filter(r => r.hotel === hotelId);
+      }
+      
+      return { data: reservations, error: null };
+    }
+
     try {
       let query = window.supabase
         .from(TABLES.RESERVATIONS)
