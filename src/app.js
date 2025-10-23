@@ -32,35 +32,56 @@ class App {
     if (this.initialized) return;
 
     try {
+      console.log('[App] Starting initialization...');
+      
       // Show loading screen
       this.showLoading();
 
       // Initialize services
+      console.log('[App] Initializing Toast...');
       Toast.initialize();
+      
+      console.log('[App] Initializing ModalManager...');
       ModalManager.initialize();
+      
+      console.log('[App] Initializing Auth...');
       await Auth.initialize();
 
       // Check for demo session
+      console.log('[App] Checking demo session...');
       const hasDemoSession = await Auth.checkDemoSession();
 
       // Check database connection
+      console.log('[App] Checking database connection...');
       const isConnected = await checkConnection();
       this.updateConnectionStatus(isConnected);
+      console.log('[App] Database connected:', isConnected);
 
       // Setup event listeners
+      console.log('[App] Setting up event listeners...');
       this.setupEventListeners();
 
       // Check authentication
+      console.log('[App] Checking authentication...');
       if (Auth.isAuthenticated() || hasDemoSession) {
+        console.log('[App] User authenticated, loading main app...');
         await this.onLogin(Auth.getCurrentUser());
       } else {
+        console.log('[App] No user authenticated, showing login...');
+        this.hideLoading();
         this.showLogin();
       }
 
       this.initialized = true;
+      console.log('[App] Initialization complete!');
     } catch (error) {
       console.error('App initialization error:', error);
       Toast.error('Fehler beim Initialisieren der Anwendung');
+      
+      // Show login screen even on error
+      this.hideLoading();
+      this.showLogin();
+      this.initialized = true;
     }
   }
 
