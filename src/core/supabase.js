@@ -22,10 +22,20 @@ export const TABLES = {
 // Check connection status
 export async function checkConnection() {
   try {
-    const { data, error } = await supabase
+    const connectionPromise = supabase
       .from(TABLES.RESERVATIONS)
       .select('count')
       .limit(1);
+    
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Connection timeout')), 5000)
+    );
+    
+    const { data, error } = await Promise.race([connectionPromise, timeoutPromise])
+      .catch(err => {
+        console.warn('Supabase connection check failed:', err.message);
+        return { data: null, error: err };
+      });
     
     return !error;
   } catch (err) {
@@ -33,7 +43,6 @@ export async function checkConnection() {
     return false;
   }
 }
-
 // Generic query helper
 export async function query(table, options = {}) {
   try {
