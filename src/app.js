@@ -263,6 +263,12 @@ class App {
       }
 
       this.reservations = result.data || [];
+      
+      // Filter out invalid reservations (without proper data)
+      this.reservations = this.reservations.filter(res => 
+        res && res.firstname && res.lastname
+      );
+      
       this.renderReservationsTable();
     } catch (error) {
       console.error('Load reservations error:', error);
@@ -305,10 +311,11 @@ class App {
 
     const reservations = data || this.reservations;
 
-    if (reservations.length === 0) {
+    // Show empty state if no reservations
+    if (!reservations || reservations.length === 0) {
       container.innerHTML = `
         <div style="padding: 60px 20px; text-align: center; color: var(--text-secondary);">
-          <p style="font-size: 16px; margin-bottom: 8px;">Keine Reservierungen gefunden</p>
+          <p style="font-size: 16px; margin-bottom: 8px;">📋 Keine Reservierungen gefunden</p>
           <p style="font-size: 14px;">Erstellen Sie eine neue Reservierung, um loszulegen.</p>
         </div>
       `;
@@ -333,7 +340,7 @@ class App {
         ${reservations.map(res => `
           <tr data-id="${res.id}" style="cursor: pointer;">
             <td>
-              <strong>${res.firstname} ${res.lastname}</strong>
+              <strong>${res.firstname || 'N/A'} ${res.lastname || 'N/A'}</strong>
               ${res.email ? `<br><span style="font-size: 12px; color: var(--text-secondary);">${res.email}</span>` : ''}
             </td>
             <td>${res.hotel || '-'}</td>
@@ -373,7 +380,7 @@ class App {
       completed: 'Abgeschlossen',
       canceled: 'Storniert'
     };
-    return labels[status] || status;
+    return labels[status] || 'Aktiv';
   }
 
   /**
@@ -389,9 +396,9 @@ class App {
 
       // Update today's KPIs
       document.getElementById('kpi-bookings-today').textContent = todayStats?.totalReservations || 0;
-      document.getElementById('kpi-revenue-today').textContent = formatCurrency(todayStats?.totalRevenue || 0);
+      document.getElementById('kpi-revenue-today').textContent = formatCurrency(todayStats?.totalRevenue || 0, false);
       document.getElementById('kpi-occupancy').textContent = '-%'; // TODO: Calculate from availability
-      document.getElementById('kpi-adr').textContent = formatCurrency(todayStats?.averagePrice || 0);
+      document.getElementById('kpi-adr').textContent = formatCurrency(todayStats?.averagePrice || 0, false);
     } catch (error) {
       console.error('Update KPIs error:', error);
     }
@@ -618,9 +625,16 @@ class ReservationWizard {
   collectStepData(step) {
     if (step === 1) {
       this.data.hotel = document.getElementById('wizard-hotel').value;
-      this.data.persons = document.getElementById('wizard-persons').value;
+      this.data.persons = parseInt(document.getElementById('wizard-persons').value) || 2;
       this.data.checkin = document.getElementById('wizard-checkin').value;
       this.data.checkout = document.getElementById('wizard-checkout').value;
+    }
+
+    if (step === 2) {
+      // Category should already be set by card click
+      if (!this.data.category || !this.data.price) {
+        console.warn('Category or price not set in step 2');
+      }
     }
 
     if (step === 3) {
@@ -653,7 +667,8 @@ class ReservationWizard {
         grid.querySelectorAll('.category-card').forEach(c => c.classList.remove('selected'));
         card.classList.add('selected');
         this.data.category = card.dataset.category;
-        this.data.price = Hotels.getCategoryById(card.dataset.category).basePrice;
+        const category = Hotels.getCategoryById(card.dataset.category);
+        this.data.price = category.basePrice;
       });
     });
   }
@@ -682,11 +697,11 @@ class ReservationWizard {
     summary.innerHTML = `
       <div class="summary-row">
         <span class="summary-label">Hotel</span>
-        <span class="summary-value">${hotel.name}</span>
+        <span class="summary-value">${hotel?.name || 'N/A'}</span>
       </div>
       <div class="summary-row">
         <span class="summary-label">Kategorie</span>
-        <span class="summary-value">${category.name}</span>
+        <span class="summary-value">${category?.name || 'N/A'}</span>
       </div>
       <div class="summary-row">
         <span class="summary-label">Zeitraum</span>
@@ -709,7 +724,12 @@ class ReservationWizard {
 
   async submit() {
     try {
-      await Toast.promise(
+      // Ensure all data is collected
+      this.collectStepData(3);
+      
+      console.log('Submitting reservation with data:', this.data);
+      
+      const result = await Toast.promise(
         Reservations.create(this.data),
         {
           loading: 'Reservierung wird erstellt...',
@@ -718,7 +738,12 @@ class ReservationWizard {
         }
       );
 
-      ModalManager.close('modal-new-reservation');
+      if (result.data) {
+        ModalManager.close('modal-new-reservation');
+        // Reset wizard
+        this.data = {};
+        this.currentStep = 1;
+      }
     } catch (error) {
       console.error('Submit error:', error);
     }
