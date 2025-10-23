@@ -16,6 +16,15 @@
     }
 
     init() {
+      // Warten bis DOM ready ist
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => this.createContainer());
+      } else {
+        this.createContainer();
+      }
+    }
+
+    createContainer() {
       // Container erstellen
       this.container = document.createElement('div');
       this.container.id = 'toast-container';
