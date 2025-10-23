@@ -544,7 +544,7 @@ class ReservationWizard {
 
   setupHotelListener() {
     const hotelSelect = document.getElementById('wizard-hotel');
-    const rateSelect = document.getElementById('wizard-rate');
+    const rateSelect = document.getElementById('wizard-rate') || document.getElementById('newRate');
     
     if (hotelSelect && rateSelect) {
       hotelSelect.addEventListener('change', () => {
@@ -554,8 +554,11 @@ class ReservationWizard {
   }
 
   updateRatesForHotel() {
-    const hotelCode = document.getElementById('wizard-hotel').value;
-    const rateSelect = document.getElementById('wizard-rate');
+    const hotelSelect = document.getElementById('wizard-hotel');
+    if (!hotelSelect) return;
+    
+    const hotelCode = hotelSelect.value;
+    const rateSelect = document.getElementById('wizard-rate') || document.getElementById('newRate');
     
     if (!rateSelect || !hotelCode) return;
 
@@ -572,12 +575,12 @@ class ReservationWizard {
   }
 
   updatePrice() {
-    const rateSelect = document.getElementById('wizard-rate');
+    const rateSelect = document.getElementById('wizard-rate') || document.getElementById('newRate');
     const priceDisplay = document.getElementById('wizard-price-display');
     
     if (rateSelect && priceDisplay) {
       const selectedOption = rateSelect.options[rateSelect.selectedIndex];
-      const price = selectedOption?.dataset.price || 0;
+      const price = selectedOption?.dataset?.price || selectedOption?.getAttribute('data-price') || 0;
       priceDisplay.textContent = `${price} € pro Nacht`;
     }
   }
@@ -632,9 +635,9 @@ class ReservationWizard {
 
   validateStep(step) {
     if (step === 1) {
-      const hotel = document.getElementById('wizard-hotel').value;
-      const arrival = document.getElementById('wizard-arrival').value;
-      const departure = document.getElementById('wizard-departure').value;
+      const hotel = document.getElementById('wizard-hotel')?.value;
+      const arrival = (document.getElementById('wizard-arrival') || document.getElementById('wizard-checkin'))?.value;
+      const departure = (document.getElementById('wizard-departure') || document.getElementById('wizard-checkout'))?.value;
 
       if (!hotel || !arrival || !departure) {
         Toast.warning('Bitte alle Felder ausfüllen');
@@ -659,8 +662,8 @@ class ReservationWizard {
     }
 
     if (step === 3) {
-      const firstname = document.getElementById('wizard-firstname').value;
-      const lastname = document.getElementById('wizard-lastname').value;
+      const firstname = (document.getElementById('wizard-firstname') || document.getElementById('newFname'))?.value;
+      const lastname = (document.getElementById('wizard-lastname') || document.getElementById('newLname'))?.value;
 
       if (!firstname || !lastname) {
         Toast.warning('Vor- und Nachname sind Pflichtfelder');
@@ -678,28 +681,37 @@ class ReservationWizard {
       
       this.data.hotel_code = hotelCode;
       this.data.hotel_name = hotel ? Hotels.getDisplayName(hotel) : hotelCode;
-      this.data.arrival = document.getElementById('wizard-arrival').value;
-      this.data.departure = document.getElementById('wizard-departure').value;
-      this.data.guests_adults = parseInt(document.getElementById('wizard-adults').value) || 1;
-      this.data.guests_children = parseInt(document.getElementById('wizard-children').value) || 0;
+      
+      // Support both old and new field IDs
+      const arrivalInput = document.getElementById('wizard-arrival') || document.getElementById('wizard-checkin');
+      const departureInput = document.getElementById('wizard-departure') || document.getElementById('wizard-checkout');
+      const adultsInput = document.getElementById('wizard-adults') || document.getElementById('newAdults');
+      const childrenInput = document.getElementById('wizard-children') || document.getElementById('newChildren');
+      
+      this.data.arrival = arrivalInput?.value;
+      this.data.departure = departureInput?.value;
+      this.data.guests_adults = parseInt(adultsInput?.value) || 1;
+      this.data.guests_children = parseInt(childrenInput?.value) || 0;
     }
 
     if (step === 2) {
       // Category should already be set by card click
-      const rateSelect = document.getElementById('wizard-rate');
-      const selectedOption = rateSelect.options[rateSelect.selectedIndex];
-      
-      this.data.rate_name = rateSelect.value;
-      this.data.rate_price = parseInt(selectedOption.dataset.price) || 0;
+      const rateSelect = document.getElementById('wizard-rate') || document.getElementById('newRate');
+      if (rateSelect) {
+        const selectedOption = rateSelect.options[rateSelect.selectedIndex];
+        
+        this.data.rate_name = rateSelect.value;
+        this.data.rate_price = parseInt(selectedOption?.dataset?.price || selectedOption?.getAttribute('data-price')) || 0;
+      }
     }
 
     if (step === 3) {
-      this.data.guest_first_name = document.getElementById('wizard-firstname').value;
-      this.data.guest_last_name = document.getElementById('wizard-lastname').value;
-      this.data.guest_email = document.getElementById('wizard-email').value;
-      this.data.guest_phone = document.getElementById('wizard-phone').value;
-      this.data.company_name = document.getElementById('wizard-company').value;
-      this.data.notes = document.getElementById('wizard-notes').value;
+      this.data.guest_first_name = (document.getElementById('wizard-firstname') || document.getElementById('newFname'))?.value;
+      this.data.guest_last_name = (document.getElementById('wizard-lastname') || document.getElementById('newLname'))?.value;
+      this.data.guest_email = (document.getElementById('wizard-email') || document.getElementById('newEmail'))?.value;
+      this.data.guest_phone = (document.getElementById('wizard-phone') || document.getElementById('newPhone'))?.value;
+      this.data.company_name = (document.getElementById('wizard-company') || document.getElementById('newCompany'))?.value;
+      this.data.notes = (document.getElementById('wizard-notes') || document.getElementById('newNotes'))?.value;
     }
   }
 
@@ -738,8 +750,16 @@ class ReservationWizard {
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
-    document.getElementById('wizard-arrival').value = today.toISOString().split('T')[0];
-    document.getElementById('wizard-departure').value = tomorrow.toISOString().split('T')[0];
+    // Try both old and new IDs
+    const arrivalInput = document.getElementById('wizard-arrival') || document.getElementById('wizard-checkin');
+    const departureInput = document.getElementById('wizard-departure') || document.getElementById('wizard-checkout');
+
+    if (arrivalInput) {
+      arrivalInput.value = today.toISOString().split('T')[0];
+    }
+    if (departureInput) {
+      departureInput.value = tomorrow.toISOString().split('T')[0];
+    }
   }
 
   showSummary() {
