@@ -120,6 +120,15 @@ class API {
     this.cache = new Map();
   }
 
+   class API {
+  constructor(config) {
+    this.config = config;
+    this.supabase = null;
+    this.cache = new Map();
+    // Referenz zu HOTELS für Demo-Daten
+    this.HOTELS = typeof HOTELS !== 'undefined' ? HOTELS : [];
+  }
+
   // Initialize Supabase client - DEMO VERSION
 async initSupabase() {
   if (this.supabase) return this.supabase;
@@ -179,7 +188,7 @@ getDemoData(table) {
         created_at: new Date().toISOString()
       }
     ],
-    hotels: HOTELS,
+    hotels: this.HOTELS,
     categories: [
       { id: 1, name: 'Standard', code: 'STD' },
       { id: 2, name: 'Superior', code: 'SUP' },
@@ -685,6 +694,9 @@ try {
       // Update UI
       this.updateDashboard();
       this.hideLoadingOverlay();
+
+       // Start clock immediately
+      this.updateClock();
       
       this.initialized = true;
       this.ui.showToast('System initialized successfully', 'success');
@@ -697,8 +709,13 @@ try {
   }
 
   async initializeSupabase() {
+  try {
     return await this.api.initSupabase();
+  } catch (error) {
+    console.log('Continuing without Supabase - Demo Mode');
+    return null;
   }
+}
 
   loadStoredData() {
     // Load preferences
@@ -989,13 +1006,15 @@ try {
     }
   }
 
-  async loadReservations() {
-    try {
-      const loadingElement = document.querySelector('#btnRefresh');
+ async loadReservations() {
+  try {
+    const loadingElement = document.querySelector('[data-action="refresh"]');
+    if (loadingElement) {
       this.ui.setLoading(loadingElement, true);
-      
-      const filters = state.get('filters');
-      const reservations = await this.api.getReservations(filters);
+    }
+    
+    const filters = state.get('filters') || {};
+    const reservations = await this.api.getReservations(filters);
       
       state.set('reservations', reservations);
       this.renderReservationTable();
@@ -1285,10 +1304,10 @@ try {
   }
 
   // Session Management
-  isSessionValid(session) {
-    if (!session || !session.expires_at) return false;
-    return new Date(session.expires_at) > new Date();
-  }
+ isSessionValid(session) {
+  if (!session || !session.expiresAt) return false;  // expiresAt statt expires_at
+  return new Date(session.expiresAt) > new Date();
+}
 
   redirectToAuth() {
     window.location.href = '/auth.html';
