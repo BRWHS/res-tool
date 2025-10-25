@@ -12,7 +12,7 @@ const AUTH_CONFIG = {
   LOCKOUT_DURATION: 15 * 60 * 1000, // 15 minutes
   PASSWORD_MIN_LENGTH: 8,
   REQUIRE_2FA: false,
-  SESSION_KEY: 'hrs_v2_session',
+  SESSION_KEY: 'hrs_v2_userSession',
   ATTEMPTS_KEY: 'hrs_v2_login_attempts'
 };
 
