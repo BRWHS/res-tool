@@ -119,7 +119,7 @@ class API {
     this.supabase = null;
     this.cache = new Map();
   }
-}
+ }
 
   // Demo data generator
   getDemoData(table) {
@@ -154,7 +154,7 @@ class API {
           created_at: new Date().toISOString()
         }
       ],
-      hotels: typeof HOTELS !== 'undefined' ? HOTELS : [],
+      hotels: HOTELS || [],
       categories: [
         { id: 1, name: 'Standard', code: 'STD' },
         { id: 2, name: 'Superior', code: 'SUP' },
