@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hotel Reservation System - Login</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- Styles -->
+  <link rel="stylesheet" href="styles_v2.css">
+  <link rel="stylesheet" href="auth_v2.css">
+  
+  <!-- Libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.7/dist/umd/supabase.min.js"></script>
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='80' font-size='80'>🏨</text></svg>">
+</head>
+<body class="auth-page">
+
+  <!-- Animated Background Particles -->
+  <div class="particles">
+    <div class="particle" style="left: 10%; animation-delay: 0s;"></div>
+    <div class="particle" style="left: 20%; animation-delay: 2s;"></div>
+    <div class="particle" style="left: 30%; animation-delay: 4s;"></div>
+    <div class="particle" style="left: 40%; animation-delay: 1s;"></div>
+    <div class="particle" style="left: 50%; animation-delay: 3s;"></div>
+    <div class="particle" style="left: 60%; animation-delay: 5s;"></div>
+    <div class="particle" style="left: 70%; animation-delay: 2s;"></div>
+    <div class="particle" style="left: 80%; animation-delay: 4s;"></div>
+    <div class="particle" style="left: 90%; animation-delay: 0s;"></div>
+  </div>
+
+  <!-- Auth Container -->
+  <div class="auth-container">
+    <div class="auth-card">
+      
+      <!-- Logo Section -->
+      <div class="auth-logo">
+        <i class="fas fa-hotel"></i>
+        <h1>Hotel Reservation System</h1>
+        <p>Version 2.0 - Professional Edition</p>
+      </div>
+
+      <!-- Alert Messages -->
+      <div class="alert alert-error hidden" id="errorAlert"></div>
+      <div class="alert alert-success hidden" id="successAlert"></div>
+      <div class="alert alert-info hidden" id="infoAlert"></div>
+
+      <!-- Login Form -->
+      <form id="loginForm" class="auth-form">
+        <h2>Willkommen zurück</h2>
+        
+        <div class="form-group">
+          <label class="form-label">E-Mail Adresse</label>
+          <input 
+            type="email" 
+            name="email" 
+            class="form-input" 
+            placeholder="ihre.email@hotel.de"
+            required
+            autocomplete="email"
+          >
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Passwort</label>
+          <div class="password-field">
+            <input 
+              type="password" 
+              name="password" 
+              class="form-input" 
+              placeholder="••••••••"
+              required
+              autocomplete="current-password"
+            >
+            <button type="button" class="toggle-password">
+              <i class="fas fa-eye"></i>
+            </button>
+          </div>
+        </div>
+        
+        <div class="form-checkbox">
+          <input type="checkbox" id="remember" name="remember">
+          <label for="remember">Angemeldet bleiben</label>
+        </div>
+        
+        <button type="submit" class="btn-auth">
+          <i class="fas fa-sign-in-alt"></i>
+          Anmelden
+        </button>
+        
+        <div class="auth-divider">
+          <span>oder</span>
+        </div>
+        
+        <div class="social-login">
+          <button type="button" class="btn-social" onclick="alert('Google Login coming soon')">
+            <i class="fab fa-google"></i>
+            Google
+          </button>
+          <button type="button" class="btn-social" onclick="alert('Microsoft Login coming soon')">
+            <i class="fab fa-microsoft"></i>
+            Microsoft
+          </button>
+        </div>
+        
+        <div class="auth-links">
+          <a href="#" data-toggle-auth="reset">Passwort vergessen?</a>
+          <span class="separator">•</span>
+          <a href="#" data-toggle-auth="register">Neues Konto erstellen</a>
+        </div>
+      </form>
+
+      <!-- Register Form -->
+      <form id="registerForm" class="auth-form hidden">
+        <h2>Konto erstellen</h2>
+        
+        <div class="form-group">
+          <label class="form-label">Name</label>
+          <input 
+            type="text" 
+            name="name" 
+            class="form-input" 
+            placeholder="Max Mustermann"
+            required
+            autocomplete="name"
+          >
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">E-Mail Adresse</label>
+          <input 
+            type="email" 
+            name="email" 
+            class="form-input" 
+            placeholder="ihre.email@hotel.de"
+            required
+            autocomplete="email"
+          >
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Passwort</label>
+          <div class="password-field">
+            <input 
+              type="password" 
+              name="password" 
+              class="form-input" 
+              placeholder="Mindestens 8 Zeichen"
+              required
+              autocomplete="new-password"
+              data-strength="true"
+            >
+            <button type="button" class="toggle-password">
+              <i class="fas fa-eye"></i>
+            </button>
+          </div>
+          <div class="password-strength-container">
+            <div class="password-strength"></div>
+          </div>
+          <ul class="password-errors hidden"></ul>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Passwort bestätigen</label>
+          <div class="password-field">
+            <input 
+              type="password" 
+              name="confirmPassword" 
+              class="form-input" 
+              placeholder="Passwort wiederholen"
+              required
+              autocomplete="new-password"
+            >
+            <button type="button" class="toggle-password">
+              <i class="fas fa-eye"></i>
+            </button>
+          </div>
+        </div>
+        
+        <button type="submit" class="btn-auth">
+          <i class="fas fa-user-plus"></i>
+          Konto erstellen
+        </button>
+        
+        <div class="auth-links">
+          <a href="#" data-toggle-auth="login">Bereits ein Konto? Anmelden</a>
+        </div>
+      </form>
+
+      <!-- Reset Password Form -->
+      <form id="resetForm" class="auth-form hidden">
+        <h2>Passwort zurücksetzen</h2>
+        
+        <p class="text-muted" style="margin-bottom: 20px;">
+          Geben Sie Ihre E-Mail-Adresse ein und wir senden Ihnen einen Link zum Zurücksetzen Ihres Passworts.
+        </p>
+        
+        <div class="form-group">
+          <label class="form-label">E-Mail Adresse</label>
+          <input 
+            type="email" 
+            name="email" 
+            class="form-input" 
+            placeholder="ihre.email@hotel.de"
+            required
+            autocomplete="email"
+          >
+        </div>
+        
+        <button type="submit" class="btn-auth">
+          <i class="fas fa-paper-plane"></i>
+          Reset-Link senden
+        </button>
+        
+        <div class="auth-links">
+          <a href="#" data-toggle-auth="login">Zurück zur Anmeldung</a>
+        </div>
+      </form>
+
+      <!-- Two-Factor Authentication Form -->
+      <form id="twoFactorForm" class="auth-form hidden">
+        <h2>Zwei-Faktor-Authentifizierung</h2>
+        
+        <p class="text-muted" style="margin-bottom: 20px;">
+          Geben Sie den 6-stelligen Code aus Ihrer Authenticator-App ein.
+        </p>
+        
+        <div class="two-factor-input">
+          <input type="text" maxlength="1" pattern="[0-9]" required>
+          <input type="text" maxlength="1" pattern="[0-9]" required>
+          <input type="text" maxlength="1" pattern="[0-9]" required>
+          <input type="text" maxlength="1" pattern="[0-9]" required>
+          <input type="text" maxlength="1" pattern="[0-9]" required>
+          <input type="text" maxlength="1" pattern="[0-9]" required>
+        </div>
+        
+        <button type="submit" class="btn-auth">
+          <i class="fas fa-shield-alt"></i>
+          Verifizieren
+        </button>
+        
+        <div class="auth-links">
+          <a href="#" onclick="alert('Recovery code feature coming soon')">Recovery Code verwenden</a>
+        </div>
+      </form>
+
+      <!-- Loading Overlay -->
+      <div class="auth-loading hidden">
+        <div class="spinner large"></div>
+      </div>
+
+    </div>
+
+    <!-- Footer -->
+    <div class="auth-footer">
+      <p>
+        © 2024 Hotel Reservation System V2.0 
+        <span class="separator">•</span>
+        <a href="#">Datenschutz</a>
+        <span class="separator">•</span>
+        <a href="#">Impressum</a>
+        <span class="separator">•</span>
+        <a href="#">Support</a>
+      </p>
+    </div>
+  </div>
+
+  <!-- Demo Login Info (for testing) -->
+  <div style="position: fixed; bottom: 20px; right: 20px; background: rgba(0,0,0,0.8); padding: 15px; border-radius: 8px; font-size: 12px; color: #94a3b8; max-width: 250px;">
+    <strong>Demo-Zugang:</strong><br>
+    E-Mail: demo@hotel.de<br>
+    Passwort: Demo1234!<br>
+    <small style="opacity: 0.7;">Nur für Testzwecke</small>
+  </div>
+
+  <!-- Scripts -->
+  <script src="config.js"></script>
+  <script src="auth_v2.js"></script>
+  
+  <script>
+    // Quick demo login for testing
+    document.addEventListener('DOMContentLoaded', () => {
+      // Pre-fill demo credentials if URL has ?demo=true
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('demo') === 'true') {
+        const emailInput = document.querySelector('#loginForm input[name="email"]');
+        const passwordInput = document.querySelector('#loginForm input[name="password"]');
+        
+        if (emailInput && passwordInput) {
+          emailInput.value = 'demo@hotel.de';
+          passwordInput.value = 'Demo1234!';
+          
+          // Show info message
+          const infoAlert = document.getElementById('infoAlert');
+          infoAlert.textContent = 'Demo-Zugangsdaten wurden automatisch eingetragen';
+          infoAlert.classList.remove('hidden');
+        }
+      }
+    });
+    
+    // Handle 2FA input auto-advance
+    const twoFactorInputs = document.querySelectorAll('.two-factor-input input');
+    twoFactorInputs.forEach((input, index) => {
+      input.addEventListener('input', (e) => {
+        if (e.target.value && index < twoFactorInputs.length - 1) {
+          twoFactorInputs[index + 1].focus();
+        }
+      });
+      
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Backspace' && !e.target.value && index > 0) {
+          twoFactorInputs[index - 1].focus();
+        }
+      });
+    });
+  </script>
+</body>
+</html>

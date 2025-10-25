@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hotel Reservation System V2 | Professional Dashboard</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <!-- Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- Styles -->
+  <link rel="stylesheet" href="styles_v2.css">
+  <link rel="stylesheet" href="auth.css">
+  
+  <!-- Libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.7/dist/umd/supabase.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='80' font-size='80'>🏨</text></svg>">
+</head>
+<body>
+
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay" class="loading-overlay hidden">
+    <div class="loading-content">
+      <div class="spinner large"></div>
+      <h2>Loading System...</h2>
+      <p class="text-muted">Initializing Hotel Reservation System</p>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <header>
+    <nav class="navbar">
+      <div class="navbar-brand">
+        <h1>
+          <i class="fas fa-hotel"></i>
+          <span>HRS</span>
+          <sup class="version">V2.0</sup>
+        </h1>
+      </div>
+
+      <div class="toolbar">
+        <button class="btn primary" data-action="new-reservation">
+          <i class="fas fa-plus"></i>
+          Neue Reservierung
+        </button>
+        <button class="btn secondary" data-action="open-availability">
+          <i class="fas fa-calendar-check"></i>
+          Verfügbarkeit
+        </button>
+        <button class="btn secondary" data-action="open-reports">
+          <i class="fas fa-chart-line"></i>
+          Reporting
+        </button>
+        <button class="btn secondary" data-action="open-settings">
+          <i class="fas fa-cog"></i>
+          Einstellungen
+        </button>
+        <button class="btn secondary" data-action="open-sketch">
+          <i class="fas fa-map"></i>
+          Hotelskizze
+        </button>
+      </div>
+
+      <div class="toolbar-right">
+        <div id="statusIndicators">
+          <span class="pill active" data-tooltip="Supabase Connected">
+            <i class="fas fa-database"></i> SB
+          </span>
+          <span class="pill" data-tooltip="HotelNetSolutions">
+            <i class="fas fa-network-wired"></i> HNS
+          </span>
+        </div>
+        
+        <div class="user-menu">
+          <span id="currentUser" class="text-small">User</span>
+          <button class="btn-icon" data-action="logout">
+            <i class="fas fa-sign-out-alt"></i>
+          </button>
+        </div>
+
+        <div class="clock mono">
+          <span id="dateLocal">--.--.----</span>
+          <span class="sep">·</span>
+          <span id="clockLocal">--:--:--</span>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Main Content -->
+  <main class="container">
+    
+    <!-- KPI Dashboard -->
+    <section class="dashboard-grid" aria-label="Performance Übersicht">
+      
+      <!-- Today's Performance -->
+      <article class="card scanlines">
+        <div class="card-head">
+          <h3>Performance - Heute</h3>
+          <select class="select sm hotel-select" data-filter="hotel-today">
+            <option value="">Alle Hotels</option>
+          </select>
+        </div>
+        <div class="kpis">
+          <div class="kpi">
+            <div class="value" id="tBookings">0</div>
+            <div class="label">Neue Buchungen</div>
+          </div>
+          <div class="kpi">
+            <div class="value" id="tRevenue">0 €</div>
+            <div class="label">Umsatz</div>
+          </div>
+          <div class="kpi">
+            <div class="value" id="tADR">0 €</div>
+            <div class="label">ADR</div>
+          </div>
+          <div class="kpi">
+            <div class="value" id="tOcc">0%</div>
+            <div class="label">Auslastung</div>
+          </div>
+        </div>
+      </article>
+
+      <!-- Next 7 Days Performance -->
+      <article class="card scanlines">
+        <div class="card-head">
+          <h3>Performance - Nächste 7 Tage</h3>
+          <select class="select sm hotel-select" data-filter="hotel-next">
+            <option value="">Alle Hotels</option>
+          </select>
+        </div>
+        <div class="kpis">
+          <div class="kpi">
+            <div class="value" id="nBookings">0</div>
+            <div class="label">Erwartete Ankünfte</div>
+          </div>
+          <div class="kpi">
+            <div class="value" id="nRevenue">0 €</div>
+            <div class="label">Erwarteter Umsatz</div>
+          </div>
+          <div class="kpi">
+            <div class="value" id="nADR">0 €</div>
+            <div class="label">ADR (Forecast)</div>
+          </div>
+          <div class="kpi">
+            <div class="value" id="nOcc">0%</div>
+            <div class="label">Ø Auslastung</div>
+          </div>
+        </div>
+      </article>
+
+      <!-- Quick Actions -->
+      <article class="card">
+        <div class="card-head">
+          <h3>Quick Actions</h3>
+        </div>
+        <div class="quick-actions">
+          <button class="action-card" data-action="quick-checkin">
+            <i class="fas fa-sign-in-alt fa-2x"></i>
+            <span>Quick Check-in</span>
+          </button>
+          <button class="action-card" data-action="quick-checkout">
+            <i class="fas fa-sign-out-alt fa-2x"></i>
+            <span>Quick Check-out</span>
+          </button>
+          <button class="action-card" data-action="group-reservation">
+            <i class="fas fa-users fa-2x"></i>
+            <span>Gruppen Resa</span>
+          </button>
+          <button class="action-card" data-action="sync-hns">
+            <i class="fas fa-sync fa-2x"></i>
+            <span>HNS Sync</span>
+          </button>
+        </div>
+      </div>
+      </article>
+
+      <!-- Activity Feed -->
+      <article class="card">
+        <div class="card-head">
+          <h3>Recent Activity</h3>
+          <button class="btn sm secondary" data-action="refresh-activity">
+            <i class="fas fa-sync"></i>
+          </button>
+        </div>
+        <div id="activityFeed" class="activity-feed">
+          <div class="skeleton" style="height: 200px;"></div>
+        </div>
+      </article>
+    </section>
+
+    <!-- Filters Section -->
+    <section class="filters-section">
+      <div class="card">
+        <div class="filters-grid">
+          <div class="filter-group">
+            <input type="text" 
+                   class="input" 
+                   placeholder="Suche nach Gast, Res-Nr..." 
+                   data-filter="search"
+                   id="filterSearch">
+          </div>
+          
+          <div class="filter-group">
+            <select class="select" data-filter="status" id="filterStatus">
+              <option value="active">Status: Aktiv</option>
+              <option value="done">Status: Abgeschlossen</option>
+              <option value="canceled">Status: Storniert</option>
+              <option value="all">Alle anzeigen</option>
+            </select>
+          </div>
+          
+          <div class="filter-group">
+            <select class="select hotel-select" data-filter="hotel" id="filterHotel">
+              <option value="">Alle Hotels</option>
+            </select>
+          </div>
+          
+          <div class="filter-group">
+            <input type="date" 
+                   class="input" 
+                   data-filter="date-from"
+                   id="filterDateFrom">
+          </div>
+          
+          <div class="filter-group">
+            <input type="date" 
+                   class="input" 
+                   data-filter="date-to"
+                   id="filterDateTo">
+          </div>
+          
+          <div class="filter-actions">
+            <button class="btn primary" data-action="refresh">
+              <i class="fas fa-sync"></i>
+              Refresh
+            </button>
+            <button class="btn secondary" data-action="reset-filters">
+              <i class="fas fa-times"></i>
+              Reset
+            </button>
+            <button class="btn success" data-action="export-csv">
+              <i class="fas fa-download"></i>
+              Export
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Reservations Table -->
+    <section class="reservations-section">
+      <div class="card">
+        <div class="card-head">
+          <h3>Reservierungen</h3>
+          <span class="badge" id="reservationCount">0</span>
+        </div>
+        
+        <div class="table-wrapper">
+          <table id="reservationTable">
+            <thead>
+              <tr>
+                <th>Res-Nr.</th>
+                <th>Hotel</th>
+                <th>Gast</th>
+                <th>Anreise</th>
+                <th>Abreise</th>
+                <th>Kategorie</th>
+                <th>Preis</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td colspan="8" class="text-center">
+                  <div class="skeleton" style="height: 40px; margin: 10px;"></div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODALS -->
+  
+  <!-- New Reservation Modal -->
+  <div id="modalNewReservation" class="modal hidden" aria-hidden="true">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Neue Reservierung</h2>
+        <button class="modal-close">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      <form id="formNewReservation" data-form="new-reservation">
+        <div class="modal-body">
+          
+          <!-- Wizard Steps -->
+          <div class="wizard-steps">
+            <div class="wizard-step active" data-step="1">
+              <div class="wizard-step-number">1</div>
+              <div class="wizard-step-label">Hotel & Daten</div>
+            </div>
+            <div class="wizard-step" data-step="2">
+              <div class="wizard-step-number">2</div>
+              <div class="wizard-step-label">Kategorie</div>
+            </div>
+            <div class="wizard-step" data-step="3">
+              <div class="wizard-step-number">3</div>
+              <div class="wizard-step-label">Rate</div>
+            </div>
+            <div class="wizard-step" data-step="4">
+              <div class="wizard-step-number">4</div>
+              <div class="wizard-step-label">Gast & Zahlung</div>
+            </div>
+          </div>
+
+          <!-- Step 1: Hotel & Dates -->
+          <div class="wizard-content" data-step-content="1">
+            <div class="form-group">
+              <label class="form-label">Hotel *</label>
+              <select class="select hotel-select" name="hotel_code" required>
+                <option value="">Bitte wählen...</option>
+              </select>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Anreise *</label>
+                <input type="date" class="input" name="arrival" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Abreise *</label>
+                <input type="date" class="input" name="departure" required>
+              </div>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Erwachsene</label>
+                <input type="number" class="input" name="guests_adults" value="1" min="1" max="10">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Kinder</label>
+                <input type="number" class="input" name="guests_children" value="0" min="0" max="10">
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 2: Category -->
+          <div class="wizard-content hidden" data-step-content="2">
+            <div class="category-grid" id="categoryGrid">
+              <div class="skeleton" style="height: 200px;"></div>
+            </div>
+          </div>
+
+          <!-- Step 3: Rate -->
+          <div class="wizard-content hidden" data-step-content="3">
+            <div class="rate-grid" id="rateGrid">
+              <div class="skeleton" style="height: 200px;"></div>
+            </div>
+          </div>
+
+          <!-- Step 4: Guest & Payment -->
+          <div class="wizard-content hidden" data-step-content="4">
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Vorname</label>
+                <input type="text" class="input" name="guest_first_name">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Nachname *</label>
+                <input type="text" class="input" name="guest_last_name" required>
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label">E-Mail</label>
+              <input type="email" class="input" name="guest_email">
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label">Telefon</label>
+              <input type="tel" class="input" name="guest_phone">
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label">Firma</label>
+              <input type="text" class="input" name="guest_company">
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label">Notizen</label>
+              <textarea class="input" name="notes" rows="3"></textarea>
+            </div>
+            
+            <div class="form-group">
+              <label class="checkbox">
+                <input type="checkbox" name="send_confirmation">
+                <span>Bestätigungs-E-Mail senden</span>
+              </label>
+            </div>
+          </div>
+        </div>
+        
+        <div class="modal-footer">
+          <button type="button" class="btn secondary" data-wizard-action="prev" disabled>
+            <i class="fas fa-arrow-left"></i>
+            Zurück
+          </button>
+          <button type="button" class="btn primary" data-wizard-action="next">
+            Weiter
+            <i class="fas fa-arrow-right"></i>
+          </button>
+          <button type="submit" class="btn success hidden" data-wizard-action="submit">
+            <i class="fas fa-check"></i>
+            Reservierung erstellen
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Edit Reservation Modal -->
+  <div id="modalEditReservation" class="modal hidden" aria-hidden="true">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Reservierung bearbeiten</h2>
+        <button class="modal-close">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      <form id="formEditReservation" data-form="edit-reservation">
+        <div class="modal-body">
+          <!-- Edit form content -->
+          <div class="tabs">
+            <div class="tab-buttons">
+              <button type="button" class="tab-button active" data-tab="details">Details</button>
+              <button type="button" class="tab-button" data-tab="guest">Gast</button>
+              <button type="button" class="tab-button" data-tab="pricing">Preise</button>
+              <button type="button" class="tab-button" data-tab="notes">Notizen</button>
+            </div>
+            
+            <div class="tab-content">
+              <!-- Tab contents here -->
+            </div>
+          </div>
+        </div>
+        
+        <div class="modal-footer">
+          <button type="button" class="btn danger" data-action="cancel-reservation">
+            <i class="fas fa-ban"></i>
+            Stornieren
+          </button>
+          <button type="submit" class="btn primary">
+            <i class="fas fa-save"></i>
+            Änderungen speichern
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Availability Modal -->
+  <div id="modalAvailability" class="modal hidden" aria-hidden="true">
+    <div class="modal-content large">
+      <div class="modal-header">
+        <h2>Verfügbarkeit</h2>
+        <button class="modal-close">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      <div class="modal-body">
+        <div class="availability-controls">
+          <select class="select hotel-select" id="availHotel">
+            <option value="">Alle Hotels</option>
+          </select>
+          <input type="date" class="input" id="availFrom">
+          <input type="number" class="input" id="availDays" value="14" min="1" max="90">
+          <button class="btn primary" data-action="load-availability">
+            <i class="fas fa-sync"></i>
+            Laden
+          </button>
+        </div>
+        
+        <div id="availabilityGrid" class="availability-grid">
+          <div class="skeleton" style="height: 400px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reports Modal -->
+  <div id="modalReports" class="modal hidden" aria-hidden="true">
+    <div class="modal-content large">
+      <div class="modal-header">
+        <h2>Reporting</h2>
+        <button class="modal-close">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      <div class="modal-body">
+        <div class="report-controls">
+          <select class="select" id="reportType">
+            <option value="revenue">Umsatzreport</option>
+            <option value="bookings">Buchungsreport</option>
+            <option value="occupancy">Auslastungsreport</option>
+            <option value="adr">ADR Report</option>
+          </select>
+          
+          <select class="select hotel-select" id="reportHotel">
+            <option value="">Alle Hotels</option>
+          </select>
+          
+          <input type="date" class="input" id="reportFrom">
+          <input type="date" class="input" id="reportTo">
+          
+          <button class="btn primary" data-action="generate-report">
+            <i class="fas fa-chart-bar"></i>
+            Report erstellen
+          </button>
+        </div>
+        
+        <div class="report-content">
+          <canvas id="reportChart"></canvas>
+        </div>
+        
+        <div class="report-table" id="reportTable">
+          <!-- Report table will be generated here -->
+        </div>
+      </div>
+      
+      <div class="modal-footer">
+        <button class="btn secondary" data-action="export-report-pdf">
+          <i class="fas fa-file-pdf"></i>
+          PDF Export
+        </button>
+        <button class="btn success" data-action="export-report-excel">
+          <i class="fas fa-file-excel"></i>
+          Excel Export
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings Modal -->
+  <div id="modalSettings" class="modal hidden" aria-hidden="true">
+    <div class="modal-content large">
+      <div class="modal-header">
+        <h2>Einstellungen</h2>
+        <button class="modal-close">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      <div class="modal-body">
+        <div class="settings-tabs">
+          <div class="tab-buttons vertical">
+            <button class="tab-button active" data-tab="general">
+              <i class="fas fa-cog"></i>
+              Allgemein
+            </button>
+            <button class="tab-button" data-tab="hotels">
+              <i class="fas fa-hotel"></i>
+              Hotels
+            </button>
+            <button class="tab-button" data-tab="categories">
+              <i class="fas fa-bed"></i>
+              Kategorien
+            </button>
+            <button class="tab-button" data-tab="rates">
+              <i class="fas fa-tag"></i>
+              Raten
+            </button>
+            <button class="tab-button" data-tab="channel">
+              <i class="fas fa-network-wired"></i>
+              Channel Manager
+            </button>
+            <button class="tab-button" data-tab="users">
+              <i class="fas fa-users"></i>
+              Benutzer
+            </button>
+            <button class="tab-button" data-tab="system">
+              <i class="fas fa-server"></i>
+              System
+            </button>
+          </div>
+          
+          <div class="settings-content">
+            <!-- Settings content will be loaded dynamically -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hotel Sketch Modal -->
+  <div id="modalSketch" class="modal hidden" aria-hidden="true">
+    <div class="modal-content large">
+      <div class="modal-header">
+        <h2>Hotelskizze</h2>
+        <button class="modal-close">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      <div class="modal-body">
+        <div class="sketch-controls">
+          <select class="select hotel-select" id="sketchHotel">
+            <option value="">Hotel wählen...</option>
+          </select>
+          <button class="btn primary" data-action="load-sketch">
+            <i class="fas fa-map"></i>
+            Skizze laden
+          </button>
+        </div>
+        
+        <div id="sketchCanvas" class="sketch-canvas">
+          <p class="text-center text-muted">Bitte wählen Sie ein Hotel aus</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confirmation Email Modal -->
+  <div id="modalConfirmationEmail" class="modal hidden" aria-hidden="true">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Bestätigungs-E-Mail</h2>
+        <button class="modal-close">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Empfänger E-Mail</label>
+          <input type="email" class="input" id="confirmEmailTo">
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Betreff</label>
+          <input type="text" class="input" id="confirmEmailSubject">
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Nachricht</label>
+          <textarea class="input" id="confirmEmailBody" rows="10"></textarea>
+        </div>
+      </div>
+      
+      <div class="modal-footer">
+        <button type="button" class="btn secondary" data-close-modal>
+          Abbrechen
+        </button>
+        <button type="button" class="btn primary" data-action="send-confirmation">
+          <i class="fas fa-paper-plane"></i>
+          E-Mail senden
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="i18n.js"></script>
+  <script src="auth.js"></script>
+  <script src="app_v2.js"></script>
+  
+</body>
+</html>
