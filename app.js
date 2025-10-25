@@ -118,8 +118,10 @@ class API {
     this.config = config;
     this.supabase = null;
     this.cache = new Map();
+  
+     }
+    return null;
   }
- }
 
   // Demo data generator
   getDemoData(table) {
