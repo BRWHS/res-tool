@@ -24,28 +24,32 @@ class AuthManager {
     this.initializeAuth();
   }
 
-  // Initialize authentication
-  initializeAuth() {
-    // Check if we're on auth page
-    const isAuthPage = window.location.pathname.includes('auth.html') || 
-                      window.location.pathname.includes('login');
-    
-    // Load existing session
-    this.loadSession();
-    
-    // Redirect logic
-    if (!isAuthPage && !this.isAuthenticated()) {
-      this.redirectToLogin();
-    } else if (isAuthPage && this.isAuthenticated()) {
-      this.redirectToDashboard();
-    }
-    
-    // Setup auto-logout
-    if (this.isAuthenticated()) {
-      this.setupAutoLogout();
-      this.refreshSession();
-    }
+ // Initialize authentication
+initializeAuth() {
+  // Check if we're on auth page
+  const isAuthPage = window.location.pathname.includes('auth.html') || 
+                    window.location.pathname.includes('login') ||
+                    window.location.pathname === '/' ||  // Root als auth page
+                    !window.location.pathname.includes('.html');  // Kein HTML = root
+  
+  // Load existing session
+  this.loadSession();
+  
+  // Redirect logic - angepasst für Demo
+  if (!isAuthPage && !this.isAuthenticated()) {
+    console.log('Not authenticated, redirecting to login...');
+    this.redirectToLogin();
+  } else if (isAuthPage && this.isAuthenticated()) {
+    console.log('Already authenticated, redirecting to dashboard...');
+    this.redirectToDashboard();
   }
+  
+  // Setup auto-logout
+  if (this.isAuthenticated()) {
+    this.setupAutoLogout();
+    this.refreshSession();
+  }
+}
 
   // Load session from storage
   loadSession() {
@@ -87,53 +91,37 @@ class AuthManager {
     return this.session && this.isSessionValid(this.session);
   }
 
-  // Login with credentials
-  async login(email, password, remember = false) {
-    try {
-      // Check lockout
-      if (this.isLockedOut()) {
-        const remainingTime = this.getRemainingLockoutTime();
-        throw new Error(`Account locked. Try again in ${Math.ceil(remainingTime / 60000)} minutes.`);
-      }
+ // Login with credentials
+async login(email, password, remember = false) {
+  try {
+    // Check lockout
+    if (this.isLockedOut()) {
+      const remainingTime = this.getRemainingLockoutTime();
+      throw new Error(`Account locked. Try again in ${Math.ceil(remainingTime / 60000)} minutes.`);
+    }
 
-      // Validate input
-      if (!email || !password) {
-        throw new Error('Email and password are required');
-      }
+    // Validate input
+    if (!email || !password) {
+      throw new Error('Email and password are required');
+    }
 
-      // Validate email format
-      if (!this.isValidEmail(email)) {
-        throw new Error('Invalid email format');
-      }
+    // Validate email format
+    if (!this.isValidEmail(email)) {
+      throw new Error('Invalid email format');
+    }
 
-      // Initialize Supabase
-      const { createClient } = window.supabase;
-      const supabaseClient = createClient(
-        'https://ncrczhlwqwqirvdgbrfb.supabase.co',
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5jcmN6aGx3cXdxaXJ2ZGdicmZiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzY0MTMyNDAsImV4cCI6MjA1MTk4OTI0MH0.jYNGgg6jT0-tSsWnWnWsZOW5Y-n0hHD2eI82ktl2YzA'
-      );
-
-      // Attempt authentication
-      const { data, error } = await supabaseClient.auth.signInWithPassword({
-        email: email,
-        password: password
-      });
-
-      if (error) {
-        this.recordFailedAttempt();
-        throw new Error('Invalid credentials');
-      }
-
-      // Create session
+    // DEMO LOGIN - Temporär für Entwicklung
+    if (email === 'demo@hotel.de' && password === 'Demo1234!') {
+      // Create demo session
       const duration = remember ? AUTH_CONFIG.REMEMBER_DURATION : AUTH_CONFIG.SESSION_DURATION;
       const session = {
         user: {
-          id: data.user.id,
-          email: data.user.email,
-          name: data.user.user_metadata?.name || email.split('@')[0],
-          role: data.user.user_metadata?.role || 'user'
+          id: 'demo-user-001',
+          email: email,
+          name: 'Demo User',
+          role: 'admin'
         },
-        token: data.session.access_token,
+        token: 'demo-token-' + Date.now(),
         expiresAt: new Date(Date.now() + duration).toISOString(),
         createdAt: new Date().toISOString(),
         remember: remember
@@ -143,16 +131,21 @@ class AuthManager {
       this.saveSession(session);
       this.clearAttempts();
 
-      // Log activity
-      await this.logActivity('login', { email, remember });
+      // Log activity (simplified for demo)
+      console.log('Demo login successful:', session);
 
       return { success: true, user: session.user };
-
-    } catch (error) {
-      console.error('Login failed:', error);
-      return { success: false, error: error.message };
+    } else {
+      // Für alle anderen Login-Versuche
+      this.recordFailedAttempt();
+      throw new Error('Invalid credentials. Please use demo@hotel.de / Demo1234!');
     }
+
+  } catch (error) {
+    console.error('Login failed:', error);
+    return { success: false, error: error.message };
   }
+}
 
   // Logout
   async logout() {
@@ -490,14 +483,24 @@ class AuthManager {
     }
   }
 
-  // Redirect helpers
-  redirectToLogin() {
+ // Redirect helpers
+redirectToLogin() {
+  // Prüfe verschiedene mögliche Pfade
+  if (window.location.pathname.includes('index.html')) {
     window.location.href = '/auth.html';
+  } else {
+    window.location.href = 'auth.html';
   }
+}
 
-  redirectToDashboard() {
+redirectToDashboard() {
+  // Prüfe verschiedene mögliche Pfade
+  if (window.location.pathname.includes('auth.html')) {
     window.location.href = '/index.html';
+  } else {
+    window.location.href = 'index.html';
   }
+}
 
   // Get current user
   getCurrentUser() {
