@@ -118,11 +118,36 @@ class API {
     this.config = config;
     this.supabase = null;
     this.cache = new Map();
-  
-     }
-    return null;
   }
 
+  // Initialize Supabase client - DEMO VERSION
+  async initSupabase() {
+    if (this.supabase) return this.supabase;
+    
+    try {
+      // Demo Mode - keine echte Supabase Verbindung
+      console.log('Running in DEMO mode - no real database connection');
+      this.supabase = {
+        demo: true,
+        from: (table) => ({
+          select: () => Promise.resolve({ data: this.getDemoData(table), error: null }),
+          insert: (data) => Promise.resolve({ data: { ...data, id: Date.now() }, error: null }),
+          update: (data) => Promise.resolve({ data, error: null }),
+          delete: () => Promise.resolve({ error: null }),
+          eq: () => ({ select: () => Promise.resolve({ data: [], error: null }) }),
+          order: () => ({ select: () => Promise.resolve({ data: [], error: null }) }),
+          gte: () => ({ lte: () => ({ select: () => Promise.resolve({ data: [], error: null }) }) })
+        })
+      };
+      return this.supabase;
+    } catch (error) {
+      console.error('Failed to initialize demo mode:', error);
+      return null;
+    }
+  }
+
+  // Demo data generator
+  getDemoData(table) {
   // Demo data generator
   getDemoData(table) {
     const demoData = {
