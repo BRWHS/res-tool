@@ -640,7 +640,7 @@ const HOTELS = [
 // =============== APPLICATION CONTROLLER ===============
 class ReservationApp {
   constructor() {
-    this.api = new API(CONFIG.API);
+    this.api = new API(CONFIG);
     this.ui = new UIManager();
     this.initialized = false;
   }
