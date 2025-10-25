@@ -3,18 +3,18 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>res-tool — Dashboard</title>
+  <title>res-tool â€” Dashboard</title>
   
   <!-- Inline Favicon -->
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='0.9em' font-size='90'%3E🏨%3C/text%3E%3C/svg%3E">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='0.9em' font-size='90'%3EðŸ¨%3C/text%3E%3C/svg%3E">
 
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;600;800&display=swap" rel="stylesheet">
 
   
-  <!-- Styles (V1.5 - Best of Both Worlds) -->
-  <link rel="stylesheet" href="styles.css" />
+  <!-- Styles (V2.0 - Ordnerstruktur) -->
+  <link rel="stylesheet" href="src/styles.css" />
 
   <!-- Toast System (defer for DOM-ready) -->
   <script src="toast-system.js" defer></script>
@@ -31,7 +31,7 @@
     <nav class="toolbar" aria-label="Aktionen">
       <div class="toolbar-left">
         <button class="btn primary" id="btnNew"        data-modal="#modalNew">Neue Reservierung</button>
-        <button class="btn ghost"   id="btnAvail"      data-modal="#modalAvail">Verfügbarkeit</button>
+        <button class="btn ghost"   id="btnAvail"      data-modal="#modalAvail">VerfÃ¼gbarkeit</button>
         <button class="btn ghost"   id="btnReporting"  data-modal="#modalReporting">Reporting</button>
         <button class="btn ghost"   id="btnSettings"   data-modal="#modalSettings">Einstellungen</button>
         <button class="btn ghost"   id="btnSketch"     data-modal="#modalSketch">Hotelskizze</button>
@@ -46,7 +46,7 @@
         </div>
         <div class="clock">
           <span id="dateLocal">--.--.----</span>
-          <span class="sep">·</span>
+          <span class="sep">Â·</span>
           <span id="clockLocal">--:--:--</span>
         </div>
       </div>
@@ -55,7 +55,7 @@
 
   <main class="container" aria-live="polite">
     <!-- KPIs -->
-    <section class="grid hero" aria-label="Dashboard Übersicht">
+    <section class="grid hero" aria-label="Dashboard Ãœbersicht">
       <article class="card scanlines">
         <div class="content">
           <div class="card-head">
@@ -65,10 +65,10 @@
             </div>
           </div>
           <div class="kpis big">
-            <div class="kpi"><div class="value" id="tBookings">—</div><div class="label">Buchungen (heute eingegangen)</div></div>
-            <div class="kpi"><div class="value" id="tRevenue">— €</div><div class="label">Umsatz (heute)</div></div>
-            <div class="kpi"><div class="value" id="tADR">— €</div><div class="label">ADR (heute)</div></div>
-            <div class="kpi"><div class="value" id="tOcc">—%</div><div class="label">Auslastung (heute)</div></div>
+            <div class="kpi"><div class="value" id="tBookings">â€”</div><div class="label">Buchungen (heute eingegangen)</div></div>
+            <div class="kpi"><div class="value" id="tRevenue">â€” â‚¬</div><div class="label">Umsatz (heute)</div></div>
+            <div class="kpi"><div class="value" id="tADR">â€” â‚¬</div><div class="label">ADR (heute)</div></div>
+            <div class="kpi"><div class="value" id="tOcc">â€”%</div><div class="label">Auslastung (heute)</div></div>
           </div>
         </div>
       </article>
@@ -76,15 +76,15 @@
       <article class="card scanlines">
         <div class="content">
           <div class="card-head">
-            <h3 class="mono">Performance - Nächste 7 Tage</h3>
+            <h3 class="mono">Performance - NÃ¤chste 7 Tage</h3>
             <div class="select-wrap">
               <select id="kpiFilterNext" class="input sm theme-select"></select>
             </div>
           </div>
           <div class="kpis big">
-            <div class="kpi"><div class="value" id="nRevenue">— €</div><div class="label">Umsatz (Anreisen +1..+7)</div></div>
-            <div class="kpi"><div class="value" id="nADR">— €</div><div class="label">WDR (+1..+7)</div></div>
-            <div class="kpi"><div class="value" id="nOcc">—%</div><div class="label">Ø Auslastung (+1..+7)</div></div>
+            <div class="kpi"><div class="value" id="nRevenue">â€” â‚¬</div><div class="label">Umsatz (Anreisen +1..+7)</div></div>
+            <div class="kpi"><div class="value" id="nADR">â€” â‚¬</div><div class="label">WDR (+1..+7)</div></div>
+            <div class="kpi"><div class="value" id="nOcc">â€”%</div><div class="label">Ã˜ Auslastung (+1..+7)</div></div>
           </div>
         </div>
       </article>
@@ -101,7 +101,7 @@
 
           <div class="table-tools">
             <div class="row wrap">
-              <input id="searchInput" class="input" placeholder="Gastname…" />
+              <input id="searchInput" class="input" placeholder="Gastnameâ€¦" />
               <select id="filterHotel" class="input theme-select" style="width:220px;"></select>
               <select id="filterStatus" class="input theme-select" style="width:170px;">
                 <option value="active">Status: Active (Zukunft)</option>
@@ -114,7 +114,7 @@
               <input id="filterTo"   type="date" class="input" style="width:170px;" />
               <button class="btn" id="btnRefresh">Refresh</button>
             
-<button class="btn ghost" id="btnClearFilters" title="Filter zurücksetzen">Reset</button>
+<button class="btn ghost" id="btnClearFilters" title="Filter zurÃ¼cksetzen">Reset</button>
 </div>
           </div>
 
@@ -136,7 +136,7 @@
               <tbody id="resvBody"></tbody>
             </table>
             <div class="pagination">
-              <button class="btn" id="prevPage">Zurück</button>
+              <button class="btn" id="prevPage">ZurÃ¼ck</button>
               <span class="muted" id="pageInfo">Seite 1</span>
               <button class="btn" id="nextPage">Weiter</button>
             </div>
@@ -157,7 +157,7 @@
 <section class="modal" id="modalRateEdit" role="dialog" aria-labelledby="rateEditTitle" aria-modal="true" aria-hidden="true">
   <header>
     <h3 id="rateEditTitle" class="mono"><span class="set-logo" aria-hidden="true"></span> Rate bearbeiten</h3>
-    <button class="btn" data-close>Schließen</button>
+    <button class="btn" data-close>SchlieÃŸen</button>
   </header>
   <div class="body">
     <div class="grid2">
@@ -175,7 +175,7 @@
         </select>
       </label>
       <label>Ratename
-        <input id="erName" class="input" placeholder="z. B. Flex exkl. Frühstück" />
+        <input id="erName" class="input" placeholder="z. B. Flex exkl. FrÃ¼hstÃ¼ck" />
       </label>
       <label style="grid-column:1 / -1">Kategorien
   <div id="erCatsWrap" class="cat-stack"></div>
@@ -184,7 +184,7 @@
       <label style="grid-column:1 / -1">Stornobedingung
         <textarea id="erPolicy" class="input" rows="3" placeholder="z. B. Bis zum Anreisetag 18:00 Uhr kostenfrei stornierbar."></textarea>
       </label>
-      <label>Preis/Nacht (€)
+      <label>Preis/Nacht (â‚¬)
         <input id="erPrice" type="number" step="1" min="0" class="input" />
       </label>
       <label>Gemappt
@@ -196,11 +196,11 @@
     </div>
 
     <div class="set-footer" style="gap:8px; justify-content:flex-end">
-      <button class="btn danger" id="btnRateDelete">Rate löschen</button>
-      <button class="btn primary" id="btnRateUpdate">Änderungen speichern</button>
+      <button class="btn danger" id="btnRateDelete">Rate lÃ¶schen</button>
+      <button class="btn primary" id="btnRateUpdate">Ã„nderungen speichern</button>
     </div>
 
-    <p class="muted tiny" style="margin-top:6px">Hotel, Ratecode und Ratentyp sind fix und nicht änderbar.</p>
+    <p class="muted tiny" style="margin-top:6px">Hotel, Ratecode und Ratentyp sind fix und nicht Ã¤nderbar.</p>
   </div>
 </section>
 
@@ -208,7 +208,7 @@
 <section class="modal" id="modalRateCreate" role="dialog" aria-labelledby="rateCreateTitle" aria-modal="true" aria-hidden="true">
   <header>
     <h3 id="rateCreateTitle" class="mono"><span class="set-logo" aria-hidden="true"></span> Neue Rate</h3>
-    <button class="btn" data-close>Schließen</button>
+    <button class="btn" data-close>SchlieÃŸen</button>
   </header>
   <div class="body">
     <div class="grid2">
@@ -217,7 +217,7 @@
       </label>
       <label>Ratentyp*
         <select id="crType" class="input theme-select">
-          <option value="">Bitte wählen</option>
+          <option value="">Bitte wÃ¤hlen</option>
           <option>Direct</option><option>Corp</option><option>IDS</option>
         </select>
       </label>
@@ -225,7 +225,7 @@
         <select id="crHotel" class="input theme-select"></select>
       </label>
       <label>Ratename*
-        <input id="crName" class="input" placeholder="z. B. Flex exkl. Frühstück">
+        <input id="crName" class="input" placeholder="z. B. Flex exkl. FrÃ¼hstÃ¼ck">
       </label>
       <label style="grid-column:1 / -1">Kategorien
   <div id="crCatsWrap" class="cat-stack" data-disabled="true"></div>
@@ -234,7 +234,7 @@
       <label style="grid-column:1 / -1">Stornobedingung
         <textarea id="crPolicy" class="input" rows="3" placeholder="Bis 18:00 Uhr am Anreisetag kostenfrei stornierbar."></textarea>
       </label>
-      <label>Preis/Nacht (€)
+      <label>Preis/Nacht (â‚¬)
         <input id="crPrice" type="number" step="1" min="0" class="input" value="0">
       </label>
       <label>Gemappt
@@ -260,7 +260,7 @@
   <section class="modal" id="modalNew" role="dialog" aria-labelledby="newTitle" aria-modal="true" aria-hidden="true">
     <header>
       <h3 id="newTitle" class="mono"><span class="newres-logo"></span> Neue Reservierung</h3>
-      <button class="btn" data-close>Schließen</button>
+      <button class="btn" data-close>SchlieÃŸen</button>
     </header>
     <div class="body">
       <div class="wizard-steps">
@@ -285,13 +285,13 @@
               <label>Kinder <input id="newChildren" type="number" min="0" value="0" class="input"/></label>
             </div>
 
-            <h4 class="mono section">Gästedaten</h4>
+            <h4 class="mono section">GÃ¤stedaten</h4>
             <div class="grid-compact">
               <label>Vorname <input id="newFname" class="input" placeholder="Max"/></label>
               <label>Nachname* <input id="newLname" class="input" placeholder="Mustermann" required/></label>
               <label>PLZ <input id="newZip" class="input" placeholder="80331"/></label>
-              <label>Straße <input id="newStreet" class="input" placeholder="Musterstraße 1"/></label>
-              <label style="grid-column:1 / -1">Ort <input id="newCity" class="input" placeholder="München"/></label>
+              <label>StraÃŸe <input id="newStreet" class="input" placeholder="MusterstraÃŸe 1"/></label>
+              <label style="grid-column:1 / -1">Ort <input id="newCity" class="input" placeholder="MÃ¼nchen"/></label>
             </div>
           </div>
 
@@ -304,7 +304,7 @@
             <div class="box" style="margin-top:12px">
               <h4 class="mono section" style="margin:0 0 6px">Kontaktdaten</h4>
               <div class="grid-compact">
-                <label style="grid-column:1 / -1">Telefon <input id="newPhone" class="input" placeholder="+49 …"/></label>
+                <label style="grid-column:1 / -1">Telefon <input id="newPhone" class="input" placeholder="+49 â€¦"/></label>
                 <label style="grid-column:1 / -1">E-Mail <input id="newEmail" class="input" placeholder="max@example.com"/></label>
               </div>
             </div>
@@ -334,9 +334,9 @@
           <div class="box s2-desc">
             <div class="mono muted tiny" style="margin-bottom:4px">Beschreibung</div>
             <div id="catDesc" class="tiny">
-              das Zimmer hat eine größe von mehr oder weniger als 40m², Toaster, Mikrowelle und Balkon mit Ausblick.
+              das Zimmer hat eine grÃ¶ÃŸe von mehr oder weniger als 40mÂ², Toaster, Mikrowelle und Balkon mit Ausblick.
               Dies ist ein Placeholder-Text und soll einen visuellen Effekt erzeugen. Die Beschreibung soll dem Agent
-              alle Infos zu der Zimmerkategorie liefern, um möglichst präziser arbeiten zu können.
+              alle Infos zu der Zimmerkategorie liefern, um mÃ¶glichst prÃ¤ziser arbeiten zu kÃ¶nnen.
             </div>
           </div>
         </div>
@@ -360,7 +360,7 @@
         </div>
         <div class="policy-box">
           <div class="muted">Stornobedingung</div>
-          <p id="ratePolicyPreview">—</p>
+          <p id="ratePolicyPreview">â€”</p>
         </div>
       </div>
 
@@ -375,7 +375,7 @@
             <label>Firma <input id="newCompany" class="input" /></label>
             <label>USt-ID <input id="newVat" class="input" /></label>
             <label>PLZ <input id="newCompanyZip" class="input" /></label>
-            <label>Adresse <input id="newAddress" class="input" placeholder="Straße + Ort" /></label>
+            <label>Adresse <input id="newAddress" class="input" placeholder="StraÃŸe + Ort" /></label>
           </div>
         </details>
 
@@ -383,26 +383,26 @@
         <div class="cc-wrap">
           <div class="cc-visual">
             <div class="cc-chip"></div>
-            <div class="cc-num"  id="ccNumLive">•••• •••• •••• ••••</div>
+            <div class="cc-num"  id="ccNumLive">â€¢â€¢â€¢â€¢ â€¢â€¢â€¢â€¢ â€¢â€¢â€¢â€¢ â€¢â€¢â€¢â€¢</div>
             <div class="cc-holder" id="ccHolderLive">NAME</div>
             <div class="cc-exp"    id="ccExpLive">MM/YY</div>
           </div>
           <div class="cc-form">
             <div class="grid2">
               <label>Karteninhaber <input id="ccHolder" class="input" /></label>
-              <label>Kartennummer <input id="ccNumber" class="input" placeholder="•••• •••• •••• 1234" /></label>
+              <label>Kartennummer <input id="ccNumber" class="input" placeholder="â€¢â€¢â€¢â€¢ â€¢â€¢â€¢â€¢ â€¢â€¢â€¢â€¢ 1234" /></label>
               <label>Ablauf (MM/JJ) <input id="ccExpiry" class="input" placeholder="12/27" /></label>
             </div>
           </div>
         </div>
 
         <label class="section mono">Notizen
-          <textarea id="newNotes" class="input" rows="3" placeholder="Besonderheiten, Wünsche …"></textarea>
+          <textarea id="newNotes" class="input" rows="3" placeholder="Besonderheiten, WÃ¼nsche â€¦"></textarea>
         </label>
       </div>
 
       <div class="wizard-actions">
-        <button class="btn ghost hidden" id="btnPrev">Zurück</button>
+        <button class="btn ghost hidden" id="btnPrev">ZurÃ¼ck</button>
         <div style="flex:1"></div>
         <button class="btn" id="btnNext" disabled>Weiter</button>
         <button class="btn primary hidden" id="btnCreate">Reservierung abschicken</button>
@@ -416,7 +416,7 @@
   <section class="modal" id="modalEdit" role="dialog" aria-labelledby="editTitle" aria-modal="true" aria-hidden="true">
     <header>
       <h3 id="editTitle" class="mono">Reservierung bearbeiten</h3>
-      <button class="btn" data-close>Schließen</button>
+      <button class="btn" data-close>SchlieÃŸen</button>
     </header>
     <div class="body">
       <div class="tabs">
@@ -481,8 +481,8 @@
       <h4 class="mono" style="margin:0">Preisplan (pro Nacht)</h4>
       <div class="row wrap" style="gap:8px;">
         <button id="btnPlanFillWeekdays" class="btn sm ghost" title="Wochentage-Muster anwenden">Wochentage-Muster</button>
-        <button id="btnPlanAll" class="btn sm ghost" title="Alle Nächte auf einen Preis setzen">💰All Price</button>
-        <button id="btnPlanReset" class="btn sm ghost" title="Alle Nächte wieder auf Basispreis setzen">Zurücksetzen</button>
+        <button id="btnPlanAll" class="btn sm ghost" title="Alle NÃ¤chte auf einen Preis setzen">ðŸ’°All Price</button>
+        <button id="btnPlanReset" class="btn sm ghost" title="Alle NÃ¤chte wieder auf Basispreis setzen">ZurÃ¼cksetzen</button>
         <button id="btnSavePlan" class="btn sm primary">Preisplan speichern</button>
        <!-- Footer-Aktionen unten rechts im Tab -->
 <div id="planFooter" style="position:sticky; bottom:0; padding-top:8px;">
@@ -494,10 +494,10 @@
 <div id="planAllPopup" class="card hidden" style="
      position:absolute; right:12px; top:56px; z-index:200;
      width: 260px; padding:12px; border:1px solid var(--line,#17414b);">
-  <div class="mono" style="margin-bottom:8px;">Alle Nächte auf Preis setzen</div>
+  <div class="mono" style="margin-bottom:8px;">Alle NÃ¤chte auf Preis setzen</div>
   <div class="row" style="gap:8px; align-items:center;">
     <input id="planAllValue" class="input mono" type="number" step="0.01" min="0" placeholder="z. B. 109.00" style="flex:1;">
-    <span class="mono">€</span>
+    <span class="mono">â‚¬</span>
   </div>
   <div class="row" style="justify-content:flex-end; gap:8px; margin-top:10px;">
     <button id="planAllCancel" class="btn sm">Abbrechen</button>
@@ -528,7 +528,7 @@
         <div class="box">
           <p class="muted">Reservierung stornieren? Status wird auf <b>canceled</b> gesetzt.</p>
           <button class="btn danger" id="btnCancelRes">Stornieren</button>
-          <button id="btnResendConfirmation" class="btn btn--primary">Bestätigung erneut senden</button>
+          <button id="btnResendConfirmation" class="btn btn--primary">BestÃ¤tigung erneut senden</button>
         </div>
       </div>
 
@@ -536,11 +536,11 @@
     </div>
   </section>
 
-  <!-- Verfügbarkeit -->
+  <!-- VerfÃ¼gbarkeit -->
   <section class="modal" id="modalAvail" role="dialog" aria-labelledby="availTitle" aria-modal="true" aria-hidden="true">
     <header>
-      <h3 id="availTitle" class="mono"><span class="rep-logo"></span> Verfügbarkeit</h3>
-      <button class="btn" data-close>Schließen</button>
+      <h3 id="availTitle" class="mono"><span class="rep-logo"></span> VerfÃ¼gbarkeit</h3>
+      <button class="btn" data-close>SchlieÃŸen</button>
     </header>
     <div class="body">
       <div class="row wrap" style="margin-bottom:8px;">
@@ -559,9 +559,9 @@
   nur aktive Hotels
 </label>
         <div class="muted" style="margin-left:auto;">Legende:
-          <span class="pill occ-g">≤64%</span>
-          <span class="pill occ-o">65–89%</span>
-          <span class="pill occ-r">≥90%</span>
+          <span class="pill occ-g">â‰¤64%</span>
+          <span class="pill occ-o">65â€“89%</span>
+          <span class="pill occ-r">â‰¥90%</span>
         </div>
       </div>
       <div class="matrix compact">
@@ -579,7 +579,7 @@
   <h3 id="repTitle" class="mono">
     <span class="rep-logo"></span> Reporting
   </h3>
-  <button class="btn" data-close>Schließen</button>
+  <button class="btn" data-close>SchlieÃŸen</button>
 </header>
   <div class="body">
     <div class="row wrap">
@@ -632,7 +632,7 @@
 <section class="modal" id="modalRepScheduler" role="dialog" aria-labelledby="repSchedTitle" aria-modal="true" aria-hidden="true">
   <header>
     <h3 id="repSchedTitle" class="mono"><span class="rep-logo"></span> Automatischer Report-Versand</h3>
-    <button class="btn" data-close>Schließen</button>
+    <button class="btn" data-close>SchlieÃŸen</button>
   </header>
 
   <div class="body">
@@ -646,8 +646,8 @@
 
       <label>Rhythmus
         <select id="rsFreq" class="input theme-select">
-          <option value="daily">täglich</option>
-          <option value="weekly">wöchentlich</option>
+          <option value="daily">tÃ¤glich</option>
+          <option value="weekly">wÃ¶chentlich</option>
           <option value="monthly">monatlich</option>
         </select>
       </label>
@@ -660,7 +660,7 @@
         <select id="rsRange" class="input theme-select" title="Betrachteter Zeitraum im Report">
           <option value="yesterday">Gestern</option>
           <option value="today" selected>Heute</option>
-          <option value="next7">Nächste 7 Tage</option>
+          <option value="next7">NÃ¤chste 7 Tage</option>
           <option value="last7">Letzte 7 Tage</option>
           <option value="custom">Benutzerdefiniert</option>
         </select>
@@ -675,7 +675,7 @@
 
       <label style="grid-column:1 / -1">Hotels
   <select id="rsHotels" class="input" multiple size="6" style="width:100%"></select>
-  <small class="muted">Tipp: Strg/Cmd gedrückt halten für Mehrfachauswahl.</small>
+  <small class="muted">Tipp: Strg/Cmd gedrÃ¼ckt halten fÃ¼r Mehrfachauswahl.</small>
 </label>
 
       <label>Formate
@@ -685,16 +685,16 @@
         </div>
       </label>
 
-      <label style="grid-column:1 / -1">Empfänger (Kommagetrennt)
-        <textarea id="rsRecipients" class="input" rows="2" placeholder="anna@…, ben@…, team@…"></textarea>
+      <label style="grid-column:1 / -1">EmpfÃ¤nger (Kommagetrennt)
+        <textarea id="rsRecipients" class="input" rows="2" placeholder="anna@â€¦, ben@â€¦, team@â€¦"></textarea>
       </label>
 
       <label style="grid-column:1 / -1">Betreff-Template
-        <input id="rsSubj" class="input" placeholder="Report {{range}} – {{date}} – {{hotels}}" />
+        <input id="rsSubj" class="input" placeholder="Report {{range}} â€“ {{date}} â€“ {{hotels}}" />
       </label>
 
       <label style="grid-column:1 / -1">Body-Template
-        <textarea id="rsBody" class="input" rows="4" placeholder="Guten Morgen,\n anbei der automatisierte Report für {{range}} ({{date}}) – Hotels: {{hotels}}.\nViele Grüße\nReservierung"></textarea>
+        <textarea id="rsBody" class="input" rows="4" placeholder="Guten Morgen,\n anbei der automatisierte Report fÃ¼r {{range}} ({{date}}) â€“ Hotels: {{hotels}}.\nViele GrÃ¼ÃŸe\nReservierung"></textarea>
       </label>
     </div>
 
@@ -714,7 +714,7 @@
       <h3 id="setTitle" class="mono">
         <span class="set-logo" aria-hidden="true"></span> Einstellungen
       </h3>
-      <button class="btn" data-close>Schließen</button>
+      <button class="btn" data-close>SchlieÃŸen</button>
     </header>
     <div class="body">
       <!-- oben: links Form / rechts Live-Systeminfo -->
@@ -731,7 +731,7 @@
       </label>
 
       <label class="set-field">
-        <span class="set-label">Farbton (Hue) <span id="hueVal" class="muted">180°</span></span>
+        <span class="set-label">Farbton (Hue) <span id="hueVal" class="muted">180Â°</span></span>
         <input id="rngHue" class="hue" type="range" min="0" max="359" step="1" />
       </label>
     </div>
@@ -739,7 +739,7 @@
     <!-- Buttons direkt darunter, klein -->
     <div class="set-tiles">
       <button class="btn tile" id="btnUserPrefs">Benutzereinstellungen</button>
-      <button class="btn tile" id="btnChannel" data-role-required="admin">Channel – Einstellungen</button>
+      <button class="btn tile" id="btnChannel" data-role-required="admin">Channel â€“ Einstellungen</button>
       <button class="btn tile" id="btnLog">Log Activity</button>
       <button class="btn tile" id="btnCats" data-role-required="admin">Kategorieverwaltung</button>
       <button class="btn tile" id="btnRates" data-modal="#modalRates" data-role-required="admin">Rateneinstellungen</button>
@@ -749,12 +749,12 @@
 
   <!-- RECHTER BLOCK: Live-Systeminfo (kleiner, transparenter) -->
   <aside class="box set-sys" id="netBox">
-    <h4 class="mono section" style="margin:0 0 6px">Live‑Systeminfo</h4>
+    <h4 class="mono section" style="margin:0 0 6px">Liveâ€‘Systeminfo</h4>
     <div class="sys-grid">
-      <div class="settings-row"><label>Öffentliche IP</label><span id="netIp">—</span></div>
-      <div class="settings-row"><label>IPv4</label><span id="netIpv4">—</span></div>
-      <div class="settings-row"><label>Standort</label><span id="netLoc">—</span></div>
-      <div class="settings-row"><label>OS / Browser</label><span id="netOs">—</span></div>
+      <div class="settings-row"><label>Ã–ffentliche IP</label><span id="netIp">â€”</span></div>
+      <div class="settings-row"><label>IPv4</label><span id="netIpv4">â€”</span></div>
+      <div class="settings-row"><label>Standort</label><span id="netLoc">â€”</span></div>
+      <div class="settings-row"><label>OS / Browser</label><span id="netOs">â€”</span></div>
     </div>
     <p class="muted tiny">Live Daten.</p>
   </aside>
@@ -771,13 +771,13 @@
     </div>
   </section>
 
- <!-- Modal: Channel Settings (admin) – NEU -->
+ <!-- Modal: Channel Settings (admin) â€“ NEU -->
 <section class="modal" id="modalChannel" role="dialog" aria-labelledby="channelTitle" aria-modal="true">
   <header>
     <h3 id="channelTitle" class="mono">
-      <span class="set-logo" aria-hidden="true"></span> Channel – Einstellungen
+      <span class="set-logo" aria-hidden="true"></span> Channel â€“ Einstellungen
     </h3>
-    <button class="btn" data-close>Schließen</button>
+    <button class="btn" data-close>SchlieÃŸen</button>
   </header>
 
   <div class="body" style="min-width:920px; max-width:96vw;">
@@ -786,31 +786,31 @@
       <aside class="box" style="width:260px; padding:10px;">
         <div class="mono muted tiny" style="margin-bottom:6px">Bereiche</div>
         <div class="channel-tabs" id="channelTabs" style="display:flex; flex-direction:column; gap:6px;">
-          <button class="btn tile channel-tab active" data-channel-tab="api">Api – Einstellungen</button>
-          <button class="btn tile channel-tab" data-channel-tab="property">Property – Mapping</button>
+          <button class="btn tile channel-tab active" data-channel-tab="api">Api â€“ Einstellungen</button>
+          <button class="btn tile channel-tab" data-channel-tab="property">Property â€“ Mapping</button>
           <button class="btn tile channel-tab" data-channel-tab="monitor">Monitoring</button>
-          <button class="btn tile channel-tab" data-channel-tab="system">System – Technik</button>
+          <button class="btn tile channel-tab" data-channel-tab="system">System â€“ Technik</button>
           <button class="btn tile channel-tab" data-channel-tab="admin">Admin</button>
         </div>
       </aside>
 
-      <!-- Rechte Contentfläche -->
+      <!-- Rechte ContentflÃ¤che -->
       <section class="card" style="flex:1;">
         <div class="content" id="channelContent" style="min-height:480px;">
           <!-- Page: API -->
           <div class="channel-page" id="chPage_api">
-            <div class="card-head"><h3 class="mono" style="margin:0">API – Einstellungen</h3></div>
+            <div class="card-head"><h3 class="mono" style="margin:0">API â€“ Einstellungen</h3></div>
             <div class="grid2">
               <label>API-Key (versteckt)
-                <input id="chApiKey" type="password" class="input" autocomplete="off" placeholder="••••••••" />
+                <input id="chApiKey" type="password" class="input" autocomplete="off" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" />
               </label>
               <label>API-Secret (versteckt)
-                <input id="chApiSecret" type="password" class="input" autocomplete="off" placeholder="••••••••" />
+                <input id="chApiSecret" type="password" class="input" autocomplete="off" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" />
               </label>
-              <label>HNS Endpoint – PROD
+              <label>HNS Endpoint â€“ PROD
                 <input id="chHnsProd" class="input" placeholder="https://api.hns.example/v1" />
               </label>
-              <label>HNS Endpoint – TEST
+              <label>HNS Endpoint â€“ TEST
                 <input id="chHnsTest" class="input" placeholder="https://sandbox.hns.example/v1" />
               </label>
               <label>Timeout (ms)
@@ -819,7 +819,7 @@
               <label>Retry-Versuche
                 <input id="chRetry" type="number" class="input" value="2" min="0" max="5" />
               </label>
-              <label style="grid-column:1 / -1">Hotel-Mapping (JSON: unsere <code>hotel_code</code> → HNS-Code)
+              <label style="grid-column:1 / -1">Hotel-Mapping (JSON: unsere <code>hotel_code</code> â†’ HNS-Code)
                 <textarea id="chHotelMap" class="input" rows="4" placeholder='{"MA7-STR":"HNS_123","TAL-SON":"HNS_987"}'></textarea>
               </label>
             </div>
@@ -827,16 +827,16 @@
 
           <!-- Page: Property -->
           <div class="channel-page hidden" id="chPage_property">
-            <div class="card-head"><h3 class="mono" style="margin:0">Property – Mapping</h3></div>
+            <div class="card-head"><h3 class="mono" style="margin:0">Property â€“ Mapping</h3></div>
             <div class="box">
               <div class="mono muted tiny" style="margin-bottom:6px">Hotels aktiv</div>
               <div id="chHotelActiveList" class="grid-compact" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:8px;"></div>
             </div>
             <div class="grid2" style="margin-top:8px">
-              <label style="grid-column:1 / -1">Kategorien-Mapping (JSON: unsere Kategorie → HNS)
+              <label style="grid-column:1 / -1">Kategorien-Mapping (JSON: unsere Kategorie â†’ HNS)
                 <textarea id="chCatMap" class="input" rows="3" placeholder='{"Standard":"STD","Superior":"SUP","Suite":"STE"}'></textarea>
               </label>
-              <label style="grid-column:1 / -1">Raten-Mapping (JSON: unser Ratecode → HNS-Ratecode)
+              <label style="grid-column:1 / -1">Raten-Mapping (JSON: unser Ratecode â†’ HNS-Ratecode)
                 <textarea id="chRateMap" class="input" rows="3" placeholder='{"1001":"BAR","1002":"BAR_BB"}'></textarea>
               </label>
             </div>
@@ -856,12 +856,12 @@
       <ul id="chErrorList" class="tiny" style="margin:6px 0 0 16px; line-height:1.4"></ul>
     </div>
     <div>
-      <h4 class="mono section">Mapping-Übersicht</h4>
-      <div id="chMappingSummary" class="tiny" style="margin-bottom:8px;">—</div>
+      <h4 class="mono section">Mapping-Ãœbersicht</h4>
+      <div id="chMappingSummary" class="tiny" style="margin-bottom:8px;">â€”</div>
 
       <!-- Ampel -->
       <div class="box" id="chMapAmpel" style="display:grid; gap:8px;">
-        <!-- wird per JS befüllt -->
+        <!-- wird per JS befÃ¼llt -->
       </div>
     </div>
   </div>
@@ -869,7 +869,7 @@
 
           <!-- Page: System -->
           <div class="channel-page hidden" id="chPage_system">
-            <div class="card-head"><h3 class="mono" style="margin:0">System – Technik</h3></div>
+            <div class="card-head"><h3 class="mono" style="margin:0">System â€“ Technik</h3></div>
             <div class="grid2">
               <label>Modus
                 <select id="chMode" class="input theme-select">
@@ -883,13 +883,13 @@
                 <input id="chImportFile" type="file" accept="application/json" style="display:none;">
               </div>
               <div style="grid-column:1 / -1" class="box">
-                <div class="mono muted tiny" style="margin-bottom:6px">Hotel hinzufügen (on-the-fly)</div>
+                <div class="mono muted tiny" style="margin-bottom:6px">Hotel hinzufÃ¼gen (on-the-fly)</div>
                 <div class="grid-compact">
                   <label>Code <input id="chNewHotelCode" class="input" placeholder="VV-HH"></label>
                   <label>Name <input id="chNewHotelName" class="input" placeholder="Villa Viva Hamburg"></label>
                   <label>Gruppe <input id="chNewHotelGroup" class="input" placeholder="Villa Viva"></label>
                   <label>Bild-URL <input id="chNewHotelImg" class="input" placeholder="/assets/hotel-placeholder.png"></label>
-                  <button class="btn" id="chAddHotel">Hotel hinzufügen</button>
+                  <button class="btn" id="chAddHotel">Hotel hinzufÃ¼gen</button>
                 </div>
               </div>
               <label style="grid-column:1 / -1">Stornierungsbedingungen (Default, Markdown/Plain)
@@ -904,11 +904,11 @@
   <div class="grid2">
     <div class="box">
       <div class="settings-row"><label>Passwortschutz</label><span class="muted tiny">ist aktiv (Prompt)</span></div>
-      <div class="settings-row"><label>Letzter Sync</label><span id="chLastSync">—</span></div>
+      <div class="settings-row"><label>Letzter Sync</label><span id="chLastSync">â€”</span></div>
     </div>
     <div class="box">
       <p class="tiny muted">
-        „Jetzt synchronisieren“ führt einen Health-Check aus, zieht Availability von HNS (für aktive Hotels)
+        â€žJetzt synchronisierenâ€œ fÃ¼hrt einen Health-Check aus, zieht Availability von HNS (fÃ¼r aktive Hotels)
         und schreibt alles ins Log. Danach werden KPIs & Matrix aktualisiert.
       </p>
       <button class="btn primary" id="btnSyncNow">Jetzt synchronisieren</button>
@@ -933,11 +933,11 @@
     <h3 id="logTitle" class="mono">
       <span class="set-logo" aria-hidden="true"></span> Log Activity
     </h3>
-    <button class="btn" data-close>Schließen</button>
+    <button class="btn" data-close>SchlieÃŸen</button>
   </header>
   <div class="body">
     <div class="row wrap" style="margin-bottom:8px;">
-      <input id="logSearch" class="input" placeholder="Suche… (Text/Meta)" style="width:220px;">
+      <input id="logSearch" class="input" placeholder="Sucheâ€¦ (Text/Meta)" style="width:220px;">
       <select id="logType" class="input theme-select" style="width:180px;">
         <option value="">Typ: Alle</option>
         <option value="settings">settings</option>
@@ -948,7 +948,7 @@
       <label>Von <input id="logFrom" type="date" class="input" style="width:160px;"></label>
       <label>Bis <input id="logTo" type="date" class="input" style="width:160px;"></label>
       <button class="btn" id="logApply">Filter anwenden</button>
-      <button class="btn ghost" id="logClear">Zurücksetzen</button>
+      <button class="btn ghost" id="logClear">ZurÃ¼cksetzen</button>
     </div>
     <div class="table-wrap">
       <table class="table" id="logTable">
@@ -964,8 +964,8 @@
   <tbody></tbody>
 </table>
       <div id="logPager" class="toolbar" style="justify-content:flex-end;gap:8px">
-  <button id="logPrev" class="btn sm ghost">Zurück</button>
-  <span id="logPageInfo" class="muted">Seite 1 / 1 · 0 Einträge</span>
+  <button id="logPrev" class="btn sm ghost">ZurÃ¼ck</button>
+  <span id="logPageInfo" class="muted">Seite 1 / 1 Â· 0 EintrÃ¤ge</span>
   <button id="logNext" class="btn sm">Weiter</button>
 </div>
 
@@ -977,7 +977,7 @@
 <section class="modal" id="modalCats" role="dialog" aria-labelledby="catsTitle" aria-modal="true" aria-hidden="true">
   <header>
     <h3 id="catsTitle" class="mono"><span class="set-logo" aria-hidden="true"></span> Kategorieverwaltung</h3>
-    <button class="btn" data-close>Schließen</button>
+    <button class="btn" data-close>SchlieÃŸen</button>
   </header>
 
   <div class="body">
@@ -1010,10 +1010,10 @@
             <input id="catNameNew" class="input sm" placeholder="z. B. Standard">
           </label>
           <p class="muted tiny" style="margin:6px 0 0;">
-            Code: nur Großbuchstaben/Zahlen, fix nach Anlage. Hotel & Code sind später nicht änderbar.
+            Code: nur GroÃŸbuchstaben/Zahlen, fix nach Anlage. Hotel & Code sind spÃ¤ter nicht Ã¤nderbar.
           </p>
           <div class="right" style="margin-top:8px">
-            <button class="btn sm" id="btnCatCreate">Hinzufügen</button>
+            <button class="btn sm" id="btnCatCreate">HinzufÃ¼gen</button>
           </div>
           <p class="muted tiny" id="catsInfo" style="margin-top:6px"></p>
         </div>
@@ -1042,12 +1042,12 @@
           </div>
 
           <div class="pagination">
-            <button class="btn" id="catsPrev">Zurück</button>
+            <button class="btn" id="catsPrev">ZurÃ¼ck</button>
             <span class="muted" id="catsPageInfo">Seite 1</span>
             <button class="btn" id="catsNext">Weiter</button>
           </div>
 
-          <p class="muted tiny" style="margin-top:6px">Max. 50 Einträge pro Seite.</p>
+          <p class="muted tiny" style="margin-top:6px">Max. 50 EintrÃ¤ge pro Seite.</p>
         </div>
       </section>
     </div>
@@ -1059,7 +1059,7 @@
   <section class="modal" id="modalUserPrefs" role="dialog" aria-labelledby="userPrefsTitle" aria-modal="true" aria-hidden="true">
     <header>
       <h3 id="userPrefsTitle" class="mono"><span class="set-logo" aria-hidden="true"></span> Benutzereinstellungen</h3>
-      <button class="btn" data-close>Schließen</button>
+      <button class="btn" data-close>SchlieÃŸen</button>
     </header>
      <div class="body" style="min-width:980px;max-width:96vw;">
     <div class="grid2" style="align-items:start; grid-template-columns: 1fr;">
@@ -1145,11 +1145,11 @@
   </section>
 
 
-<!-- Rateneinstellungen (nur Verwaltung/Liste – ohne "Neue Rate") -->
+<!-- Rateneinstellungen (nur Verwaltung/Liste â€“ ohne "Neue Rate") -->
 <section class="modal" id="modalRates" role="dialog" aria-labelledby="ratesTitle" aria-modal="true">
   <header>
     <h3 id="ratesTitle" class="mono"><span class="set-logo" aria-hidden="true"></span> Rateneinstellungen</h3>
-    <button class="btn" data-close>Schließen</button>
+    <button class="btn" data-close>SchlieÃŸen</button>
   </header>
 <div class="body">
   <div class="rates-wrap">
@@ -1164,11 +1164,11 @@
   <button class="btn tile" id="rsTabIds"    data-rates-tab="ids">IDS-Rate</button>
 </aside>
 
-    <!-- Rechte Hauptfläche -->
+    <!-- Rechte HauptflÃ¤che -->
     <section class="rates-main card">
       <div class="content">
         <div class="card-head">
-          <h3 class="mono" id="rsTitle">Raten – Direct</h3>
+          <h3 class="mono" id="rsTitle">Raten â€“ Direct</h3>
          <div class="rs-toolbar"></div>
         </div>
 
@@ -1186,13 +1186,13 @@
             </thead>
             <tbody id="rsBody"></tbody>
           </table>
-          <p class="muted tiny" style="margin-top:6px">Max. 50 Einträge werden angezeigt.</p>
+          <p class="muted tiny" style="margin-top:6px">Max. 50 EintrÃ¤ge werden angezeigt.</p>
         </div>
       </div>
 
       <div class="set-footer">
         <div style="flex:1"></div>
-        <!-- (frei für spätere Aktionen) -->
+        <!-- (frei fÃ¼r spÃ¤tere Aktionen) -->
       </div>
     </section>
   </div>
@@ -1203,56 +1203,56 @@
   <section class="modal" id="modalHelp" role="dialog" aria-labelledby="helpTitle" aria-modal="true" aria-hidden="true">
     <header>
       <h3 id="helpTitle" class="mono"><span class="set-logo" aria-hidden="true"></span> Hilfe & FAQ</h3>
-      <button class="btn" data-close>Schließen</button>
+      <button class="btn" data-close>SchlieÃŸen</button>
     </header>
     <div class="body">
       <div class="box">
         <h4 class="mono" style="margin:0 0 6px;">Schnelle Antworten</h4>
         <details class="box"><summary class="mono">Wie lege ich eine neue Reservierung an?</summary>
-          <p class="tiny">Oben „Neue Reservierung“ → Schritt 1–4 durchklicken, dann „Reservierung abschicken“.</p>
+          <p class="tiny">Oben â€žNeue Reservierungâ€œ â†’ Schritt 1â€“4 durchklicken, dann â€žReservierung abschickenâ€œ.</p>
         </details>
-        <details class="box"><summary class="mono">Woher kommen Verfügbarkeiten?</summary>
+        <details class="box"><summary class="mono">Woher kommen VerfÃ¼gbarkeiten?</summary>
           <p class="tiny">Aus der Tabelle <code>availability</code> (Supabase). HNS-Anbindung folgt.</p>
         </details>
         <details class="box"><summary class="mono">Werden Systeminfos gespeichert?</summary>
           <p class="tiny">Nein. IP/Standort/OS werden nur lokal angezeigt.</p>
         </details>
                 <details class="box"><summary class="mono">Warum kann ich im Fast-Booker nicht speichern?</summary>
-          <p class="tiny">Prüfe, ob die Supabase-Einbindung grün ist (Header-Chip „SB“). 400-Fehler deuten oft auf Felder hin, die in der Tabelle <code>reservations</code> nicht existieren. Entferne nicht vorhandene Keys im Payload oder lege sie in Supabase an.</p>
+          <p class="tiny">PrÃ¼fe, ob die Supabase-Einbindung grÃ¼n ist (Header-Chip â€žSBâ€œ). 400-Fehler deuten oft auf Felder hin, die in der Tabelle <code>reservations</code> nicht existieren. Entferne nicht vorhandene Keys im Payload oder lege sie in Supabase an.</p>
         </details>
 
         <details class="box"><summary class="mono">Wieso sehe ich keine Kategorien?</summary>
-          <p class="tiny">Das Tool nutzt pro Hotel V2-Kategorien. Falls noch keine gepflegt sind, greift ein Fallback (Standard: Standard/Superior/Suite). Pflege Kategorien unter <b>Einstellungen → Kategorieverwaltung</b>.</p>
+          <p class="tiny">Das Tool nutzt pro Hotel V2-Kategorien. Falls noch keine gepflegt sind, greift ein Fallback (Standard: Standard/Superior/Suite). Pflege Kategorien unter <b>Einstellungen â†’ Kategorieverwaltung</b>.</p>
         </details>
 
         <details class="box"><summary class="mono">Wie pflege ich Raten inkl. Zuordnung zu Kategorien?</summary>
-          <p class="tiny">Unter <b>Einstellungen → Rateneinstellungen</b> kannst du je Hotel Raten anlegen, Kategorien zuordnen, Policies hinterlegen und Preise setzen. Im Wizard/Fast-Booker wird die gemappte Rate automatisch angeboten.</p>
+          <p class="tiny">Unter <b>Einstellungen â†’ Rateneinstellungen</b> kannst du je Hotel Raten anlegen, Kategorien zuordnen, Policies hinterlegen und Preise setzen. Im Wizard/Fast-Booker wird die gemappte Rate automatisch angeboten.</p>
         </details>
 
         <details class="box"><summary class="mono">Welche Tabellen nutzt das System?</summary>
           <p class="tiny">
-            <code>reservations</code> (Buchungen), <code>availability</code> (Verfügbarkeiten), <code>app_users</code> (Benutzer, optional).<br>
-            Bei fehlender <code>app_users</code> Tabelle fällt die App für Benutzerverwaltung auf LocalStorage zurück.
+            <code>reservations</code> (Buchungen), <code>availability</code> (VerfÃ¼gbarkeiten), <code>app_users</code> (Benutzer, optional).<br>
+            Bei fehlender <code>app_users</code> Tabelle fÃ¤llt die App fÃ¼r Benutzerverwaltung auf LocalStorage zurÃ¼ck.
           </p>
         </details>
 
         <details class="box"><summary class="mono">Wie exportiere ich Reporting-Daten?</summary>
-          <p class="tiny">Im Menü <b>Reporting</b> Zeitraum und Hotel wählen → „Aktualisieren“. Rechts oben stehen <b>CSV/XLS/PDF</b> bereit.</p>
+          <p class="tiny">Im MenÃ¼ <b>Reporting</b> Zeitraum und Hotel wÃ¤hlen â†’ â€žAktualisierenâ€œ. Rechts oben stehen <b>CSV/XLS/PDF</b> bereit.</p>
         </details>
         <details class="box"><summary class="mono">Welche Bedeutung hat die Benutzer-Rolle aktuell?</summary>
-  <p class="tiny">Rollen sind derzeit <b>Platzhalter</b> ohne Rechtewirkung. Später werden damit Rechtepakete (z. B. Lesen/Schreiben/Reporting/Admin) verknüpft. Für jetzt dienen sie nur der Kennzeichnung.</p>
+  <p class="tiny">Rollen sind derzeit <b>Platzhalter</b> ohne Rechtewirkung. SpÃ¤ter werden damit Rechtepakete (z. B. Lesen/Schreiben/Reporting/Admin) verknÃ¼pft. FÃ¼r jetzt dienen sie nur der Kennzeichnung.</p>
 </details>
 
-<details class="box"><summary class="mono">Wie funktioniert „Passwort“/Login?</summary>
+<details class="box"><summary class="mono">Wie funktioniert â€žPasswortâ€œ/Login?</summary>
   <p class="tiny">
     Aktuell gibt es <b>keine</b> echte Passwortverwaltung. Stattdessen kann pro Benutzer ein <b>lokaler Zugangscode</b> gesetzt werden (nur zu Demo-/Operativzwecken, nicht sicherheitskritisch nutzen).
-    Für ein echtes Login mit Passwort/Reset empfehle ich die Integration von <b>Supabase Auth</b> (E-Mail/Passwort oder Magic Links). Das kann ich als nächsten Schritt einbauen.
+    FÃ¼r ein echtes Login mit Passwort/Reset empfehle ich die Integration von <b>Supabase Auth</b> (E-Mail/Passwort oder Magic Links). Das kann ich als nÃ¤chsten Schritt einbauen.
   </p>
 </details>
 
 <details class="box"><summary class="mono">Warum sehe ich meinen Admin-User nicht?</summary>
   <p class="tiny">
-    Wenn noch keine Nutzer in der Tabelle <code>app_users</code> oder im lokalen Speicher vorhanden sind, legt das System beim ersten Öffnen der Benutzereinstellungen einen <b>Default-Admin</b> an (Name: „Admin“, E-Mail: „admin@local“).
+    Wenn noch keine Nutzer in der Tabelle <code>app_users</code> oder im lokalen Speicher vorhanden sind, legt das System beim ersten Ã–ffnen der Benutzereinstellungen einen <b>Default-Admin</b> an (Name: â€žAdminâ€œ, E-Mail: â€žadmin@localâ€œ).
   </p>
 </details>
       </div>
@@ -1263,7 +1263,7 @@
   <section class="modal" id="modalSketch" role="dialog" aria-labelledby="sketchTitle" aria-modal="true" aria-hidden="true">
     <header>
       <h3 id="sketchTitle" class="mono"><span class="sketch-logo" aria-hidden="true"></span> Hotelskizze</h3>
-      <button class="btn" data-close>Schließen</button>
+      <button class="btn" data-close>SchlieÃŸen</button>
     </header>
     <div class="body">
       <div class="sketch-wrap">
@@ -1275,7 +1275,7 @@
           <div class="card">
             <div class="content">
               <div class="card-head">
-                <h3 class="mono" id="sketchHotelLabel">Bitte Hotel wählen</h3>
+                <h3 class="mono" id="sketchHotelLabel">Bitte Hotel wÃ¤hlen</h3>
                 <span class="pill">Skizze</span>
               </div>
               <div class="imgcard wide">
@@ -1292,11 +1292,11 @@
 <section class="modal" id="modalCatDesc" role="dialog" aria-labelledby="catDescTitle" aria-modal="true" aria-hidden="true">
   <header>
     <h3 id="catDescTitle" class="mono"><span class="set-logo" aria-hidden="true"></span> Kategoriebeschreibung</h3>
-    <button class="btn" data-close>Schließen</button>
+    <button class="btn" data-close>SchlieÃŸen</button>
   </header>
   <div class="body">
     <label class="mono muted tiny" style="margin-bottom:6px;display:block">Beschreibungstext</label>
-    <textarea id="catDescTextarea" class="input" rows="6" placeholder="Beschreibung zur Zimmerkategorie …"></textarea>
+    <textarea id="catDescTextarea" class="input" rows="6" placeholder="Beschreibung zur Zimmerkategorie â€¦"></textarea>
     <div class="set-footer right" style="margin-top:10px;">
       <button class="btn primary" id="btnCatDescSave">Speichern</button>
     </div>
@@ -1311,7 +1311,7 @@
   </h3>
   <div class="row wrap">
     <button id="btnNewGroup" class="btn primary">+ Neue Gruppe</button>
-    <button class="btn" data-close>Schließen</button>
+    <button class="btn" data-close>SchlieÃŸen</button>
   </div>
 </header>
   <div class="body">
@@ -1322,12 +1322,12 @@
         <select id="grpHotelFilter" class="input theme-select"></select>
 
         <label class="mono muted tiny" style="margin:10px 0 6px;display:block">Suche</label>
-        <input id="grpSearch" class="input" placeholder="Gruppenname oder Notiz …" />
+        <input id="grpSearch" class="input" placeholder="Gruppenname oder Notiz â€¦" />
 
         <div class="grow"></div>
       </aside>
 
-      <!-- Rechte Hauptfläche -->
+      <!-- Rechte HauptflÃ¤che -->
       <section class="groups-main card">
         <div class="content">
           <div class="card-head">
@@ -1348,7 +1348,7 @@
               </thead>
               <tbody id="grpBody"></tbody>
             </table>
-            <p class="muted tiny" style="margin-top:6px">Max. 100 Einträge.</p>
+            <p class="muted tiny" style="margin-top:6px">Max. 100 EintrÃ¤ge.</p>
           </div>
         </div>
       </section>
@@ -1360,13 +1360,13 @@
 <section class="modal" id="modalGroupEdit" role="dialog" aria-labelledby="groupEditTitle" aria-modal="true" aria-hidden="true">
   <header>
     <h3 id="groupEditTitle" class="mono"><span class="set-logo" aria-hidden="true"></span> Gruppe</h3>
-    <button class="btn" data-close>Schließen</button>
+    <button class="btn" data-close>SchlieÃŸen</button>
   </header>
   <div class="body">
   <div class="grid-compact-2">
 
   <!-- 1) LINKE SPALTE: Stammdaten-Form -->
-  <div class="form-col"><h4 class="mono section" style="margin-top:0">Stammdaten</h4><div class="grid-compact"><label>Gruppenname<input id="geName" class="input" placeholder="z. B. ACME Sales Kickoff" /></label><label>Hotel<select id="geHotel" class="input theme-select"></select></label><label style="grid-column:1 / -1">Beschreibung / Notizen<textarea id="geNotes" class="input" rows="6" placeholder="Interne Notizen …"></textarea></label></div></div>
+  <div class="form-col"><h4 class="mono section" style="margin-top:0">Stammdaten</h4><div class="grid-compact"><label>Gruppenname<input id="geName" class="input" placeholder="z. B. ACME Sales Kickoff" /></label><label>Hotel<select id="geHotel" class="input theme-select"></select></label><label style="grid-column:1 / -1">Beschreibung / Notizen<textarea id="geNotes" class="input" rows="6" placeholder="Interne Notizen â€¦"></textarea></label></div></div>
 
   <!-- 2) RECHTE SPALTE: KPI-Card -->
   <div class="card kpi-card">
@@ -1378,11 +1378,11 @@
       <div class="kpi-col">
         <div class="kpi-line"><span>Zimmer</span><b id="gkRooms">0</b></div>
         <div class="kpi-line"><span>Roomnights</span><b id="gkRN">0</b></div>
-        <div class="kpi-line"><span>Revenue</span><b id="gkRev">0 €</b></div>
-        <div class="kpi-line"><span>ADR</span><b id="gkADR">0 €</b></div>
+        <div class="kpi-line"><span>Revenue</span><b id="gkRev">0 â‚¬</b></div>
+        <div class="kpi-line"><span>ADR</span><b id="gkADR">0 â‚¬</b></div>
       </div>
       <div class="set-footer" style="margin-top:10px;gap:8px;justify-content:flex-end">
-        <button class="btn" id="btnGroupDelete">Gruppe löschen</button>
+        <button class="btn" id="btnGroupDelete">Gruppe lÃ¶schen</button>
         <button class="btn primary" id="btnGroupSave">Speichern</button>
       </div>
     </div>
@@ -1406,7 +1406,7 @@
     <label>Rate
       <select id="fbRateSel" class="input theme-select"></select>
     </label>
-    <label>Preis/Nacht (€)
+    <label>Preis/Nacht (â‚¬)
       <input id="fbPrice" type="number" step="1" min="0" class="input" value="0" />
     </label>
     <div class="fast-actions">
@@ -1435,28 +1435,45 @@
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
 
-  <!-- App Logic (V1.5) -->
-  <script src="app.js"></script>
+  <!-- Core Scripts -->
+  <script src="src/core/supabase.js"></script>
+  <script src="src/core/eventBus.js"></script>
+  <script src="src/core/auth.js"></script>
+  
+  <!-- Services -->
+  <script src="src/services/hotels.js"></script>
+  <script src="src/services/reservations.js"></script>
+  
+  <!-- Utils -->
+  <script src="src/utils/formatters.js"></script>
+  <script src="src/utils/modal.js"></script>
+  <script src="src/utils/toast.js"></script>
+  
+  <!-- Components -->
+  <script src="src/components/tables/tableManager.js"></script>
+  
+  <!-- Main App (muss als letztes geladen werden) -->
+  <script src="src/app.js"></script>
   <!-- Confirmations-Popup -->
 <div id="confirmEmailModal" class="modal hidden" aria-hidden="true">
   <div class="modal__backdrop" data-close="confirmEmailModal"></div>
   <div class="modal__panel">
     <div class="modal__header">
-      <h3>Reservierungsbestätigung versenden</h3>
-      <button class="modal__close" data-close="confirmEmailModal" aria-label="Schließen">×</button>
+      <h3>ReservierungsbestÃ¤tigung versenden</h3>
+      <button class="modal__close" data-close="confirmEmailModal" aria-label="SchlieÃŸen">Ã—</button>
     </div>
 
     <div class="modal__body">
-      <label class="form__label">Empfänger-E-Mail</label>
+      <label class="form__label">EmpfÃ¤nger-E-Mail</label>
       <input id="confirmEmailTo" type="email" class="form__input" placeholder="kunde@example.com" />
 
       <label class="form__label" style="margin-top:12px;">Nachricht (bearbeitbar)</label>
-      <textarea id="confirmEmailBody" class="form__textarea" rows="8" placeholder="Ihre Buchungsbestätigung …"></textarea>
+      <textarea id="confirmEmailBody" class="form__textarea" rows="8" placeholder="Ihre BuchungsbestÃ¤tigung â€¦"></textarea>
     </div>
 
     <div class="modal__footer">
       <div style="margin-right:auto; display:flex; gap:8px;"><button class="btn btn--ghost" id="btnCopyEmail" type="button" title="E-Mail kopieren">E-Mail kopieren</button><button class="btn btn--ghost" id="btnCopyConfirmation" type="button" title="Text kopieren">Text kopieren</button></div><button class="btn btn--ghost" data-close="confirmEmailModal">Abbrechen</button>
-      <button id="btnSendConfirmationNow" class="btn btn--primary">Reservierungsbestätigung versenden</button>
+      <button id="btnSendConfirmationNow" class="btn btn--primary">ReservierungsbestÃ¤tigung versenden</button>
     </div>
   </div>
 </div>
@@ -1471,31 +1488,31 @@
 
   const I18N = {
     de: {
-      'btn.new':'Neue Reservierung','btn.avail':'Verfügbarkeit','btn.reporting':'Reporting','btn.settings':'Einstellungen','btn.sketch':'Hotelskizze',
+      'btn.new':'Neue Reservierung','btn.avail':'VerfÃ¼gbarkeit','btn.reporting':'Reporting','btn.settings':'Einstellungen','btn.sketch':'Hotelskizze',
       'kpi.today.title':'Performance - Heute','kpi.today.bookings':'Buchungen (heute eingegangen)','kpi.today.revenue':'Umsatz (heute)','kpi.today.adr':'ADR (heute)','kpi.today.occ':'Auslastung (heute)',
-      'kpi.next.title':'Performance - Nächste 7 Tage','kpi.next.revenue':'Umsatz (Anreisen +1..+7)','kpi.next.adr':'WDR (+1..+7)','kpi.next.occ':'Ø Auslastung (+1..+7)',
+      'kpi.next.title':'Performance - NÃ¤chste 7 Tage','kpi.next.revenue':'Umsatz (Anreisen +1..+7)','kpi.next.adr':'WDR (+1..+7)','kpi.next.occ':'Ã˜ Auslastung (+1..+7)',
       'res.table.title':'Reservierungen','res.table.th.resno':'Res.-Nr.','res.table.th.hotel':'Hotel','res.table.th.guest':'Gastname','res.table.th.arr':'Anreise','res.table.th.dep':'Abreise','res.table.th.cat':'Kategorie','res.table.th.rate':'Rate','res.table.th.price':'Preis','res.table.th.status':'Status',
-      'res.filter.search':'Gastname…','res.filter.status.active':'Status: Active (Zukunft)','res.filter.status.done':'Status: Done (Vergangenheit)','res.filter.status.canceled':'Status: Canceled','res.filter.status.all':'Status: Alle','res.filter.resno':'Res.-Nr.','res.filter.from':'Von','res.filter.to':'Bis',
+      'res.filter.search':'Gastnameâ€¦','res.filter.status.active':'Status: Active (Zukunft)','res.filter.status.done':'Status: Done (Vergangenheit)','res.filter.status.canceled':'Status: Canceled','res.filter.status.all':'Status: Alle','res.filter.resno':'Res.-Nr.','res.filter.from':'Von','res.filter.to':'Bis',
       'btn.refresh':'Refresh','btn.reset':'Reset','btn.export.csv':'Export CSV',
       'modal.new.title':'Neue Reservierung','wiz.step1':'Hotel & Daten','wiz.step2':'Kategorie','wiz.step3':'Rate','wiz.step4':'Gast & Zahlung',
       'step1.arrival':'Anreise','step1.departure':'Abreise','step1.adults':'Erwachsene','step1.children':'Kinder','contact.phone':'Telefon','contact.email':'E-Mail',
       'step2.facts':'Fakten','step2.desc':'Beschreibung','step3.policy':'Stornobedingung','step4.company':'Firma (optional)','step4.cc':'Kreditkarte','step4.notes':'Notizen',
-      'btn.prev':'Zurück','btn.next':'Weiter','btn.create':'Reservierung abschicken',
+      'btn.prev':'ZurÃ¼ck','btn.next':'Weiter','btn.create':'Reservierung abschicken',
       'modal.edit.title':'Reservierung bearbeiten','edit.tabs.details':'Details','edit.tabs.plan':'Preisplan','edit.tabs.pay':'Zahlungskonto','edit.tabs.actions':'Aktionen',
-      'edit.total':'Gesamtpreis','edit.notes':'Notizen','btn.save':'Speichern','btn.cancel':'Stornieren','btn.resend':'Bestätigung erneut senden',
-      'modal.avail.title':'Verfügbarkeit','avail.legend':'Legende:','avail.legend.g':'≤64%','avail.legend.o':'65–89%','avail.legend.r':'≥90%','btn.avail.update':'Aktualisieren',
+      'edit.total':'Gesamtpreis','edit.notes':'Notizen','btn.save':'Speichern','btn.cancel':'Stornieren','btn.resend':'BestÃ¤tigung erneut senden',
+      'modal.avail.title':'VerfÃ¼gbarkeit','avail.legend':'Legende:','avail.legend.g':'â‰¤64%','avail.legend.o':'65â€“89%','avail.legend.r':'â‰¥90%','btn.avail.update':'Aktualisieren',
       'modal.reporting.title':'Reporting','report.revenue':'Umsatz pro Hotel','report.bookings':'Buchungen pro Hotel','btn.export.xls':'Export Excel','btn.export.pdf':'Export PDF',
-      'modal.settings.title':'Einstellungen','settings.lang':'Sprache','settings.hue':'Farbton (Hue)','settings.save':'Einstellungen speichern','settings.userprefs':'Benutzereinstellungen','settings.channel':'Channel – Einstellungen','settings.log':'Log Activity','settings.cats':'Kategorieverwaltung','settings.rates':'Rateneinstellungen','settings.help':'Hilfe & FAQ',
-      'sysinfo.title':'Live-Systeminfo','modal.rate.edit':'Rate bearbeiten','modal.rate.create':'Neue Rate','btn.rate.create':'Rate erstellen','btn.rate.update':'Änderungen speichern','btn.rate.delete':'Rate löschen',
+      'modal.settings.title':'Einstellungen','settings.lang':'Sprache','settings.hue':'Farbton (Hue)','settings.save':'Einstellungen speichern','settings.userprefs':'Benutzereinstellungen','settings.channel':'Channel â€“ Einstellungen','settings.log':'Log Activity','settings.cats':'Kategorieverwaltung','settings.rates':'Rateneinstellungen','settings.help':'Hilfe & FAQ',
+      'sysinfo.title':'Live-Systeminfo','modal.rate.edit':'Rate bearbeiten','modal.rate.create':'Neue Rate','btn.rate.create':'Rate erstellen','btn.rate.update':'Ã„nderungen speichern','btn.rate.delete':'Rate lÃ¶schen',
       'modal.cats.title':'Kategorieverwaltung','cats.new.title':'Neue Kategorie','btn.sync.now':'Jetzt synchronisieren',
-      'channel.title':'Channel – Einstellungen','channel.api.title':'API – Einstellungen','channel.prop.title':'Property – Mapping','channel.monitor.title':'Monitoring','channel.system.title':'System – Technik','channel.admin.title':'Admin'
+      'channel.title':'Channel â€“ Einstellungen','channel.api.title':'API â€“ Einstellungen','channel.prop.title':'Property â€“ Mapping','channel.monitor.title':'Monitoring','channel.system.title':'System â€“ Technik','channel.admin.title':'Admin'
     },
     en: {
       'btn.new':'New Reservation','btn.avail':'Availability','btn.reporting':'Reporting','btn.settings':'Settings','btn.sketch':'Hotel Sketch',
       'kpi.today.title':'Performance - Today','kpi.today.bookings':'Bookings (received today)','kpi.today.revenue':'Revenue (today)','kpi.today.adr':'ADR (today)','kpi.today.occ':'Occupancy (today)',
       'kpi.next.title':'Performance - Next 7 Days','kpi.next.revenue':'Revenue (arrivals +1..+7)','kpi.next.adr':'ADR (+1..+7)','kpi.next.occ':'Avg. Occupancy (+1..+7)',
       'res.table.title':'Reservations','res.table.th.resno':'Res. No.','res.table.th.hotel':'Hotel','res.table.th.guest':'Guest name','res.table.th.arr':'Arrival','res.table.th.dep':'Departure','res.table.th.cat':'Category','res.table.th.rate':'Rate','res.table.th.price':'Price','res.table.th.status':'Status',
-      'res.filter.search':'Guest name…','res.filter.status.active':'Status: Active (future)','res.filter.status.done':'Status: Done (past)','res.filter.status.canceled':'Status: Canceled','res.filter.status.all':'Status: All','res.filter.resno':'Res. No.','res.filter.from':'From','res.filter.to':'To',
+      'res.filter.search':'Guest nameâ€¦','res.filter.status.active':'Status: Active (future)','res.filter.status.done':'Status: Done (past)','res.filter.status.canceled':'Status: Canceled','res.filter.status.all':'Status: All','res.filter.resno':'Res. No.','res.filter.from':'From','res.filter.to':'To',
       'btn.refresh':'Refresh','btn.reset':'Reset','btn.export.csv':'Export CSV',
       'modal.new.title':'New Reservation','wiz.step1':'Hotel & Dates','wiz.step2':'Category','wiz.step3':'Rate','wiz.step4':'Guest & Payment',
       'step1.arrival':'Arrival','step1.departure':'Departure','step1.adults':'Adults','step1.children':'Children','contact.phone':'Phone','contact.email':'Email',
@@ -1503,7 +1520,7 @@
       'btn.prev':'Back','btn.next':'Next','btn.create':'Submit reservation',
       'modal.edit.title':'Edit Reservation','edit.tabs.details':'Details','edit.tabs.plan':'Price Plan','edit.tabs.pay':'Payment','edit.tabs.actions':'Actions',
       'edit.total':'Total price','edit.notes':'Notes','btn.save':'Save','btn.cancel':'Cancel','btn.resend':'Resend confirmation',
-      'modal.avail.title':'Availability','avail.legend':'Legend:','avail.legend.g':'≤64%','avail.legend.o':'65–89%','avail.legend.r':'≥90%','btn.avail.update':'Update',
+      'modal.avail.title':'Availability','avail.legend':'Legend:','avail.legend.g':'â‰¤64%','avail.legend.o':'65â€“89%','avail.legend.r':'â‰¥90%','btn.avail.update':'Update',
       'modal.reporting.title':'Reporting','report.revenue':'Revenue by hotel','report.bookings':'Bookings by hotel','btn.export.xls':'Export Excel','btn.export.pdf':'Export PDF',
       'modal.settings.title':'Settings','settings.lang':'Language','settings.hue':'Hue (color)','settings.save':'Save settings','settings.userprefs':'User preferences','settings.channel':'Channel settings','settings.log':'Log Activity','settings.cats':'Category Management','settings.rates':'Rate settings','settings.help':'Help & FAQ',
       'sysinfo.title':'Live system info','modal.rate.edit':'Edit Rate','modal.rate.create':'Create Rate','btn.rate.create':'Create rate','btn.rate.update':'Save changes','btn.rate.delete':'Delete rate',
@@ -1512,7 +1529,7 @@
     }
   };
 
-  // Map: CSS-Selektoren → Schlüssel (wir bedienen nur sichtbare UI-Texte)
+  // Map: CSS-Selektoren â†’ SchlÃ¼ssel (wir bedienen nur sichtbare UI-Texte)
   const MAP = [
     // Topbar / Toolbar
     ['#btnNew','btn.new'],['#btnAvail','btn.avail'],['#btnReporting','btn.reporting'],['#btnSettings','btn.settings'],['#btnSketch','btn.sketch'],
@@ -1530,7 +1547,7 @@
     ['.hero article:nth-of-type(2) .kpis .kpi:nth-child(2) .label','kpi.next.adr'],
     ['.hero article:nth-of-type(2) .kpis .kpi:nth-child(3) .label','kpi.next.occ'],
 
-    // Reservierungen – Titel, Filter, Buttons
+    // Reservierungen â€“ Titel, Filter, Buttons
     ['section[aria-label="Reservierungen"] .card-head h3','res.table.title'],
     ['#filterStatus option[value="active"]','res.filter.status.active'],
     ['#filterStatus option[value="done"]','res.filter.status.done'],
@@ -1549,7 +1566,7 @@
     ['#resTable thead th:nth-child(8)','res.table.th.price'],
     ['#resTable thead th:nth-child(9)','res.table.th.status'],
 
-    // Neue Reservierung – Titel/Steps
+    // Neue Reservierung â€“ Titel/Steps
     ['#modalNew header h3','modal.new.title'],
     ['.wizard-steps .wstep[data-step="1"] b','wiz.step1'],
     ['.wizard-steps .wstep[data-step="2"] b','wiz.step2'],
@@ -1661,7 +1678,7 @@
     const avScope = document.querySelector('#modalAvail .body .muted');
     if (avScope) avScope.textContent = tr('avail.legend', lang);
 
-    // Sektionstitel „Kontaktdaten“ vs. „Contact“
+    // Sektionstitel â€žKontaktdatenâ€œ vs. â€žContactâ€œ
     const contactH = document.querySelector('#w1 .preview-col .box h4.section');
     if (contactH) contactH.textContent = (lang==='en') ? 'Contact' : 'Kontaktdaten';
 
@@ -1694,7 +1711,7 @@
     init();
   }
 
-  // Expose für evtl. spätere Nutzung
+  // Expose fÃ¼r evtl. spÃ¤tere Nutzung
   window.resToolI18n = {apply:applyI18n, getLang, setLang};
 })();
 </script>
@@ -1702,9 +1719,9 @@
  <aside class="analytics-dock" id="miniAnalyticsDockContainer" role="complementary" aria-label="Mini-Analytics">
   <div class="dock-head">
     <h4 class="mono">Booking / Day  (YoY)</h4>
-    <button id="dockToggle" class="btn sm ghost" type="button" aria-expanded="true" aria-controls="miniAnalyticsDock">–</button>
+    <button id="dockToggle" class="btn sm ghost" type="button" aria-expanded="true" aria-controls="miniAnalyticsDock">â€“</button>
   </div>
-  <div id="miniAnalyticsDock" class="dock-list"><!-- wird via JS gefüllt --></div>
+  <div id="miniAnalyticsDock" class="dock-list"><!-- wird via JS gefÃ¼llt --></div>
 </aside>
 
 
@@ -1718,7 +1735,7 @@ document.addEventListener('DOMContentLoaded', function(){
       const hidden = list.style.display === 'none';
       list.style.display = hidden ? '' : 'none';
       btn.setAttribute('aria-expanded', String(hidden));
-      btn.textContent = hidden ? '–' : '+';
+      btn.textContent = hidden ? 'â€“' : '+';
     });
   }
 });
