@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>res-tool Test</title>
+    <style>
+        body {
+            background: #0b0f14;
+            color: #d9faff;
+            font-family: system-ui, -apple-system, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 2rem;
+        }
+        .debug {
+            background: rgba(255,255,255,0.1);
+            padding: 2rem;
+            border-radius: 8px;
+            max-width: 600px;
+        }
+        .file-list {
+            list-style: none;
+            padding: 0;
+        }
+        .file-list li {
+            padding: 0.5rem;
+            margin: 0.5rem 0;
+            background: rgba(0,255,255,0.1);
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        .success { color: #35e08a; }
+        .error { color: #ff4d6d; }
+    </style>
+</head>
+<body>
+    <h1>🏨 res-tool Deployment Test</h1>
+    <div class="debug">
+        <h2>Datei-Check:</h2>
+        <ul class="file-list" id="fileList">
+            <li>Prüfe Dateien...</li>
+        </ul>
+    </div>
+
+    <script>
+        // Test welche Dateien erreichbar sind
+        const files = [
+            'app.js',
+            'styles.css',
+            'toast-system.js',
+            'auth.js',
+            'supabase.js',
+            'eventBus.js',
+            'reservations.js',
+            'modal.js',
+            'tableManager.js',
+            'formatters.js',
+            'hotels.js',
+            'toast.js'
+        ];
+
+        const fileList = document.getElementById('fileList');
+        fileList.innerHTML = '';
+
+        async function checkFile(filename) {
+            try {
+                const response = await fetch(`./${filename}`, { method: 'HEAD' });
+                const li = document.createElement('li');
+                if (response.ok) {
+                    li.className = 'success';
+                    li.textContent = `✅ ${filename} - OK (${response.status})`;
+                } else {
+                    li.className = 'error';
+                    li.textContent = `❌ ${filename} - Fehler (${response.status})`;
+                }
+                fileList.appendChild(li);
+            } catch (error) {
+                const li = document.createElement('li');
+                li.className = 'error';
+                li.textContent = `❌ ${filename} - Netzwerkfehler`;
+                fileList.appendChild(li);
+            }
+        }
+
+        // Prüfe alle Dateien
+        files.forEach(file => checkFile(file));
+
+        // Zusätzlich: Zeige die aktuelle URL
+        const urlInfo = document.createElement('li');
+        urlInfo.style.marginTop = '1rem';
+        urlInfo.innerHTML = `<strong>Aktuelle URL:</strong> ${window.location.href}`;
+        fileList.appendChild(urlInfo);
+    </script>
+</body>
+</html>
