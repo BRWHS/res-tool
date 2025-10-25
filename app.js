@@ -119,60 +119,60 @@ class API {
     this.supabase = null;
     this.cache = new Map();
   }
-
-   class API {
-  constructor(config) {
-    this.config = config;
-    this.supabase = null;
-    this.cache = new Map();
-    // Referenz zu HOTELS für Demo-Daten
-    this.HOTELS = typeof HOTELS !== 'undefined' ? HOTELS : [];
-  }
-
-  // Initialize Supabase client - DEMO VERSION
-async initSupabase() {
-  if (this.supabase) return this.supabase;
-  
-  try {
-    // Demo Mode - keine echte Supabase Verbindung
-    console.log('Running in DEMO mode - no real database connection');
-    this.supabase = {
-      demo: true,
-      from: (table) => ({
-        select: () => Promise.resolve({ data: this.getDemoData(table), error: null }),
-        insert: (data) => Promise.resolve({ data: { ...data, id: Date.now() }, error: null }),
-        update: (data) => Promise.resolve({ data, error: null }),
-        delete: () => Promise.resolve({ error: null }),
-        eq: () => ({ select: () => Promise.resolve({ data: [], error: null }) }),
-        order: () => ({ select: () => Promise.resolve({ data: [], error: null }) }),
-        gte: () => ({ lte: () => ({ select: () => Promise.resolve({ data: [], error: null }) }) })
-      })
-    };
-    return this.supabase;
-  } catch (error) {
-    console.error('Failed to initialize demo mode:', error);
-    // Continue without throwing error
-    return null;
-  }
 }
-   // Demo data generator
-getDemoData(table) {
-  const demoData = {
-    reservations: [
-      {
-        id: 1,
-        reservation_number: 'RES-2024-001',
-        hotel_code: 'MA7-M-DOR',
-        guest_first_name: 'Max',
-        guest_last_name: 'Mustermann',
-        guest_email: 'max@example.com',
-        arrival: '2024-02-15',
-        departure: '2024-02-18',
-        category: 'Standard',
-        rate_price: 89.00,
-        status: 'active',
-        created_at: new Date().toISOString()
-      },
+
+  // Demo data generator
+  getDemoData(table) {
+    const demoData = {
+      reservations: [
+        {
+          id: 1,
+          reservation_number: 'RES-2024-001',
+          hotel_code: 'MA7-M-DOR',
+          guest_first_name: 'Max',
+          guest_last_name: 'Mustermann',
+          guest_email: 'max@example.com',
+          arrival: '2024-02-15',
+          departure: '2024-02-18',
+          category: 'Standard',
+          rate_price: 89.00,
+          status: 'active',
+          created_at: new Date().toISOString()
+        },
+        {
+          id: 2,
+          reservation_number: 'RES-2024-002',
+          hotel_code: 'RES-HD-ALT',
+          guest_first_name: 'Anna',
+          guest_last_name: 'Schmidt',
+          guest_email: 'anna@example.com',
+          arrival: '2024-02-20',
+          departure: '2024-02-22',
+          category: 'Superior',
+          rate_price: 125.00,
+          status: 'active',
+          created_at: new Date().toISOString()
+        }
+      ],
+      hotels: typeof HOTELS !== 'undefined' ? HOTELS : [],
+      categories: [
+        { id: 1, name: 'Standard', code: 'STD' },
+        { id: 2, name: 'Superior', code: 'SUP' },
+        { id: 3, name: 'Deluxe', code: 'DLX' }
+      ],
+      rates: [
+        { id: 1, name: 'Standardrate', code: 'STD', price: 89 },
+        { id: 2, name: 'Wochenendrate', code: 'WKD', price: 99 },
+        { id: 3, name: 'Geschäftsrate', code: 'BUS', price: 79 }
+      ]
+    };
+    
+    return demoData[table] || [];
+  }
+
+  // Generic fetch wrapper with retry logic
+  async fetchWithRetry(url, options = {}, retries = 3) {
+    const controller = new AbortController();
       {
         id: 2,
         reservation_number: 'RES-2024-002',
