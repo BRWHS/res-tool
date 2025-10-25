@@ -195,41 +195,7 @@ class API {
     return demoData[table] || [];
   }
 
-  // Generic fetch wrapper with retry logic
-  async fetchWithRetry(url, options = {}, retries = 3) {
-    const controller = new AbortController();
-      {
-        id: 2,
-        reservation_number: 'RES-2024-002',
-        hotel_code: 'RES-HD-ALT',
-        guest_first_name: 'Anna',
-        guest_last_name: 'Schmidt',
-        guest_email: 'anna@example.com',
-        arrival: '2024-02-20',
-        departure: '2024-02-22',
-        category: 'Superior',
-        rate_price: 125.00,
-        status: 'active',
-        created_at: new Date().toISOString()
-      }
-    ],
-    hotels: this.HOTELS,
-    categories: [
-      { id: 1, name: 'Standard', code: 'STD' },
-      { id: 2, name: 'Superior', code: 'SUP' },
-      { id: 3, name: 'Deluxe', code: 'DLX' }
-    ],
-    rates: [
-      { id: 1, name: 'Standardrate', code: 'STD', price: 89 },
-      { id: 2, name: 'Wochenendrate', code: 'WKD', price: 99 },
-      { id: 3, name: 'Geschäftsrate', code: 'BUS', price: 79 }
-    ]
-  };
-  
-  return demoData[table] || [];
-}
-
-  // Generic fetch wrapper with retry logic
+   // Generic fetch wrapper with retry logic
   async fetchWithRetry(url, options = {}, retries = 3) {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), this.config.HNS.TIMEOUT);
