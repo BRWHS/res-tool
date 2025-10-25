@@ -148,8 +148,6 @@ class API {
 
   // Demo data generator
   getDemoData(table) {
-  // Demo data generator
-  getDemoData(table) {
     const demoData = {
       reservations: [
         {
