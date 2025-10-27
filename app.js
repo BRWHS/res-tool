@@ -1626,19 +1626,28 @@ class ReservationApp {
 
     tbody.innerHTML = reservations.map(r => {
       const hotel = state.get('hotels')?.find(h => h.code === r.hotel_code);
+      const hotelName = hotel ? hotel.name : (r.hotel_code || 'N/A');
       const nights = this.calculateNights(r.arrival, r.departure);
       const totalPrice = (r.rate_price || 0) * nights;
       
+      console.log('Rendering reservation:', {
+        id: r.id,
+        resNumber: r.reservation_number,
+        hotelCode: r.hotel_code,
+        hotelName: hotelName,
+        hotel: hotel
+      });
+      
       return `
         <tr data-id="${r.id}" style="cursor: pointer;">
-          <td class="res-nr-cell">${r.reservation_number}</td>
-          <td>${hotel ? hotel.name : r.hotel_code}</td>
-          <td>${r.guest_first_name || ''} ${r.guest_last_name}</td>
+          <td class="res-nr-cell">${r.reservation_number || 'N/A'}</td>
+          <td>${hotelName}</td>
+          <td>${r.guest_first_name || ''} ${r.guest_last_name || ''}</td>
           <td>${this.formatDate(r.arrival)}</td>
           <td>${this.formatDate(r.departure)}</td>
-          <td><span class="category-badge">${r.category}</span></td>
+          <td><span class="category-badge">${r.category || 'N/A'}</span></td>
           <td class="price-cell">${this.formatCurrency(totalPrice)}</td>
-          <td><span class="pill ${r.status}">${this.getStatusLabel(r.status)}</span></td>
+          <td><span class="pill ${r.status || 'active'}">${this.getStatusLabel(r.status)}</span></td>
         </tr>
       `;
     }).join('');
