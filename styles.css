@@ -664,7 +664,11 @@ textarea {
   display: flex;
   flex-direction: column;
   height: 100%;
-  padding: 0; /* Remove padding so card-head can go to edges */
+}
+
+/* Override card padding specifically for sidebar-card */
+.card.sidebar-card {
+  padding: 0 !important; /* Remove padding so card-head can go to edges */
 }
 
 .sidebar-card .card-head {
@@ -1032,7 +1036,7 @@ textarea {
   background: var(--bg-surface);
   border: 1px solid var(--border-primary);
   border-radius: var(--radius-xl);
-  padding: 0; /* Entferne Padding fÃ¼r bessere Kontrolle */
+  padding: 0 !important; /* Entferne Padding für bessere Kontrolle */
   overflow: hidden;
 }
 
@@ -1464,8 +1468,9 @@ tbody td .pill {
   margin-top: var(--space-6);
 }
 
+/* Override card padding specifically for operations-widget */
 .operations-widget .card {
-  padding: 0; /* Remove padding so card-head can go to edges */
+  padding: 0 !important; /* Remove padding so card-head can go to edges */
 }
 
 .operations-widget .card-head {
