@@ -663,19 +663,21 @@ textarea {
 .sidebar-card {
   display: flex;
   flex-direction: column;
-  height: 100%; /* Volle HÃ¶he nutzen */
+  height: 100%;
+  padding: 0; /* Remove padding so card-head can go to edges */
 }
 
 .sidebar-card .card-head {
   flex-shrink: 0;
   padding: var(--space-5) var(--space-6);
-  margin-bottom: 0;
+  margin: 0; /* No negative margin needed since card has no padding */
   background: linear-gradient(135deg, rgba(99, 102, 241, 0.04) 0%, rgba(139, 92, 246, 0.04) 100%);
   border-bottom: 1px solid rgba(99, 102, 241, 0.2);
   position: relative;
   min-height: 64px;
   display: flex;
   align-items: center;
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0; /* Round top corners to match card */
 }
 
 .sidebar-card .card-head::after {
@@ -1036,13 +1038,14 @@ textarea {
 
 .reservations-block .card-head {
   padding: var(--space-5) var(--space-6);
-  margin-bottom: 0;
+  margin: 0;
   background: linear-gradient(135deg, rgba(99, 102, 241, 0.04) 0%, rgba(139, 92, 246, 0.04) 100%);
   border-bottom: 1px solid rgba(99, 102, 241, 0.2);
   position: relative;
   min-height: 64px;
   display: flex;
   align-items: center;
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0; /* Round top corners to match card */
 }
 
 .reservations-block .card-head::after {
@@ -1461,15 +1464,20 @@ tbody td .pill {
   margin-top: var(--space-6);
 }
 
+.operations-widget .card {
+  padding: 0; /* Remove padding so card-head can go to edges */
+}
+
 .operations-widget .card-head {
   padding: var(--space-5) var(--space-6);
-  margin-bottom: 0;
+  margin: 0;
   background: linear-gradient(135deg, rgba(99, 102, 241, 0.04) 0%, rgba(139, 92, 246, 0.04) 100%);
   border-bottom: 1px solid rgba(99, 102, 241, 0.2);
   position: relative;
   min-height: 64px;
   display: flex;
   align-items: center;
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0; /* Round top corners to match card */
 }
 
 .operations-widget .card-head::after {
