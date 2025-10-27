@@ -611,64 +611,70 @@ textarea {
 
 .container {
   position: relative;
-  max-width: 1600px;
+  max-width: 1800px;
   margin: 0 auto;
   padding: var(--space-8);
   z-index: var(--z-base);
 }
 
-/* Main Layout - Single Column */
+/* 3-Column Layout: Left Sidebar - Main Content - Right Sidebar */
 .main-layout {
-  display: block;
+  display: grid;
+  grid-template-columns: 280px 1fr 280px;
+  gap: var(--space-6);
+  align-items: start;
 }
 
 .main-content {
   display: flex;
   flex-direction: column;
   gap: var(--space-6);
+  min-width: 0; /* Prevents grid blowout */
 }
 
-/* Performance Widgets Row */
-.performance-widgets {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: var(--space-6);
+/* Left & Right Sidebars */
+.sidebar-left,
+.sidebar-right {
+  position: sticky;
+  top: calc(var(--space-8) + 80px);
 }
 
-.activity-card,
-.yoy-card {
+.sidebar-card {
   display: flex;
   flex-direction: column;
-  min-height: 400px;
+  max-height: calc(100vh - 200px);
 }
 
-.activity-card .activity-feed,
-.yoy-card .yoy-performance {
+.sidebar-card .activity-feed,
+.sidebar-card .yoy-performance {
   flex: 1;
   overflow-y: auto;
+  padding-right: var(--space-2);
 }
 
-.activity-card .activity-feed::-webkit-scrollbar,
-.yoy-card .yoy-performance::-webkit-scrollbar {
+.sidebar-card .activity-feed::-webkit-scrollbar,
+.sidebar-card .yoy-performance::-webkit-scrollbar {
   width: 6px;
 }
 
-.activity-card .activity-feed::-webkit-scrollbar-track,
-.yoy-card .yoy-performance::-webkit-scrollbar-track {
+.sidebar-card .activity-feed::-webkit-scrollbar-track,
+.sidebar-card .yoy-performance::-webkit-scrollbar-track {
   background: var(--bg-surface);
   border-radius: var(--radius-full);
 }
 
-.activity-card .activity-feed::-webkit-scrollbar-thumb,
-.yoy-card .yoy-performance::-webkit-scrollbar-thumb {
+.sidebar-card .activity-feed::-webkit-scrollbar-thumb,
+.sidebar-card .yoy-performance::-webkit-scrollbar-thumb {
   background: var(--bg-elevated);
   border-radius: var(--radius-full);
 }
 
-.activity-card .activity-feed::-webkit-scrollbar-thumb:hover,
-.yoy-card .yoy-performance::-webkit-scrollbar-thumb:hover {
+.sidebar-card .activity-feed::-webkit-scrollbar-thumb:hover,
+.sidebar-card .yoy-performance::-webkit-scrollbar-thumb:hover {
   background: var(--bg-overlay);
 }
+
+/* Performance Widgets Row - REMOVED (not needed anymore) */
 
 /* ================================================
    CARDS
@@ -1789,6 +1795,13 @@ tbody td:first-child {
    RESPONSIVE
    ================================================ */
 
+@media (max-width: 1400px) {
+  .main-layout {
+    grid-template-columns: 240px 1fr 240px;
+    gap: var(--space-4);
+  }
+}
+
 @media (max-width: 1200px) {
   .navbar {
     padding: var(--space-4) var(--space-6);
@@ -1798,8 +1811,30 @@ tbody td:first-child {
     padding: var(--space-6);
   }
   
-  .performance-widgets {
+  .main-layout {
     grid-template-columns: 1fr;
+    grid-template-areas:
+      "main"
+      "left"
+      "right";
+  }
+  
+  .sidebar-left {
+    grid-area: left;
+    position: static;
+  }
+  
+  .main-content {
+    grid-area: main;
+  }
+  
+  .sidebar-right {
+    grid-area: right;
+    position: static;
+  }
+  
+  .sidebar-card {
+    max-height: 400px;
   }
   
   .kpi-section {
@@ -1828,8 +1863,18 @@ tbody td:first-child {
     padding: var(--space-4);
   }
   
-  .performance-widgets {
+  .main-layout {
     grid-template-columns: 1fr;
+    gap: var(--space-4);
+  }
+  
+  .sidebar-left,
+  .sidebar-right {
+    position: static;
+  }
+  
+  .sidebar-card {
+    max-height: 300px;
   }
   
   .kpi-section {
