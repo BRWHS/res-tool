@@ -1049,52 +1049,169 @@ try {
         break;
     }
   }
+   async loadCategories() {
+  try {
+    // Demo-Kategorien für die Entwicklung
+    const categories = [
+      { 
+        id: 1, 
+        code: 'STD', 
+        name: 'Standard', 
+        size: '18m²', 
+        beds: '1 Doppelbett', 
+        persons: 2, 
+        price: 89,
+        amenities: ['WLAN', 'TV', 'Bad mit Dusche']
+      },
+      { 
+        id: 2, 
+        code: 'SUP', 
+        name: 'Superior', 
+        size: '24m²', 
+        beds: '1 King-Size Bett', 
+        persons: 2, 
+        price: 119,
+        amenities: ['WLAN', 'Smart-TV', 'Bad mit Wanne', 'Minibar']
+      },
+      { 
+        id: 3, 
+        code: 'DLX', 
+        name: 'Deluxe', 
+        size: '32m²', 
+        beds: '1 King-Size Bett + Schlafsofa', 
+        persons: 3, 
+        price: 159,
+        amenities: ['WLAN', 'Smart-TV', 'Bad mit Wanne & Dusche', 'Minibar', 'Balkon']
+      },
+      {
+        id: 4,
+        code: 'JUN',
+        name: 'Junior Suite',
+        size: '42m²',
+        beds: '1 King-Size Bett',
+        persons: 2,
+        price: 199,
+        amenities: ['WLAN', 'Smart-TV', 'Luxus-Bad', 'Minibar', 'Sitzecke', 'Balkon']
+      }
+    ];
+    
+    state.set('categories', categories);
+  } catch (error) {
+    console.error('Failed to load categories:', error);
+    this.ui.showToast('Kategorien konnten nicht geladen werden', 'error');
+  }
+}
+
+async loadRates() {
+  try {
+    // Demo-Raten für die Entwicklung
+    const rates = [
+      { 
+        id: 1, 
+        code: 'STD', 
+        name: 'Standardrate', 
+        price: 89, 
+        cancellation: 'Bis 24h vorher kostenlos stornierbar',
+        includes: ['Frühstück']
+      },
+      { 
+        id: 2, 
+        code: 'FLEX', 
+        name: 'Flex Rate', 
+        price: 109, 
+        cancellation: 'Bis 6h vorher kostenlos stornierbar',
+        includes: ['Frühstück', 'Late Check-out']
+      },
+      { 
+        id: 3, 
+        code: 'NREF', 
+        name: 'Non-Refundable', 
+        price: 69, 
+        cancellation: 'Nicht stornierbar - 20% günstiger',
+        includes: ['Frühstück']
+      },
+      {
+        id: 4,
+        code: 'BUSI',
+        name: 'Business Rate',
+        price: 99,
+        cancellation: 'Bis 18h vorher kostenlos stornierbar',
+        includes: ['Frühstück', 'WLAN Premium', 'Parkplatz']
+      }
+    ];
+    
+    state.set('rates', rates);
+  } catch (error) {
+    console.error('Failed to load rates:', error);
+    this.ui.showToast('Raten konnten nicht geladen werden', 'error');
+  }
+}
 
   renderCategoryGrid() {
-    const grid = document.getElementById('categoryGrid');
-    if (!grid) return;
+  const grid = document.getElementById('categoryGrid');
+  if (!grid) return;
 
-    const categories = state.get('categories') || [
-      { id: 1, code: 'STD', name: 'Standard', size: '18m²', beds: '1 Doppelbett', persons: 2, price: 89 },
-      { id: 2, code: 'SUP', name: 'Superior', size: '24m²', beds: '1 Doppelbett', persons: 2, price: 119 },
-      { id: 3, code: 'DLX', name: 'Deluxe', size: '32m²', beds: '1 Doppelbett + Sofa', persons: 3, price: 159 }
-    ];
+  const categories = state.get('categories') || [];
 
-    grid.innerHTML = categories.map(cat => `
-      <div class="category-card" data-category="${cat.code}">
-        <div class="category-header">
-          <h4>${cat.name}</h4>
-          <div class="category-price">${this.formatCurrency(cat.price)} <small>/Nacht</small></div>
-        </div>
-        <div class="category-details">
-          <div class="detail-item">
-            <i class="fas fa-ruler-combined"></i>
-            <span>${cat.size}</span>
-          </div>
-          <div class="detail-item">
-            <i class="fas fa-bed"></i>
-            <span>${cat.beds}</span>
-          </div>
-          <div class="detail-item">
-            <i class="fas fa-user"></i>
-            <span>Max. ${cat.persons} Personen</span>
-          </div>
-        </div>
-        <button type="button" class="btn primary btn-select-category" data-category-code="${cat.code}">
-          <i class="fas fa-check"></i>
-          Auswählen
-        </button>
+  if (categories.length === 0) {
+    grid.innerHTML = `
+      <div class="text-center text-muted" style="grid-column: 1/-1; padding: 2rem;">
+        <i class="fas fa-bed" style="font-size: 3rem; opacity: 0.3;"></i>
+        <p style="margin-top: 1rem;">Keine Kategorien verfügbar</p>
       </div>
-    `).join('');
-
-    // Add click handlers
-    grid.querySelectorAll('.btn-select-category').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const code = e.currentTarget.dataset.categoryCode;
-        this.selectCategory(code);
-      });
-    });
+    `;
+    return;
   }
+
+  grid.innerHTML = categories.map(cat => `
+    <div class="category-card glass-morphism" data-category="${cat.code}">
+      <div class="category-header">
+        <h4>${cat.name}</h4>
+        <div class="category-price">
+          €${cat.price}
+          <small>/Nacht</small>
+        </div>
+      </div>
+      <div class="category-details">
+        <div class="detail-item">
+          <i class="fas fa-ruler-combined"></i>
+          <span>${cat.size}</span>
+        </div>
+        <div class="detail-item">
+          <i class="fas fa-bed"></i>
+          <span>${cat.beds}</span>
+        </div>
+        <div class="detail-item">
+          <i class="fas fa-users"></i>
+          <span>Max. ${cat.persons} Personen</span>
+        </div>
+      </div>
+      ${cat.amenities ? `
+        <div class="category-amenities" style="margin-bottom: 1rem;">
+          ${cat.amenities.map(a => `<span class="badge" style="margin-right: 0.25rem;">${a}</span>`).join('')}
+        </div>
+      ` : ''}
+      <button type="button" class="btn primary btn-select-category" data-category-code="${cat.code}">
+        <i class="fas fa-check"></i>
+        Auswählen
+      </button>
+    </div>
+  `).join('');
+
+  // Add click handlers
+  grid.querySelectorAll('.btn-select-category').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const code = e.currentTarget.dataset.categoryCode;
+      this.selectCategory(code);
+      
+      // Auto-advance to next step
+      setTimeout(() => {
+        const wizard = { currentStep: 2, maxSteps: 4, data: {} };
+        this.wizardNext(wizard);
+      }, 300);
+    });
+  });
+}
 
   selectCategory(code) {
     // Visual feedback
@@ -1119,41 +1236,66 @@ try {
   }
 
   renderRateGrid() {
-    const grid = document.getElementById('rateGrid');
-    if (!grid) return;
+  const grid = document.getElementById('rateGrid');
+  if (!grid) return;
 
-    const rates = state.get('rates') || [
-      { id: 1, code: 'STD', name: 'Standard Rate', price: 89, cancellation: 'Bis 24h vorher kostenlos' },
-      { id: 2, code: 'FLEX', name: 'Flex Rate', price: 109, cancellation: 'Bis 6h vorher kostenlos' },
-      { id: 3, code: 'NREF', name: 'Non-Refundable', price: 69, cancellation: 'Nicht stornierbar - 20% günstiger' }
-    ];
-
-    grid.innerHTML = rates.map(rate => `
-      <div class="rate-card" data-rate="${rate.code}">
-        <div class="rate-header">
-          <h4>${rate.name}</h4>
-          <div class="rate-price">${this.formatCurrency(rate.price)} <small>/Nacht</small></div>
-        </div>
-        <div class="rate-policy">
-          <i class="fas fa-info-circle"></i>
-          <span>${rate.cancellation}</span>
-        </div>
-        <button type="button" class="btn primary btn-select-rate" data-rate-code="${rate.code}" data-rate-price="${rate.price}">
-          <i class="fas fa-check"></i>
-          Auswählen
-        </button>
+  const rates = state.get('rates') || [];
+  
+  if (rates.length === 0) {
+    grid.innerHTML = `
+      <div class="text-center text-muted" style="grid-column: 1/-1; padding: 2rem;">
+        <i class="fas fa-tag" style="font-size: 3rem; opacity: 0.3;"></i>
+        <p style="margin-top: 1rem;">Keine Raten verfügbar</p>
       </div>
-    `).join('');
-
-    // Add click handlers
-    grid.querySelectorAll('.btn-select-rate').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const code = e.currentTarget.dataset.rateCode;
-        const price = e.currentTarget.dataset.ratePrice;
-        this.selectRate(code, price);
-      });
-    });
+    `;
+    return;
   }
+
+  grid.innerHTML = rates.map(rate => `
+    <div class="rate-card glass-morphism" data-rate="${rate.code}">
+      <div class="rate-header">
+        <h4>${rate.name}</h4>
+        <div class="rate-price">
+          €${rate.price}
+          <small>/Nacht</small>
+        </div>
+      </div>
+      <div class="rate-policy">
+        <i class="fas fa-info-circle"></i>
+        <span>${rate.cancellation}</span>
+      </div>
+      ${rate.includes && rate.includes.length > 0 ? `
+        <div class="rate-includes" style="margin-bottom: 1rem;">
+          <strong style="display: block; margin-bottom: 0.5rem;">Inklusive:</strong>
+          ${rate.includes.map(item => `
+            <span class="badge" style="margin-right: 0.25rem;">
+              <i class="fas fa-check" style="font-size: 0.75rem;"></i> ${item}
+            </span>
+          `).join('')}
+        </div>
+      ` : ''}
+      <button type="button" class="btn primary btn-select-rate" data-rate-code="${rate.code}" data-rate-price="${rate.price}">
+        <i class="fas fa-check"></i>
+        Auswählen
+      </button>
+    </div>
+  `).join('');
+
+  // Add click handlers
+  grid.querySelectorAll('.btn-select-rate').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const code = e.currentTarget.dataset.rateCode;
+      const price = e.currentTarget.dataset.ratePrice;
+      this.selectRate(code, price);
+      
+      // Auto-advance to next step
+      setTimeout(() => {
+        const wizard = { currentStep: 3, maxSteps: 4, data: {} };
+        this.wizardNext(wizard);
+      }, 300);
+    });
+  });
+}
 
   selectRate(code, price) {
     // Visual feedback
@@ -1778,9 +1920,19 @@ try {
 
   // Modal Methods
   openNewReservationModal() {
-    this.resetForm('formNewReservation');
-    this.ui.openModal('modalNewReservation');
-  }
+  this.resetForm('formNewReservation');
+  this.ui.openModal('modalNewReservation');
+  
+  // Wizard initialisieren
+  this.initWizard();
+  
+  // Hotels laden für den ersten Schritt
+  this.loadHotelsForSelect();
+  
+  // Kategorien und Raten vorladen für bessere Performance
+  this.loadCategories();
+  this.loadRates();
+}
 
   openAvailabilityModal() {
     this.ui.openModal('modalAvailability');
