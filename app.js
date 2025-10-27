@@ -559,7 +559,7 @@ const DEMO_CATEGORIES = [
     id: 1, 
     code: 'STD', 
     name: 'Standard', 
-    size: '18mÂ²', 
+    size: '18m²', 
     beds: '1 Doppelbett', 
     persons: 2, 
     price: 89,
@@ -569,7 +569,7 @@ const DEMO_CATEGORIES = [
     id: 2, 
     code: 'SUP', 
     name: 'Superior', 
-    size: '24mÂ²', 
+    size: '24m²', 
     beds: '1 King-Size Bett', 
     persons: 2, 
     price: 119,
@@ -579,7 +579,7 @@ const DEMO_CATEGORIES = [
     id: 3, 
     code: 'DLX', 
     name: 'Deluxe', 
-    size: '32mÂ²', 
+    size: '32m²', 
     beds: '1 King-Size Bett + Schlafsofa', 
     persons: 3, 
     price: 159,
@@ -589,7 +589,7 @@ const DEMO_CATEGORIES = [
     id: 4,
     code: 'JUN',
     name: 'Junior Suite',
-    size: '42mÂ²',
+    size: '42m²',
     beds: '1 King-Size Bett',
     persons: 2,
     price: 199,
@@ -2024,7 +2024,7 @@ class ReservationApp {
         </div>
         <div class="activity-content">
           <div class="activity-title">Neue Reservierung: ${r.guest_last_name}</div>
-          <div class="activity-meta">${r.reservation_number} Â· ${this.formatDate(r.created_at)}</div>
+          <div class="activity-meta">${r.reservation_number} · ${this.formatDate(r.created_at)}</div>
         </div>
       </div>
     `).join('');
@@ -2086,7 +2086,7 @@ class ReservationApp {
       <div class="yoy-item">
         <div class="yoy-item-info">
           <div class="yoy-item-name">${perf.hotel.name}</div>
-          <div class="yoy-item-meta">${perf.todayBookings} heute Â· ${perf.lastYearBookings} letztes Jahr</div>
+          <div class="yoy-item-meta">${perf.todayBookings} heute · ${perf.lastYearBookings} letztes Jahr</div>
         </div>
         <div class="yoy-item-trend ${perf.trend}">
           <i class="fas ${perf.icon}"></i>
