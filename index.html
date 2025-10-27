@@ -21,7 +21,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   
   <!-- Favicon -->
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='80' font-size='80'>ðŸ¨</text></svg>">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='80' font-size='80'>Ã°Å¸ÂÂ¨</text></svg>">
 </head>
 <body>
 
@@ -38,37 +38,10 @@
   <header>
     <nav class="navbar">
       <div class="navbar-brand">
-        <div class="logo-container">
-          <svg class="logo-icon" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-            <!-- Modern geometric hotel icon -->
-            <defs>
-              <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1" />
-                <stop offset="100%" style="stop-color:#8b5cf6;stop-opacity:1" />
-              </linearGradient>
-            </defs>
-            <!-- Building base -->
-            <rect x="8" y="14" width="32" height="28" rx="2" fill="url(#logoGradient)" opacity="0.9"/>
-            <!-- Windows pattern -->
-            <rect x="12" y="18" width="4" height="4" rx="1" fill="white" opacity="0.3"/>
-            <rect x="22" y="18" width="4" height="4" rx="1" fill="white" opacity="0.3"/>
-            <rect x="32" y="18" width="4" height="4" rx="1" fill="white" opacity="0.3"/>
-            <rect x="12" y="26" width="4" height="4" rx="1" fill="white" opacity="0.3"/>
-            <rect x="22" y="26" width="4" height="4" rx="1" fill="white" opacity="0.3"/>
-            <rect x="32" y="26" width="4" height="4" rx="1" fill="white" opacity="0.3"/>
-            <rect x="12" y="34" width="4" height="4" rx="1" fill="white" opacity="0.3"/>
-            <rect x="22" y="34" width="4" height="4" rx="1" fill="white" opacity="0.3"/>
-            <rect x="32" y="34" width="4" height="4" rx="1" fill="white" opacity="0.3"/>
-            <!-- Roof accent -->
-            <path d="M 4 14 L 24 4 L 44 14 L 40 14 L 24 7 L 8 14 Z" fill="url(#logoGradient)"/>
-            <!-- Door -->
-            <rect x="20" y="34" width="8" height="8" rx="1" fill="white" opacity="0.5"/>
-          </svg>
-          <div class="logo-text">
-            <span class="logo-name">Hasco</span>
-            <span class="logo-subtitle">Reservation System</span>
-          </div>
-        </div>
+        <h1>
+          <i class="fas fa-hotel"></i>
+          <span>Hasco</span>
+        </h1>
       </div>
 
       <div class="toolbar">
@@ -76,13 +49,13 @@
           <i class="fas fa-plus"></i>
           Neue Reservierung
         </button>
-        <button class="btn danger" data-action="group-reservation">
+        <button class="btn secondary" data-action="group-reservation">
           <i class="fas fa-users"></i>
           GruppenResa
         </button>
         <button class="btn secondary" data-action="open-availability">
           <i class="fas fa-calendar-check"></i>
-          Verfügbarkeit
+          VerfÃ¼gbarkeit
         </button>
         <button class="btn secondary" data-action="open-reports">
           <i class="fas fa-chart-line"></i>
@@ -117,7 +90,7 @@
 
         <div class="clock mono">
           <span id="dateLocal">--.--.----</span>
-          <span class="sep">·</span>
+          <span class="sep">Ã‚Â·</span>
           <span id="clockLocal">--:--:--</span>
         </div>
       </div>
@@ -168,11 +141,11 @@
                 <div class="label">Buchungen</div>
               </div>
               <div class="kpi">
-                <div class="value" id="tRevenue">0,00 â‚¬</div>
+                <div class="value" id="tRevenue">0,00 Ã¢â€šÂ¬</div>
                 <div class="label">Umsatz</div>
               </div>
               <div class="kpi">
-                <div class="value" id="tADR">0,00 â‚¬</div>
+                <div class="value" id="tADR">0,00 Ã¢â€šÂ¬</div>
                 <div class="label">ADR</div>
               </div>
               <div class="kpi">
@@ -187,7 +160,7 @@
             <div class="card-head compact">
               <div class="performance-title-inline">
                 <i class="fas fa-calendar-week"></i>
-                <h3>Nächste 7 Tage</h3>
+                <h3>NÃ¤chste 7 Tage</h3>
               </div>
               <select class="select sm hotel-select" data-filter="hotel-next">
                 <option value="">Alle Hotels</option>
@@ -196,14 +169,14 @@
             <div class="kpis">
               <div class="kpi">
                 <div class="value" id="nBookings">0</div>
-                <div class="label">Ankünfte</div>
+                <div class="label">AnkÃ¼nfte</div>
               </div>
               <div class="kpi">
-                <div class="value" id="nRevenue">0,00 â‚¬</div>
+                <div class="value" id="nRevenue">0,00 Ã¢â€šÂ¬</div>
                 <div class="label">Umsatz</div>
               </div>
               <div class="kpi">
-                <div class="value" id="nADR">0,00 â‚¬</div>
+                <div class="value" id="nADR">0,00 Ã¢â€šÂ¬</div>
                 <div class="label">ADR</div>
               </div>
               <div class="kpi">
@@ -270,7 +243,7 @@
                 </button>
                 <button class="btn secondary" data-action="reset-filters">
                   <i class="fas fa-times"></i>
-                  Zurücksetzen
+                  ZurÃ¼cksetzen
                 </button>
               </div>
             </div>
@@ -378,7 +351,7 @@
                 </div>
                 <div class="operation-content">
                   <div class="operation-value" id="inhouseGuests">0</div>
-                  <div class="operation-label">Gäste im Haus</div>
+                  <div class="operation-label">GÃ¤ste im Haus</div>
                   <button class="btn-link" data-action="view-inhouse">
                     Details anzeigen <i class="fas fa-arrow-right"></i>
                   </button>
@@ -449,7 +422,7 @@
             <div class="form-group">
               <label class="form-label">Hotel *</label>
               <select class="select hotel-select" name="hotel_code" required>
-                <option value="">Bitte wählen...</option>
+                <option value="">Bitte wÃ¤hlen...</option>
               </select>
             </div>
             
@@ -522,20 +495,13 @@
               <label class="form-label">Notizen</label>
               <textarea class="input" name="notes" rows="3"></textarea>
             </div>
-            
-            <div class="form-group">
-              <label class="checkbox">
-                <input type="checkbox" name="send_confirmation">
-                <span>Bestätigungs-E-Mail senden</span>
-              </label>
-            </div>
           </div>
         </div>
         
         <div class="modal-footer">
           <button type="button" class="btn secondary" data-wizard-action="prev" disabled>
             <i class="fas fa-arrow-left"></i>
-            Zurück
+            ZurÃ¼ck
           </button>
           <button type="button" class="btn primary" data-wizard-action="next">
             Weiter
@@ -584,7 +550,7 @@
           </button>
           <button type="submit" class="btn primary">
             <i class="fas fa-save"></i>
-            Änderungen speichern
+            Ã„nderungen speichern
           </button>
         </div>
       </form>
@@ -595,7 +561,7 @@
   <div id="modalAvailability" class="modal hidden" aria-hidden="true">
     <div class="modal-content large">
       <div class="modal-header">
-        <h2>Verfügbarkeit</h2>
+        <h2>VerfÃ¼gbarkeit</h2>
         <button class="modal-close">
           <i class="fas fa-times"></i>
         </button>
@@ -739,7 +705,7 @@
       <div class="modal-body">
         <div class="sketch-controls">
           <select class="select hotel-select" id="sketchHotel">
-            <option value="">Hotel wählen...</option>
+            <option value="">Hotel wÃ¤hlen...</option>
           </select>
           <button class="btn primary" data-action="load-sketch">
             <i class="fas fa-map"></i>
@@ -748,7 +714,7 @@
         </div>
         
         <div id="sketchCanvas" class="sketch-canvas">
-          <p class="text-center text-muted">Bitte wählen Sie ein Hotel aus</p>
+          <p class="text-center text-muted">Bitte wÃ¤hlen Sie ein Hotel aus</p>
         </div>
       </div>
     </div>
@@ -758,7 +724,12 @@
   <div id="modalConfirmationEmail" class="modal hidden" aria-hidden="true">
     <div class="modal-content">
       <div class="modal-header">
-        <h2>Bestätigungs-E-Mail</h2>
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <div style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, var(--primary-500), var(--accent-500)); border-radius: var(--radius-lg); color: white;">
+            <i class="fas fa-envelope"></i>
+          </div>
+          <h2>BestÃ¤tigungs-E-Mail senden</h2>
+        </div>
         <button class="modal-close">
           <i class="fas fa-times"></i>
         </button>
@@ -766,26 +737,40 @@
       
       <div class="modal-body">
         <div class="form-group">
-          <label class="form-label">Empfänger E-Mail</label>
-          <input type="email" class="input" id="confirmEmailTo">
+          <label class="form-label">
+            <i class="fas fa-at" style="margin-right: 0.5rem; color: var(--primary-400);"></i>
+            EmpfÃ¤nger E-Mail
+          </label>
+          <input type="email" class="input" id="confirmEmailTo" placeholder="gast@beispiel.de" required>
         </div>
         
         <div class="form-group">
-          <label class="form-label">Betreff</label>
-          <input type="text" class="input" id="confirmEmailSubject">
+          <label class="form-label">
+            <i class="fas fa-tag" style="margin-right: 0.5rem; color: var(--primary-400);"></i>
+            Betreff
+          </label>
+          <input type="text" class="input" id="confirmEmailSubject" required>
         </div>
         
         <div class="form-group">
-          <label class="form-label">Nachricht</label>
-          <textarea class="input" id="confirmEmailBody" rows="10"></textarea>
+          <label class="form-label">
+            <i class="fas fa-file-alt" style="margin-right: 0.5rem; color: var(--primary-400);"></i>
+            Nachricht
+          </label>
+          <textarea class="input" id="confirmEmailBody" rows="12" style="font-family: 'JetBrains Mono', monospace; font-size: 0.875rem; line-height: 1.6;" required></textarea>
+          <p class="text-muted" style="font-size: 0.75rem; margin-top: 0.5rem;">
+            <i class="fas fa-info-circle"></i>
+            Sie können die Nachricht beliebig anpassen
+          </p>
         </div>
       </div>
       
       <div class="modal-footer">
         <button type="button" class="btn secondary" data-close-modal>
+          <i class="fas fa-times"></i>
           Abbrechen
         </button>
-        <button type="button" class="btn primary" data-action="send-confirmation">
+        <button type="button" class="btn success" data-action="send-confirmation">
           <i class="fas fa-paper-plane"></i>
           E-Mail senden
         </button>
