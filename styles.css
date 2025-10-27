@@ -674,30 +674,41 @@ textarea {
 .sidebar-card .yoy-performance {
   flex: 1;
   overflow-y: auto;
-  padding-right: var(--space-2);
+  overflow-x: hidden;
+  padding-right: var(--space-1);
   min-height: 0; /* Wichtig für Scrolling */
 }
 
+/* Moderne Scrollbar für Sidebars */
 .sidebar-card .activity-feed::-webkit-scrollbar,
 .sidebar-card .yoy-performance::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
 }
 
 .sidebar-card .activity-feed::-webkit-scrollbar-track,
 .sidebar-card .yoy-performance::-webkit-scrollbar-track {
-  background: var(--bg-surface);
+  background: transparent;
   border-radius: var(--radius-full);
+  margin: var(--space-2) 0;
 }
 
 .sidebar-card .activity-feed::-webkit-scrollbar-thumb,
 .sidebar-card .yoy-performance::-webkit-scrollbar-thumb {
-  background: var(--bg-elevated);
+  background: rgba(99, 102, 241, 0.3);
   border-radius: var(--radius-full);
+  transition: background var(--transition-base);
 }
 
 .sidebar-card .activity-feed::-webkit-scrollbar-thumb:hover,
 .sidebar-card .yoy-performance::-webkit-scrollbar-thumb:hover {
-  background: var(--bg-overlay);
+  background: rgba(99, 102, 241, 0.5);
+}
+
+/* Firefox Scrollbar */
+.sidebar-card .activity-feed,
+.sidebar-card .yoy-performance {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(99, 102, 241, 0.3) transparent;
 }
 
 /* Performance Widgets Row - REMOVED (not needed anymore) */
@@ -1201,21 +1212,40 @@ table {
 
 /* Explizite Spaltenbreiten für perfektes Alignment */
 table th:nth-child(1),
-table td:nth-child(1) { width: 10%; min-width: 120px; } /* Res-Nr. */
+table td:nth-child(1) { 
+  width: 2%; 
+  min-width: 20px; 
+  padding: 0;
+  border: none;
+  background: transparent;
+} /* Leere Spalte - unsichtbar */
+
 table th:nth-child(2),
-table td:nth-child(2) { width: 15%; min-width: 150px; } /* Hotel */
+table td:nth-child(2) { width: 10%; min-width: 120px; } /* Res-Nr. */
 table th:nth-child(3),
-table td:nth-child(3) { width: 15%; min-width: 150px; } /* Gast */
+table td:nth-child(3) { width: 15%; min-width: 150px; } /* Hotel */
 table th:nth-child(4),
-table td:nth-child(4) { width: 10%; min-width: 100px; } /* Anreise */
+table td:nth-child(4) { width: 15%; min-width: 150px; } /* Gast */
 table th:nth-child(5),
-table td:nth-child(5) { width: 10%; min-width: 100px; } /* Abreise */
+table td:nth-child(5) { width: 10%; min-width: 100px; } /* Anreise */
 table th:nth-child(6),
-table td:nth-child(6) { width: 12%; min-width: 100px; } /* Kategorie */
+table td:nth-child(6) { width: 10%; min-width: 100px; } /* Abreise */
 table th:nth-child(7),
-table td:nth-child(7) { width: 10%; min-width: 100px; } /* Preis */
+table td:nth-child(7) { width: 12%; min-width: 100px; } /* Kategorie */
 table th:nth-child(8),
-table td:nth-child(8) { width: 10%; min-width: 100px; } /* Status */
+table td:nth-child(8) { width: 10%; min-width: 100px; } /* Preis */
+table th:nth-child(9),
+table td:nth-child(9) { width: 10%; min-width: 100px; } /* Status */
+
+/* Res-Nr-Cell Styling - jetzt in 2. Spalte */
+table th:nth-child(2),
+table td:nth-child(2) {
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--primary-400);
+  font-size: 0.8125rem;
+  letter-spacing: -0.01em;
+}
 
 thead {
   background: var(--bg-elevated);
@@ -1273,12 +1303,8 @@ tbody td {
   vertical-align: middle;
 }
 
-tbody td:first-child {
-  font-weight: 700;
-  font-family: 'JetBrains Mono', monospace;
-  color: var(--primary-400);
-  font-size: 0.8125rem;
-  letter-spacing: -0.01em;
+tbody td:last-child {
+  text-align: center;
 }
 
 .res-nr-cell {
@@ -1287,10 +1313,6 @@ tbody td:first-child {
   color: var(--primary-400);
   font-size: 0.8125rem;
   letter-spacing: -0.01em;
-}
-
-tbody td:last-child {
-  text-align: center;
 }
 
 tbody td .pill {
