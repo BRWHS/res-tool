@@ -641,15 +641,23 @@ class AuthUIController {
     this.setLoading(form, true);
     this.clearErrors();
     
+    console.log('🔐 Attempting login...');
+    
     // Attempt login
     const result = await this.auth.login(email, password, remember);
     
     if (result.success) {
+      console.log('✅ Login successful!');
       this.showSuccess('Login successful! Redirecting...');
-      setTimeout(() => {
-        window.location.href = '/index.html';
-      }, 1000);
+      
+      // Wait a bit longer to ensure session is saved
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      console.log('🔄 Redirecting to dashboard...');
+      // Use replace to prevent back button issues
+      window.location.replace('/index.html');
     } else {
+      console.error('❌ Login failed:', result.error);
       this.showError(result.error);
       this.setLoading(form, false);
     }
