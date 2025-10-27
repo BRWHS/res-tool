@@ -41,7 +41,6 @@
         <h1>
           <i class="fas fa-hotel"></i>
           <span>Hasco</span>
-          <sup class="version">V2.0</sup>
         </h1>
       </div>
 
@@ -255,6 +254,7 @@
       
       <!-- Sidebar -->
       <aside class="sidebar">
+        <!-- Recent Activity -->
         <article class="card sidebar-card">
           <div class="card-head">
             <h3>Recent Activity</h3>
@@ -263,7 +263,20 @@
             </button>
           </div>
           <div id="activityFeed" class="activity-feed">
-            <div class="skeleton" style="height: 400px;"></div>
+            <div class="skeleton" style="height: 300px;"></div>
+          </div>
+        </article>
+        
+        <!-- Year-over-Year Performance -->
+        <article class="card yoy-card">
+          <div class="card-head">
+            <h3>Performance YoY</h3>
+            <button class="btn-icon" data-action="refresh-yoy">
+              <i class="fas fa-sync"></i>
+            </button>
+          </div>
+          <div id="yoyPerformance" class="yoy-performance">
+            <div class="skeleton" style="height: 200px;"></div>
           </div>
         </article>
       </aside>
