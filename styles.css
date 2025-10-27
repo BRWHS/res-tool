@@ -921,47 +921,36 @@ textarea {
 .performance-card .card-head {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: var(--space-5);
+  align-items: center;
+  margin-bottom: var(--space-4);
 }
 
-.performance-title {
+.performance-card .card-head.compact {
+  margin-bottom: var(--space-3);
+}
+
+.performance-title-inline {
   display: flex;
-  align-items: flex-start;
-  gap: var(--space-3);
+  align-items: center;
+  gap: var(--space-2);
 }
 
-.performance-title > i {
-  font-size: 1.5rem;
-  color: var(--primary-400);
-  margin-top: 0.125rem;
-}
-
-.performance-title > div {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-}
-
-.performance-title h3 {
+.performance-title-inline > i {
   font-size: 1.25rem;
+  color: var(--primary-400);
+}
+
+.performance-title-inline h3 {
+  font-size: 1.125rem;
   font-weight: 700;
   color: var(--text-primary);
   margin: 0;
-  line-height: 1.2;
-  letter-spacing: -0.02em;
-}
-
-.performance-title .subtitle {
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: var(--text-tertiary);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  line-height: 1;
+  letter-spacing: -0.01em;
 }
 
 .performance-card .select {
-  margin-top: 0.25rem;
+  margin: 0;
 }
 
 .reservations-block {
@@ -1207,7 +1196,26 @@ textarea {
 table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed; /* Verhindert Spalten-Shift */
 }
+
+/* Explizite Spaltenbreiten für perfektes Alignment */
+table th:nth-child(1),
+table td:nth-child(1) { width: 10%; min-width: 120px; } /* Res-Nr. */
+table th:nth-child(2),
+table td:nth-child(2) { width: 15%; min-width: 150px; } /* Hotel */
+table th:nth-child(3),
+table td:nth-child(3) { width: 15%; min-width: 150px; } /* Gast */
+table th:nth-child(4),
+table td:nth-child(4) { width: 10%; min-width: 100px; } /* Anreise */
+table th:nth-child(5),
+table td:nth-child(5) { width: 10%; min-width: 100px; } /* Abreise */
+table th:nth-child(6),
+table td:nth-child(6) { width: 12%; min-width: 100px; } /* Kategorie */
+table th:nth-child(7),
+table td:nth-child(7) { width: 10%; min-width: 100px; } /* Preis */
+table th:nth-child(8),
+table td:nth-child(8) { width: 10%; min-width: 100px; } /* Status */
 
 thead {
   background: var(--bg-elevated);
