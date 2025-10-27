@@ -283,6 +283,8 @@ header {
   display: flex;
   align-items: center;
   gap: var(--space-3);
+  margin-left: calc(-3 * var(--space-8));
+  padding-left: var(--space-4);
 }
 
 /* Modern Logo Container */
@@ -347,7 +349,7 @@ header {
 }
 
 .navbar-brand h1 i {
-  font-size: 2rem;
+  font-size: 5.5rem;
   background: var(--primary-600);
   -webkit-text-fill-color: white;
   background-clip: unset;
