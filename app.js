@@ -1631,13 +1631,13 @@ class ReservationApp {
       
       return `
         <tr data-id="${r.id}" style="cursor: pointer;">
-          <td><code class="mono">${r.reservation_number}</code></td>
+          <td class="res-nr-cell">${r.reservation_number}</td>
           <td>${hotel ? hotel.name : r.hotel_code}</td>
           <td>${r.guest_first_name || ''} ${r.guest_last_name}</td>
           <td>${this.formatDate(r.arrival)}</td>
           <td>${this.formatDate(r.departure)}</td>
-          <td><span class="badge">${r.category}</span></td>
-          <td>${this.formatCurrency(totalPrice)}</td>
+          <td><span class="category-badge">${r.category}</span></td>
+          <td class="price-cell">${this.formatCurrency(totalPrice)}</td>
           <td><span class="pill ${r.status}">${this.getStatusLabel(r.status)}</span></td>
         </tr>
       `;
