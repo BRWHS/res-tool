@@ -536,9 +536,9 @@ textarea {
   font-size: 0.875rem;
   font-family: inherit;
   color: var(--text-primary);
-  background: var(--bg-surface);
+  background: var(--bg-elevated);
   border: 1px solid var(--border-primary);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   transition: all var(--transition-base);
   outline: none;
 }
@@ -547,12 +547,14 @@ textarea {
 .select:hover,
 textarea:hover {
   border-color: var(--border-hover);
+  background: var(--bg-overlay);
 }
 
 .input:focus,
 .select:focus,
 textarea:focus {
   border-color: var(--primary-500);
+  background: var(--bg-overlay);
   box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
 }
 
@@ -564,11 +566,28 @@ textarea.error {
 
 .input::placeholder {
   color: var(--text-tertiary);
+  opacity: 0.6;
+}
+
+.select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2394a3b8' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right var(--space-3) center;
+  padding-right: var(--space-8);
+  cursor: pointer;
+}
+
+.select.sm {
+  padding: var(--space-2) var(--space-3);
+  padding-right: var(--space-6);
+  font-size: 0.8125rem;
 }
 
 textarea {
   resize: vertical;
   min-height: 100px;
+  line-height: 1.5;
 }
 
 .form-group {
@@ -622,7 +641,7 @@ textarea {
   display: grid;
   grid-template-columns: 280px 1fr 280px;
   gap: var(--space-6);
-  align-items: start;
+  align-items: stretch; /* Alle Spalten gleich hoch */
 }
 
 .main-content {
@@ -637,12 +656,18 @@ textarea {
 .sidebar-right {
   position: sticky;
   top: calc(var(--space-8) + 80px);
+  align-self: start; /* Wichtig für sticky */
 }
 
 .sidebar-card {
   display: flex;
   flex-direction: column;
-  max-height: calc(100vh - 200px);
+  height: 100%;
+  min-height: 600px; /* Mindesthöhe */
+}
+
+.sidebar-card .card-head {
+  flex-shrink: 0; /* Header fixiert */
 }
 
 .sidebar-card .activity-feed,
@@ -650,6 +675,7 @@ textarea {
   flex: 1;
   overflow-y: auto;
   padding-right: var(--space-2);
+  min-height: 0; /* Wichtig für Scrolling */
 }
 
 .sidebar-card .activity-feed::-webkit-scrollbar,
@@ -755,6 +781,7 @@ textarea {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: var(--space-3);
   padding: var(--space-4);
   background: var(--glass-bg);
   border: 1px solid var(--border-primary);
@@ -792,20 +819,25 @@ textarea {
   flex-direction: column;
   gap: var(--space-1);
   flex: 1;
+  min-width: 0; /* Important for text-overflow */
 }
 
 .yoy-item-name {
-  font-size: 0.9375rem;
+  font-size: 0.875rem;
   font-weight: 600;
   color: var(--text-primary);
   letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .yoy-item-meta {
-  font-size: 0.75rem;
+  font-size: 0.6875rem;
   color: var(--text-tertiary);
   font-family: 'JetBrains Mono', monospace;
   opacity: 0.8;
+  white-space: nowrap;
 }
 
 .yoy-item-trend {
@@ -878,28 +910,50 @@ textarea {
 }
 
 .reservations-block {
-  margin-top: var(--space-6);
+  margin-top: 0; /* Kein extra Margin */
+}
+
+.reservations-block .card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-xl);
+  padding: 0; /* Entferne Padding für bessere Kontrolle */
+  overflow: hidden;
 }
 
 .reservations-block .card-head {
-  margin-bottom: var(--space-6);
+  padding: var(--space-6);
+  margin-bottom: 0;
+  background: var(--bg-elevated);
+  border-bottom: 1px solid var(--border-primary);
 }
 
 .reservations-block .filters-grid {
-  margin-bottom: var(--space-6);
-  padding-bottom: var(--space-6);
+  padding: var(--space-6);
+  margin-bottom: 0;
+  background: var(--bg-surface);
   border-bottom: 1px solid var(--border-primary);
 }
 
 .filters-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: 2fr 1.5fr 1.5fr 1fr 1fr;
   gap: var(--space-4);
+  align-items: end;
 }
 
 .filter-group {
   display: flex;
   flex-direction: column;
+  gap: var(--space-2);
+}
+
+.filter-group label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .filter-actions {
@@ -907,6 +961,9 @@ textarea {
   gap: var(--space-3);
   grid-column: 1 / -1;
   justify-content: flex-end;
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border-primary);
+  margin-top: var(--space-4);
 }
 
 .kpis {
@@ -1075,9 +1132,6 @@ textarea {
 
 .table-wrapper {
   overflow-x: auto;
-  margin-top: var(--space-4);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--border-primary);
   background: var(--bg-surface);
 }
 
@@ -1089,19 +1143,16 @@ table {
 thead {
   background: var(--bg-elevated);
   border-bottom: 2px solid var(--border-primary);
-  position: sticky;
-  top: 0;
-  z-index: 10;
 }
 
 thead th {
-  padding: var(--space-4);
+  padding: var(--space-5) var(--space-4);
   text-align: left;
-  font-size: 0.75rem;
+  font-size: 0.6875rem;
   font-weight: 700;
-  color: var(--text-secondary);
+  color: var(--text-tertiary);
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   white-space: nowrap;
 }
 
@@ -1125,7 +1176,8 @@ tbody tr::before {
 }
 
 tbody tr:hover {
-  background: var(--glass-bg-hover);
+  background: rgba(99, 102, 241, 0.05);
+  border-color: var(--primary-500);
 }
 
 tbody tr:hover::before {
@@ -1137,16 +1189,53 @@ tbody tr:last-child {
 }
 
 tbody td {
-  padding: var(--space-4);
+  padding: var(--space-5) var(--space-4);
   font-size: 0.875rem;
   color: var(--text-primary);
   white-space: nowrap;
+  vertical-align: middle;
 }
 
 tbody td:first-child {
-  font-weight: 600;
+  font-weight: 700;
   font-family: 'JetBrains Mono', monospace;
   color: var(--primary-400);
+  font-size: 0.8125rem;
+  letter-spacing: -0.01em;
+}
+
+tbody td:last-child {
+  text-align: center;
+}
+
+tbody td .pill {
+  font-size: 0.75rem;
+  padding: var(--space-1) var(--space-3);
+  font-weight: 600;
+}
+
+/* Kategorie-Badges in Tabelle */
+.category-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-3);
+  font-size: 0.75rem;
+  font-weight: 700;
+  border-radius: var(--radius-md);
+  background: rgba(99, 102, 241, 0.15);
+  color: var(--primary-400);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.02em;
+}
+
+/* Preis-Formatierung */
+.price-cell {
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--text-primary);
+  font-size: 0.9375rem;
 }
 
 /* ================================================
@@ -1835,10 +1924,19 @@ tbody td:first-child {
   
   .sidebar-card {
     max-height: 400px;
+    min-height: auto;
   }
   
   .kpi-section {
     grid-template-columns: 1fr;
+  }
+  
+  .filters-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  
+  .filter-actions {
+    grid-column: 1 / -1;
   }
 }
 
@@ -1875,6 +1973,7 @@ tbody td:first-child {
   
   .sidebar-card {
     max-height: 300px;
+    min-height: auto;
   }
   
   .kpi-section {
@@ -1883,6 +1982,15 @@ tbody td:first-child {
   
   .filters-grid {
     grid-template-columns: 1fr;
+  }
+  
+  .filter-actions {
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+  
+  .filter-actions .btn {
+    width: 100%;
   }
   
   #categoryGrid,
@@ -1900,6 +2008,17 @@ tbody td:first-child {
     left: var(--space-4);
     right: var(--space-4);
     bottom: var(--space-4);
+  }
+  
+  /* Table Responsive */
+  .table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  tbody td {
+    font-size: 0.8125rem;
+    padding: var(--space-3);
   }
 }
 
