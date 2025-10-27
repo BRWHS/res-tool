@@ -651,23 +651,26 @@ textarea {
   min-width: 0; /* Prevents grid blowout */
 }
 
-/* Left & Right Sidebars */
+/* Left & Right Sidebars - EXAKT GLEICH */
 .sidebar-left,
 .sidebar-right {
   position: sticky;
   top: calc(var(--space-8) + 80px);
-  align-self: start; /* Wichtig für sticky */
+  align-self: start;
+  height: calc(100vh - 200px); /* Gleiche Höhe! */
 }
 
 .sidebar-card {
   display: flex;
   flex-direction: column;
-  height: 100%;
-  min-height: 600px; /* Mindesthöhe */
+  height: 100%; /* Volle Höhe nutzen */
 }
 
 .sidebar-card .card-head {
-  flex-shrink: 0; /* Header fixiert */
+  flex-shrink: 0;
+  padding: var(--space-5);
+  margin-bottom: 0;
+  border-bottom: 1px solid var(--border-primary);
 }
 
 .sidebar-card .activity-feed,
@@ -675,40 +678,48 @@ textarea {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  padding-right: var(--space-1);
-  min-height: 0; /* Wichtig für Scrolling */
+  padding: var(--space-4);
+  min-height: 0;
 }
 
-/* Moderne Scrollbar für Sidebars */
+/* Subtile Scrollbars - nur bei Hover sichtbar */
 .sidebar-card .activity-feed::-webkit-scrollbar,
 .sidebar-card .yoy-performance::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
 }
 
 .sidebar-card .activity-feed::-webkit-scrollbar-track,
 .sidebar-card .yoy-performance::-webkit-scrollbar-track {
   background: transparent;
-  border-radius: var(--radius-full);
-  margin: var(--space-2) 0;
 }
 
 .sidebar-card .activity-feed::-webkit-scrollbar-thumb,
 .sidebar-card .yoy-performance::-webkit-scrollbar-thumb {
-  background: rgba(99, 102, 241, 0.3);
+  background: transparent;
   border-radius: var(--radius-full);
   transition: background var(--transition-base);
 }
 
-.sidebar-card .activity-feed::-webkit-scrollbar-thumb:hover,
-.sidebar-card .yoy-performance::-webkit-scrollbar-thumb:hover {
-  background: rgba(99, 102, 241, 0.5);
+.sidebar-card .activity-feed:hover::-webkit-scrollbar-thumb,
+.sidebar-card .yoy-performance:hover::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.3);
 }
 
-/* Firefox Scrollbar */
+.sidebar-card .activity-feed:hover::-webkit-scrollbar-thumb:hover,
+.sidebar-card .yoy-performance:hover::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.5);
+}
+
+/* Firefox - Unsichtbare Scrollbar */
 .sidebar-card .activity-feed,
 .sidebar-card .yoy-performance {
   scrollbar-width: thin;
-  scrollbar-color: rgba(99, 102, 241, 0.3) transparent;
+  scrollbar-color: transparent transparent;
+}
+
+.sidebar-card .activity-feed:hover,
+.sidebar-card .yoy-performance:hover {
+  scrollbar-color: rgba(148, 163, 184, 0.3) transparent;
 }
 
 /* Performance Widgets Row - REMOVED (not needed anymore) */
@@ -785,7 +796,7 @@ textarea {
 .yoy-performance {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--space-2); /* Gleich wie Activity Feed */
 }
 
 .yoy-item {
@@ -1200,51 +1211,14 @@ textarea {
    ================================================ */
 
 .table-wrapper {
-  overflow-x: auto;
+  overflow-x: hidden; /* KEINE horizontale Scrollbar */
   background: var(--bg-surface);
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
-  table-layout: fixed; /* Verhindert Spalten-Shift */
-}
-
-/* Explizite Spaltenbreiten für perfektes Alignment */
-table th:nth-child(1),
-table td:nth-child(1) { 
-  width: 2%; 
-  min-width: 20px; 
-  padding: 0;
-  border: none;
-  background: transparent;
-} /* Leere Spalte - unsichtbar */
-
-table th:nth-child(2),
-table td:nth-child(2) { width: 10%; min-width: 120px; } /* Res-Nr. */
-table th:nth-child(3),
-table td:nth-child(3) { width: 15%; min-width: 150px; } /* Hotel */
-table th:nth-child(4),
-table td:nth-child(4) { width: 15%; min-width: 150px; } /* Gast */
-table th:nth-child(5),
-table td:nth-child(5) { width: 10%; min-width: 100px; } /* Anreise */
-table th:nth-child(6),
-table td:nth-child(6) { width: 10%; min-width: 100px; } /* Abreise */
-table th:nth-child(7),
-table td:nth-child(7) { width: 12%; min-width: 100px; } /* Kategorie */
-table th:nth-child(8),
-table td:nth-child(8) { width: 10%; min-width: 100px; } /* Preis */
-table th:nth-child(9),
-table td:nth-child(9) { width: 10%; min-width: 100px; } /* Status */
-
-/* Res-Nr-Cell Styling - jetzt in 2. Spalte */
-table th:nth-child(2),
-table td:nth-child(2) {
-  font-weight: 700;
-  font-family: 'JetBrains Mono', monospace;
-  color: var(--primary-400);
-  font-size: 0.8125rem;
-  letter-spacing: -0.01em;
+  table-layout: auto; /* Automatisches Layout */
 }
 
 thead {
@@ -1303,16 +1277,16 @@ tbody td {
   vertical-align: middle;
 }
 
-tbody td:last-child {
-  text-align: center;
-}
-
-.res-nr-cell {
+tbody td:first-child {
   font-weight: 700;
   font-family: 'JetBrains Mono', monospace;
   color: var(--primary-400);
   font-size: 0.8125rem;
   letter-spacing: -0.01em;
+}
+
+tbody td:last-child {
+  text-align: center;
 }
 
 tbody td .pill {
