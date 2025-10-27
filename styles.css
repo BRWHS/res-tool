@@ -1027,7 +1027,7 @@ textarea {
 
 .kpi {
   text-align: center;
-  padding: var(--space-5) var(--space-3);
+  padding: var(--space-4) var(--space-3);
   background: transparent;
   border: 1px solid var(--border-primary);
   border-radius: var(--radius-lg);
@@ -1035,6 +1035,10 @@ textarea {
   position: relative;
   overflow: hidden;
   min-width: 0; /* Important for responsive */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 .kpi::before {
@@ -1062,7 +1066,7 @@ textarea {
 }
 
 .kpi .value {
-  font-size: 1.75rem;
+  font-size: 1.5rem;
   font-weight: 800;
   color: var(--text-primary);
   margin-bottom: var(--space-2);
@@ -1071,7 +1075,9 @@ textarea {
   transition: all var(--transition-base);
   position: relative;
   z-index: 1;
-  word-break: break-all; /* Verhindert Overflow bei langen Zahlen */
+  white-space: nowrap; /* WICHTIG: Keine Umbrüche! */
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .kpi:hover .value {
