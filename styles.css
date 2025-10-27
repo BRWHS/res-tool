@@ -589,10 +589,12 @@ textarea {
 .sidebar {
   position: sticky;
   top: calc(var(--space-8) + 80px);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
 }
 
 .sidebar-card {
-  max-height: calc(100vh - 180px);
   display: flex;
   flex-direction: column;
 }
@@ -600,7 +602,7 @@ textarea {
 .sidebar-card .activity-feed {
   flex: 1;
   overflow-y: auto;
-  max-height: calc(100vh - 280px);
+  max-height: 350px;
 }
 
 .sidebar-card .activity-feed::-webkit-scrollbar {
@@ -618,6 +620,86 @@ textarea {
 
 .sidebar-card .activity-feed::-webkit-scrollbar-thumb:hover {
   background: var(--bg-overlay);
+}
+
+/* Year-over-Year Widget */
+.yoy-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.yoy-performance {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.yoy-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3);
+  background: var(--glass-bg);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  transition: all var(--transition-fast);
+}
+
+.yoy-item:hover {
+  background: var(--glass-bg-hover);
+  border-color: var(--border-hover);
+}
+
+.yoy-item-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  flex: 1;
+}
+
+.yoy-item-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.yoy-item-meta {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.yoy-item-trend {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.yoy-item-trend.up {
+  background: rgba(16, 185, 129, 0.1);
+  color: var(--success-400);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.yoy-item-trend.down {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--danger-400);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.yoy-item-trend.neutral {
+  background: rgba(148, 163, 184, 0.1);
+  color: var(--text-secondary);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.yoy-item-trend i {
+  font-size: 1rem;
 }
 
 /* ================================================
@@ -1476,13 +1558,20 @@ tbody td {
   
   .sidebar {
     position: static;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-6);
   }
   
   .sidebar-card {
-    max-height: 500px;
+    max-height: 400px;
   }
   
   .sidebar-card .activity-feed {
+    max-height: 320px;
+  }
+  
+  .yoy-card {
     max-height: 400px;
   }
   
@@ -1518,6 +1607,9 @@ tbody td {
   
   .sidebar {
     position: static;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
   }
   
   .kpi-section {
