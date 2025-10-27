@@ -70,7 +70,7 @@
         </button>
         <button class="btn secondary" data-action="open-availability">
           <i class="fas fa-calendar-check"></i>
-          Verfügbarkeit
+          VerfÃ¼gbarkeit
         </button>
         <button class="btn secondary" data-action="open-reports">
           <i class="fas fa-chart-line"></i>
@@ -105,7 +105,7 @@
 
         <div class="clock mono">
           <span id="dateLocal">--.--.----</span>
-          <span class="sep">·</span>
+          <span class="sep">Â·</span>
           <span id="clockLocal">--:--:--</span>
         </div>
       </div>
@@ -156,11 +156,11 @@
                 <div class="label">Buchungen</div>
               </div>
               <div class="kpi">
-                <div class="value" id="tRevenue">0,00 €</div>
+                <div class="value" id="tRevenue">0,00 â‚¬</div>
                 <div class="label">Umsatz</div>
               </div>
               <div class="kpi">
-                <div class="value" id="tADR">0,00 €</div>
+                <div class="value" id="tADR">0,00 â‚¬</div>
                 <div class="label">ADR</div>
               </div>
               <div class="kpi">
@@ -175,7 +175,7 @@
             <div class="card-head compact">
               <div class="performance-title-inline">
                 <i class="fas fa-calendar-week"></i>
-                <h3>Nächste 7 Tage</h3>
+                <h3>NÃ¤chste 7 Tage</h3>
               </div>
               <select class="select sm hotel-select" data-filter="hotel-next">
                 <option value="">Alle Hotels</option>
@@ -184,14 +184,14 @@
             <div class="kpis">
               <div class="kpi">
                 <div class="value" id="nBookings">0</div>
-                <div class="label">Ankünfte</div>
+                <div class="label">AnkÃ¼nfte</div>
               </div>
               <div class="kpi">
-                <div class="value" id="nRevenue">0,00 €</div>
+                <div class="value" id="nRevenue">0,00 â‚¬</div>
                 <div class="label">Umsatz</div>
               </div>
               <div class="kpi">
-                <div class="value" id="nADR">0,00 €</div>
+                <div class="value" id="nADR">0,00 â‚¬</div>
                 <div class="label">ADR</div>
               </div>
               <div class="kpi">
@@ -258,7 +258,7 @@
                 </button>
                 <button class="btn secondary" data-action="reset-filters">
                   <i class="fas fa-times"></i>
-                  Zurücksetzen
+                  ZurÃ¼cksetzen
                 </button>
               </div>
             </div>
@@ -366,7 +366,7 @@
                 </div>
                 <div class="operation-content">
                   <div class="operation-value" id="inhouseGuests">0</div>
-                  <div class="operation-label">Gäste im Haus</div>
+                  <div class="operation-label">GÃ¤ste im Haus</div>
                   <button class="btn-link" data-action="view-inhouse">
                     Details anzeigen <i class="fas fa-arrow-right"></i>
                   </button>
@@ -437,7 +437,7 @@
             <div class="form-group">
               <label class="form-label">Hotel *</label>
               <select class="select hotel-select" name="hotel_code" required>
-                <option value="">Bitte wählen...</option>
+                <option value="">Bitte wÃ¤hlen...</option>
               </select>
             </div>
             
@@ -516,7 +516,7 @@
         <div class="modal-footer">
           <button type="button" class="btn secondary" data-wizard-action="prev" disabled>
             <i class="fas fa-arrow-left"></i>
-            Zurück
+            ZurÃ¼ck
           </button>
           <button type="button" class="btn primary" data-wizard-action="next">
             Weiter
@@ -553,7 +553,132 @@
             </div>
             
             <div class="tab-content">
-              <!-- Tab contents here -->
+              <!-- Details Tab -->
+              <div class="tab-pane active" data-tab-content="details">
+                <div class="form-group">
+                  <label class="form-label">Reservierungsnummer</label>
+                  <input type="text" class="input" name="reservation_number" readonly>
+                </div>
+                
+                <div class="form-group">
+                  <label class="form-label">Hotel *</label>
+                  <select class="select hotel-select" name="hotel_code" required>
+                    <option value="">Bitte wählen...</option>
+                  </select>
+                </div>
+                
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label">Anreise *</label>
+                    <input type="date" class="input" name="arrival" required>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Abreise *</label>
+                    <input type="date" class="input" name="departure" required>
+                  </div>
+                </div>
+                
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label">Erwachsene</label>
+                    <input type="number" class="input" name="guests_adults" min="1" max="10">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Kinder</label>
+                    <input type="number" class="input" name="guests_children" min="0" max="10">
+                  </div>
+                </div>
+                
+                <div class="form-group">
+                  <label class="form-label">Status</label>
+                  <select class="select" name="status">
+                    <option value="active">Aktiv</option>
+                    <option value="pending">Ausstehend</option>
+                    <option value="done">Abgeschlossen</option>
+                    <option value="canceled">Storniert</option>
+                  </select>
+                </div>
+              </div>
+              
+              <!-- Guest Tab -->
+              <div class="tab-pane hidden" data-tab-content="guest">
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label">Vorname</label>
+                    <input type="text" class="input" name="guest_first_name">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Nachname *</label>
+                    <input type="text" class="input" name="guest_last_name" required>
+                  </div>
+                </div>
+                
+                <div class="form-group">
+                  <label class="form-label">E-Mail</label>
+                  <input type="email" class="input" name="guest_email">
+                </div>
+                
+                <div class="form-group">
+                  <label class="form-label">Telefon</label>
+                  <input type="tel" class="input" name="guest_phone">
+                </div>
+                
+                <div class="form-group">
+                  <label class="form-label">Firma</label>
+                  <input type="text" class="input" name="guest_company">
+                </div>
+                
+                <div class="form-group">
+                  <label class="form-label">Adresse</label>
+                  <textarea class="input" name="guest_address" rows="3"></textarea>
+                </div>
+              </div>
+              
+              <!-- Pricing Tab -->
+              <div class="tab-pane hidden" data-tab-content="pricing">
+                <div class="form-group">
+                  <label class="form-label">Kategorie</label>
+                  <input type="text" class="input" name="category" readonly>
+                </div>
+                
+                <div class="form-group">
+                  <label class="form-label">Rate Code</label>
+                  <input type="text" class="input" name="rate_code" readonly>
+                </div>
+                
+                <div class="form-group">
+                  <label class="form-label">Preis pro Nacht</label>
+                  <input type="number" class="input" name="rate_price" step="0.01" min="0">
+                </div>
+                
+                <div class="form-group">
+                  <label class="form-label">Gesamtpreis</label>
+                  <input type="number" class="input" name="total_price" step="0.01" min="0">
+                </div>
+                
+                <div class="form-group">
+                  <label class="form-label">Zahlungsstatus</label>
+                  <select class="select" name="payment_status">
+                    <option value="pending">Ausstehend</option>
+                    <option value="partial">Teilweise bezahlt</option>
+                    <option value="paid">Bezahlt</option>
+                    <option value="refunded">Erstattet</option>
+                  </select>
+                </div>
+              </div>
+              
+              <!-- Notes Tab -->
+              <div class="tab-pane hidden" data-tab-content="notes">
+                <div class="form-group">
+                  <label class="form-label">Interne Notizen</label>
+                  <textarea class="input" name="notes" rows="6" placeholder="Interne Notizen zur Reservierung..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                  <label class="form-label">Gastnotizen</label>
+                  <textarea class="input" name="guest_notes" rows="6" placeholder="Notizen vom Gast oder besondere Wünsche..."></textarea>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -565,7 +690,7 @@
           </button>
           <button type="submit" class="btn primary">
             <i class="fas fa-save"></i>
-            Änderungen speichern
+            Ã„nderungen speichern
           </button>
         </div>
       </form>
@@ -576,7 +701,7 @@
   <div id="modalAvailability" class="modal hidden" aria-hidden="true">
     <div class="modal-content large">
       <div class="modal-header">
-        <h2>Verfügbarkeit</h2>
+        <h2>VerfÃ¼gbarkeit</h2>
         <button class="modal-close">
           <i class="fas fa-times"></i>
         </button>
@@ -720,7 +845,7 @@
       <div class="modal-body">
         <div class="sketch-controls">
           <select class="select hotel-select" id="sketchHotel">
-            <option value="">Hotel wählen...</option>
+            <option value="">Hotel wÃ¤hlen...</option>
           </select>
           <button class="btn primary" data-action="load-sketch">
             <i class="fas fa-map"></i>
@@ -729,7 +854,7 @@
         </div>
         
         <div id="sketchCanvas" class="sketch-canvas">
-          <p class="text-center text-muted">Bitte wählen Sie ein Hotel aus</p>
+          <p class="text-center text-muted">Bitte wÃ¤hlen Sie ein Hotel aus</p>
         </div>
       </div>
     </div>
@@ -743,7 +868,7 @@
           <div style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, var(--primary-500), var(--accent-500)); border-radius: var(--radius-lg); color: white;">
             <i class="fas fa-envelope"></i>
           </div>
-          <h2>Bestätigungs-E-Mail senden</h2>
+          <h2>BestÃ¤tigungs-E-Mail senden</h2>
         </div>
         <button class="modal-close">
           <i class="fas fa-times"></i>
@@ -754,7 +879,7 @@
         <div class="form-group">
           <label class="form-label">
             <i class="fas fa-at" style="margin-right: 0.5rem; color: var(--primary-400);"></i>
-            Empfänger E-Mail
+            EmpfÃ¤nger E-Mail
           </label>
           <input type="email" class="input" id="confirmEmailTo" placeholder="gast@beispiel.de" required>
         </div>
@@ -775,7 +900,7 @@
           <textarea class="input" id="confirmEmailBody" rows="12" style="font-family: 'JetBrains Mono', monospace; font-size: 0.875rem; line-height: 1.6;" required></textarea>
           <p class="text-muted" style="font-size: 0.75rem; margin-top: 0.5rem;">
             <i class="fas fa-info-circle"></i>
-            Sie können die Nachricht beliebig anpassen
+            Sie kÃ¶nnen die Nachricht beliebig anpassen
           </p>
         </div>
       </div>
