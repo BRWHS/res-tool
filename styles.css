@@ -285,6 +285,54 @@ header {
   gap: var(--space-3);
 }
 
+/* Modern Logo Container */
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.logo-icon {
+  width: 40px;
+  height: 40px;
+  filter: drop-shadow(0 4px 12px rgba(99, 102, 241, 0.4));
+  transition: all var(--transition-base);
+}
+
+.logo-icon:hover {
+  filter: drop-shadow(0 6px 16px rgba(99, 102, 241, 0.6));
+  transform: translateY(-2px);
+}
+
+.logo-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.logo-name {
+  font-size: 1.375rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, var(--primary-400) 0%, var(--accent-400) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  line-height: 1;
+  text-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+}
+
+.logo-subtitle {
+  font-size: 0.625rem;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-top: 2px;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Old h1 styles - keep for backwards compatibility */
 .navbar-brand h1 {
   display: flex;
   align-items: center;
@@ -414,18 +462,18 @@ header {
 .btn.primary {
   background: linear-gradient(135deg, var(--primary-600), var(--primary-500));
   color: white;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4), 0 0 0 1px rgba(99, 102, 241, 0.1);
 }
 
 .btn.primary:hover:not(:disabled) {
   background: linear-gradient(135deg, var(--primary-700), var(--primary-600));
-  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.4);
+  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.5), 0 0 0 1px rgba(99, 102, 241, 0.2);
   transform: translateY(-2px);
 }
 
 .btn.primary:active {
   transform: translateY(0);
-  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4);
 }
 
 /* Secondary Button */
@@ -460,13 +508,18 @@ header {
 .btn.danger {
   background: linear-gradient(135deg, var(--danger-600), var(--danger-500));
   color: white;
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4), 0 0 0 1px rgba(239, 68, 68, 0.1);
 }
 
 .btn.danger:hover:not(:disabled) {
   background: linear-gradient(135deg, var(--danger-700), var(--danger-600));
-  box-shadow: 0 8px 24px rgba(239, 68, 68, 0.4);
+  box-shadow: 0 8px 24px rgba(239, 68, 68, 0.5), 0 0 0 1px rgba(239, 68, 68, 0.2);
   transform: translateY(-2px);
+}
+
+.btn.danger:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
 }
 
 /* Button Sizes */
