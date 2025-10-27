@@ -1610,7 +1610,7 @@ class ReservationApp {
     if (reservations.length === 0) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="9" class="text-center text-muted">
+          <td colspan="8" class="text-center text-muted">
             <div style="padding: 2rem;">
               <i class="fas fa-inbox" style="font-size: 3rem; opacity: 0.3;"></i>
               <p style="margin-top: 1rem;">Keine Reservierungen gefunden</p>
@@ -1632,7 +1632,6 @@ class ReservationApp {
       
       return `
         <tr data-id="${r.id}" style="cursor: pointer;">
-          <td></td>
           <td class="res-nr-cell">${r.reservation_number || 'N/A'}</td>
           <td>${hotelName}</td>
           <td>${r.guest_first_name || ''} ${r.guest_last_name || ''}</td>
