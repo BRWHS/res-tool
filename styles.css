@@ -670,26 +670,44 @@ textarea {
   flex-shrink: 0;
   padding: var(--space-5) var(--space-6);
   margin-bottom: 0;
-  background: var(--bg-elevated);
-  border-bottom: 2px solid var(--border-primary);
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.04) 0%, rgba(139, 92, 246, 0.04) 100%);
+  border-bottom: 1px solid rgba(99, 102, 241, 0.2);
   position: relative;
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+}
+
+.sidebar-card .card-head::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--primary-500), transparent);
+  opacity: 0.3;
 }
 
 .sidebar-card .card-head h3 {
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--text-secondary);
+  letter-spacing: 0.1em;
+  color: var(--text-primary);
 }
 
 .sidebar-card .card-head h3 i {
-  width: 28px;
-  height: 28px;
-  font-size: 1rem;
-  background: transparent;
-  box-shadow: none;
+  width: 24px;
+  height: 24px;
+  font-size: 0.9375rem;
+  background: rgba(99, 102, 241, 0.12);
+  box-shadow: 0 0 12px rgba(99, 102, 241, 0.15);
   color: var(--primary-400);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .sidebar-card .activity-feed,
@@ -792,23 +810,27 @@ textarea {
 }
 
 .card-head h3 {
-  font-size: 1rem;
+  font-size: 0.9375rem;
   font-weight: 700;
-  color: var(--text-secondary);
+  color: var(--text-primary);
   margin: 0;
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
 .card-head h3 i {
   color: var(--primary-400);
-  font-size: 1.125rem;
+  font-size: 1.0625rem;
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: rgba(99, 102, 241, 0.12);
+  border-radius: var(--radius-md);
 }
 
 .glass-morphism {
@@ -1015,26 +1037,44 @@ textarea {
 .reservations-block .card-head {
   padding: var(--space-5) var(--space-6);
   margin-bottom: 0;
-  background: var(--bg-elevated);
-  border-bottom: 2px solid var(--border-primary);
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.04) 0%, rgba(139, 92, 246, 0.04) 100%);
+  border-bottom: 1px solid rgba(99, 102, 241, 0.2);
   position: relative;
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+}
+
+.reservations-block .card-head::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--primary-500), transparent);
+  opacity: 0.3;
 }
 
 .reservations-block .card-head h3 {
-  font-size: 1rem;
+  font-size: 0.9375rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--text-secondary);
+  letter-spacing: 0.1em;
+  color: var(--text-primary);
 }
 
 .reservations-block .card-head h3 i {
-  width: 32px;
-  height: 32px;
-  font-size: 1.125rem;
-  background: transparent;
-  box-shadow: none;
+  width: 28px;
+  height: 28px;
+  font-size: 1.0625rem;
+  background: rgba(99, 102, 241, 0.12);
+  box-shadow: 0 0 12px rgba(99, 102, 241, 0.15);
   color: var(--primary-400);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .reservations-block .filters-grid {
@@ -1424,25 +1464,44 @@ tbody td .pill {
 .operations-widget .card-head {
   padding: var(--space-5) var(--space-6);
   margin-bottom: 0;
-  background: var(--bg-elevated);
-  border-bottom: 2px solid var(--border-primary);
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.04) 0%, rgba(139, 92, 246, 0.04) 100%);
+  border-bottom: 1px solid rgba(99, 102, 241, 0.2);
+  position: relative;
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+}
+
+.operations-widget .card-head::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--primary-500), transparent);
+  opacity: 0.3;
 }
 
 .operations-widget .card-head h3 {
-  font-size: 1rem;
+  font-size: 0.9375rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--text-secondary);
+  letter-spacing: 0.1em;
+  color: var(--text-primary);
 }
 
 .operations-widget .card-head h3 i {
-  width: 32px;
-  height: 32px;
-  font-size: 1.125rem;
-  background: transparent;
-  box-shadow: none;
+  width: 28px;
+  height: 28px;
+  font-size: 1.0625rem;
+  background: rgba(99, 102, 241, 0.12);
+  box-shadow: 0 0 12px rgba(99, 102, 241, 0.15);
   color: var(--primary-400);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .operations-grid {
@@ -1598,10 +1657,16 @@ tbody td .pill {
   background: linear-gradient(135deg, var(--primary-600), var(--primary-500));
   color: white;
   border: none;
-  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.35), 0 0 0 1px rgba(99, 102, 241, 0.1);
   font-family: 'JetBrains Mono', monospace;
-  min-width: 32px;
+  min-width: 36px;
   justify-content: center;
+  transition: all var(--transition-fast);
+}
+
+.badge:hover {
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.45), 0 0 0 1px rgba(99, 102, 241, 0.2);
+  transform: scale(1.05);
 }
 
 .pill {
