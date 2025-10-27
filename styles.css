@@ -639,7 +639,7 @@ textarea {
 /* 3-Column Layout: Left Sidebar - Main Content - Right Sidebar */
 .main-layout {
   display: grid;
-  grid-template-columns: 280px 1fr 280px;
+  grid-template-columns: 320px 1fr 320px;
   gap: var(--space-6);
   align-items: stretch; /* Alle Spalten gleich hoch */
 }
@@ -647,7 +647,7 @@ textarea {
 .main-content {
   display: flex;
   flex-direction: column;
-  gap: var(--space-6);
+  gap: var(--space-4);
   min-width: 0; /* Prevents grid blowout */
 }
 
@@ -710,7 +710,7 @@ textarea {
   background: var(--bg-surface);
   border: 1px solid var(--border-primary);
   border-radius: var(--radius-xl);
-  padding: var(--space-6);
+  padding: var(--space-5);
   transition: all var(--transition-base);
   position: relative;
   overflow: hidden;
@@ -746,7 +746,7 @@ textarea {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: var(--space-6);
+  margin-bottom: var(--space-4);
 }
 
 .card-head h3 {
@@ -781,8 +781,8 @@ textarea {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-3);
-  padding: var(--space-4);
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
   background: var(--glass-bg);
   border: 1px solid var(--border-primary);
   border-radius: var(--radius-lg);
@@ -817,39 +817,47 @@ textarea {
 .yoy-item-info {
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
+  gap: 0.25rem;
   flex: 1;
   min-width: 0; /* Important for text-overflow */
 }
 
 .yoy-item-name {
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: var(--text-primary);
   letter-spacing: -0.01em;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  word-break: break-word;
+}
+
+.yoy-item-meta {
+  font-size: 0.625rem;
+  color: var(--text-tertiary);
+  font-family: 'JetBrains Mono', monospace;
+  opacity: 0.8;
+  line-height: 1.2;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.yoy-item-meta {
-  font-size: 0.6875rem;
-  color: var(--text-tertiary);
-  font-family: 'JetBrains Mono', monospace;
-  opacity: 0.8;
-  white-space: nowrap;
-}
-
 .yoy-item-trend {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-2) var(--space-4);
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-lg);
-  font-size: 0.9375rem;
+  font-size: 0.8125rem;
   font-weight: 700;
   font-family: 'JetBrains Mono', monospace;
   transition: all var(--transition-base);
+  flex-shrink: 0;
 }
 
 .yoy-item-trend.up {
@@ -883,7 +891,7 @@ textarea {
 }
 
 .yoy-item-trend i {
-  font-size: 1rem;
+  font-size: 0.875rem;
   animation: pulse 2s ease-in-out infinite;
 }
 
@@ -905,8 +913,8 @@ textarea {
 .kpi-section {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: var(--space-6);
-  margin-bottom: var(--space-6);
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
 }
 
 .reservations-block {
@@ -922,14 +930,14 @@ textarea {
 }
 
 .reservations-block .card-head {
-  padding: var(--space-6);
+  padding: var(--space-5) var(--space-6);
   margin-bottom: 0;
   background: var(--bg-elevated);
   border-bottom: 1px solid var(--border-primary);
 }
 
 .reservations-block .filters-grid {
-  padding: var(--space-6);
+  padding: var(--space-5) var(--space-6);
   margin-bottom: 0;
   background: var(--bg-surface);
   border-bottom: 1px solid var(--border-primary);
@@ -937,8 +945,8 @@ textarea {
 
 .filters-grid {
   display: grid;
-  grid-template-columns: 2fr 1.5fr 1.5fr 1fr 1fr;
-  gap: var(--space-4);
+  grid-template-columns: 2fr 1.5fr 1.5fr 1fr 1fr auto;
+  gap: var(--space-3);
   align-items: end;
 }
 
@@ -958,12 +966,9 @@ textarea {
 
 .filter-actions {
   display: flex;
-  gap: var(--space-3);
-  grid-column: 1 / -1;
-  justify-content: flex-end;
-  padding-top: var(--space-4);
-  border-top: 1px solid var(--border-primary);
-  margin-top: var(--space-4);
+  gap: var(--space-2);
+  align-items: end;
+  padding-bottom: 0;
 }
 
 .kpis {
@@ -1043,13 +1048,13 @@ textarea {
 .activity-feed {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--space-2);
 }
 
 .activity-item {
   display: flex;
   gap: var(--space-3);
-  padding: var(--space-4);
+  padding: var(--space-3);
   background: var(--glass-bg);
   border: 1px solid var(--border-primary);
   border-radius: var(--radius-lg);
@@ -1082,8 +1087,8 @@ textarea {
 }
 
 .activity-icon {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1101,7 +1106,7 @@ textarea {
 
 .activity-icon i {
   color: white;
-  font-size: 1rem;
+  font-size: 0.875rem;
 }
 
 .activity-content {
@@ -1110,20 +1115,26 @@ textarea {
 }
 
 .activity-title {
-  font-size: 0.9375rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: var(--text-primary);
-  margin-bottom: var(--space-1);
-  white-space: nowrap;
+  margin-bottom: 0.25rem;
+  line-height: 1.3;
   overflow: hidden;
   text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 
 .activity-meta {
-  font-size: 0.75rem;
+  font-size: 0.6875rem;
   color: var(--text-tertiary);
   font-family: 'JetBrains Mono', monospace;
   opacity: 0.8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* ================================================
@@ -1886,7 +1897,7 @@ tbody td .pill {
 
 @media (max-width: 1400px) {
   .main-layout {
-    grid-template-columns: 240px 1fr 240px;
+    grid-template-columns: 280px 1fr 280px;
     gap: var(--space-4);
   }
 }
@@ -1932,11 +1943,17 @@ tbody td .pill {
   }
   
   .filters-grid {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr) auto;
+  }
+  
+  .filter-group:nth-child(1) {
+    grid-column: 1 / -1;
   }
   
   .filter-actions {
-    grid-column: 1 / -1;
+    grid-column: 3;
+    grid-row: 2;
+    justify-content: flex-end;
   }
 }
 
