@@ -863,6 +863,9 @@ class ReservationApp {
         case 'new-reservation':
           this.openNewReservationModal();
           break;
+        case 'group-reservation':
+          this.openGroupReservationModal();
+          break;
         case 'refresh':
           await this.loadReservations();
           break;
@@ -902,6 +905,11 @@ class ReservationApp {
       console.error('Action failed:', error);
       this.ui.showToast('Action failed: ' + error.message, 'error');
     }
+  }
+  
+  openGroupReservationModal() {
+    this.ui.showToast('GruppenResa Feature coming soon...', 'info');
+    // TODO: Implement Group Reservation Modal
   }
 
   // =============== WIZARD MANAGEMENT ===============
