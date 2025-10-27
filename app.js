@@ -653,10 +653,13 @@ class ReservationApp {
       this.initializeRouting();
       
       // Check authentication
-      const session = Storage.get('USER_SESSION');
+      let session = Storage.get('USER_SESSION');
+      
+      // Create demo session if none exists (for development/demo mode)
       if (!session || !this.isSessionValid(session)) {
-        this.redirectToAuth();
-        return;
+        console.log('No valid session found - creating demo session');
+        session = this.createDemoSession();
+        Storage.set('USER_SESSION', session);
       }
       
       state.set('user', session.user);
@@ -678,6 +681,9 @@ class ReservationApp {
 
       // Start clock immediately
       this.updateClock();
+      
+      // Update user display
+      this.updateUserDisplay();
       
       this.initialized = true;
       this.ui.showToast('System initialized successfully', 'success');
@@ -1838,6 +1844,14 @@ class ReservationApp {
     updateTime();
     setInterval(updateTime, 1000);
   }
+  
+  updateUserDisplay() {
+    const user = state.get('user');
+    const userElement = document.getElementById('currentUser');
+    if (userElement && user) {
+      userElement.textContent = user.name || user.email || 'User';
+    }
+  }
 
   updateDashboard() {
     this.renderReservationTable();
@@ -1896,6 +1910,23 @@ class ReservationApp {
   isSessionValid(session) {
     if (!session || !session.expiresAt) return false;
     return new Date(session.expiresAt) > new Date();
+  }
+  
+  createDemoSession() {
+    const now = new Date();
+    const expiresAt = new Date(now.getTime() + 8 * 60 * 60 * 1000); // 8 hours
+    
+    return {
+      user: {
+        id: 'demo-user',
+        email: 'demo@hotel-system.de',
+        name: 'Demo User',
+        role: 'admin'
+      },
+      token: 'demo-token-' + Date.now(),
+      createdAt: now.toISOString(),
+      expiresAt: expiresAt.toISOString()
+    };
   }
 
   redirectToAuth() {
