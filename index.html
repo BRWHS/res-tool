@@ -38,10 +38,37 @@
   <header>
     <nav class="navbar">
       <div class="navbar-brand">
-        <h1>
-          <i class="fas fa-hotel"></i>
-          <span>Hasco</span>
-        </h1>
+        <div class="logo-container">
+          <svg class="logo-icon" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+            <!-- Modern geometric hotel icon -->
+            <defs>
+              <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1" />
+                <stop offset="100%" style="stop-color:#8b5cf6;stop-opacity:1" />
+              </linearGradient>
+            </defs>
+            <!-- Building base -->
+            <rect x="8" y="14" width="32" height="28" rx="2" fill="url(#logoGradient)" opacity="0.9"/>
+            <!-- Windows pattern -->
+            <rect x="12" y="18" width="4" height="4" rx="1" fill="white" opacity="0.3"/>
+            <rect x="22" y="18" width="4" height="4" rx="1" fill="white" opacity="0.3"/>
+            <rect x="32" y="18" width="4" height="4" rx="1" fill="white" opacity="0.3"/>
+            <rect x="12" y="26" width="4" height="4" rx="1" fill="white" opacity="0.3"/>
+            <rect x="22" y="26" width="4" height="4" rx="1" fill="white" opacity="0.3"/>
+            <rect x="32" y="26" width="4" height="4" rx="1" fill="white" opacity="0.3"/>
+            <rect x="12" y="34" width="4" height="4" rx="1" fill="white" opacity="0.3"/>
+            <rect x="22" y="34" width="4" height="4" rx="1" fill="white" opacity="0.3"/>
+            <rect x="32" y="34" width="4" height="4" rx="1" fill="white" opacity="0.3"/>
+            <!-- Roof accent -->
+            <path d="M 4 14 L 24 4 L 44 14 L 40 14 L 24 7 L 8 14 Z" fill="url(#logoGradient)"/>
+            <!-- Door -->
+            <rect x="20" y="34" width="8" height="8" rx="1" fill="white" opacity="0.5"/>
+          </svg>
+          <div class="logo-text">
+            <span class="logo-name">Hasco</span>
+            <span class="logo-subtitle">Reservation System</span>
+          </div>
+        </div>
       </div>
 
       <div class="toolbar">
@@ -49,7 +76,7 @@
           <i class="fas fa-plus"></i>
           Neue Reservierung
         </button>
-        <button class="btn secondary" data-action="group-reservation">
+        <button class="btn danger" data-action="group-reservation">
           <i class="fas fa-users"></i>
           GruppenResa
         </button>
