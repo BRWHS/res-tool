@@ -8,8 +8,8 @@
 const AUTH_CONFIG = {
   SESSION_DURATION: 8 * 60 * 60 * 1000, // 8 hours
   REMEMBER_DURATION: 30 * 24 * 60 * 60 * 1000, // 30 days
-  MAX_LOGIN_ATTEMPTS: 5,
-  LOCKOUT_DURATION: 15 * 60 * 1000, // 15 minutes
+  MAX_LOGIN_ATTEMPTS: 20, // Increased for development
+  LOCKOUT_DURATION: 2 * 60 * 1000, // 2 minutes (reduced for development)
   PASSWORD_MIN_LENGTH: 8,
   REQUIRE_2FA: false,
   SESSION_KEY: 'hrs_v2_session',
@@ -133,6 +133,58 @@ class AuthManager {
         throw new Error('Invalid email format');
       }
 
+      // ============ DEMO MODE - Direct login without Supabase ============
+      const DEMO_ACCOUNTS = {
+        'demo@hotel.de': {
+          password: 'Demo1234!',
+          name: 'Demo User',
+          role: 'admin'
+        },
+        'test@hotel.de': {
+          password: 'Test1234!',
+          name: 'Test User',
+          role: 'user'
+        }
+      };
+
+      // Check if this is a demo account
+      if (DEMO_ACCOUNTS[email.toLowerCase()]) {
+        const demoAccount = DEMO_ACCOUNTS[email.toLowerCase()];
+        
+        if (password === demoAccount.password) {
+          console.log('✅ Demo login successful (bypassing Supabase)');
+          
+          // Create demo session
+          const duration = remember ? AUTH_CONFIG.REMEMBER_DURATION : AUTH_CONFIG.SESSION_DURATION;
+          const session = {
+            user: {
+              id: 'demo-' + Date.now(),
+              email: email.toLowerCase(),
+              name: demoAccount.name,
+              role: demoAccount.role
+            },
+            token: 'demo-token-' + Date.now(),
+            expiresAt: new Date(Date.now() + duration).toISOString(),
+            createdAt: new Date().toISOString(),
+            remember: remember,
+            isDemo: true
+          };
+
+          // Save session
+          this.saveSession(session);
+          this.clearAttempts();
+
+          return { success: true, user: session.user };
+        } else {
+          this.recordFailedAttempt();
+          throw new Error('Invalid credentials');
+        }
+      }
+      // ============ END DEMO MODE ============
+
+      // Regular Supabase authentication for non-demo accounts
+      console.log('🔐 Attempting Supabase authentication...');
+      
       // Initialize Supabase
       const { createClient } = window.supabase;
       const supabaseClient = createClient(
