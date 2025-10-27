@@ -96,8 +96,23 @@
   <!-- Main Content -->
   <main class="container">
     
-    <!-- Main Layout with Sidebar -->
+    <!-- 3-Column Layout: Left Sidebar - Main Content - Right Sidebar -->
     <div class="main-layout">
+      
+      <!-- Left Sidebar: YoY Performance -->
+      <aside class="sidebar-left">
+        <article class="card sidebar-card">
+          <div class="card-head">
+            <h3><i class="fas fa-chart-line"></i> Performance YoY</h3>
+            <button class="btn-icon" data-action="refresh-yoy">
+              <i class="fas fa-sync"></i>
+            </button>
+          </div>
+          <div id="yoyPerformance" class="yoy-performance">
+            <div class="skeleton" style="height: 400px;"></div>
+          </div>
+        </article>
+      </aside>
       
       <!-- Main Content Area -->
       <div class="main-content">
@@ -158,35 +173,6 @@
                 <div class="value" id="nOcc">0%</div>
                 <div class="label">Ø Auslastung</div>
               </div>
-            </div>
-          </article>
-        </section>
-
-        <!-- Performance Widgets Row -->
-        <section class="performance-widgets">
-          <!-- Year-over-Year Performance -->
-          <article class="card yoy-card">
-            <div class="card-head">
-              <h3><i class="fas fa-chart-line"></i> Performance YoY</h3>
-              <button class="btn-icon" data-action="refresh-yoy">
-                <i class="fas fa-sync"></i>
-              </button>
-            </div>
-            <div id="yoyPerformance" class="yoy-performance">
-              <div class="skeleton" style="height: 200px;"></div>
-            </div>
-          </article>
-          
-          <!-- Recent Activity -->
-          <article class="card activity-card">
-            <div class="card-head">
-              <h3><i class="fas fa-history"></i> Recent Activity</h3>
-              <button class="btn-icon" data-action="refresh-activity">
-                <i class="fas fa-sync"></i>
-              </button>
-            </div>
-            <div id="activityFeed" class="activity-feed">
-              <div class="skeleton" style="height: 200px;"></div>
             </div>
           </article>
         </section>
@@ -278,6 +264,23 @@
             </div>
           </div>
         </section>
+        
+      </div>
+      
+      <!-- Right Sidebar: Recent Activity -->
+      <aside class="sidebar-right">
+        <article class="card sidebar-card">
+          <div class="card-head">
+            <h3><i class="fas fa-history"></i> Recent Activity</h3>
+            <button class="btn-icon" data-action="refresh-activity">
+              <i class="fas fa-sync"></i>
+            </button>
+          </div>
+          <div id="activityFeed" class="activity-feed">
+            <div class="skeleton" style="height: 400px;"></div>
+          </div>
+        </article>
+      </aside>
       
     </div>
 
