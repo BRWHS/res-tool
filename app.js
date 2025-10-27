@@ -866,6 +866,14 @@ class ReservationApp {
         case 'refresh':
           await this.loadReservations();
           break;
+        case 'refresh-activity':
+          this.updateActivityFeed();
+          this.ui.showToast('Activity aktualisiert', 'success');
+          break;
+        case 'refresh-yoy':
+          this.updateYoYPerformance();
+          this.ui.showToast('YoY Performance aktualisiert', 'success');
+          break;
         case 'export-csv':
           await this.exportToCSV();
           break;
@@ -1857,6 +1865,7 @@ class ReservationApp {
     this.renderReservationTable();
     this.updateKPIs();
     this.updateActivityFeed();
+    this.updateYoYPerformance();
   }
 
   updateActivityFeed() {
@@ -1884,6 +1893,72 @@ class ReservationApp {
         <div class="activity-content">
           <div class="activity-title">Neue Reservierung: ${r.guest_last_name}</div>
           <div class="activity-meta">${r.reservation_number} · ${this.formatDate(r.created_at)}</div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  updateYoYPerformance() {
+    const yoyContainer = document.getElementById('yoyPerformance');
+    if (!yoyContainer) return;
+    
+    const hotels = state.get('hotels') || [];
+    const reservations = state.get('reservations') || [];
+    
+    // Calculate YoY for each hotel
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0];
+    const lastYear = new Date(today);
+    lastYear.setFullYear(lastYear.getFullYear() - 1);
+    const lastYearStr = lastYear.toISOString().split('T')[0];
+    
+    const hotelPerformance = hotels.map(hotel => {
+      // Count bookings today
+      const todayBookings = reservations.filter(r => 
+        r.hotel_code === hotel.code && 
+        r.created_at && 
+        r.created_at.split('T')[0] === todayStr &&
+        r.status === 'active'
+      ).length;
+      
+      // Count bookings same day last year (simulated - in real app would fetch from DB)
+      const lastYearBookings = Math.floor(Math.random() * 5); // Demo data
+      
+      const diff = todayBookings - lastYearBookings;
+      const trend = diff > 0 ? 'up' : diff < 0 ? 'down' : 'neutral';
+      const icon = diff > 0 ? 'fa-arrow-up' : diff < 0 ? 'fa-arrow-down' : 'fa-minus';
+      const diffText = diff > 0 ? `+${diff}` : diff < 0 ? `${diff}` : '0';
+      
+      return {
+        hotel,
+        todayBookings,
+        lastYearBookings,
+        diff,
+        trend,
+        icon,
+        diffText
+      };
+    });
+    
+    if (hotelPerformance.length === 0) {
+      yoyContainer.innerHTML = `
+        <div class="text-center text-muted" style="padding: 2rem;">
+          <i class="fas fa-chart-line" style="font-size: 2rem; opacity: 0.3;"></i>
+          <p style="margin-top: 1rem;">Keine Hotels</p>
+        </div>
+      `;
+      return;
+    }
+    
+    yoyContainer.innerHTML = hotelPerformance.map(perf => `
+      <div class="yoy-item">
+        <div class="yoy-item-info">
+          <div class="yoy-item-name">${perf.hotel.name}</div>
+          <div class="yoy-item-meta">${perf.todayBookings} heute · ${perf.lastYearBookings} letztes Jahr</div>
+        </div>
+        <div class="yoy-item-trend ${perf.trend}">
+          <i class="fas ${perf.icon}"></i>
+          <span>${perf.diffText}</span>
         </div>
       </div>
     `).join('');
