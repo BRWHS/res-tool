@@ -572,6 +572,54 @@ textarea {
   z-index: var(--z-base);
 }
 
+/* Main Layout with Sidebar */
+.main-layout {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: var(--space-6);
+  align-items: start;
+}
+
+.main-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.sidebar {
+  position: sticky;
+  top: calc(var(--space-8) + 80px);
+}
+
+.sidebar-card {
+  max-height: calc(100vh - 180px);
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-card .activity-feed {
+  flex: 1;
+  overflow-y: auto;
+  max-height: calc(100vh - 280px);
+}
+
+.sidebar-card .activity-feed::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar-card .activity-feed::-webkit-scrollbar-track {
+  background: var(--bg-surface);
+}
+
+.sidebar-card .activity-feed::-webkit-scrollbar-thumb {
+  background: var(--bg-elevated);
+  border-radius: var(--radius-full);
+}
+
+.sidebar-card .activity-feed::-webkit-scrollbar-thumb:hover {
+  background: var(--bg-overlay);
+}
+
 /* ================================================
    CARDS
    ================================================ */
@@ -609,18 +657,46 @@ textarea {
 }
 
 /* ================================================
-   DASHBOARD
+   DASHBOARD & KPIs
    ================================================ */
 
-.dashboard-grid {
+.kpi-section {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: var(--space-6);
-  margin-bottom: var(--space-8);
+  margin-bottom: var(--space-6);
 }
 
-.dashboard-grid > article:last-child {
+.reservations-block {
+  margin-top: var(--space-6);
+}
+
+.reservations-block .card-head {
+  margin-bottom: var(--space-6);
+}
+
+.reservations-block .filters-grid {
+  margin-bottom: var(--space-6);
+  padding-bottom: var(--space-6);
+  border-bottom: 1px solid var(--border-primary);
+}
+
+.filters-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-4);
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.filter-actions {
+  display: flex;
+  gap: var(--space-3);
   grid-column: 1 / -1;
+  justify-content: flex-end;
 }
 
 .kpis {
@@ -714,32 +790,6 @@ textarea {
 .activity-meta {
   font-size: 0.75rem;
   color: var(--text-tertiary);
-}
-
-/* ================================================
-   FILTERS SECTION
-   ================================================ */
-
-.filters-section {
-  margin-bottom: var(--space-8);
-}
-
-.filters-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: var(--space-4);
-}
-
-.filter-group {
-  display: flex;
-  flex-direction: column;
-}
-
-.filter-actions {
-  display: flex;
-  gap: var(--space-3);
-  grid-column: 1 / -1;
-  justify-content: flex-end;
 }
 
 /* ================================================
@@ -1420,12 +1470,24 @@ tbody td {
     padding: var(--space-6);
   }
   
-  .dashboard-grid {
+  .main-layout {
     grid-template-columns: 1fr;
   }
   
-  .dashboard-grid > article:last-child {
-    grid-column: 1;
+  .sidebar {
+    position: static;
+  }
+  
+  .sidebar-card {
+    max-height: 500px;
+  }
+  
+  .sidebar-card .activity-feed {
+    max-height: 400px;
+  }
+  
+  .kpi-section {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -1450,11 +1512,19 @@ tbody td {
     padding: var(--space-4);
   }
   
-  .filters-grid {
+  .main-layout {
     grid-template-columns: 1fr;
   }
   
-  .quick-actions {
+  .sidebar {
+    position: static;
+  }
+  
+  .kpi-section {
+    grid-template-columns: 1fr;
+  }
+  
+  .filters-grid {
     grid-template-columns: 1fr;
   }
   
