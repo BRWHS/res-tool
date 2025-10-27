@@ -125,9 +125,15 @@
         <section class="kpi-section">
           
           <!-- Today's Performance -->
-          <article class="card">
+          <article class="card performance-card">
             <div class="card-head">
-              <h3>Performance - Heute</h3>
+              <div class="performance-title">
+                <i class="fas fa-calendar-day"></i>
+                <div>
+                  <h3>Heute</h3>
+                  <span class="subtitle">Aktuelle Performance</span>
+                </div>
+              </div>
               <select class="select sm hotel-select" data-filter="hotel-today">
                 <option value="">Alle Hotels</option>
               </select>
@@ -135,7 +141,7 @@
             <div class="kpis">
               <div class="kpi">
                 <div class="value" id="tBookings">0</div>
-                <div class="label">Neue Buchungen</div>
+                <div class="label">Buchungen</div>
               </div>
               <div class="kpi">
                 <div class="value" id="tRevenue">0 €</div>
@@ -153,9 +159,15 @@
           </article>
 
           <!-- Next 7 Days Performance -->
-          <article class="card">
+          <article class="card performance-card">
             <div class="card-head">
-              <h3>Performance - Nächste 7 Tage</h3>
+              <div class="performance-title">
+                <i class="fas fa-calendar-week"></i>
+                <div>
+                  <h3>Nächste 7 Tage</h3>
+                  <span class="subtitle">Forecast & Prognose</span>
+                </div>
+              </div>
               <select class="select sm hotel-select" data-filter="hotel-next">
                 <option value="">Alle Hotels</option>
               </select>
@@ -163,19 +175,19 @@
             <div class="kpis">
               <div class="kpi">
                 <div class="value" id="nBookings">0</div>
-                <div class="label">Erwartete Ankünfte</div>
+                <div class="label">Ankünfte</div>
               </div>
               <div class="kpi">
                 <div class="value" id="nRevenue">0 €</div>
-                <div class="label">Erwarteter Umsatz</div>
+                <div class="label">Umsatz</div>
               </div>
               <div class="kpi">
                 <div class="value" id="nADR">0 €</div>
-                <div class="label">ADR (Forecast)</div>
+                <div class="label">ADR</div>
               </div>
               <div class="kpi">
                 <div class="value" id="nOcc">0%</div>
-                <div class="label">Ø Auslastung</div>
+                <div class="label">Auslastung</div>
               </div>
             </div>
           </article>
