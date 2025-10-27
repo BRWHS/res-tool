@@ -1211,9 +1211,8 @@ textarea {
    ================================================ */
 
 .table-wrapper {
-  overflow-x: auto; /* Erlaubt horizontales Scrollen falls nötig */
+  overflow-x: auto;
   background: var(--bg-surface);
-  margin-left: 3px; /* Macht Platz für den linken Indikator */
 }
 
 table {
@@ -1240,31 +1239,15 @@ thead th {
 
 tbody tr {
   border-bottom: 1px solid var(--border-primary);
+  border-left: 3px solid transparent;
   transition: all var(--transition-fast);
   cursor: pointer;
-  position: relative;
-}
-
-tbody tr::before {
-  content: '';
-  position: absolute;
-  left: -3px; /* Verschiebt den Indikator nach links außerhalb der Tabelle */
-  top: 0;
-  bottom: 0;
-  width: 3px;
-  background: linear-gradient(180deg, var(--primary-500), var(--accent-500));
-  transform: scaleY(0);
-  transition: transform var(--transition-base);
-  z-index: 1; /* Stellt sicher dass der Indikator über dem Hintergrund liegt */
 }
 
 tbody tr:hover {
   background: rgba(99, 102, 241, 0.05);
   border-color: var(--primary-500);
-}
-
-tbody tr:hover::before {
-  transform: scaleY(1);
+  border-left-color: var(--primary-500);
 }
 
 tbody tr:last-child {
