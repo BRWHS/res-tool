@@ -269,8 +269,17 @@ class API {
   async getReservations(filters = {}) {
     try {
       if (!this.supabase) {
-        // Demo mode - return sample data
-        return this.getDemoReservations();
+        // Demo mode - return data from localStorage or sample data
+        let reservations = this.getStoredReservations();
+        
+        // If no stored reservations, use demo data
+        if (!reservations || reservations.length === 0) {
+          reservations = this.getDemoReservations();
+          this.saveReservationsToStorage(reservations);
+        }
+        
+        // Apply filters
+        return this.applyFiltersToReservations(reservations, filters);
       }
 
       let query = this.supabase
@@ -306,8 +315,64 @@ class API {
       return data || [];
     } catch (error) {
       console.error('Failed to get reservations:', error);
-      return this.getDemoReservations();
+      return this.getStoredReservations() || this.getDemoReservations();
     }
+  }
+
+  getStoredReservations() {
+    try {
+      const stored = localStorage.getItem('hrs_v2_demo_reservations');
+      return stored ? JSON.parse(stored) : null;
+    } catch (error) {
+      console.error('Failed to get stored reservations:', error);
+      return null;
+    }
+  }
+
+  saveReservationsToStorage(reservations) {
+    try {
+      localStorage.setItem('hrs_v2_demo_reservations', JSON.stringify(reservations));
+    } catch (error) {
+      console.error('Failed to save reservations to storage:', error);
+    }
+  }
+
+  applyFiltersToReservations(reservations, filters) {
+    let filtered = [...reservations];
+
+    // Sort by created_at descending
+    filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+    // Apply status filter
+    if (filters.status && filters.status !== 'all') {
+      filtered = filtered.filter(r => r.status === filters.status);
+    }
+
+    // Apply hotel filter
+    if (filters.hotel) {
+      filtered = filtered.filter(r => r.hotel_code === filters.hotel);
+    }
+
+    // Apply date filters
+    if (filters.dateFrom) {
+      filtered = filtered.filter(r => r.arrival >= filters.dateFrom);
+    }
+
+    if (filters.dateTo) {
+      filtered = filtered.filter(r => r.departure <= filters.dateTo);
+    }
+
+    // Apply search filter
+    if (filters.search) {
+      const searchLower = filters.search.toLowerCase();
+      filtered = filtered.filter(r => 
+        (r.guest_last_name && r.guest_last_name.toLowerCase().includes(searchLower)) ||
+        (r.guest_first_name && r.guest_first_name.toLowerCase().includes(searchLower)) ||
+        (r.reservation_number && r.reservation_number.toLowerCase().includes(searchLower))
+      );
+    }
+
+    return filtered;
   }
 
   getDemoReservations() {
@@ -430,12 +495,19 @@ class API {
   async createReservation(data) {
     try {
       if (!this.supabase) {
-        // Demo mode - simulate creation
-        return {
+        // Demo mode - simulate creation and save to localStorage
+        const newReservation = {
           ...data,
           id: Date.now(),
           created_at: new Date().toISOString()
         };
+        
+        // Get existing reservations and add new one
+        const reservations = this.getStoredReservations() || [];
+        reservations.unshift(newReservation);
+        this.saveReservationsToStorage(reservations);
+        
+        return newReservation;
       }
 
       const { data: reservation, error } = await this.supabase
@@ -456,7 +528,16 @@ class API {
   async updateReservation(id, updates) {
     try {
       if (!this.supabase) {
-        // Demo mode
+        // Demo mode - update in localStorage
+        const reservations = this.getStoredReservations() || [];
+        const index = reservations.findIndex(r => r.id === id || r.id === Number(id));
+        
+        if (index !== -1) {
+          reservations[index] = { ...reservations[index], ...updates };
+          this.saveReservationsToStorage(reservations);
+          return reservations[index];
+        }
+        
         return { id, ...updates };
       }
 
