@@ -1242,5 +1242,40 @@ tbody tr:hover td {
   25% { transform: translateX(-5px); }
   75% { transform: translateX(5px); }
 }
+/* Badge Styles */
+.badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  color: var(--primary-light);
+}
+
+.category-amenities,
+.rate-includes {
+  padding-top: var(--spacing-sm);
+  border-top: 1px solid var(--glass-border);
+}
+
+/* Glass Morphism Enhancement */
+.glass-morphism {
+  background: rgba(255, 255, 255, 0.03) !important;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+/* Animation für Auswahl */
+@keyframes selectPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+.category-card.selected,
+.rate-card.selected {
+  animation: selectPulse 0.3s ease-out;
+}
 
 /* =============== END OF STYLES =============== */
