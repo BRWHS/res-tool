@@ -206,7 +206,14 @@ class API {
 
   async initSupabase() {
     try {
-      const { createClient } = supabase;
+      // Check if Supabase library is loaded
+      if (typeof window.supabase === 'undefined') {
+        console.warn('Supabase library not loaded - running in Demo Mode');
+        this.updateConnectionStatus('SB', false);
+        return null;
+      }
+      
+      const { createClient } = window.supabase;
       this.supabase = createClient(
         this.config.API.SUPABASE_URL,
         this.config.API.SUPABASE_KEY
@@ -219,14 +226,14 @@ class API {
       
       if (error) throw error;
       
-      console.log('Supabase connected successfully');
+      console.log('✅ Supabase connected successfully');
       this.updateConnectionStatus('SB', true);
       
       return this.supabase;
     } catch (error) {
-      console.error('Supabase connection failed:', error);
+      console.warn('⚠️ Supabase connection failed - running in Demo Mode:', error.message);
       this.updateConnectionStatus('SB', false);
-      throw error;
+      return null;
     }
   }
 
@@ -305,6 +312,14 @@ class API {
 
   getDemoReservations() {
     // Return demo data if Supabase is not available
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const nextWeek = new Date(today);
+    nextWeek.setDate(nextWeek.getDate() + 7);
+    
+    const formatDate = (date) => date.toISOString().split('T')[0];
+    
     return [
       {
         id: 1,
@@ -312,13 +327,20 @@ class API {
         hotel_code: 'MA7-M-DOR',
         guest_first_name: 'Max',
         guest_last_name: 'Mustermann',
-        arrival: '2024-11-15',
-        departure: '2024-11-17',
+        guest_email: 'max.mustermann@email.com',
+        guest_phone: '+49 89 12345678',
+        arrival: formatDate(today),
+        departure: formatDate(new Date(today.getTime() + 2 * 24 * 60 * 60 * 1000)),
+        guests_adults: 2,
+        guests_children: 0,
         category: 'SUP',
         rate_code: 'STD',
         rate_price: 119,
+        total_price: 238,
         status: 'active',
-        created_at: '2024-11-10T10:00:00Z'
+        payment_status: 'pending',
+        notes: 'Früher Check-in gewünscht',
+        created_at: new Date(today.getTime() - 5 * 24 * 60 * 60 * 1000).toISOString()
       },
       {
         id: 2,
@@ -326,13 +348,81 @@ class API {
         hotel_code: 'RES-HD-ALT',
         guest_first_name: 'Anna',
         guest_last_name: 'Schmidt',
-        arrival: '2024-11-20',
-        departure: '2024-11-22',
+        guest_email: 'anna.schmidt@example.de',
+        guest_phone: '+49 621 987654',
+        arrival: formatDate(tomorrow),
+        departure: formatDate(new Date(tomorrow.getTime() + 3 * 24 * 60 * 60 * 1000)),
+        guests_adults: 2,
+        guests_children: 1,
         category: 'DLX',
         rate_code: 'FLEX',
         rate_price: 159,
+        total_price: 477,
         status: 'active',
-        created_at: '2024-11-11T14:30:00Z'
+        payment_status: 'paid',
+        guest_company: 'Schmidt GmbH',
+        created_at: new Date(today.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        id: 3,
+        reservation_number: 'RES-2024-003',
+        hotel_code: 'MA7-M-DOR',
+        guest_first_name: 'Thomas',
+        guest_last_name: 'Weber',
+        guest_email: 'thomas.weber@business.com',
+        guest_phone: '+49 89 555-1234',
+        arrival: formatDate(nextWeek),
+        departure: formatDate(new Date(nextWeek.getTime() + 5 * 24 * 60 * 60 * 1000)),
+        guests_adults: 1,
+        guests_children: 0,
+        category: 'EXE',
+        rate_code: 'CORP',
+        rate_price: 189,
+        total_price: 945,
+        status: 'active',
+        payment_status: 'partial',
+        guest_company: 'TechCorp AG',
+        notes: 'Business Gast - Rechnung an Firma',
+        created_at: new Date(today.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        id: 4,
+        reservation_number: 'RES-2024-004',
+        hotel_code: 'RES-HD-ALT',
+        guest_first_name: 'Julia',
+        guest_last_name: 'Müller',
+        guest_email: 'julia.mueller@gmail.com',
+        arrival: '2024-11-20',
+        departure: '2024-11-22',
+        guests_adults: 2,
+        guests_children: 0,
+        category: 'SUP',
+        rate_code: 'STD',
+        rate_price: 129,
+        total_price: 258,
+        status: 'pending',
+        payment_status: 'pending',
+        created_at: new Date(today.getTime() - 1 * 24 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        id: 5,
+        reservation_number: 'RES-2024-005',
+        hotel_code: 'MA7-M-DOR',
+        guest_first_name: 'Michael',
+        guest_last_name: 'Fischer',
+        guest_email: 'michael.fischer@email.de',
+        arrival: '2024-11-05',
+        departure: '2024-11-08',
+        guests_adults: 2,
+        guests_children: 2,
+        category: 'FAM',
+        rate_code: 'FAM',
+        rate_price: 149,
+        total_price: 447,
+        status: 'done',
+        payment_status: 'paid',
+        guest_notes: 'Hatten einen schönen Aufenthalt',
+        created_at: new Date(today.getTime() - 25 * 24 * 60 * 60 * 1000).toISOString()
       }
     ];
   }
@@ -2094,10 +2184,18 @@ Ihr Reservierungsteam`;
   handleTableRowClick(id) {
     // Open edit modal for this reservation
     console.log('Edit reservation:', id);
-    const reservation = state.get('reservations')?.find(r => r.id === id);
+    
+    // Convert id to number if it's a string number
+    const numId = isNaN(id) ? id : Number(id);
+    
+    const reservations = state.get('reservations') || [];
+    // Try to find by both string and number comparison
+    const reservation = reservations.find(r => r.id === id || r.id === numId);
+    
     if (reservation) {
       this.openEditReservationModal(reservation);
     } else {
+      console.error('Reservation not found. ID:', id, 'Available IDs:', reservations.map(r => r.id));
       this.ui.showToast('Reservierung nicht gefunden', 'error');
     }
   }
