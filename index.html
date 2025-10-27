@@ -21,7 +21,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   
   <!-- Favicon -->
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='80' font-size='80'>🏨</text></svg>">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='80' font-size='80'>ðŸ¨</text></svg>">
 </head>
 <body>
 
@@ -55,7 +55,7 @@
         </button>
         <button class="btn secondary" data-action="open-availability">
           <i class="fas fa-calendar-check"></i>
-          Verfügbarkeit
+          VerfÃ¼gbarkeit
         </button>
         <button class="btn secondary" data-action="open-reports">
           <i class="fas fa-chart-line"></i>
@@ -90,7 +90,7 @@
 
         <div class="clock mono">
           <span id="dateLocal">--.--.----</span>
-          <span class="sep">·</span>
+          <span class="sep">Â·</span>
           <span id="clockLocal">--:--:--</span>
         </div>
       </div>
@@ -141,11 +141,11 @@
                 <div class="label">Buchungen</div>
               </div>
               <div class="kpi">
-                <div class="value" id="tRevenue">0,00 €</div>
+                <div class="value" id="tRevenue">0,00 â‚¬</div>
                 <div class="label">Umsatz</div>
               </div>
               <div class="kpi">
-                <div class="value" id="tADR">0,00 €</div>
+                <div class="value" id="tADR">0,00 â‚¬</div>
                 <div class="label">ADR</div>
               </div>
               <div class="kpi">
@@ -160,7 +160,7 @@
             <div class="card-head compact">
               <div class="performance-title-inline">
                 <i class="fas fa-calendar-week"></i>
-                <h3>Nächste 7 Tage</h3>
+                <h3>NÃ¤chste 7 Tage</h3>
               </div>
               <select class="select sm hotel-select" data-filter="hotel-next">
                 <option value="">Alle Hotels</option>
@@ -169,14 +169,14 @@
             <div class="kpis">
               <div class="kpi">
                 <div class="value" id="nBookings">0</div>
-                <div class="label">Ankünfte</div>
+                <div class="label">AnkÃ¼nfte</div>
               </div>
               <div class="kpi">
-                <div class="value" id="nRevenue">0,00 €</div>
+                <div class="value" id="nRevenue">0,00 â‚¬</div>
                 <div class="label">Umsatz</div>
               </div>
               <div class="kpi">
-                <div class="value" id="nADR">0,00 €</div>
+                <div class="value" id="nADR">0,00 â‚¬</div>
                 <div class="label">ADR</div>
               </div>
               <div class="kpi">
@@ -243,7 +243,7 @@
                 </button>
                 <button class="btn secondary" data-action="reset-filters">
                   <i class="fas fa-times"></i>
-                  Zurücksetzen
+                  ZurÃ¼cksetzen
                 </button>
               </div>
             </div>
@@ -271,6 +271,106 @@
                   </tr>
                 </tbody>
               </table>
+            </div>
+            
+            <!-- Pagination Controls -->
+            <div class="pagination-wrapper">
+              <div class="pagination-info">
+                <span id="paginationInfo">Zeige 0-0 von 0 Reservierungen</span>
+              </div>
+              <div class="pagination-controls">
+                <button class="btn-pagination" data-action="first-page" disabled>
+                  <i class="fas fa-angle-double-left"></i>
+                </button>
+                <button class="btn-pagination" data-action="prev-page" disabled>
+                  <i class="fas fa-angle-left"></i>
+                </button>
+                <span class="pagination-pages" id="paginationPages">Seite 1 von 1</span>
+                <button class="btn-pagination" data-action="next-page" disabled>
+                  <i class="fas fa-angle-right"></i>
+                </button>
+                <button class="btn-pagination" data-action="last-page" disabled>
+                  <i class="fas fa-angle-double-right"></i>
+                </button>
+              </div>
+              <div class="pagination-size">
+                <select class="select sm" id="pageSize">
+                  <option value="10">10 pro Seite</option>
+                  <option value="25" selected>25 pro Seite</option>
+                  <option value="50">50 pro Seite</option>
+                  <option value="100">100 pro Seite</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </section>
+        
+        <!-- Today's Operations Widget -->
+        <section class="operations-widget">
+          <div class="card">
+            <div class="card-head">
+              <h3><i class="fas fa-calendar-day"></i> Heutige Operationen</h3>
+              <button class="btn-icon" data-action="refresh-operations">
+                <i class="fas fa-sync"></i>
+              </button>
+            </div>
+            
+            <div class="operations-grid">
+              <!-- Check-ins Today -->
+              <div class="operation-card checkin">
+                <div class="operation-icon">
+                  <i class="fas fa-sign-in-alt"></i>
+                </div>
+                <div class="operation-content">
+                  <div class="operation-value" id="todayCheckins">0</div>
+                  <div class="operation-label">Check-ins heute</div>
+                  <button class="btn-link" data-action="view-checkins">
+                    Details anzeigen <i class="fas fa-arrow-right"></i>
+                  </button>
+                </div>
+              </div>
+              
+              <!-- Check-outs Today -->
+              <div class="operation-card checkout">
+                <div class="operation-icon">
+                  <i class="fas fa-sign-out-alt"></i>
+                </div>
+                <div class="operation-content">
+                  <div class="operation-value" id="todayCheckouts">0</div>
+                  <div class="operation-label">Check-outs heute</div>
+                  <button class="btn-link" data-action="view-checkouts">
+                    Details anzeigen <i class="fas fa-arrow-right"></i>
+                  </button>
+                </div>
+              </div>
+              
+              <!-- In-house Guests -->
+              <div class="operation-card inhouse">
+                <div class="operation-icon">
+                  <i class="fas fa-bed"></i>
+                </div>
+                <div class="operation-content">
+                  <div class="operation-value" id="inhouseGuests">0</div>
+                  <div class="operation-label">Gäste im Haus</div>
+                  <button class="btn-link" data-action="view-inhouse">
+                    Details anzeigen <i class="fas fa-arrow-right"></i>
+                  </button>
+                </div>
+              </div>
+              
+              <!-- Pending Actions -->
+              <div class="operation-card pending">
+                <div class="operation-icon">
+                  <i class="fas fa-clock"></i>
+                </div>
+                <div class="operation-content">
+                  <div class="operation-value" id="pendingActions">0</div>
+                  <div class="operation-label">Ausstehende Aktionen</div>
+                  <button class="btn-link" data-action="view-pending">
+                    Details anzeigen <i class="fas fa-arrow-right"></i>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </section>
@@ -336,7 +436,7 @@
             <div class="form-group">
               <label class="form-label">Hotel *</label>
               <select class="select hotel-select" name="hotel_code" required>
-                <option value="">Bitte wählen...</option>
+                <option value="">Bitte wÃ¤hlen...</option>
               </select>
             </div>
             
@@ -413,7 +513,7 @@
             <div class="form-group">
               <label class="checkbox">
                 <input type="checkbox" name="send_confirmation">
-                <span>Bestätigungs-E-Mail senden</span>
+                <span>BestÃ¤tigungs-E-Mail senden</span>
               </label>
             </div>
           </div>
@@ -422,7 +522,7 @@
         <div class="modal-footer">
           <button type="button" class="btn secondary" data-wizard-action="prev" disabled>
             <i class="fas fa-arrow-left"></i>
-            Zurück
+            ZurÃ¼ck
           </button>
           <button type="button" class="btn primary" data-wizard-action="next">
             Weiter
@@ -471,7 +571,7 @@
           </button>
           <button type="submit" class="btn primary">
             <i class="fas fa-save"></i>
-            Änderungen speichern
+            Ã„nderungen speichern
           </button>
         </div>
       </form>
@@ -482,7 +582,7 @@
   <div id="modalAvailability" class="modal hidden" aria-hidden="true">
     <div class="modal-content large">
       <div class="modal-header">
-        <h2>Verfügbarkeit</h2>
+        <h2>VerfÃ¼gbarkeit</h2>
         <button class="modal-close">
           <i class="fas fa-times"></i>
         </button>
@@ -626,7 +726,7 @@
       <div class="modal-body">
         <div class="sketch-controls">
           <select class="select hotel-select" id="sketchHotel">
-            <option value="">Hotel wählen...</option>
+            <option value="">Hotel wÃ¤hlen...</option>
           </select>
           <button class="btn primary" data-action="load-sketch">
             <i class="fas fa-map"></i>
@@ -635,7 +735,7 @@
         </div>
         
         <div id="sketchCanvas" class="sketch-canvas">
-          <p class="text-center text-muted">Bitte wählen Sie ein Hotel aus</p>
+          <p class="text-center text-muted">Bitte wÃ¤hlen Sie ein Hotel aus</p>
         </div>
       </div>
     </div>
@@ -645,7 +745,7 @@
   <div id="modalConfirmationEmail" class="modal hidden" aria-hidden="true">
     <div class="modal-content">
       <div class="modal-header">
-        <h2>Bestätigungs-E-Mail</h2>
+        <h2>BestÃ¤tigungs-E-Mail</h2>
         <button class="modal-close">
           <i class="fas fa-times"></i>
         </button>
@@ -653,7 +753,7 @@
       
       <div class="modal-body">
         <div class="form-group">
-          <label class="form-label">Empfänger E-Mail</label>
+          <label class="form-label">EmpfÃ¤nger E-Mail</label>
           <input type="email" class="input" id="confirmEmailTo">
         </div>
         
