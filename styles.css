@@ -657,13 +657,13 @@ textarea {
   position: sticky;
   top: calc(var(--space-8) + 80px);
   align-self: start;
-  height: calc(100vh - 200px); /* Gleiche Höhe! */
+  height: calc(100vh - 200px); /* Gleiche HÃ¶he! */
 }
 
 .sidebar-card {
   display: flex;
   flex-direction: column;
-  height: 100%; /* Volle Höhe nutzen */
+  height: 100%; /* Volle HÃ¶he nutzen */
 }
 
 .sidebar-card .card-head {
@@ -983,7 +983,7 @@ textarea {
   background: var(--bg-surface);
   border: 1px solid var(--border-primary);
   border-radius: var(--radius-xl);
-  padding: 0; /* Entferne Padding für bessere Kontrolle */
+  padding: 0; /* Entferne Padding fÃ¼r bessere Kontrolle */
   overflow: hidden;
 }
 
@@ -1086,7 +1086,7 @@ textarea {
   transition: all var(--transition-base);
   position: relative;
   z-index: 1;
-  white-space: nowrap; /* WICHTIG: Keine Umbrüche! */
+  white-space: nowrap; /* WICHTIG: Keine UmbrÃ¼che! */
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -1211,8 +1211,9 @@ textarea {
    ================================================ */
 
 .table-wrapper {
-  overflow-x: hidden; /* KEINE horizontale Scrollbar */
+  overflow-x: auto; /* Erlaubt horizontales Scrollen falls nötig */
   background: var(--bg-surface);
+  margin-left: 3px; /* Macht Platz für den linken Indikator */
 }
 
 table {
@@ -1247,13 +1248,14 @@ tbody tr {
 tbody tr::before {
   content: '';
   position: absolute;
-  left: -3px;
+  left: -3px; /* Verschiebt den Indikator nach links außerhalb der Tabelle */
   top: 0;
   bottom: 0;
   width: 3px;
   background: linear-gradient(180deg, var(--primary-500), var(--accent-500));
   transform: scaleY(0);
   transition: transform var(--transition-base);
+  z-index: 1; /* Stellt sicher dass der Indikator über dem Hintergrund liegt */
 }
 
 tbody tr:hover {
