@@ -32,6 +32,22 @@ initializeAuth() {
                     window.location.pathname === '/' ||  // Root als auth page
                     !window.location.pathname.includes('.html');  // Kein HTML = root
   
+  // Check if we're in logout mode
+  const urlParams = new URLSearchParams(window.location.search);
+  const isLoggingOut = urlParams.get('logout') === 'true';
+  
+  // If logging out, force clear session and stay on auth page
+  if (isLoggingOut) {
+    console.log('Logout detected, clearing session...');
+    this.session = null;
+    localStorage.removeItem(AUTH_CONFIG.SESSION_KEY);
+    localStorage.removeItem(AUTH_CONFIG.ATTEMPTS_KEY);
+    sessionStorage.clear();
+    // Remove logout parameter from URL without reloading
+    window.history.replaceState({}, '', window.location.pathname);
+    return; // Stay on auth page
+  }
+  
   // Load existing session
   this.loadSession();
   
@@ -153,6 +169,8 @@ async login(email, password, remember = false) {
       // Clear session
       this.session = null;
       localStorage.removeItem(AUTH_CONFIG.SESSION_KEY);
+      localStorage.removeItem(AUTH_CONFIG.ATTEMPTS_KEY);
+      sessionStorage.clear();
       
       // Sign out from Supabase
       const { createClient } = window.supabase;
@@ -166,12 +184,21 @@ async login(email, password, remember = false) {
       // Log activity
       await this.logActivity('logout', {});
       
-      // Redirect to login
-      this.redirectToLogin();
+      // Force a short delay to ensure localStorage is cleared
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Redirect to login with logout parameter to prevent immediate redirect back
+      window.location.replace('/auth.html?logout=true');
       
       return { success: true };
     } catch (error) {
       console.error('Logout failed:', error);
+      // Even if there's an error, clear session and redirect
+      this.session = null;
+      localStorage.removeItem(AUTH_CONFIG.SESSION_KEY);
+      localStorage.removeItem(AUTH_CONFIG.ATTEMPTS_KEY);
+      sessionStorage.clear();
+      window.location.replace('/auth.html?logout=true');
       return { success: false, error: error.message };
     }
   }
