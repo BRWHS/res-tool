@@ -283,8 +283,6 @@ header {
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  margin-left: calc(-3 * var(--space-8));
-  padding-left: var(--space-4);
 }
 
 /* Modern Logo Container */
@@ -349,7 +347,7 @@ header {
 }
 
 .navbar-brand h1 i {
-  font-size: 5.5rem;
+  font-size: 2rem;
   background: var(--primary-600);
   -webkit-text-fill-color: white;
   background-clip: unset;
@@ -713,7 +711,7 @@ textarea {
   position: sticky;
   top: calc(var(--space-8) + 80px);
   align-self: start;
-  height: calc(100vh - 200px); /* Gleiche HÃ¶he! */
+  height: calc(100vh - 200px); /* Gleiche HÃƒÂ¶he! */
 }
 
 .sidebar-card {
@@ -1092,7 +1090,7 @@ textarea {
   background: var(--bg-surface);
   border: 1px solid var(--border-primary);
   border-radius: var(--radius-xl);
-  padding: 0 !important; /* Entferne Padding für bessere Kontrolle */
+  padding: 0 !important; /* Entferne Padding fÃ¼r bessere Kontrolle */
   overflow: hidden;
 }
 
@@ -1232,7 +1230,7 @@ textarea {
   transition: all var(--transition-base);
   position: relative;
   z-index: 1;
-  white-space: nowrap; /* WICHTIG: Keine UmbrÃ¼che! */
+  white-space: nowrap; /* WICHTIG: Keine UmbrÃƒÂ¼che! */
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -2003,6 +2001,22 @@ tbody td .pill {
 
 .wizard-content {
   animation: fadeInSlide var(--transition-smooth);
+  max-height: 60vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: var(--space-2);
+  scroll-behavior: smooth;
+}
+
+/* Scrollbar verstecken, aber Scroll-Funktionalität behalten */
+.wizard-content::-webkit-scrollbar {
+  width: 0;
+  background: transparent;
+}
+
+.wizard-content {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
 @keyframes fadeInSlide {
@@ -2023,34 +2037,77 @@ tbody td .pill {
 #categoryGrid,
 #rateGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: var(--space-4);
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--space-3);
   margin-top: var(--space-4);
+  max-height: 65vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: var(--space-2);
+}
+
+/* Scrollbar verstecken, aber Scrollfunktion behalten */
+#categoryGrid::-webkit-scrollbar,
+#rateGrid::-webkit-scrollbar {
+  width: 0;
+  background: transparent;
+}
+
+#categoryGrid,
+#rateGrid {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
 .category-card,
 .rate-card {
-  padding: var(--space-6);
-  background: var(--glass-bg);
-  border: 2px solid var(--border-primary);
-  border-radius: var(--radius-xl);
-  transition: all var(--transition-base);
+  padding: var(--space-4) var(--space-5);
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.03) 0%, rgba(139, 92, 246, 0.03) 100%);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.category-card::before,
+.rate-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--primary-500), var(--accent-500));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s ease;
 }
 
 .category-card:hover,
 .rate-card:hover {
-  background: var(--glass-bg-hover);
-  border-color: var(--primary-500);
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-lg), 0 0 40px rgba(99, 102, 241, 0.2);
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(139, 92, 246, 0.08) 100%);
+  border-color: var(--primary-400);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.15);
+}
+
+.category-card:hover::before,
+.rate-card:hover::before {
+  transform: scaleX(1);
 }
 
 .category-card.selected,
 .rate-card.selected {
-  background: rgba(99, 102, 241, 0.1);
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.12) 0%, rgba(139, 92, 246, 0.12) 100%);
   border-color: var(--primary-500);
-  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1), var(--shadow-md);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15), 0 8px 24px rgba(99, 102, 241, 0.2);
+}
+
+.category-card.selected::before,
+.rate-card.selected::before {
+  transform: scaleX(1);
 }
 
 .category-header,
@@ -2058,86 +2115,104 @@ tbody td .pill {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: var(--space-4);
+  margin-bottom: var(--space-3);
+  gap: var(--space-3);
 }
 
 .category-header h4,
 .rate-header h4 {
-  font-size: 1.125rem;
+  font-size: 1rem;
   font-weight: 600;
   margin: 0;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+  line-height: 1.3;
 }
 
 .category-price,
 .rate-price {
   text-align: right;
+  flex-shrink: 0;
 }
 
 .category-price,
 .rate-price {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: 700;
   background: linear-gradient(135deg, var(--primary-400), var(--accent-400));
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
+  line-height: 1;
 }
 
 .category-price small,
 .rate-price small {
   display: block;
-  font-size: 0.75rem;
+  font-size: 0.6875rem;
   color: var(--text-tertiary);
   -webkit-text-fill-color: var(--text-tertiary);
+  margin-top: 2px;
+  font-weight: 400;
 }
 
 .category-details {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
-  margin-bottom: var(--space-4);
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
 }
 
 .detail-item {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
-  font-size: 0.875rem;
+  gap: var(--space-2);
+  font-size: 0.8125rem;
   color: var(--text-secondary);
 }
 
 .detail-item i {
-  width: 20px;
+  width: 16px;
   color: var(--primary-400);
   flex-shrink: 0;
+  font-size: 0.875rem;
 }
 
 .category-amenities,
 .rate-includes {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-2);
-  margin-bottom: var(--space-4);
+  gap: var(--space-1);
+  margin-bottom: var(--space-3);
+}
+
+.category-amenities .badge,
+.rate-includes .badge {
+  font-size: 0.6875rem;
+  padding: 0.25rem 0.5rem;
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.2);
 }
 
 .rate-policy {
   display: flex;
   gap: var(--space-2);
-  padding: var(--space-3);
-  background: rgba(6, 182, 212, 0.1);
-  border: 1px solid rgba(6, 182, 212, 0.2);
+  padding: var(--space-2) var(--space-3);
+  background: rgba(6, 182, 212, 0.08);
+  border: 1px solid rgba(6, 182, 212, 0.15);
   border-radius: var(--radius-md);
-  margin-bottom: var(--space-4);
+  margin-bottom: var(--space-3);
 }
 
 .rate-policy i {
   color: var(--accent-400);
-  margin-top: 2px;
+  margin-top: 1px;
   flex-shrink: 0;
+  font-size: 0.875rem;
 }
 
 .rate-policy span {
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   color: var(--text-secondary);
   line-height: 1.4;
 }
@@ -2146,6 +2221,9 @@ tbody td .pill {
 .btn-select-rate {
   width: 100%;
   justify-content: center;
+  padding: var(--space-2) var(--space-4);
+  font-size: 0.875rem;
+  font-weight: 600;
 }
 
 /* ================================================
