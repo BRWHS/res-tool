@@ -369,8 +369,7 @@ header {
   gap: var(--space-3);
   align-items: center;
   flex: 1;
-  justify-content: flex-start;
-  margin-left: var(--space-20);
+  justify-content: center;
 }
 
 .toolbar-right {
