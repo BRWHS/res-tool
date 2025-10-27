@@ -12,7 +12,7 @@ const AUTH_CONFIG = {
   LOCKOUT_DURATION: 15 * 60 * 1000, // 15 minutes
   PASSWORD_MIN_LENGTH: 8,
   REQUIRE_2FA: false,
-  SESSION_KEY: 'hrs_v2_userSession',
+  SESSION_KEY: 'hrs_v2_session',
   ATTEMPTS_KEY: 'hrs_v2_login_attempts'
 };
 
@@ -24,48 +24,51 @@ class AuthManager {
     this.initializeAuth();
   }
 
- // Initialize authentication
-initializeAuth() {
-  // Check if we're on auth page
-  const isAuthPage = window.location.pathname.includes('auth.html') || 
-                    window.location.pathname.includes('login') ||
-                    window.location.pathname === '/' ||  // Root als auth page
-                    !window.location.pathname.includes('.html');  // Kein HTML = root
-  
-  // Check if we're in logout mode
-  const urlParams = new URLSearchParams(window.location.search);
-  const isLoggingOut = urlParams.get('logout') === 'true';
-  
-  // If logging out, force clear session and stay on auth page
-  if (isLoggingOut) {
-    console.log('Logout detected, clearing session...');
-    this.session = null;
-    localStorage.removeItem(AUTH_CONFIG.SESSION_KEY);
-    localStorage.removeItem(AUTH_CONFIG.ATTEMPTS_KEY);
-    sessionStorage.clear();
-    // Remove logout parameter from URL without reloading
-    window.history.replaceState({}, '', window.location.pathname);
-    return; // Stay on auth page
+  // Initialize authentication
+  initializeAuth() {
+    // Check if we're on auth page
+    const isAuthPage = window.location.pathname.includes('auth.html') || 
+                      window.location.pathname.includes('login') ||
+                      window.location.pathname === '/auth.html';
+    
+    // Check if we're in logout mode - MUST BE BEFORE loadSession
+    const urlParams = new URLSearchParams(window.location.search);
+    const isLoggingOut = urlParams.get('logout') === 'true';
+    
+    // If logging out, force clear everything and stay on auth page
+    if (isLoggingOut) {
+      console.log('🔒 Logout detected - clearing all session data');
+      this.session = null;
+      localStorage.removeItem(AUTH_CONFIG.SESSION_KEY);
+      localStorage.removeItem(AUTH_CONFIG.ATTEMPTS_KEY);
+      sessionStorage.clear();
+      // Remove logout parameter from URL without reloading
+      window.history.replaceState({}, '', window.location.pathname);
+      console.log('✅ Session cleared - staying on auth page');
+      return; // Stay on auth page - DON'T proceed further
+    }
+    
+    // Load existing session
+    const sessionLoaded = this.loadSession();
+    
+    // Redirect logic
+    if (!isAuthPage && !this.isAuthenticated()) {
+      // Not on auth page and not authenticated → redirect to login
+      this.redirectToLogin();
+      return; // Stop further execution
+    } else if (isAuthPage && this.isAuthenticated()) {
+      // On auth page and authenticated → redirect to dashboard
+      this.redirectToDashboard();
+      return; // Stop further execution
+    }
+    // If on auth page and not authenticated → stay on auth page (do nothing)
+    
+    // Setup auto-logout only if authenticated
+    if (this.isAuthenticated()) {
+      this.setupAutoLogout();
+      this.refreshSession();
+    }
   }
-  
-  // Load existing session
-  this.loadSession();
-  
-  // Redirect logic - angepasst für Demo
-  if (!isAuthPage && !this.isAuthenticated()) {
-    console.log('Not authenticated, redirecting to login...');
-    this.redirectToLogin();
-  } else if (isAuthPage && this.isAuthenticated()) {
-    console.log('Already authenticated, redirecting to dashboard...');
-    this.redirectToDashboard();
-  }
-  
-  // Setup auto-logout
-  if (this.isAuthenticated()) {
-    this.setupAutoLogout();
-    this.refreshSession();
-  }
-}
 
   // Load session from storage
   loadSession() {
@@ -76,10 +79,14 @@ initializeAuth() {
         if (this.isSessionValid(session)) {
           this.session = session;
           return true;
+        } else {
+          // Session expired, clear it
+          localStorage.removeItem(AUTH_CONFIG.SESSION_KEY);
         }
       }
     } catch (error) {
       console.error('Failed to load session:', error);
+      localStorage.removeItem(AUTH_CONFIG.SESSION_KEY);
     }
     return false;
   }
@@ -107,37 +114,53 @@ initializeAuth() {
     return this.session && this.isSessionValid(this.session);
   }
 
- // Login with credentials
-async login(email, password, remember = false) {
-  try {
-    // Check lockout
-    if (this.isLockedOut()) {
-      const remainingTime = this.getRemainingLockoutTime();
-      throw new Error(`Account locked. Try again in ${Math.ceil(remainingTime / 60000)} minutes.`);
-    }
+  // Login with credentials
+  async login(email, password, remember = false) {
+    try {
+      // Check lockout
+      if (this.isLockedOut()) {
+        const remainingTime = this.getRemainingLockoutTime();
+        throw new Error(`Account locked. Try again in ${Math.ceil(remainingTime / 60000)} minutes.`);
+      }
 
-    // Validate input
-    if (!email || !password) {
-      throw new Error('Email and password are required');
-    }
+      // Validate input
+      if (!email || !password) {
+        throw new Error('Email and password are required');
+      }
 
-    // Validate email format
-    if (!this.isValidEmail(email)) {
-      throw new Error('Invalid email format');
-    }
+      // Validate email format
+      if (!this.isValidEmail(email)) {
+        throw new Error('Invalid email format');
+      }
 
-    // DEMO LOGIN - Temporär für Entwicklung
-    if (email === 'demo@hotel.de' && password === 'Demo1234!') {
-      // Create demo session
+      // Initialize Supabase
+      const { createClient } = window.supabase;
+      const supabaseClient = createClient(
+        'https://ncrczhlwqwqirvdgbrfb.supabase.co',
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5jcmN6aGx3cXdxaXJ2ZGdicmZiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzY0MTMyNDAsImV4cCI6MjA1MTk4OTI0MH0.jYNGgg6jT0-tSsWnWnWsZOW5Y-n0hHD2eI82ktl2YzA'
+      );
+
+      // Attempt authentication
+      const { data, error } = await supabaseClient.auth.signInWithPassword({
+        email: email,
+        password: password
+      });
+
+      if (error) {
+        this.recordFailedAttempt();
+        throw new Error('Invalid credentials');
+      }
+
+      // Create session
       const duration = remember ? AUTH_CONFIG.REMEMBER_DURATION : AUTH_CONFIG.SESSION_DURATION;
       const session = {
         user: {
-          id: 'demo-user-001',
-          email: email,
-          name: 'Demo User',
-          role: 'admin'
+          id: data.user.id,
+          email: data.user.email,
+          name: data.user.user_metadata?.name || email.split('@')[0],
+          role: data.user.user_metadata?.role || 'user'
         },
-        token: 'demo-token-' + Date.now(),
+        token: data.session.access_token,
         expiresAt: new Date(Date.now() + duration).toISOString(),
         createdAt: new Date().toISOString(),
         remember: remember
@@ -147,32 +170,26 @@ async login(email, password, remember = false) {
       this.saveSession(session);
       this.clearAttempts();
 
-      // Log activity (simplified for demo)
-      console.log('Demo login successful:', session);
+      // Log activity
+      await this.logActivity('login', { email, remember });
 
       return { success: true, user: session.user };
-    } else {
-      // Für alle anderen Login-Versuche
-      this.recordFailedAttempt();
-      throw new Error('Invalid credentials. Please use demo@hotel.de / Demo1234!');
-    }
 
-  } catch (error) {
-    console.error('Login failed:', error);
-    return { success: false, error: error.message };
+    } catch (error) {
+      console.error('Login failed:', error);
+      return { success: false, error: error.message };
+    }
   }
-}
 
   // Logout
   async logout() {
     try {
-      // Clear session
-      this.session = null;
-      localStorage.removeItem(AUTH_CONFIG.SESSION_KEY);
-      localStorage.removeItem(AUTH_CONFIG.ATTEMPTS_KEY);
-      sessionStorage.clear();
+      console.log('🔓 Starting logout process...');
       
-      // Sign out from Supabase
+      // Log activity before clearing session
+      await this.logActivity('logout', {});
+      
+      // Sign out from Supabase first
       const { createClient } = window.supabase;
       const supabaseClient = createClient(
         'https://ncrczhlwqwqirvdgbrfb.supabase.co',
@@ -181,18 +198,27 @@ async login(email, password, remember = false) {
       
       await supabaseClient.auth.signOut();
       
-      // Log activity
-      await this.logActivity('logout', {});
+      // Clear session completely
+      this.session = null;
+      localStorage.removeItem(AUTH_CONFIG.SESSION_KEY);
+      
+      // Also clear any other auth-related storage
+      localStorage.removeItem(AUTH_CONFIG.ATTEMPTS_KEY);
+      sessionStorage.clear();
+      
+      console.log('✅ All session data cleared');
       
       // Force a short delay to ensure localStorage is cleared
       await new Promise(resolve => setTimeout(resolve, 100));
       
-      // Redirect to login with logout parameter to prevent immediate redirect back
+      // Use replace instead of href to prevent back button issues
+      // CRITICAL: Add ?logout=true parameter to prevent immediate redirect back
+      console.log('🔄 Redirecting to auth page with logout parameter...');
       window.location.replace('/auth.html?logout=true');
       
       return { success: true };
     } catch (error) {
-      console.error('Logout failed:', error);
+      console.error('❌ Logout failed:', error);
       // Even if there's an error, clear session and redirect
       this.session = null;
       localStorage.removeItem(AUTH_CONFIG.SESSION_KEY);
@@ -510,24 +536,14 @@ async login(email, password, remember = false) {
     }
   }
 
- // Redirect helpers
-redirectToLogin() {
-  // Prüfe verschiedene mögliche Pfade
-  if (window.location.pathname.includes('index.html')) {
+  // Redirect helpers
+  redirectToLogin() {
     window.location.href = '/auth.html';
-  } else {
-    window.location.href = 'auth.html';
   }
-}
 
-redirectToDashboard() {
-  // Prüfe verschiedene mögliche Pfade
-  if (window.location.pathname.includes('auth.html')) {
+  redirectToDashboard() {
     window.location.href = '/index.html';
-  } else {
-    window.location.href = 'index.html';
   }
-}
 
   // Get current user
   getCurrentUser() {
