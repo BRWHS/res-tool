@@ -661,6 +661,8 @@ try {
       this.loadStoredData();
       this.initializeEventListeners();
       this.initializeRouting();
+
+      this.initWizard();
       
       // Check authentication
       const session = Storage.get('USER_SESSION');
@@ -895,6 +897,354 @@ try {
       console.error('Action failed:', error);
       this.ui.showToast('Action failed: ' + error.message, 'error');
     }
+  }
+   // =============== WIZARD MANAGEMENT ===============
+  initWizard() {
+    const wizard = {
+      currentStep: 1,
+      maxSteps: 4,
+      data: {}
+    };
+
+    // Wizard navigation
+    const nextBtn = document.querySelector('[data-wizard-action="next"]');
+    const prevBtn = document.querySelector('[data-wizard-action="prev"]');
+    const submitBtn = document.querySelector('[data-wizard-action="submit"]');
+
+    if (nextBtn) {
+      nextBtn.addEventListener('click', () => this.wizardNext(wizard));
+    }
+    if (prevBtn) {
+      prevBtn.addEventListener('click', () => this.wizardPrev(wizard));
+    }
+
+    // Initialize first step
+    this.updateWizardUI(wizard);
+  }
+
+  wizardNext(wizard) {
+    // Validate current step
+    const currentStepValid = this.validateWizardStep(wizard.currentStep);
+    
+    if (!currentStepValid) {
+      this.ui.showToast('Bitte alle Pflichtfelder ausfüllen', 'error');
+      return;
+    }
+
+    // Save current step data
+    this.saveWizardStep(wizard);
+
+    // Load next step
+    if (wizard.currentStep < wizard.maxSteps) {
+      wizard.currentStep++;
+      this.updateWizardUI(wizard);
+      this.loadWizardStepData(wizard);
+    }
+  }
+
+  wizardPrev(wizard) {
+    if (wizard.currentStep > 1) {
+      wizard.currentStep--;
+      this.updateWizardUI(wizard);
+    }
+  }
+
+  validateWizardStep(step) {
+    const content = document.querySelector(`[data-step-content="${step}"]`);
+    if (!content) return true;
+
+    const requiredInputs = content.querySelectorAll('[required]');
+    let isValid = true;
+
+    requiredInputs.forEach(input => {
+      if (!input.value.trim()) {
+        input.classList.add('error');
+        isValid = false;
+      } else {
+        input.classList.remove('error');
+      }
+    });
+
+    // Step-specific validation
+    switch(step) {
+      case 1:
+        // Validate dates
+        const arrival = content.querySelector('[name="arrival"]').value;
+        const departure = content.querySelector('[name="departure"]').value;
+        
+        if (arrival && departure && new Date(arrival) >= new Date(departure)) {
+          this.ui.showToast('Abreise muss nach Anreise liegen', 'error');
+          return false;
+        }
+        break;
+    }
+
+    return isValid;
+  }
+
+  saveWizardStep(wizard) {
+    const stepContent = document.querySelector(`[data-step-content="${wizard.currentStep}"]`);
+    if (!stepContent) return;
+
+    const inputs = stepContent.querySelectorAll('input, select, textarea');
+    inputs.forEach(input => {
+      if (input.name) {
+        wizard.data[input.name] = input.value;
+      }
+    });
+  }
+
+  updateWizardUI(wizard) {
+    // Update step indicators
+    document.querySelectorAll('.wizard-step').forEach((step, index) => {
+      const stepNum = index + 1;
+      step.classList.remove('active', 'completed');
+      
+      if (stepNum === wizard.currentStep) {
+        step.classList.add('active');
+      } else if (stepNum < wizard.currentStep) {
+        step.classList.add('completed');
+      }
+    });
+
+    // Show/hide step contents
+    document.querySelectorAll('[data-step-content]').forEach(content => {
+      const stepNum = parseInt(content.dataset.stepContent);
+      content.classList.toggle('hidden', stepNum !== wizard.currentStep);
+    });
+
+    // Update buttons
+    const prevBtn = document.querySelector('[data-wizard-action="prev"]');
+    const nextBtn = document.querySelector('[data-wizard-action="next"]');
+    const submitBtn = document.querySelector('[data-wizard-action="submit"]');
+
+    if (prevBtn) {
+      prevBtn.disabled = wizard.currentStep === 1;
+    }
+
+    if (nextBtn && submitBtn) {
+      if (wizard.currentStep === wizard.maxSteps) {
+        nextBtn.classList.add('hidden');
+        submitBtn.classList.remove('hidden');
+      } else {
+        nextBtn.classList.remove('hidden');
+        submitBtn.classList.add('hidden');
+      }
+    }
+  }
+
+  loadWizardStepData(wizard) {
+    const { currentStep } = wizard;
+
+    switch(currentStep) {
+      case 2:
+        this.loadCategories();
+        this.renderCategoryGrid();
+        break;
+      case 3:
+        this.renderRateGrid();
+        break;
+      case 4:
+        this.renderReservationSummary(wizard.data);
+        break;
+    }
+  }
+
+  renderCategoryGrid() {
+    const grid = document.getElementById('categoryGrid');
+    if (!grid) return;
+
+    const categories = state.get('categories') || [
+      { id: 1, code: 'STD', name: 'Standard', size: '18m²', beds: '1 Doppelbett', persons: 2, price: 89 },
+      { id: 2, code: 'SUP', name: 'Superior', size: '24m²', beds: '1 Doppelbett', persons: 2, price: 119 },
+      { id: 3, code: 'DLX', name: 'Deluxe', size: '32m²', beds: '1 Doppelbett + Sofa', persons: 3, price: 159 }
+    ];
+
+    grid.innerHTML = categories.map(cat => `
+      <div class="category-card" data-category="${cat.code}">
+        <div class="category-header">
+          <h4>${cat.name}</h4>
+          <div class="category-price">${this.formatCurrency(cat.price)} <small>/Nacht</small></div>
+        </div>
+        <div class="category-details">
+          <div class="detail-item">
+            <i class="fas fa-ruler-combined"></i>
+            <span>${cat.size}</span>
+          </div>
+          <div class="detail-item">
+            <i class="fas fa-bed"></i>
+            <span>${cat.beds}</span>
+          </div>
+          <div class="detail-item">
+            <i class="fas fa-user"></i>
+            <span>Max. ${cat.persons} Personen</span>
+          </div>
+        </div>
+        <button type="button" class="btn primary btn-select-category" data-category-code="${cat.code}">
+          <i class="fas fa-check"></i>
+          Auswählen
+        </button>
+      </div>
+    `).join('');
+
+    // Add click handlers
+    grid.querySelectorAll('.btn-select-category').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const code = e.currentTarget.dataset.categoryCode;
+        this.selectCategory(code);
+      });
+    });
+  }
+
+  selectCategory(code) {
+    // Visual feedback
+    document.querySelectorAll('.category-card').forEach(card => {
+      card.classList.remove('selected');
+    });
+    const selectedCard = document.querySelector(`[data-category="${code}"]`);
+    if (selectedCard) {
+      selectedCard.classList.add('selected');
+    }
+
+    // Store selection
+    const form = document.getElementById('formNewReservation');
+    let input = form.querySelector('[name="category"]');
+    if (!input) {
+      input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = 'category';
+      form.appendChild(input);
+    }
+    input.value = code;
+  }
+
+  renderRateGrid() {
+    const grid = document.getElementById('rateGrid');
+    if (!grid) return;
+
+    const rates = state.get('rates') || [
+      { id: 1, code: 'STD', name: 'Standard Rate', price: 89, cancellation: 'Bis 24h vorher kostenlos' },
+      { id: 2, code: 'FLEX', name: 'Flex Rate', price: 109, cancellation: 'Bis 6h vorher kostenlos' },
+      { id: 3, code: 'NREF', name: 'Non-Refundable', price: 69, cancellation: 'Nicht stornierbar - 20% günstiger' }
+    ];
+
+    grid.innerHTML = rates.map(rate => `
+      <div class="rate-card" data-rate="${rate.code}">
+        <div class="rate-header">
+          <h4>${rate.name}</h4>
+          <div class="rate-price">${this.formatCurrency(rate.price)} <small>/Nacht</small></div>
+        </div>
+        <div class="rate-policy">
+          <i class="fas fa-info-circle"></i>
+          <span>${rate.cancellation}</span>
+        </div>
+        <button type="button" class="btn primary btn-select-rate" data-rate-code="${rate.code}" data-rate-price="${rate.price}">
+          <i class="fas fa-check"></i>
+          Auswählen
+        </button>
+      </div>
+    `).join('');
+
+    // Add click handlers
+    grid.querySelectorAll('.btn-select-rate').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const code = e.currentTarget.dataset.rateCode;
+        const price = e.currentTarget.dataset.ratePrice;
+        this.selectRate(code, price);
+      });
+    });
+  }
+
+  selectRate(code, price) {
+    // Visual feedback
+    document.querySelectorAll('.rate-card').forEach(card => {
+      card.classList.remove('selected');
+    });
+    const selectedCard = document.querySelector(`[data-rate="${code}"]`);
+    if (selectedCard) {
+      selectedCard.classList.add('selected');
+    }
+
+    // Store selection
+    const form = document.getElementById('formNewReservation');
+    
+    let codeInput = form.querySelector('[name="rate_code"]');
+    if (!codeInput) {
+      codeInput = document.createElement('input');
+      codeInput.type = 'hidden';
+      codeInput.name = 'rate_code';
+      form.appendChild(codeInput);
+    }
+    codeInput.value = code;
+
+    let priceInput = form.querySelector('[name="rate_price"]');
+    if (!priceInput) {
+      priceInput = document.createElement('input');
+      priceInput.type = 'hidden';
+      priceInput.name = 'rate_price';
+      form.appendChild(priceInput);
+    }
+    priceInput.value = price;
+  }
+
+  renderReservationSummary(data) {
+    const content = document.querySelector('[data-step-content="4"]');
+    if (!content) return;
+
+    // Add summary section if not exists
+    let summarySection = content.querySelector('.reservation-summary');
+    if (!summarySection) {
+      summarySection = document.createElement('div');
+      summarySection.className = 'reservation-summary card';
+      content.insertBefore(summarySection, content.firstChild);
+    }
+
+    const hotel = state.get('hotels')?.find(h => h.code === data.hotel_code);
+    const nights = this.calculateNights(data.arrival, data.departure);
+    const totalPrice = (data.rate_price || 0) * nights;
+
+    summarySection.innerHTML = `
+      <h4>Zusammenfassung</h4>
+      <div class="summary-grid">
+        <div class="summary-item">
+          <span class="label">Hotel:</span>
+          <span class="value">${hotel ? hotel.name : data.hotel_code}</span>
+        </div>
+        <div class="summary-item">
+          <span class="label">Anreise:</span>
+          <span class="value">${this.formatDate(data.arrival)}</span>
+        </div>
+        <div class="summary-item">
+          <span class="label">Abreise:</span>
+          <span class="value">${this.formatDate(data.departure)}</span>
+        </div>
+        <div class="summary-item">
+          <span class="label">Nächte:</span>
+          <span class="value">${nights}</span>
+        </div>
+        <div class="summary-item">
+          <span class="label">Kategorie:</span>
+          <span class="value">${data.category || 'Nicht ausgewählt'}</span>
+        </div>
+        <div class="summary-item">
+          <span class="label">Rate:</span>
+          <span class="value">${data.rate_code || 'Nicht ausgewählt'}</span>
+        </div>
+        <div class="summary-item highlight">
+          <span class="label">Gesamtpreis:</span>
+          <span class="value">${this.formatCurrency(totalPrice)}</span>
+        </div>
+      </div>
+    `;
+  }
+
+  calculateNights(arrival, departure) {
+    if (!arrival || !departure) return 0;
+    const arrDate = new Date(arrival);
+    const depDate = new Date(departure);
+    const diffTime = Math.abs(depDate - arrDate);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
   }
 
   async handleFilterChange(filterType, value) {
