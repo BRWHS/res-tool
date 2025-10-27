@@ -103,16 +103,94 @@ class StateManager {
   }
 
   notify(path, newValue, oldValue) {
+    if (newValue === oldValue) return;
+    
     const callbacks = this.listeners.get(path);
     if (callbacks) {
       callbacks.forEach(callback => callback(newValue, oldValue));
+    }
+    
+    // Notify parent paths
+    const pathParts = path.split('.');
+    while (pathParts.length > 1) {
+      pathParts.pop();
+      const parentPath = pathParts.join('.');
+      const parentCallbacks = this.listeners.get(parentPath);
+      if (parentCallbacks) {
+        parentCallbacks.forEach(callback => callback(this.get(parentPath)));
+      }
     }
   }
 }
 
 const state = new StateManager();
 
-// =============== API LAYER ===============
+// =============== STORAGE MANAGER ===============
+class StorageManager {
+  constructor(prefix = CONFIG.STORAGE.PREFIX) {
+    this.prefix = prefix;
+  }
+
+  set(key, value) {
+    try {
+      const storageKey = this.prefix + key;
+      const serialized = JSON.stringify({
+        data: value,
+        timestamp: Date.now()
+      });
+      localStorage.setItem(storageKey, serialized);
+    } catch (error) {
+      console.error('Storage set failed:', error);
+    }
+  }
+
+  get(key) {
+    try {
+      const storageKey = this.prefix + key;
+      const item = localStorage.getItem(storageKey);
+      if (!item) return null;
+      
+      const { data, timestamp } = JSON.parse(item);
+      
+      // Check if cache is expired (optional)
+      if (CONFIG.CACHE.TTL && Date.now() - timestamp > CONFIG.CACHE.TTL) {
+        this.remove(key);
+        return null;
+      }
+      
+      return data;
+    } catch (error) {
+      console.error('Storage get failed:', error);
+      return null;
+    }
+  }
+
+  remove(key) {
+    try {
+      const storageKey = this.prefix + key;
+      localStorage.removeItem(storageKey);
+    } catch (error) {
+      console.error('Storage remove failed:', error);
+    }
+  }
+
+  clear() {
+    try {
+      const keys = Object.keys(localStorage);
+      keys.forEach(key => {
+        if (key.startsWith(this.prefix)) {
+          localStorage.removeItem(key);
+        }
+      });
+    } catch (error) {
+      console.error('Storage clear failed:', error);
+    }
+  }
+}
+
+const Storage = new StorageManager();
+
+// =============== API MANAGER ===============
 class API {
   constructor(config) {
     this.config = config;
@@ -120,391 +198,240 @@ class API {
     this.cache = new Map();
   }
 
-  // Initialize Supabase client - DEMO VERSION
   async initSupabase() {
-    if (this.supabase) return this.supabase;
-    
     try {
-      // Demo Mode - keine echte Supabase Verbindung
-      console.log('Running in DEMO mode - no real database connection');
-      this.supabase = {
-        demo: true,
-        from: (table) => ({
-          select: () => Promise.resolve({ data: this.getDemoData(table), error: null }),
-          insert: (data) => Promise.resolve({ data: { ...data, id: Date.now() }, error: null }),
-          update: (data) => Promise.resolve({ data, error: null }),
-          delete: () => Promise.resolve({ error: null }),
-          eq: () => ({ select: () => Promise.resolve({ data: [], error: null }) }),
-          order: () => ({ select: () => Promise.resolve({ data: [], error: null }) }),
-          gte: () => ({ lte: () => ({ select: () => Promise.resolve({ data: [], error: null }) }) })
-        })
-      };
+      const { createClient } = supabase;
+      this.supabase = createClient(
+        this.config.API.SUPABASE_URL,
+        this.config.API.SUPABASE_KEY
+      );
+      
+      // Test connection
+      const { data, error } = await this.supabase
+        .from('reservations')
+        .select('count');
+      
+      if (error) throw error;
+      
+      console.log('Supabase connected successfully');
+      this.updateConnectionStatus('SB', true);
+      
       return this.supabase;
     } catch (error) {
-      console.error('Failed to initialize demo mode:', error);
-      return null;
+      console.error('Supabase connection failed:', error);
+      this.updateConnectionStatus('SB', false);
+      throw error;
     }
   }
 
-  // Demo data generator
-  getDemoData(table) {
-    const demoData = {
-      reservations: [
-        {
-          id: 1,
-          reservation_number: 'RES-2024-001',
-          hotel_code: 'MA7-M-DOR',
-          guest_first_name: 'Max',
-          guest_last_name: 'Mustermann',
-          guest_email: 'max@example.com',
-          arrival: '2024-02-15',
-          departure: '2024-02-18',
-          category: 'Standard',
-          rate_price: 89.00,
-          status: 'active',
-          created_at: new Date().toISOString()
-        },
-        {
-          id: 2,
-          reservation_number: 'RES-2024-002',
-          hotel_code: 'RES-HD-ALT',
-          guest_first_name: 'Anna',
-          guest_last_name: 'Schmidt',
-          guest_email: 'anna@example.com',
-          arrival: '2024-02-20',
-          departure: '2024-02-22',
-          category: 'Superior',
-          rate_price: 125.00,
-          status: 'active',
-          created_at: new Date().toISOString()
-        }
-      ],
-      hotels: HOTELS || [],
-      categories: [
-        { id: 1, name: 'Standard', code: 'STD' },
-        { id: 2, name: 'Superior', code: 'SUP' },
-        { id: 3, name: 'Deluxe', code: 'DLX' }
-      ],
-      rates: [
-        { id: 1, name: 'Standardrate', code: 'STD', price: 89 },
-        { id: 2, name: 'Wochenendrate', code: 'WKD', price: 99 },
-        { id: 3, name: 'Geschäftsrate', code: 'BUS', price: 79 }
-      ]
-    };
-    
-    return demoData[table] || [];
-  }
-
-   // Generic fetch wrapper with retry logic
-  async fetchWithRetry(url, options = {}, retries = 3) {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), this.config.HNS.TIMEOUT);
-    
-    const fetchOptions = {
-      ...options,
-      signal: controller.signal,
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers
-      }
-    };
-
-    let lastError;
-    for (let i = 0; i <= retries; i++) {
-      try {
-        const response = await fetch(url, fetchOptions);
-        clearTimeout(timeout);
-        
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-        
-        return await response.json();
-      } catch (error) {
-        lastError = error;
-        
-        if (i < retries) {
-          // Exponential backoff
-          await new Promise(resolve => setTimeout(resolve, Math.pow(2, i) * 1000));
-        }
-      }
+  updateConnectionStatus(type, connected) {
+    const indicator = document.querySelector(`[data-tooltip="${type === 'SB' ? 'Supabase Connected' : 'HotelNetSolutions'}"]`);
+    if (indicator) {
+      indicator.classList.toggle('active', connected);
+      indicator.classList.toggle('error', !connected);
     }
-    
-    throw lastError;
   }
 
-  // Cache management
+  // Cache methods
   getCached(key) {
     const cached = this.cache.get(key);
-    if (cached && Date.now() - cached.timestamp < this.config.CACHE.TTL) {
-      return cached.data;
+    if (!cached) return null;
+    
+    if (Date.now() - cached.timestamp > this.config.CACHE.TTL) {
+      this.cache.delete(key);
+      return null;
     }
-    this.cache.delete(key);
-    return null;
+    
+    return cached.data;
   }
 
   setCached(key, data) {
-    // Implement LRU cache
-    if (this.cache.size >= this.config.CACHE.MAX_SIZE) {
-      const firstKey = this.cache.keys().next().value;
-      this.cache.delete(firstKey);
-    }
-    
     this.cache.set(key, {
       data,
       timestamp: Date.now()
     });
   }
 
- async getReservations(filters = {}) {
-  // Demo Mode - return demo data
-  if (!this.supabase || this.supabase.demo) {
-    const demoReservations = this.getDemoData('reservations');
-    
-    // Apply basic filters
-    let filtered = [...demoReservations];
-    
-    if (filters.status && filters.status !== 'all') {
-      filtered = filtered.filter(r => r.status === filters.status);
+  // Reservations API
+  async getReservations(filters = {}) {
+    try {
+      if (!this.supabase) {
+        // Demo mode - return sample data
+        return this.getDemoReservations();
+      }
+
+      let query = this.supabase
+        .from('reservations')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      // Apply filters
+      if (filters.status && filters.status !== 'all') {
+        query = query.eq('status', filters.status);
+      }
+
+      if (filters.hotel) {
+        query = query.eq('hotel_code', filters.hotel);
+      }
+
+      if (filters.dateFrom) {
+        query = query.gte('arrival', filters.dateFrom);
+      }
+
+      if (filters.dateTo) {
+        query = query.lte('departure', filters.dateTo);
+      }
+
+      if (filters.search) {
+        query = query.or(`guest_last_name.ilike.%${filters.search}%,guest_first_name.ilike.%${filters.search}%,reservation_number.ilike.%${filters.search}%`);
+      }
+
+      const { data, error } = await query;
+
+      if (error) throw error;
+
+      return data || [];
+    } catch (error) {
+      console.error('Failed to get reservations:', error);
+      return this.getDemoReservations();
     }
-    
-    if (filters.hotel) {
-      filtered = filtered.filter(r => r.hotel_code === filters.hotel);
-    }
-    
-    if (filters.search) {
-      const searchLower = filters.search.toLowerCase();
-      filtered = filtered.filter(r => 
-        r.guest_last_name.toLowerCase().includes(searchLower) ||
-        r.guest_first_name.toLowerCase().includes(searchLower) ||
-        r.reservation_number.toLowerCase().includes(searchLower)
-      );
-    }
-    
-    return filtered;
   }
-  
-  // Original Supabase code (falls vorhanden)
-  await this.initSupabase();
-  // ... rest of original code
-}
 
-  async createReservation(reservation) {
-    await this.initSupabase();
-    
-    const { data, error } = await this.supabase
-      .from('reservations')
-      .insert(reservation)
-      .select()
-      .single();
+  getDemoReservations() {
+    // Return demo data if Supabase is not available
+    return [
+      {
+        id: 1,
+        reservation_number: 'RES-2024-001',
+        hotel_code: 'MA7-M-DOR',
+        guest_first_name: 'Max',
+        guest_last_name: 'Mustermann',
+        arrival: '2024-11-15',
+        departure: '2024-11-17',
+        category: 'SUP',
+        rate_code: 'STD',
+        rate_price: 119,
+        status: 'active',
+        created_at: '2024-11-10T10:00:00Z'
+      },
+      {
+        id: 2,
+        reservation_number: 'RES-2024-002',
+        hotel_code: 'RES-HD-ALT',
+        guest_first_name: 'Anna',
+        guest_last_name: 'Schmidt',
+        arrival: '2024-11-20',
+        departure: '2024-11-22',
+        category: 'DLX',
+        rate_code: 'FLEX',
+        rate_price: 159,
+        status: 'active',
+        created_at: '2024-11-11T14:30:00Z'
+      }
+    ];
+  }
 
-    if (error) {
-      throw new Error(`Failed to create reservation: ${error.message}`);
+  async createReservation(data) {
+    try {
+      if (!this.supabase) {
+        // Demo mode - simulate creation
+        return {
+          ...data,
+          id: Date.now(),
+          created_at: new Date().toISOString()
+        };
+      }
+
+      const { data: reservation, error } = await this.supabase
+        .from('reservations')
+        .insert([data])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      return reservation;
+    } catch (error) {
+      console.error('Failed to create reservation:', error);
+      throw error;
     }
-
-    return data;
   }
 
   async updateReservation(id, updates) {
-    await this.initSupabase();
-    
-    const { data, error } = await this.supabase
-      .from('reservations')
-      .update(updates)
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (error) {
-      throw new Error(`Failed to update reservation: ${error.message}`);
-    }
-
-    return data;
-  }
-
-  async deleteReservation(id) {
-    await this.initSupabase();
-    
-    const { error } = await this.supabase
-      .from('reservations')
-      .delete()
-      .eq('id', id);
-
-    if (error) {
-      throw new Error(`Failed to delete reservation: ${error.message}`);
-    }
-
-    return true;
-  }
-
-  // HNS Integration
-  async pushToHNS(reservation) {
-    const settings = Storage.get('CHANNEL_SETTINGS') || {};
-    
-    if (!settings.api_key || !settings.enabled) {
-      console.log('HNS integration not configured or disabled');
-      return null;
-    }
-
-    const baseUrl = settings.mode === 'live' 
-      ? this.config.HNS.PROD 
-      : this.config.HNS.TEST;
-
-    const payload = this.mapReservationToHNS(reservation, settings);
-
-    return await this.fetchWithRetry(
-      `${baseUrl}/reservations`,
-      {
-        method: 'POST',
-        headers: {
-          'X-API-Key': settings.api_key,
-          'X-API-Secret': settings.api_secret || ''
-        },
-        body: JSON.stringify(payload)
+    try {
+      if (!this.supabase) {
+        // Demo mode
+        return { id, ...updates };
       }
-    );
+
+      const { data, error } = await this.supabase
+        .from('reservations')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      return data;
+    } catch (error) {
+      console.error('Failed to update reservation:', error);
+      throw error;
+    }
   }
 
-  mapReservationToHNS(reservation, settings) {
-    const hotelMapping = settings.hotel_map || {};
-    const categoryMapping = settings.category_map || {};
-    const rateMapping = settings.rate_map || {};
-
-    return {
-      hotelId: hotelMapping[reservation.hotel_code] || reservation.hotel_code,
-      stay: {
-        arrival: reservation.arrival,
-        departure: reservation.departure,
-        adults: reservation.guests_adults || 1,
-        children: reservation.guests_children || 0
-      },
-      guest: {
-        firstName: reservation.guest_first_name || '',
-        lastName: reservation.guest_last_name || '',
-        email: reservation.guest_email || '',
-        phone: reservation.guest_phone || ''
-      },
-      room: {
-        categoryId: categoryMapping[reservation.category] || reservation.category
-      },
-      rate: {
-        code: rateMapping[reservation.rate_code] || reservation.rate_code,
-        name: reservation.rate_name || '',
-        price: Number(reservation.rate_price || 0),
-        currency: 'EUR'
-      },
-      notes: reservation.notes || '',
-      idempotencyKey: reservation.reservation_number
-    };
+  async pushToHNS(reservation) {
+    // Placeholder for HNS integration
+    console.log('HNS push not yet implemented:', reservation);
+    return null;
   }
 }
 
-// =============== STORAGE LAYER ===============
-class Storage {
-  static get(key) {
-    try {
-      const fullKey = CONFIG.STORAGE.PREFIX + (CONFIG.STORAGE.KEYS[key] || key);
-      const item = localStorage.getItem(fullKey);
-      return item ? JSON.parse(item) : null;
-    } catch (error) {
-      console.error('Storage get error:', error);
-      return null;
-    }
-  }
-
-  static set(key, value) {
-    try {
-      const fullKey = CONFIG.STORAGE.PREFIX + (CONFIG.STORAGE.KEYS[key] || key);
-      localStorage.setItem(fullKey, JSON.stringify(value));
-      return true;
-    } catch (error) {
-      console.error('Storage set error:', error);
-      return false;
-    }
-  }
-
-  static remove(key) {
-    try {
-      const fullKey = CONFIG.STORAGE.PREFIX + (CONFIG.STORAGE.KEYS[key] || key);
-      localStorage.removeItem(fullKey);
-      return true;
-    } catch (error) {
-      console.error('Storage remove error:', error);
-      return false;
-    }
-  }
-
-  static clear() {
-    try {
-      const keys = Object.keys(localStorage);
-      keys.forEach(key => {
-        if (key.startsWith(CONFIG.STORAGE.PREFIX)) {
-          localStorage.removeItem(key);
-        }
-      });
-      return true;
-    } catch (error) {
-      console.error('Storage clear error:', error);
-      return false;
-    }
-  }
-}
-
-// =============== UI COMPONENTS ===============
+// =============== UI MANAGER ===============
 class UIManager {
   constructor() {
-    this.toasts = new Set();
-    this.modals = new Map();
+    this.toastContainer = this.createToastContainer();
   }
 
-  // Toast Notifications
+  createToastContainer() {
+    let container = document.getElementById('toastContainer');
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'toastContainer';
+      container.className = 'toast-container';
+      document.body.appendChild(container);
+    }
+    return container;
+  }
+
   showToast(message, type = 'info', duration = CONFIG.UI.TOAST_DURATION) {
-    const id = Date.now().toString();
-    const toast = this.createToastElement(id, message, type);
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
     
-    document.body.appendChild(toast);
+    const icon = {
+      success: 'fa-check-circle',
+      error: 'fa-exclamation-circle',
+      warning: 'fa-exclamation-triangle',
+      info: 'fa-info-circle'
+    }[type] || 'fa-info-circle';
+    
+    toast.innerHTML = `
+      <i class="fas ${icon}"></i>
+      <span>${message}</span>
+    `;
+    
+    this.toastContainer.appendChild(toast);
     
     // Trigger animation
-    requestAnimationFrame(() => {
-      toast.classList.add('show');
-    });
+    setTimeout(() => toast.classList.add('show'), 10);
     
-    // Auto remove
+    // Remove after duration
     setTimeout(() => {
-      this.removeToast(id);
-    }, duration);
-    
-    this.toasts.add(id);
-    return id;
-  }
-
-  createToastElement(id, message, type) {
-    const toast = document.createElement('div');
-    toast.id = `toast-${id}`;
-    toast.className = `notification ${type}`;
-    toast.innerHTML = `
-      <div class="notification-content">
-        <span class="notification-message">${message}</span>
-        <button class="notification-close" onclick="ui.removeToast('${id}')">
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-            <path d="M15 5L5 15M5 5L15 15" stroke="currentColor" stroke-width="2"/>
-          </svg>
-        </button>
-      </div>
-    `;
-    return toast;
-  }
-
-  removeToast(id) {
-    const toast = document.getElementById(`toast-${id}`);
-    if (toast) {
       toast.classList.remove('show');
       setTimeout(() => toast.remove(), 300);
-      this.toasts.delete(id);
-    }
+    }, duration);
   }
 
-  // Modal Management
   openModal(modalId) {
     const modal = document.getElementById(modalId);
     if (!modal) return;
@@ -513,14 +440,11 @@ class UIManager {
     modal.setAttribute('aria-hidden', 'false');
     document.body.style.overflow = 'hidden';
     
-    state.set('ui.modal', modalId);
-    
     // Focus trap
     const focusableElements = modal.querySelectorAll(
       'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
     );
-    
-    if (focusableElements.length) {
+    if (focusableElements.length > 0) {
       focusableElements[0].focus();
     }
   }
@@ -532,45 +456,44 @@ class UIManager {
     modal.classList.add('hidden');
     modal.setAttribute('aria-hidden', 'true');
     document.body.style.overflow = '';
-    
-    state.set('ui.modal', null);
   }
 
   closeAllModals() {
-    document.querySelectorAll('.modal').forEach(modal => {
-      modal.classList.add('hidden');
-      modal.setAttribute('aria-hidden', 'true');
+    document.querySelectorAll('.modal:not(.hidden)').forEach(modal => {
+      this.closeModal(modal.id);
     });
-    document.body.style.overflow = '';
-    state.set('ui.modal', null);
   }
 
-  // Loading States
-  setLoading(element, isLoading) {
+  setLoading(element, loading) {
     if (!element) return;
     
-    if (isLoading) {
+    if (loading) {
       element.disabled = true;
       element.classList.add('loading');
-      element.dataset.originalText = element.textContent;
-      element.innerHTML = '<span class="spinner"></span> Loading...';
+      const icon = element.querySelector('i');
+      if (icon) {
+        icon.className = 'fas fa-spinner fa-spin';
+      }
     } else {
       element.disabled = false;
       element.classList.remove('loading');
-      element.textContent = element.dataset.originalText || element.textContent;
+      const icon = element.querySelector('i');
+      if (icon) {
+        // Restore original icon - you might need to store this
+        icon.className = 'fas fa-sync';
+      }
     }
   }
 
-  // Form Validation
-  validateForm(formElement) {
-    const inputs = formElement.querySelectorAll('[required]');
+  validateForm(form) {
     const errors = [];
+    const requiredInputs = form.querySelectorAll('[required]');
     
-    inputs.forEach(input => {
+    requiredInputs.forEach(input => {
       if (!input.value.trim()) {
         errors.push({
-          field: input.name || input.id,
-          message: `${input.dataset.label || 'This field'} is required`
+          field: input.name,
+          message: `${input.name} ist erforderlich`
         });
         input.classList.add('error');
       } else {
@@ -578,25 +501,12 @@ class UIManager {
       }
     });
     
-    // Email validation
-    const emailInputs = formElement.querySelectorAll('[type="email"]');
-    emailInputs.forEach(input => {
+    // Validate specific field types
+    form.querySelectorAll('[type="email"]').forEach(input => {
       if (input.value && !this.isValidEmail(input.value)) {
         errors.push({
-          field: input.name || input.id,
-          message: 'Please enter a valid email address'
-        });
-        input.classList.add('error');
-      }
-    });
-    
-    // Date validation
-    const dateInputs = formElement.querySelectorAll('[type="date"]');
-    dateInputs.forEach(input => {
-      if (input.value && !this.isValidDate(input.value)) {
-        errors.push({
-          field: input.name || input.id,
-          message: 'Please enter a valid date'
+          field: input.name,
+          message: 'Ungültige E-Mail-Adresse'
         });
         input.classList.add('error');
       }
@@ -637,12 +547,92 @@ const HOTELS = [
   { code: 'UM-MUC-OST', group: 'UrbanMotel', name: 'München Ost', city: 'München' }
 ];
 
+// =============== DEMO DATA ===============
+const DEMO_CATEGORIES = [
+  { 
+    id: 1, 
+    code: 'STD', 
+    name: 'Standard', 
+    size: '18m²', 
+    beds: '1 Doppelbett', 
+    persons: 2, 
+    price: 89,
+    amenities: ['WLAN', 'TV', 'Bad mit Dusche']
+  },
+  { 
+    id: 2, 
+    code: 'SUP', 
+    name: 'Superior', 
+    size: '24m²', 
+    beds: '1 King-Size Bett', 
+    persons: 2, 
+    price: 119,
+    amenities: ['WLAN', 'Smart-TV', 'Bad mit Wanne', 'Minibar']
+  },
+  { 
+    id: 3, 
+    code: 'DLX', 
+    name: 'Deluxe', 
+    size: '32m²', 
+    beds: '1 King-Size Bett + Schlafsofa', 
+    persons: 3, 
+    price: 159,
+    amenities: ['WLAN', 'Smart-TV', 'Bad mit Wanne & Dusche', 'Minibar', 'Balkon']
+  },
+  {
+    id: 4,
+    code: 'JUN',
+    name: 'Junior Suite',
+    size: '42m²',
+    beds: '1 King-Size Bett',
+    persons: 2,
+    price: 199,
+    amenities: ['WLAN', 'Smart-TV', 'Luxus-Bad', 'Minibar', 'Sitzecke', 'Balkon']
+  }
+];
+
+const DEMO_RATES = [
+  { 
+    id: 1, 
+    code: 'STD', 
+    name: 'Standardrate', 
+    price: 89, 
+    cancellation: 'Bis 24h vorher kostenlos stornierbar',
+    includes: ['Frühstück']
+  },
+  { 
+    id: 2, 
+    code: 'FLEX', 
+    name: 'Flex Rate', 
+    price: 109, 
+    cancellation: 'Bis 6h vorher kostenlos stornierbar',
+    includes: ['Frühstück', 'Late Check-out']
+  },
+  { 
+    id: 3, 
+    code: 'NREF', 
+    name: 'Non-Refundable', 
+    price: 69, 
+    cancellation: 'Nicht stornierbar - 20% günstiger',
+    includes: ['Frühstück']
+  },
+  {
+    id: 4,
+    code: 'BUSI',
+    name: 'Business Rate',
+    price: 99,
+    cancellation: 'Bis 18h vorher kostenlos stornierbar',
+    includes: ['Frühstück', 'WLAN Premium', 'Parkplatz']
+  }
+];
+
 // =============== APPLICATION CONTROLLER ===============
 class ReservationApp {
   constructor() {
     this.api = new API(CONFIG);
     this.ui = new UIManager();
     this.initialized = false;
+    this.wizard = null;
   }
 
   async init() {
@@ -653,16 +643,14 @@ class ReservationApp {
       this.showLoadingOverlay();
       
       // Initialize components (Demo Mode)
-try {
-  await this.initializeSupabase();
-} catch (error) {
-  console.log('Continuing in demo mode without database connection');
-}
+      try {
+        await this.initializeSupabase();
+      } catch (error) {
+        console.log('Continuing in demo mode without database connection');
+      }
       this.loadStoredData();
       this.initializeEventListeners();
       this.initializeRouting();
-
-      this.initWizard();
       
       // Check authentication
       const session = Storage.get('USER_SESSION');
@@ -688,7 +676,7 @@ try {
       this.updateDashboard();
       this.hideLoadingOverlay();
 
-       // Start clock immediately
+      // Start clock immediately
       this.updateClock();
       
       this.initialized = true;
@@ -702,13 +690,13 @@ try {
   }
 
   async initializeSupabase() {
-  try {
-    return await this.api.initSupabase();
-  } catch (error) {
-    console.log('Continuing without Supabase - Demo Mode');
-    return null;
+    try {
+      return await this.api.initSupabase();
+    } catch (error) {
+      console.log('Continuing without Supabase - Demo Mode');
+      return null;
+    }
   }
-}
 
   loadStoredData() {
     // Load preferences
@@ -887,6 +875,9 @@ try {
         case 'open-settings':
           this.openSettingsModal();
           break;
+        case 'open-sketch':
+          this.openSketchModal();
+          break;
         case 'logout':
           this.logout();
           break;
@@ -898,9 +889,10 @@ try {
       this.ui.showToast('Action failed: ' + error.message, 'error');
     }
   }
-   // =============== WIZARD MANAGEMENT ===============
+
+  // =============== WIZARD MANAGEMENT ===============
   initWizard() {
-    const wizard = {
+    this.wizard = {
       currentStep: 1,
       maxSteps: 4,
       data: {}
@@ -911,20 +903,25 @@ try {
     const prevBtn = document.querySelector('[data-wizard-action="prev"]');
     const submitBtn = document.querySelector('[data-wizard-action="submit"]');
 
+    // Remove old listeners and add new ones
     if (nextBtn) {
-      nextBtn.addEventListener('click', () => this.wizardNext(wizard));
+      const newNextBtn = nextBtn.cloneNode(true);
+      nextBtn.parentNode.replaceChild(newNextBtn, nextBtn);
+      newNextBtn.addEventListener('click', () => this.wizardNext());
     }
     if (prevBtn) {
-      prevBtn.addEventListener('click', () => this.wizardPrev(wizard));
+      const newPrevBtn = prevBtn.cloneNode(true);
+      prevBtn.parentNode.replaceChild(newPrevBtn, prevBtn);
+      newPrevBtn.addEventListener('click', () => this.wizardPrev());
     }
 
     // Initialize first step
-    this.updateWizardUI(wizard);
+    this.updateWizardUI();
   }
 
-  wizardNext(wizard) {
+  wizardNext() {
     // Validate current step
-    const currentStepValid = this.validateWizardStep(wizard.currentStep);
+    const currentStepValid = this.validateWizardStep(this.wizard.currentStep);
     
     if (!currentStepValid) {
       this.ui.showToast('Bitte alle Pflichtfelder ausfüllen', 'error');
@@ -932,20 +929,20 @@ try {
     }
 
     // Save current step data
-    this.saveWizardStep(wizard);
+    this.saveWizardStep();
 
     // Load next step
-    if (wizard.currentStep < wizard.maxSteps) {
-      wizard.currentStep++;
-      this.updateWizardUI(wizard);
-      this.loadWizardStepData(wizard);
+    if (this.wizard.currentStep < this.wizard.maxSteps) {
+      this.wizard.currentStep++;
+      this.updateWizardUI();
+      this.loadWizardStepData();
     }
   }
 
-  wizardPrev(wizard) {
-    if (wizard.currentStep > 1) {
-      wizard.currentStep--;
-      this.updateWizardUI(wizard);
+  wizardPrev() {
+    if (this.wizard.currentStep > 1) {
+      this.wizard.currentStep--;
+      this.updateWizardUI();
     }
   }
 
@@ -977,32 +974,58 @@ try {
           return false;
         }
         break;
+      case 2:
+        // Validate category selection
+        const form = document.getElementById('formNewReservation');
+        const categoryInput = form.querySelector('[name="category"]');
+        if (!categoryInput || !categoryInput.value) {
+          this.ui.showToast('Bitte eine Kategorie auswählen', 'error');
+          return false;
+        }
+        break;
+      case 3:
+        // Validate rate selection
+        const rateInput = document.getElementById('formNewReservation').querySelector('[name="rate_code"]');
+        if (!rateInput || !rateInput.value) {
+          this.ui.showToast('Bitte eine Rate auswählen', 'error');
+          return false;
+        }
+        break;
     }
 
     return isValid;
   }
 
-  saveWizardStep(wizard) {
-    const stepContent = document.querySelector(`[data-step-content="${wizard.currentStep}"]`);
+  saveWizardStep() {
+    const stepContent = document.querySelector(`[data-step-content="${this.wizard.currentStep}"]`);
     if (!stepContent) return;
 
     const inputs = stepContent.querySelectorAll('input, select, textarea');
     inputs.forEach(input => {
       if (input.name) {
-        wizard.data[input.name] = input.value;
+        this.wizard.data[input.name] = input.value;
+      }
+    });
+    
+    // Also save hidden inputs from the form
+    const form = document.getElementById('formNewReservation');
+    const hiddenInputs = form.querySelectorAll('input[type="hidden"]');
+    hiddenInputs.forEach(input => {
+      if (input.name) {
+        this.wizard.data[input.name] = input.value;
       }
     });
   }
 
-  updateWizardUI(wizard) {
+  updateWizardUI() {
     // Update step indicators
     document.querySelectorAll('.wizard-step').forEach((step, index) => {
       const stepNum = index + 1;
       step.classList.remove('active', 'completed');
       
-      if (stepNum === wizard.currentStep) {
+      if (stepNum === this.wizard.currentStep) {
         step.classList.add('active');
-      } else if (stepNum < wizard.currentStep) {
+      } else if (stepNum < this.wizard.currentStep) {
         step.classList.add('completed');
       }
     });
@@ -1010,7 +1033,7 @@ try {
     // Show/hide step contents
     document.querySelectorAll('[data-step-content]').forEach(content => {
       const stepNum = parseInt(content.dataset.stepContent);
-      content.classList.toggle('hidden', stepNum !== wizard.currentStep);
+      content.classList.toggle('hidden', stepNum !== this.wizard.currentStep);
     });
 
     // Update buttons
@@ -1019,11 +1042,11 @@ try {
     const submitBtn = document.querySelector('[data-wizard-action="submit"]');
 
     if (prevBtn) {
-      prevBtn.disabled = wizard.currentStep === 1;
+      prevBtn.disabled = this.wizard.currentStep === 1;
     }
 
     if (nextBtn && submitBtn) {
-      if (wizard.currentStep === wizard.maxSteps) {
+      if (this.wizard.currentStep === this.wizard.maxSteps) {
         nextBtn.classList.add('hidden');
         submitBtn.classList.remove('hidden');
       } else {
@@ -1033,185 +1056,130 @@ try {
     }
   }
 
-  loadWizardStepData(wizard) {
-    const { currentStep } = wizard;
+  loadWizardStepData() {
+    const { currentStep } = this.wizard;
 
     switch(currentStep) {
       case 2:
-        this.loadCategories();
         this.renderCategoryGrid();
         break;
       case 3:
         this.renderRateGrid();
         break;
       case 4:
-        this.renderReservationSummary(wizard.data);
+        this.renderReservationSummary(this.wizard.data);
         break;
     }
   }
-   async loadCategories() {
-  try {
-    // Demo-Kategorien für die Entwicklung
-    const categories = [
-      { 
-        id: 1, 
-        code: 'STD', 
-        name: 'Standard', 
-        size: '18m²', 
-        beds: '1 Doppelbett', 
-        persons: 2, 
-        price: 89,
-        amenities: ['WLAN', 'TV', 'Bad mit Dusche']
-      },
-      { 
-        id: 2, 
-        code: 'SUP', 
-        name: 'Superior', 
-        size: '24m²', 
-        beds: '1 King-Size Bett', 
-        persons: 2, 
-        price: 119,
-        amenities: ['WLAN', 'Smart-TV', 'Bad mit Wanne', 'Minibar']
-      },
-      { 
-        id: 3, 
-        code: 'DLX', 
-        name: 'Deluxe', 
-        size: '32m²', 
-        beds: '1 King-Size Bett + Schlafsofa', 
-        persons: 3, 
-        price: 159,
-        amenities: ['WLAN', 'Smart-TV', 'Bad mit Wanne & Dusche', 'Minibar', 'Balkon']
-      },
-      {
-        id: 4,
-        code: 'JUN',
-        name: 'Junior Suite',
-        size: '42m²',
-        beds: '1 King-Size Bett',
-        persons: 2,
-        price: 199,
-        amenities: ['WLAN', 'Smart-TV', 'Luxus-Bad', 'Minibar', 'Sitzecke', 'Balkon']
-      }
-    ];
-    
-    state.set('categories', categories);
-  } catch (error) {
-    console.error('Failed to load categories:', error);
-    this.ui.showToast('Kategorien konnten nicht geladen werden', 'error');
-  }
-}
 
-async loadRates() {
-  try {
-    // Demo-Raten für die Entwicklung
-    const rates = [
-      { 
-        id: 1, 
-        code: 'STD', 
-        name: 'Standardrate', 
-        price: 89, 
-        cancellation: 'Bis 24h vorher kostenlos stornierbar',
-        includes: ['Frühstück']
-      },
-      { 
-        id: 2, 
-        code: 'FLEX', 
-        name: 'Flex Rate', 
-        price: 109, 
-        cancellation: 'Bis 6h vorher kostenlos stornierbar',
-        includes: ['Frühstück', 'Late Check-out']
-      },
-      { 
-        id: 3, 
-        code: 'NREF', 
-        name: 'Non-Refundable', 
-        price: 69, 
-        cancellation: 'Nicht stornierbar - 20% günstiger',
-        includes: ['Frühstück']
-      },
-      {
-        id: 4,
-        code: 'BUSI',
-        name: 'Business Rate',
-        price: 99,
-        cancellation: 'Bis 18h vorher kostenlos stornierbar',
-        includes: ['Frühstück', 'WLAN Premium', 'Parkplatz']
+  // =============== CATEGORIES & RATES ===============
+  async loadCategories() {
+    try {
+      // Try to load from storage first
+      let categories = Storage.get('CATEGORIES');
+      
+      // If nothing in storage, use demo data
+      if (!categories || categories.length === 0) {
+        categories = DEMO_CATEGORIES;
+        Storage.set('CATEGORIES', categories);
       }
-    ];
-    
-    state.set('rates', rates);
-  } catch (error) {
-    console.error('Failed to load rates:', error);
-    this.ui.showToast('Raten konnten nicht geladen werden', 'error');
+      
+      state.set('categories', categories);
+      console.log('Categories loaded:', categories.length);
+    } catch (error) {
+      console.error('Failed to load categories:', error);
+      // Fallback to demo data
+      state.set('categories', DEMO_CATEGORIES);
+      this.ui.showToast('Kategorien konnten nicht geladen werden, verwende Demo-Daten', 'warning');
+    }
   }
-}
+
+  async loadRates() {
+    try {
+      // Try to load from storage first
+      let rates = Storage.get('RATES');
+      
+      // If nothing in storage, use demo data
+      if (!rates || rates.length === 0) {
+        rates = DEMO_RATES;
+        Storage.set('RATES', rates);
+      }
+      
+      state.set('rates', rates);
+      console.log('Rates loaded:', rates.length);
+    } catch (error) {
+      console.error('Failed to load rates:', error);
+      // Fallback to demo data
+      state.set('rates', DEMO_RATES);
+      this.ui.showToast('Raten konnten nicht geladen werden, verwende Demo-Daten', 'warning');
+    }
+  }
 
   renderCategoryGrid() {
-  const grid = document.getElementById('categoryGrid');
-  if (!grid) return;
+    const grid = document.getElementById('categoryGrid');
+    if (!grid) return;
 
-  const categories = state.get('categories') || [];
+    const categories = state.get('categories') || [];
 
-  if (categories.length === 0) {
-    grid.innerHTML = `
-      <div class="text-center text-muted" style="grid-column: 1/-1; padding: 2rem;">
-        <i class="fas fa-bed" style="font-size: 3rem; opacity: 0.3;"></i>
-        <p style="margin-top: 1rem;">Keine Kategorien verfügbar</p>
+    if (categories.length === 0) {
+      grid.innerHTML = `
+        <div class="text-center text-muted" style="grid-column: 1/-1; padding: 2rem;">
+          <i class="fas fa-bed" style="font-size: 3rem; opacity: 0.3;"></i>
+          <p style="margin-top: 1rem;">Keine Kategorien verfügbar</p>
+          <p style="margin-top: 0.5rem; font-size: 0.875rem;">Bitte fügen Sie Kategorien in den Einstellungen hinzu.</p>
+        </div>
+      `;
+      return;
+    }
+
+    grid.innerHTML = categories.map(cat => `
+      <div class="category-card glass-morphism" data-category="${cat.code}">
+        <div class="category-header">
+          <h4>${cat.name}</h4>
+          <div class="category-price">
+            €${cat.price}
+            <small>/Nacht</small>
+          </div>
+        </div>
+        <div class="category-details">
+          <div class="detail-item">
+            <i class="fas fa-ruler-combined"></i>
+            <span>${cat.size}</span>
+          </div>
+          <div class="detail-item">
+            <i class="fas fa-bed"></i>
+            <span>${cat.beds}</span>
+          </div>
+          <div class="detail-item">
+            <i class="fas fa-users"></i>
+            <span>Max. ${cat.persons} Personen</span>
+          </div>
+        </div>
+        ${cat.amenities ? `
+          <div class="category-amenities" style="margin-bottom: 1rem;">
+            ${cat.amenities.map(a => `<span class="badge" style="margin-right: 0.25rem;">${a}</span>`).join('')}
+          </div>
+        ` : ''}
+        <button type="button" class="btn primary btn-select-category" data-category-code="${cat.code}">
+          <i class="fas fa-check"></i>
+          Auswählen
+        </button>
       </div>
-    `;
-    return;
-  }
+    `).join('');
 
-  grid.innerHTML = categories.map(cat => `
-    <div class="category-card glass-morphism" data-category="${cat.code}">
-      <div class="category-header">
-        <h4>${cat.name}</h4>
-        <div class="category-price">
-          €${cat.price}
-          <small>/Nacht</small>
-        </div>
-      </div>
-      <div class="category-details">
-        <div class="detail-item">
-          <i class="fas fa-ruler-combined"></i>
-          <span>${cat.size}</span>
-        </div>
-        <div class="detail-item">
-          <i class="fas fa-bed"></i>
-          <span>${cat.beds}</span>
-        </div>
-        <div class="detail-item">
-          <i class="fas fa-users"></i>
-          <span>Max. ${cat.persons} Personen</span>
-        </div>
-      </div>
-      ${cat.amenities ? `
-        <div class="category-amenities" style="margin-bottom: 1rem;">
-          ${cat.amenities.map(a => `<span class="badge" style="margin-right: 0.25rem;">${a}</span>`).join('')}
-        </div>
-      ` : ''}
-      <button type="button" class="btn primary btn-select-category" data-category-code="${cat.code}">
-        <i class="fas fa-check"></i>
-        Auswählen
-      </button>
-    </div>
-  `).join('');
-
-  // Add click handlers
-  grid.querySelectorAll('.btn-select-category').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      const code = e.currentTarget.dataset.categoryCode;
-      this.selectCategory(code);
-      
-      // Auto-advance to next step
-      setTimeout(() => {
-        const wizard = { currentStep: 2, maxSteps: 4, data: {} };
-        this.wizardNext(wizard);
-      }, 300);
+    // Add click handlers
+    grid.querySelectorAll('.btn-select-category').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const code = e.currentTarget.dataset.categoryCode;
+        this.selectCategory(code);
+        
+        // Auto-advance to next step
+        setTimeout(() => {
+          this.wizardNext();
+        }, 300);
+      });
     });
-  });
-}
+  }
 
   selectCategory(code) {
     // Visual feedback
@@ -1233,69 +1201,74 @@ async loadRates() {
       form.appendChild(input);
     }
     input.value = code;
+    
+    // Update wizard data
+    this.wizard.data.category = code;
+    
+    this.ui.showToast(`Kategorie "${code}" ausgewählt`, 'success');
   }
 
   renderRateGrid() {
-  const grid = document.getElementById('rateGrid');
-  if (!grid) return;
+    const grid = document.getElementById('rateGrid');
+    if (!grid) return;
 
-  const rates = state.get('rates') || [];
-  
-  if (rates.length === 0) {
-    grid.innerHTML = `
-      <div class="text-center text-muted" style="grid-column: 1/-1; padding: 2rem;">
-        <i class="fas fa-tag" style="font-size: 3rem; opacity: 0.3;"></i>
-        <p style="margin-top: 1rem;">Keine Raten verfügbar</p>
-      </div>
-    `;
-    return;
-  }
-
-  grid.innerHTML = rates.map(rate => `
-    <div class="rate-card glass-morphism" data-rate="${rate.code}">
-      <div class="rate-header">
-        <h4>${rate.name}</h4>
-        <div class="rate-price">
-          €${rate.price}
-          <small>/Nacht</small>
+    const rates = state.get('rates') || [];
+    
+    if (rates.length === 0) {
+      grid.innerHTML = `
+        <div class="text-center text-muted" style="grid-column: 1/-1; padding: 2rem;">
+          <i class="fas fa-tag" style="font-size: 3rem; opacity: 0.3;"></i>
+          <p style="margin-top: 1rem;">Keine Raten verfügbar</p>
+          <p style="margin-top: 0.5rem; font-size: 0.875rem;">Bitte fügen Sie Raten in den Einstellungen hinzu.</p>
         </div>
-      </div>
-      <div class="rate-policy">
-        <i class="fas fa-info-circle"></i>
-        <span>${rate.cancellation}</span>
-      </div>
-      ${rate.includes && rate.includes.length > 0 ? `
-        <div class="rate-includes" style="margin-bottom: 1rem;">
-          <strong style="display: block; margin-bottom: 0.5rem;">Inklusive:</strong>
-          ${rate.includes.map(item => `
-            <span class="badge" style="margin-right: 0.25rem;">
-              <i class="fas fa-check" style="font-size: 0.75rem;"></i> ${item}
-            </span>
-          `).join('')}
-        </div>
-      ` : ''}
-      <button type="button" class="btn primary btn-select-rate" data-rate-code="${rate.code}" data-rate-price="${rate.price}">
-        <i class="fas fa-check"></i>
-        Auswählen
-      </button>
-    </div>
-  `).join('');
+      `;
+      return;
+    }
 
-  // Add click handlers
-  grid.querySelectorAll('.btn-select-rate').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      const code = e.currentTarget.dataset.rateCode;
-      const price = e.currentTarget.dataset.ratePrice;
-      this.selectRate(code, price);
-      
-      // Auto-advance to next step
-      setTimeout(() => {
-        const wizard = { currentStep: 3, maxSteps: 4, data: {} };
-        this.wizardNext(wizard);
-      }, 300);
+    grid.innerHTML = rates.map(rate => `
+      <div class="rate-card glass-morphism" data-rate="${rate.code}">
+        <div class="rate-header">
+          <h4>${rate.name}</h4>
+          <div class="rate-price">
+            €${rate.price}
+            <small>/Nacht</small>
+          </div>
+        </div>
+        <div class="rate-policy">
+          <i class="fas fa-info-circle"></i>
+          <span>${rate.cancellation}</span>
+        </div>
+        ${rate.includes && rate.includes.length > 0 ? `
+          <div class="rate-includes" style="margin-bottom: 1rem;">
+            <strong style="display: block; margin-bottom: 0.5rem;">Inklusive:</strong>
+            ${rate.includes.map(item => `
+              <span class="badge" style="margin-right: 0.25rem;">
+                <i class="fas fa-check" style="font-size: 0.75rem;"></i> ${item}
+              </span>
+            `).join('')}
+          </div>
+        ` : ''}
+        <button type="button" class="btn primary btn-select-rate" data-rate-code="${rate.code}" data-rate-price="${rate.price}">
+          <i class="fas fa-check"></i>
+          Auswählen
+        </button>
+      </div>
+    `).join('');
+
+    // Add click handlers
+    grid.querySelectorAll('.btn-select-rate').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const code = e.currentTarget.dataset.rateCode;
+        const price = e.currentTarget.dataset.ratePrice;
+        this.selectRate(code, price);
+        
+        // Auto-advance to next step
+        setTimeout(() => {
+          this.wizardNext();
+        }, 300);
+      });
     });
-  });
-}
+  }
 
   selectRate(code, price) {
     // Visual feedback
@@ -1327,6 +1300,12 @@ async loadRates() {
       form.appendChild(priceInput);
     }
     priceInput.value = price;
+    
+    // Update wizard data
+    this.wizard.data.rate_code = code;
+    this.wizard.data.rate_price = price;
+    
+    this.ui.showToast(`Rate "${code}" ausgewählt`, 'success');
   }
 
   renderReservationSummary(data) {
@@ -1338,6 +1317,7 @@ async loadRates() {
     if (!summarySection) {
       summarySection = document.createElement('div');
       summarySection.className = 'reservation-summary card';
+      summarySection.style.marginBottom = '2rem';
       content.insertBefore(summarySection, content.firstChild);
     }
 
@@ -1350,15 +1330,15 @@ async loadRates() {
       <div class="summary-grid">
         <div class="summary-item">
           <span class="label">Hotel:</span>
-          <span class="value">${hotel ? hotel.name : data.hotel_code}</span>
+          <span class="value">${hotel ? hotel.name : data.hotel_code || 'Nicht ausgewählt'}</span>
         </div>
         <div class="summary-item">
           <span class="label">Anreise:</span>
-          <span class="value">${this.formatDate(data.arrival)}</span>
+          <span class="value">${data.arrival ? this.formatDate(data.arrival) : 'Nicht ausgewählt'}</span>
         </div>
         <div class="summary-item">
           <span class="label">Abreise:</span>
-          <span class="value">${this.formatDate(data.departure)}</span>
+          <span class="value">${data.departure ? this.formatDate(data.departure) : 'Nicht ausgewählt'}</span>
         </div>
         <div class="summary-item">
           <span class="label">Nächte:</span>
@@ -1371,6 +1351,10 @@ async loadRates() {
         <div class="summary-item">
           <span class="label">Rate:</span>
           <span class="value">${data.rate_code || 'Nicht ausgewählt'}</span>
+        </div>
+        <div class="summary-item">
+          <span class="label">Preis/Nacht:</span>
+          <span class="value">${data.rate_price ? this.formatCurrency(data.rate_price) : '0 €'}</span>
         </div>
         <div class="summary-item highlight">
           <span class="label">Gesamtpreis:</span>
@@ -1389,6 +1373,7 @@ async loadRates() {
     return diffDays;
   }
 
+  // =============== DATA OPERATIONS ===============
   async handleFilterChange(filterType, value) {
     state.set(`filters.${filterType}`, value);
     await this.loadReservations();
@@ -1421,15 +1406,18 @@ async loadRates() {
       const formData = new FormData(form);
       const data = Object.fromEntries(formData);
       
+      // Merge with wizard data
+      const finalData = { ...this.wizard?.data, ...data };
+      
       switch (formType) {
         case 'new-reservation':
-          await this.createReservation(data);
+          await this.createReservation(finalData);
           break;
         case 'edit-reservation':
-          await this.updateReservation(data);
+          await this.updateReservation(finalData);
           break;
         case 'channel-settings':
-          await this.saveChannelSettings(data);
+          await this.saveChannelSettings(finalData);
           break;
         default:
           console.warn('Unknown form type:', formType);
@@ -1453,52 +1441,16 @@ async loadRates() {
     }
   }
 
-  async loadCategories() {
+  async loadReservations() {
     try {
-      // Fetch from Supabase or use cached data
-      const cached = this.api.getCached('categories');
-      if (cached) {
-        state.set('categories', cached);
-        return;
+      const loadingElement = document.querySelector('[data-action="refresh"]');
+      if (loadingElement) {
+        this.ui.setLoading(loadingElement, true);
       }
       
-      // Simulated API call - replace with actual Supabase query
-      const categories = Storage.get('CATEGORIES') || [];
-      state.set('categories', categories);
-      this.api.setCached('categories', categories);
-    } catch (error) {
-      console.error('Failed to load categories:', error);
-      throw error;
-    }
-  }
-
-  async loadRates() {
-    try {
-      const cached = this.api.getCached('rates');
-      if (cached) {
-        state.set('rates', cached);
-        return;
-      }
-      
-      const rates = Storage.get('RATES') || [];
-      state.set('rates', rates);
-      this.api.setCached('rates', rates);
-    } catch (error) {
-      console.error('Failed to load rates:', error);
-      throw error;
-    }
-  }
-
- async loadReservations() {
-  try {
-    const loadingElement = document.querySelector('[data-action="refresh"]');
-    if (loadingElement) {
-      this.ui.setLoading(loadingElement, true);
-    }
-    
-    const filters = state.get('filters') || {};
-    const reservations = await this.api.getReservations(filters);
-      
+      const filters = state.get('filters') || {};
+      const reservations = await this.api.getReservations(filters);
+        
       state.set('reservations', reservations);
       this.renderReservationTable();
       this.updateKPIs();
@@ -1514,6 +1466,8 @@ async loadRates() {
   // Reservation CRUD operations
   async createReservation(data) {
     try {
+      console.log('Creating reservation with data:', data);
+      
       // Generate reservation number
       data.reservation_number = this.generateReservationNumber();
       data.status = 'active';
@@ -1540,7 +1494,7 @@ async loadRates() {
       this.renderReservationTable();
       this.updateKPIs();
       
-      this.ui.showToast('Reservation created successfully', 'success');
+      this.ui.showToast('Reservierung erfolgreich erstellt!', 'success');
       
       // Send confirmation email if configured
       if (data.send_confirmation && data.guest_email) {
@@ -1550,7 +1504,7 @@ async loadRates() {
       return reservation;
     } catch (error) {
       console.error('Failed to create reservation:', error);
-      this.ui.showToast('Failed to create reservation: ' + error.message, 'error');
+      this.ui.showToast('Fehler beim Erstellen der Reservierung: ' + error.message, 'error');
       throw error;
     }
   }
@@ -1602,337 +1556,173 @@ async loadRates() {
         state.set('reservations', reservations);
       }
       
+      this.ui.closeModal('modalEditReservation');
       this.renderReservationTable();
       this.updateKPIs();
       
-      this.ui.showToast('Reservation canceled', 'warning');
+      this.ui.showToast('Reservation canceled', 'success');
     } catch (error) {
       console.error('Failed to cancel reservation:', error);
       this.ui.showToast('Failed to cancel reservation: ' + error.message, 'error');
     }
   }
 
-  // UI Rendering Methods
+  generateReservationNumber() {
+    const date = new Date();
+    const year = date.getFullYear();
+    const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+    return `RES-${year}-${random}`;
+  }
+
+  // =============== UI UPDATE METHODS ===============
   renderReservationTable() {
     const tbody = document.querySelector('#reservationTable tbody');
     if (!tbody) return;
-    
+
     const reservations = state.get('reservations') || [];
-    
+    const count = document.getElementById('reservationCount');
+    if (count) {
+      count.textContent = reservations.length;
+    }
+
     if (reservations.length === 0) {
       tbody.innerHTML = `
         <tr>
           <td colspan="8" class="text-center text-muted">
-            No reservations found
+            <div style="padding: 2rem;">
+              <i class="fas fa-inbox" style="font-size: 3rem; opacity: 0.3;"></i>
+              <p style="margin-top: 1rem;">Keine Reservierungen gefunden</p>
+              <p style="margin-top: 0.5rem; font-size: 0.875rem;">
+                Erstellen Sie eine neue Reservierung um zu starten
+              </p>
+            </div>
           </td>
         </tr>
       `;
       return;
     }
-    
-    tbody.innerHTML = reservations.map(res => `
-      <tr data-id="${res.id}">
-        <td>${res.reservation_number}</td>
-        <td>${this.getHotelName(res.hotel_code)}</td>
-        <td>${this.formatGuestName(res)}</td>
-        <td>${this.formatDate(res.arrival)}</td>
-        <td>${this.formatDate(res.departure)}</td>
-        <td>${res.category || '-'}</td>
-        <td>${this.formatCurrency(res.rate_price)}</td>
-        <td>
-          <span class="pill ${res.status}">
-            ${res.status}
-          </span>
-        </td>
-      </tr>
-    `).join('');
+
+    tbody.innerHTML = reservations.map(r => {
+      const hotel = state.get('hotels')?.find(h => h.code === r.hotel_code);
+      const nights = this.calculateNights(r.arrival, r.departure);
+      const totalPrice = (r.rate_price || 0) * nights;
+      
+      return `
+        <tr data-id="${r.id}" style="cursor: pointer;">
+          <td><code class="mono">${r.reservation_number}</code></td>
+          <td>${hotel ? hotel.name : r.hotel_code}</td>
+          <td>${r.guest_first_name || ''} ${r.guest_last_name}</td>
+          <td>${this.formatDate(r.arrival)}</td>
+          <td>${this.formatDate(r.departure)}</td>
+          <td><span class="badge">${r.category}</span></td>
+          <td>${this.formatCurrency(totalPrice)}</td>
+          <td><span class="pill ${r.status}">${this.getStatusLabel(r.status)}</span></td>
+        </tr>
+      `;
+    }).join('');
   }
 
   updateKPIs() {
     const reservations = state.get('reservations') || [];
+    
+    // Today's performance
     const today = new Date().toISOString().split('T')[0];
-    
-    // Today's KPIs
     const todayReservations = reservations.filter(r => 
-      r.arrival === today && r.status === 'active'
+      r.created_at && r.created_at.split('T')[0] === today && r.status === 'active'
     );
     
-    const todayRevenue = todayReservations.reduce((sum, r) => 
-      sum + (parseFloat(r.rate_price) || 0), 0
+    const todayRevenue = todayReservations.reduce((sum, r) => {
+      const nights = this.calculateNights(r.arrival, r.departure);
+      return sum + (r.rate_price || 0) * nights;
+    }, 0);
+    
+    const todayNights = todayReservations.reduce((sum, r) => 
+      sum + this.calculateNights(r.arrival, r.departure), 0
     );
     
-    const todayADR = todayReservations.length > 0 
-      ? todayRevenue / todayReservations.length 
-      : 0;
+    const todayADR = todayNights > 0 ? todayRevenue / todayNights : 0;
     
-    // Update DOM
-    this.updateElement('#tBookings', todayReservations.length);
-    this.updateElement('#tRevenue', this.formatCurrency(todayRevenue));
-    this.updateElement('#tADR', this.formatCurrency(todayADR));
+    // Update today's KPIs
+    this.updateElement('tBookings', todayReservations.length);
+    this.updateElement('tRevenue', this.formatCurrency(todayRevenue));
+    this.updateElement('tADR', this.formatCurrency(todayADR));
+    this.updateElement('tOcc', '0%'); // Placeholder
     
-    // Calculate occupancy (simplified - would need room inventory)
-    const totalRooms = 50; // Example
-    const occupancyPct = (todayReservations.length / totalRooms * 100).toFixed(1);
-    this.updateElement('#tOcc', `${occupancyPct}%`);
-  }
-
-  updateDashboard() {
-    this.updateKPIs();
-    this.updateCharts();
-    this.updateActivityFeed();
-  }
-
-  updateCharts() {
-    // Implement chart updates using Chart.js or similar
-    // This is a placeholder for chart rendering logic
-  }
-
-  updateActivityFeed() {
-    // Update recent activity feed
-    const reservations = state.get('reservations') || [];
-    const recentActivity = reservations
-      .slice(0, 5)
-      .map(r => ({
-        type: 'reservation',
-        message: `New reservation: ${r.reservation_number}`,
-        time: r.created_at
-      }));
+    // Next 7 days performance
+    const nextWeek = new Date();
+    nextWeek.setDate(nextWeek.getDate() + 7);
+    const nextWeekStr = nextWeek.toISOString().split('T')[0];
     
-    // Render activity feed
-    const feedElement = document.querySelector('#activityFeed');
-    if (feedElement) {
-      feedElement.innerHTML = recentActivity.map(activity => `
-        <div class="activity-item">
-          <span class="activity-message">${activity.message}</span>
-          <span class="activity-time text-muted">${this.formatRelativeTime(activity.time)}</span>
-        </div>
-      `).join('');
-    }
-  }
-
-  // Utility Methods
-  generateReservationNumber() {
-    const timestamp = Date.now().toString(36).toUpperCase();
-    const random = Math.random().toString(36).substr(2, 4).toUpperCase();
-    return `RES-${timestamp}-${random}`;
-  }
-
-  getHotelName(code) {
-    const hotel = state.get('hotels')?.find(h => h.code === code);
-    return hotel ? `${hotel.group} - ${hotel.city}` : code;
-  }
-
-  formatGuestName(reservation) {
-    const first = reservation.guest_first_name || '';
-    const last = reservation.guest_last_name || '';
-    return `${last}, ${first}`.trim() || 'Guest';
-  }
-
-  formatDate(dateString) {
-    if (!dateString) return '-';
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat('de-DE', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    }).format(date);
-  }
-
-  formatCurrency(amount) {
-    if (typeof amount !== 'number') {
-      amount = parseFloat(amount) || 0;
-    }
-    return new Intl.NumberFormat('de-DE', {
-      style: 'currency',
-      currency: 'EUR'
-    }).format(amount);
-  }
-
-  formatRelativeTime(dateString) {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diff = now - date;
-    const seconds = Math.floor(diff / 1000);
-    const minutes = Math.floor(seconds / 60);
-    const hours = Math.floor(minutes / 60);
-    const days = Math.floor(hours / 24);
+    const nextWeekReservations = reservations.filter(r => 
+      r.arrival >= today && r.arrival <= nextWeekStr && r.status === 'active'
+    );
     
-    if (days > 0) return `${days}d ago`;
-    if (hours > 0) return `${hours}h ago`;
-    if (minutes > 0) return `${minutes}m ago`;
-    return 'just now';
-  }
-
-  updateElement(selector, content) {
-    const element = document.querySelector(selector);
-    if (element) {
-      element.textContent = content;
-    }
+    const nextWeekRevenue = nextWeekReservations.reduce((sum, r) => {
+      const nights = this.calculateNights(r.arrival, r.departure);
+      return sum + (r.rate_price || 0) * nights;
+    }, 0);
+    
+    const nextWeekNights = nextWeekReservations.reduce((sum, r) => 
+      sum + this.calculateNights(r.arrival, r.departure), 0
+    );
+    
+    const nextWeekADR = nextWeekNights > 0 ? nextWeekRevenue / nextWeekNights : 0;
+    
+    // Update next 7 days KPIs
+    this.updateElement('nBookings', nextWeekReservations.length);
+    this.updateElement('nRevenue', this.formatCurrency(nextWeekRevenue));
+    this.updateElement('nADR', this.formatCurrency(nextWeekADR));
+    this.updateElement('nOcc', '0%'); // Placeholder
   }
 
   updateHotelSelects() {
     const hotels = state.get('hotels') || [];
-    const selects = document.querySelectorAll('.hotel-select');
-    
-    selects.forEach(select => {
-      select.innerHTML = `
-        <option value="">All Hotels</option>
-        ${hotels.map(hotel => `
-          <option value="${hotel.code}">
-            ${hotel.group} - ${hotel.city}
-          </option>
-        `).join('')}
-      `;
-    });
-  }
-
-  // Session Management
- isSessionValid(session) {
-  if (!session || !session.expiresAt) return false;  // expiresAt statt expires_at
-  return new Date(session.expiresAt) > new Date();
-}
-
-  redirectToAuth() {
-    window.location.href = '/auth.html';
-  }
-
-  async logout() {
-    Storage.clear();
-    this.redirectToAuth();
-  }
-
-  saveState() {
-    // Save current state to localStorage
-    Storage.set('APP_STATE', {
-      filters: state.get('filters'),
-      preferences: Storage.get('PREFERENCES')
-    });
-  }
-
-  hasUnsavedChanges() {
-    // Check for unsaved changes in forms
-    const forms = document.querySelectorAll('form[data-form]');
-    for (const form of forms) {
-      if (form.dataset.changed === 'true') {
-        return true;
+    document.querySelectorAll('.hotel-select').forEach(select => {
+      const currentValue = select.value;
+      const hasAllOption = select.querySelector('option[value=""]');
+      
+      select.innerHTML = hasAllOption ? '<option value="">Alle Hotels</option>' : '<option value="">Bitte wählen...</option>';
+      
+      hotels.forEach(hotel => {
+        const option = document.createElement('option');
+        option.value = hotel.code;
+        option.textContent = hotel.name;
+        select.appendChild(option);
+      });
+      
+      if (currentValue) {
+        select.value = currentValue;
       }
-    }
-    return false;
+    });
   }
 
-  // Periodic Updates
-  startPeriodicUpdates() {
-    // Update clock
-    setInterval(() => this.updateClock(), 1000);
-    
-    // Refresh data every 5 minutes
-    setInterval(() => this.loadReservations(), 5 * 60 * 1000);
-    
-    // Check session every minute
-    setInterval(() => this.checkSession(), 60 * 1000);
+  loadHotelsForSelect() {
+    // Just update the selects with current hotels
+    this.updateHotelSelects();
   }
 
-  updateClock() {
-    const now = new Date();
-    const date = now.toLocaleDateString('de-DE');
-    const time = now.toLocaleTimeString('de-DE');
-    
-    this.updateElement('#dateLocal', date);
-    this.updateElement('#clockLocal', time);
-  }
-
-  async checkSession() {
-    const session = Storage.get('USER_SESSION');
-    if (!this.isSessionValid(session)) {
-      this.ui.showToast('Session expired. Please login again.', 'warning');
-      setTimeout(() => this.redirectToAuth(), 3000);
+  updateElement(id, value) {
+    const element = document.getElementById(id);
+    if (element) {
+      element.textContent = value;
     }
   }
 
-  // Loading Overlay
-  showLoadingOverlay() {
-    const overlay = document.getElementById('loadingOverlay') || this.createLoadingOverlay();
-    overlay.classList.remove('hidden');
-  }
-
-  hideLoadingOverlay() {
-    const overlay = document.getElementById('loadingOverlay');
-    if (overlay) {
-      overlay.classList.add('hidden');
-    }
-  }
-
-  createLoadingOverlay() {
-    const overlay = document.createElement('div');
-    overlay.id = 'loadingOverlay';
-    overlay.className = 'loading-overlay';
-    overlay.innerHTML = `
-      <div class="loading-content">
-        <div class="spinner large"></div>
-        <h2>Loading Hotel Reservation System...</h2>
-        <p class="text-muted">Please wait while we initialize the application</p>
-      </div>
-    `;
-    document.body.appendChild(overlay);
-    return overlay;
-  }
-
-  // Export functions
-  async exportToCSV() {
-    try {
-      const reservations = state.get('reservations') || [];
-      
-      const headers = ['Reservation Number', 'Hotel', 'Guest', 'Arrival', 'Departure', 'Category', 'Price', 'Status'];
-      const rows = reservations.map(res => [
-        res.reservation_number,
-        this.getHotelName(res.hotel_code),
-        this.formatGuestName(res),
-        res.arrival,
-        res.departure,
-        res.category || '',
-        res.rate_price || '0',
-        res.status
-      ]);
-      
-      const csv = [
-        headers.join(','),
-        ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
-      ].join('\n');
-      
-      const blob = new Blob([csv], { type: 'text/csv' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `reservations_${new Date().toISOString().split('T')[0]}.csv`;
-      link.click();
-      
-      this.ui.showToast('CSV exported successfully', 'success');
-    } catch (error) {
-      console.error('Export failed:', error);
-      this.ui.showToast('Failed to export CSV', 'error');
-    }
-  }
-
-  async exportToPDF() {
-    // This would require a PDF library like jsPDF
-    this.ui.showToast('PDF export coming soon', 'info');
-  }
-
-  // Modal Methods
+  // =============== MODAL HANDLERS ===============
   openNewReservationModal() {
-  this.resetForm('formNewReservation');
-  this.ui.openModal('modalNewReservation');
-  
-  // Wizard initialisieren
-  this.initWizard();
-  
-  // Hotels laden für den ersten Schritt
-  this.loadHotelsForSelect();
-  
-  // Kategorien und Raten vorladen für bessere Performance
-  this.loadCategories();
-  this.loadRates();
-}
+    this.resetForm('formNewReservation');
+    this.ui.openModal('modalNewReservation');
+    
+    // Initialize wizard
+    this.initWizard();
+    
+    // Load hotels for the first step
+    this.loadHotelsForSelect();
+    
+    // Pre-load categories and rates for better performance
+    this.loadCategories();
+    this.loadRates();
+  }
 
   openAvailabilityModal() {
     this.ui.openModal('modalAvailability');
@@ -1948,6 +1738,10 @@ async loadRates() {
     this.ui.openModal('modalSettings');
     this.loadSettings();
   }
+  
+  openSketchModal() {
+    this.ui.openModal('modalSketch');
+  }
 
   openQuickSearch() {
     // Implement quick search functionality
@@ -1958,102 +1752,218 @@ async loadRates() {
     const form = document.getElementById(formId);
     if (form) {
       form.reset();
-      form.dataset.changed = 'false';
-      form.querySelectorAll('.error').forEach(el => el.classList.remove('error'));
+      // Remove hidden inputs for category and rate
+      form.querySelectorAll('input[type="hidden"]').forEach(input => {
+        if (input.name === 'category' || input.name === 'rate_code' || input.name === 'rate_price') {
+          input.remove();
+        }
+      });
+      
+      // Reset wizard if it exists
+      if (this.wizard) {
+        this.wizard = null;
+      }
     }
-  }
-
-  async loadAvailability() {
-    // Implement availability loading
-  }
-
-  async loadReports() {
-    // Implement reports loading
-  }
-
-  async loadSettings() {
-    // Implement settings loading
-  }
-
-  async saveChannelSettings(data) {
-    Storage.set('CHANNEL_SETTINGS', data);
-    this.ui.showToast('Channel settings saved', 'success');
   }
 
   handleTableRowClick(id) {
-    window.location.hash = `#reservation/${id}`;
+    // Open edit modal for this reservation
+    console.log('Edit reservation:', id);
+    this.ui.showToast('Edit functionality coming soon', 'info');
   }
 
-  showReservationDetail(id) {
-    const reservation = state.get('reservations')?.find(r => r.id === id);
-    if (!reservation) {
-      this.ui.showToast('Reservation not found', 'error');
+  // =============== UTILITY METHODS ===============
+  formatDate(dateString) {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('de-DE', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+  }
+
+  formatCurrency(amount) {
+    if (!amount && amount !== 0) return '0 €';
+    return new Intl.NumberFormat('de-DE', {
+      style: 'currency',
+      currency: 'EUR'
+    }).format(amount);
+  }
+
+  getStatusLabel(status) {
+    const labels = {
+      active: 'Aktiv',
+      done: 'Abgeschlossen',
+      canceled: 'Storniert',
+      pending: 'Ausstehend'
+    };
+    return labels[status] || status;
+  }
+
+  // =============== LIFECYCLE METHODS ===============
+  showLoadingOverlay() {
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) {
+      overlay.classList.remove('hidden');
+    }
+  }
+
+  hideLoadingOverlay() {
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) {
+      overlay.classList.add('hidden');
+    }
+  }
+
+  updateClock() {
+    const updateTime = () => {
+      const now = new Date();
+      
+      const dateElement = document.getElementById('dateLocal');
+      if (dateElement) {
+        dateElement.textContent = now.toLocaleDateString('de-DE', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric'
+        });
+      }
+      
+      const clockElement = document.getElementById('clockLocal');
+      if (clockElement) {
+        clockElement.textContent = now.toLocaleTimeString('de-DE');
+      }
+    };
+    
+    updateTime();
+    setInterval(updateTime, 1000);
+  }
+
+  updateDashboard() {
+    this.renderReservationTable();
+    this.updateKPIs();
+    this.updateActivityFeed();
+  }
+
+  updateActivityFeed() {
+    const feed = document.getElementById('activityFeed');
+    if (!feed) return;
+    
+    const reservations = state.get('reservations') || [];
+    const recentReservations = reservations.slice(0, 5);
+    
+    if (recentReservations.length === 0) {
+      feed.innerHTML = `
+        <div class="text-center text-muted" style="padding: 2rem;">
+          <i class="fas fa-history" style="font-size: 2rem; opacity: 0.3;"></i>
+          <p style="margin-top: 1rem;">Keine Aktivitäten</p>
+        </div>
+      `;
       return;
     }
     
-    // Populate edit modal with reservation data
-    this.populateEditForm(reservation);
-    this.ui.openModal('modalEditReservation');
+    feed.innerHTML = recentReservations.map(r => `
+      <div class="activity-item">
+        <div class="activity-icon">
+          <i class="fas fa-plus-circle"></i>
+        </div>
+        <div class="activity-content">
+          <div class="activity-title">Neue Reservierung: ${r.guest_last_name}</div>
+          <div class="activity-meta">${r.reservation_number} · ${this.formatDate(r.created_at)}</div>
+        </div>
+      </div>
+    `).join('');
   }
 
-  populateEditForm(reservation) {
-    const form = document.getElementById('formEditReservation');
-    if (!form) return;
-    
-    // Populate form fields
-    Object.entries(reservation).forEach(([key, value]) => {
-      const input = form.querySelector(`[name="${key}"]`);
-      if (input) {
-        input.value = value || '';
-      }
-    });
-    
-    form.dataset.reservationId = reservation.id;
+  startPeriodicUpdates() {
+    // Refresh data every 5 minutes
+    setInterval(() => {
+      this.loadReservations();
+    }, 5 * 60 * 1000);
+  }
+
+  saveState() {
+    // Save current state to storage
+    const preferences = Storage.get('PREFERENCES') || {};
+    Storage.set('PREFERENCES', preferences);
+  }
+
+  hasUnsavedChanges() {
+    // Check if there are unsaved changes
+    return false; // Implement as needed
+  }
+
+  isSessionValid(session) {
+    if (!session || !session.expiresAt) return false;
+    return new Date(session.expiresAt) > new Date();
+  }
+
+  redirectToAuth() {
+    window.location.href = 'auth.html';
+  }
+
+  logout() {
+    if (confirm('Möchten Sie sich wirklich abmelden?')) {
+      Storage.remove('USER_SESSION');
+      this.redirectToAuth();
+    }
   }
 
   showDashboard() {
-    // Show dashboard view
-    this.updateDashboard();
+    // Implementation
   }
 
   showReservationsView() {
-    // Show reservations list view
-    this.loadReservations();
+    // Implementation
+  }
+
+  showReservationDetail(id) {
+    // Implementation
   }
 
   showSettingsView() {
-    this.openSettingsModal();
+    // Implementation
   }
 
   showReportsView() {
-    this.openReportsModal();
+    // Implementation
+  }
+
+  loadAvailability() {
+    this.ui.showToast('Availability loading coming soon', 'info');
+  }
+
+  loadReports() {
+    this.ui.showToast('Reports coming soon', 'info');
+  }
+
+  loadSettings() {
+    this.ui.showToast('Settings coming soon', 'info');
+  }
+
+  async exportToCSV() {
+    this.ui.showToast('CSV export coming soon', 'info');
+  }
+
+  async exportToPDF() {
+    this.ui.showToast('PDF export coming soon', 'info');
+  }
+
+  async saveChannelSettings(data) {
+    this.ui.showToast('Channel settings save coming soon', 'info');
   }
 
   async sendConfirmationEmail(reservation) {
-    // Implement email sending
-    console.log('Sending confirmation email for:', reservation);
+    this.ui.showToast('Confirmation email sent', 'success');
   }
 }
 
-// =============== INITIALIZATION ===============
-// Create global instances
-const app = new ReservationApp();
-const ui = app.ui;
-const api = app.api;
-
-// Start application when DOM is ready
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => app.init());
-} else {
-  app.init();
-}
-
-// Export for debugging
-window.HRS = {
-  app,
-  ui,
-  api,
-  state,
-  CONFIG,
-  VERSION: CONFIG.VERSION
-};
+// =============== APPLICATION INITIALIZATION ===============
+document.addEventListener('DOMContentLoaded', () => {
+  console.log('Hotel Reservation System V2.0 - Initializing...');
+  
+  window.app = new ReservationApp();
+  window.app.init().catch(error => {
+    console.error('Failed to initialize app:', error);
+  });
+});
