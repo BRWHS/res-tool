@@ -1610,7 +1610,7 @@ class ReservationApp {
     if (reservations.length === 0) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="8" class="text-center text-muted">
+          <td colspan="9" class="text-center text-muted">
             <div style="padding: 2rem;">
               <i class="fas fa-inbox" style="font-size: 3rem; opacity: 0.3;"></i>
               <p style="margin-top: 1rem;">Keine Reservierungen gefunden</p>
@@ -1630,16 +1630,9 @@ class ReservationApp {
       const nights = this.calculateNights(r.arrival, r.departure);
       const totalPrice = (r.rate_price || 0) * nights;
       
-      console.log('Rendering reservation:', {
-        id: r.id,
-        resNumber: r.reservation_number,
-        hotelCode: r.hotel_code,
-        hotelName: hotelName,
-        hotel: hotel
-      });
-      
       return `
         <tr data-id="${r.id}" style="cursor: pointer;">
+          <td></td>
           <td class="res-nr-cell">${r.reservation_number || 'N/A'}</td>
           <td>${hotelName}</td>
           <td>${r.guest_first_name || ''} ${r.guest_last_name || ''}</td>
