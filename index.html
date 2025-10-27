@@ -162,11 +162,40 @@
           </article>
         </section>
 
+        <!-- Performance Widgets Row -->
+        <section class="performance-widgets">
+          <!-- Year-over-Year Performance -->
+          <article class="card yoy-card">
+            <div class="card-head">
+              <h3><i class="fas fa-chart-line"></i> Performance YoY</h3>
+              <button class="btn-icon" data-action="refresh-yoy">
+                <i class="fas fa-sync"></i>
+              </button>
+            </div>
+            <div id="yoyPerformance" class="yoy-performance">
+              <div class="skeleton" style="height: 200px;"></div>
+            </div>
+          </article>
+          
+          <!-- Recent Activity -->
+          <article class="card activity-card">
+            <div class="card-head">
+              <h3><i class="fas fa-history"></i> Recent Activity</h3>
+              <button class="btn-icon" data-action="refresh-activity">
+                <i class="fas fa-sync"></i>
+              </button>
+            </div>
+            <div id="activityFeed" class="activity-feed">
+              <div class="skeleton" style="height: 200px;"></div>
+            </div>
+          </article>
+        </section>
+
         <!-- Reservations Block (Filters + Table Together) -->
         <section class="reservations-block">
           <div class="card">
             <div class="card-head">
-              <h3>Reservierungen</h3>
+              <h3><i class="fas fa-calendar-alt"></i> Reservierungen</h3>
               <span class="badge" id="reservationCount">0</span>
             </div>
             
@@ -249,37 +278,6 @@
             </div>
           </div>
         </section>
-        
-      </div>
-      
-      <!-- Sidebar -->
-      <aside class="sidebar">
-        <!-- Recent Activity -->
-        <article class="card sidebar-card">
-          <div class="card-head">
-            <h3>Recent Activity</h3>
-            <button class="btn-icon" data-action="refresh-activity">
-              <i class="fas fa-sync"></i>
-            </button>
-          </div>
-          <div id="activityFeed" class="activity-feed">
-            <div class="skeleton" style="height: 300px;"></div>
-          </div>
-        </article>
-        
-        <!-- Year-over-Year Performance -->
-        <article class="card yoy-card">
-          <div class="card-head">
-            <h3>Performance YoY</h3>
-            <button class="btn-icon" data-action="refresh-yoy">
-              <i class="fas fa-sync"></i>
-            </button>
-          </div>
-          <div id="yoyPerformance" class="yoy-performance">
-            <div class="skeleton" style="height: 200px;"></div>
-          </div>
-        </article>
-      </aside>
       
     </div>
 
