@@ -724,7 +724,7 @@ textarea {
   position: sticky;
   top: calc(var(--space-8) + 80px);
   align-self: start;
-  height: calc(100vh - 200px); /* Gleiche Höhe! */
+  height: calc(100vh - 200px); /* Gleiche HÃ¶he! */
 }
 
 .sidebar-card {
@@ -1103,7 +1103,7 @@ textarea {
   background: var(--bg-surface);
   border: 1px solid var(--border-primary);
   border-radius: var(--radius-xl);
-  padding: 0 !important; /* Entferne Padding für bessere Kontrolle */
+  padding: 0 !important; /* Entferne Padding fÃ¼r bessere Kontrolle */
   overflow: hidden;
 }
 
@@ -1243,7 +1243,7 @@ textarea {
   transition: all var(--transition-base);
   position: relative;
   z-index: 1;
-  white-space: nowrap; /* WICHTIG: Keine Umbrüche! */
+  white-space: nowrap; /* WICHTIG: Keine UmbrÃ¼che! */
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -2143,7 +2143,7 @@ tbody td .pill {
 }
 
 .wizard-step.completed .wizard-step-number::after {
-  content: '✓';
+  content: 'âœ“';
   position: absolute;
   inset: 0;
   display: flex;
@@ -2606,6 +2606,91 @@ tbody td .pill {
 .p-4 { padding: var(--space-4); }
 .p-6 { padding: var(--space-6); }
 .p-8 { padding: var(--space-8); }
+
+/* ================================================
+   TABS (für Edit Modal)
+   ================================================ */
+
+.tabs {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.tab-buttons {
+  display: flex;
+  gap: var(--space-2);
+  padding: var(--space-1);
+  background: var(--bg-surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-primary);
+}
+
+.tab-button {
+  flex: 1;
+  padding: var(--space-3) var(--space-4);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-base);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+}
+
+.tab-button:hover {
+  background: var(--glass-bg-hover);
+  color: var(--text-primary);
+}
+
+.tab-button.active {
+  background: var(--primary-600);
+  color: white;
+  box-shadow: var(--shadow-sm);
+}
+
+.tab-button i {
+  font-size: 0.875rem;
+}
+
+.tab-content {
+  position: relative;
+}
+
+.tab-pane {
+  animation: fadeIn var(--transition-base);
+}
+
+.tab-pane.hidden {
+  display: none;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Vertical tabs variant (für Settings) */
+.tab-buttons.vertical {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.tab-buttons.vertical .tab-button {
+  justify-content: flex-start;
+  text-align: left;
+}
 
 /* ================================================
    RESPONSIVE
