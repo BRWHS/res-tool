@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Hotel Reservation System V2 | Professional Dashboard</title>
+  <title>Hasco Reservation System V2 | Professional Dashboard</title>
   
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -21,7 +21,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   
   <!-- Favicon -->
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='80' font-size='80'>ðŸ¨</text></svg>">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='80' font-size='80'>🏨</text></svg>">
 </head>
 <body>
 
@@ -30,7 +30,7 @@
     <div class="loading-content">
       <div class="spinner large"></div>
       <h2>Loading System...</h2>
-      <p class="text-muted">Initializing Hotel Reservation System</p>
+      <p class="text-muted">Initializing Hasco Reservation System</p>
     </div>
   </div>
 
@@ -40,7 +40,7 @@
       <div class="navbar-brand">
         <h1>
           <i class="fas fa-hotel"></i>
-          <span>HRS</span>
+          <span>Hasco</span>
           <sup class="version">V2.0</sup>
         </h1>
       </div>
@@ -52,7 +52,7 @@
         </button>
         <button class="btn secondary" data-action="open-availability">
           <i class="fas fa-calendar-check"></i>
-          VerfÃ¼gbarkeit
+          Verfügbarkeit
         </button>
         <button class="btn secondary" data-action="open-reports">
           <i class="fas fa-chart-line"></i>
@@ -87,7 +87,7 @@
 
         <div class="clock mono">
           <span id="dateLocal">--.--.----</span>
-          <span class="sep">Â·</span>
+          <span class="sep">·</span>
           <span id="clockLocal">--:--:--</span>
         </div>
       </div>
@@ -97,167 +97,178 @@
   <!-- Main Content -->
   <main class="container">
     
-    <!-- KPI Dashboard -->
-    <section class="dashboard-grid" aria-label="Performance Ãœbersicht">
+    <!-- Main Layout with Sidebar -->
+    <div class="main-layout">
       
-      <!-- Today's Performance -->
-      <article class="card scanlines">
-        <div class="card-head">
-          <h3>Performance - Heute</h3>
-          <select class="select sm hotel-select" data-filter="hotel-today">
-            <option value="">Alle Hotels</option>
-          </select>
-        </div>
-        <div class="kpis">
-          <div class="kpi">
-            <div class="value" id="tBookings">0</div>
-            <div class="label">Neue Buchungen</div>
-          </div>
-          <div class="kpi">
-            <div class="value" id="tRevenue">0 â‚¬</div>
-            <div class="label">Umsatz</div>
-          </div>
-          <div class="kpi">
-            <div class="value" id="tADR">0 â‚¬</div>
-            <div class="label">ADR</div>
-          </div>
-          <div class="kpi">
-            <div class="value" id="tOcc">0%</div>
-            <div class="label">Auslastung</div>
-          </div>
-        </div>
-      </article>
-
-      <!-- Next 7 Days Performance -->
-      <article class="card scanlines">
-        <div class="card-head">
-          <h3>Performance - NÃ¤chste 7 Tage</h3>
-          <select class="select sm hotel-select" data-filter="hotel-next">
-            <option value="">Alle Hotels</option>
-          </select>
-        </div>
-        <div class="kpis">
-          <div class="kpi">
-            <div class="value" id="nBookings">0</div>
-            <div class="label">Erwartete AnkÃ¼nfte</div>
-          </div>
-          <div class="kpi">
-            <div class="value" id="nRevenue">0 â‚¬</div>
-            <div class="label">Erwarteter Umsatz</div>
-          </div>
-          <div class="kpi">
-            <div class="value" id="nADR">0 â‚¬</div>
-            <div class="label">ADR (Forecast)</div>
-          </div>
-          <div class="kpi">
-            <div class="value" id="nOcc">0%</div>
-            <div class="label">Ã˜ Auslastung</div>
-          </div>
-        </div>
-      </article>
-
-      <!-- Activity Feed -->
-      <article class="card">
-        <div class="card-head">
-          <h3>Recent Activity</h3>
-          <button class="btn sm secondary" data-action="refresh-activity">
-            <i class="fas fa-sync"></i>
-          </button>
-        </div>
-        <div id="activityFeed" class="activity-feed">
-          <div class="skeleton" style="height: 200px;"></div>
-        </div>
-      </article>
-    </section>
-
-    <!-- Filters Section -->
-    <section class="filters-section">
-      <div class="card">
-        <div class="filters-grid">
-          <div class="filter-group">
-            <input type="text" 
-                   class="input" 
-                   placeholder="Suche nach Gast, Res-Nr..." 
-                   data-filter="search"
-                   id="filterSearch">
-          </div>
-          
-          <div class="filter-group">
-            <select class="select" data-filter="status" id="filterStatus">
-              <option value="active">Status: Aktiv</option>
-              <option value="done">Status: Abgeschlossen</option>
-              <option value="canceled">Status: Storniert</option>
-              <option value="all">Alle anzeigen</option>
-            </select>
-          </div>
-          
-          <div class="filter-group">
-            <select class="select hotel-select" data-filter="hotel" id="filterHotel">
-              <option value="">Alle Hotels</option>
-            </select>
-          </div>
-          
-          <div class="filter-group">
-            <input type="date" 
-                   class="input" 
-                   data-filter="date-from"
-                   id="filterDateFrom">
-          </div>
-          
-          <div class="filter-group">
-            <input type="date" 
-                   class="input" 
-                   data-filter="date-to"
-                   id="filterDateTo">
-          </div>
-          
-          <div class="filter-actions">
-            <button class="btn primary" data-action="refresh">
-              <i class="fas fa-sync"></i>
-              Aktualisieren
-            </button>
-            <button class="btn secondary" data-action="reset-filters">
-              <i class="fas fa-times"></i>
-              Zurücksetzen
-            </button>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Reservations Table -->
-    <section class="reservations-section">
-      <div class="card">
-        <div class="card-head">
-          <h3>Reservierungen</h3>
-          <span class="badge" id="reservationCount">0</span>
-        </div>
+      <!-- Main Content Area -->
+      <div class="main-content">
         
-        <div class="table-wrapper">
-          <table id="reservationTable">
-            <thead>
-              <tr>
-                <th>Res-Nr.</th>
-                <th>Hotel</th>
-                <th>Gast</th>
-                <th>Anreise</th>
-                <th>Abreise</th>
-                <th>Kategorie</th>
-                <th>Preis</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td colspan="8" class="text-center">
-                  <div class="skeleton" style="height: 40px; margin: 10px;"></div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+        <!-- KPI Dashboard -->
+        <section class="kpi-section">
+          
+          <!-- Today's Performance -->
+          <article class="card">
+            <div class="card-head">
+              <h3>Performance - Heute</h3>
+              <select class="select sm hotel-select" data-filter="hotel-today">
+                <option value="">Alle Hotels</option>
+              </select>
+            </div>
+            <div class="kpis">
+              <div class="kpi">
+                <div class="value" id="tBookings">0</div>
+                <div class="label">Neue Buchungen</div>
+              </div>
+              <div class="kpi">
+                <div class="value" id="tRevenue">0 €</div>
+                <div class="label">Umsatz</div>
+              </div>
+              <div class="kpi">
+                <div class="value" id="tADR">0 €</div>
+                <div class="label">ADR</div>
+              </div>
+              <div class="kpi">
+                <div class="value" id="tOcc">0%</div>
+                <div class="label">Auslastung</div>
+              </div>
+            </div>
+          </article>
+
+          <!-- Next 7 Days Performance -->
+          <article class="card">
+            <div class="card-head">
+              <h3>Performance - Nächste 7 Tage</h3>
+              <select class="select sm hotel-select" data-filter="hotel-next">
+                <option value="">Alle Hotels</option>
+              </select>
+            </div>
+            <div class="kpis">
+              <div class="kpi">
+                <div class="value" id="nBookings">0</div>
+                <div class="label">Erwartete Ankünfte</div>
+              </div>
+              <div class="kpi">
+                <div class="value" id="nRevenue">0 €</div>
+                <div class="label">Erwarteter Umsatz</div>
+              </div>
+              <div class="kpi">
+                <div class="value" id="nADR">0 €</div>
+                <div class="label">ADR (Forecast)</div>
+              </div>
+              <div class="kpi">
+                <div class="value" id="nOcc">0%</div>
+                <div class="label">Ø Auslastung</div>
+              </div>
+            </div>
+          </article>
+        </section>
+
+        <!-- Reservations Block (Filters + Table Together) -->
+        <section class="reservations-block">
+          <div class="card">
+            <div class="card-head">
+              <h3>Reservierungen</h3>
+              <span class="badge" id="reservationCount">0</span>
+            </div>
+            
+            <!-- Filters Grid -->
+            <div class="filters-grid">
+              <div class="filter-group">
+                <input type="text" 
+                       class="input" 
+                       placeholder="Suche nach Gast, Res-Nr..." 
+                       data-filter="search"
+                       id="filterSearch">
+              </div>
+              
+              <div class="filter-group">
+                <select class="select" data-filter="status" id="filterStatus">
+                  <option value="active">Status: Aktiv</option>
+                  <option value="done">Status: Abgeschlossen</option>
+                  <option value="canceled">Status: Storniert</option>
+                  <option value="all">Alle anzeigen</option>
+                </select>
+              </div>
+              
+              <div class="filter-group">
+                <select class="select hotel-select" data-filter="hotel" id="filterHotel">
+                  <option value="">Alle Hotels</option>
+                </select>
+              </div>
+              
+              <div class="filter-group">
+                <input type="date" 
+                       class="input" 
+                       data-filter="date-from"
+                       id="filterDateFrom"
+                       placeholder="Von">
+              </div>
+              
+              <div class="filter-group">
+                <input type="date" 
+                       class="input" 
+                       data-filter="date-to"
+                       id="filterDateTo"
+                       placeholder="Bis">
+              </div>
+              
+              <div class="filter-actions">
+                <button class="btn primary" data-action="refresh">
+                  <i class="fas fa-sync"></i>
+                  Aktualisieren
+                </button>
+                <button class="btn secondary" data-action="reset-filters">
+                  <i class="fas fa-times"></i>
+                  Zurücksetzen
+                </button>
+              </div>
+            </div>
+            
+            <!-- Reservations Table -->
+            <div class="table-wrapper">
+              <table id="reservationTable">
+                <thead>
+                  <tr>
+                    <th>Res-Nr.</th>
+                    <th>Hotel</th>
+                    <th>Gast</th>
+                    <th>Anreise</th>
+                    <th>Abreise</th>
+                    <th>Kategorie</th>
+                    <th>Preis</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td colspan="8" class="text-center">
+                      <div class="skeleton" style="height: 40px; margin: 10px;"></div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+        
       </div>
-    </section>
+      
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <article class="card sidebar-card">
+          <div class="card-head">
+            <h3>Recent Activity</h3>
+            <button class="btn-icon" data-action="refresh-activity">
+              <i class="fas fa-sync"></i>
+            </button>
+          </div>
+          <div id="activityFeed" class="activity-feed">
+            <div class="skeleton" style="height: 400px;"></div>
+          </div>
+        </article>
+      </aside>
+      
+    </div>
 
   </main>
 
@@ -301,7 +312,7 @@
             <div class="form-group">
               <label class="form-label">Hotel *</label>
               <select class="select hotel-select" name="hotel_code" required>
-                <option value="">Bitte wÃ¤hlen...</option>
+                <option value="">Bitte wählen...</option>
               </select>
             </div>
             
@@ -378,7 +389,7 @@
             <div class="form-group">
               <label class="checkbox">
                 <input type="checkbox" name="send_confirmation">
-                <span>BestÃ¤tigungs-E-Mail senden</span>
+                <span>Bestätigungs-E-Mail senden</span>
               </label>
             </div>
           </div>
@@ -387,7 +398,7 @@
         <div class="modal-footer">
           <button type="button" class="btn secondary" data-wizard-action="prev" disabled>
             <i class="fas fa-arrow-left"></i>
-            ZurÃ¼ck
+            Zurück
           </button>
           <button type="button" class="btn primary" data-wizard-action="next">
             Weiter
@@ -436,7 +447,7 @@
           </button>
           <button type="submit" class="btn primary">
             <i class="fas fa-save"></i>
-            Ã„nderungen speichern
+            Änderungen speichern
           </button>
         </div>
       </form>
@@ -447,7 +458,7 @@
   <div id="modalAvailability" class="modal hidden" aria-hidden="true">
     <div class="modal-content large">
       <div class="modal-header">
-        <h2>VerfÃ¼gbarkeit</h2>
+        <h2>Verfügbarkeit</h2>
         <button class="modal-close">
           <i class="fas fa-times"></i>
         </button>
@@ -591,7 +602,7 @@
       <div class="modal-body">
         <div class="sketch-controls">
           <select class="select hotel-select" id="sketchHotel">
-            <option value="">Hotel wÃ¤hlen...</option>
+            <option value="">Hotel wählen...</option>
           </select>
           <button class="btn primary" data-action="load-sketch">
             <i class="fas fa-map"></i>
@@ -600,7 +611,7 @@
         </div>
         
         <div id="sketchCanvas" class="sketch-canvas">
-          <p class="text-center text-muted">Bitte wÃ¤hlen Sie ein Hotel aus</p>
+          <p class="text-center text-muted">Bitte wählen Sie ein Hotel aus</p>
         </div>
       </div>
     </div>
@@ -610,7 +621,7 @@
   <div id="modalConfirmationEmail" class="modal hidden" aria-hidden="true">
     <div class="modal-content">
       <div class="modal-header">
-        <h2>BestÃ¤tigungs-E-Mail</h2>
+        <h2>Bestätigungs-E-Mail</h2>
         <button class="modal-close">
           <i class="fas fa-times"></i>
         </button>
@@ -618,7 +629,7 @@
       
       <div class="modal-body">
         <div class="form-group">
-          <label class="form-label">EmpfÃ¤nger E-Mail</label>
+          <label class="form-label">Empfänger E-Mail</label>
           <input type="email" class="input" id="confirmEmailTo">
         </div>
         
