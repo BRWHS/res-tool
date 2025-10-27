@@ -668,9 +668,40 @@ textarea {
 
 .sidebar-card .card-head {
   flex-shrink: 0;
-  padding: var(--space-5);
+  padding: var(--space-6);
   margin-bottom: 0;
-  border-bottom: 1px solid var(--border-primary);
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(139, 92, 246, 0.05) 100%);
+  border-bottom: 2px solid transparent;
+  border-image: linear-gradient(90deg, var(--primary-500), var(--accent-500)) 1;
+  position: relative;
+  overflow: hidden;
+}
+
+.sidebar-card .card-head::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--primary-400), transparent);
+  opacity: 0.5;
+}
+
+.sidebar-card .card-head h3 {
+  font-size: 1.25rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.9375rem;
+}
+
+.sidebar-card .card-head h3 i {
+  width: 36px;
+  height: 36px;
+  font-size: 1.25rem;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(139, 92, 246, 0.15));
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.2);
 }
 
 .sidebar-card .activity-feed,
@@ -769,21 +800,36 @@ textarea {
   justify-content: space-between;
   align-items: center;
   margin-bottom: var(--space-4);
+  position: relative;
 }
 
 .card-head h3 {
   font-size: 1.125rem;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text-primary);
   margin: 0;
   display: flex;
   align-items: center;
-  gap: var(--space-2);
+  gap: var(--space-3);
+  letter-spacing: -0.01em;
 }
 
 .card-head h3 i {
   color: var(--primary-400);
-  font-size: 1rem;
+  font-size: 1.125rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md);
+  background: rgba(99, 102, 241, 0.1);
+  transition: all var(--transition-base);
+}
+
+.card-head:hover h3 i {
+  background: rgba(99, 102, 241, 0.15);
+  transform: scale(1.05);
 }
 
 .glass-morphism {
@@ -988,10 +1034,40 @@ textarea {
 }
 
 .reservations-block .card-head {
-  padding: var(--space-5) var(--space-6);
+  padding: var(--space-6);
   margin-bottom: 0;
-  background: var(--bg-elevated);
-  border-bottom: 1px solid var(--border-primary);
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.03) 0%, rgba(139, 92, 246, 0.03) 100%);
+  border-bottom: 2px solid transparent;
+  border-image: linear-gradient(90deg, var(--primary-500), var(--accent-500)) 1;
+  position: relative;
+  overflow: hidden;
+}
+
+.reservations-block .card-head::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--primary-400), transparent);
+  opacity: 0.5;
+}
+
+.reservations-block .card-head h3 {
+  font-size: 1.375rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 1rem;
+}
+
+.reservations-block .card-head h3 i {
+  width: 40px;
+  height: 40px;
+  font-size: 1.375rem;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(139, 92, 246, 0.15));
+  box-shadow: 0 2px 12px rgba(99, 102, 241, 0.25);
 }
 
 .reservations-block .filters-grid {
@@ -1524,15 +1600,34 @@ tbody td .pill {
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
-  padding: var(--space-2) var(--space-4);
-  font-size: 0.8125rem;
-  font-weight: 700;
+  padding: var(--space-2) var(--space-5);
+  font-size: 0.875rem;
+  font-weight: 800;
   border-radius: var(--radius-full);
   background: linear-gradient(135deg, var(--primary-600), var(--primary-500));
   color: white;
   border: none;
-  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4), 0 0 20px rgba(99, 102, 241, 0.1);
   font-family: 'JetBrains Mono', monospace;
+  min-width: 40px;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.badge::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.card-head:hover .badge::before {
+  left: 100%;
 }
 
 .pill {
