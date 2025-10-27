@@ -931,9 +931,6 @@ class ReservationApp {
         case 'view-inhouse':
           this.viewInhouseGuests();
           break;
-        case 'view-pending':
-          this.viewPendingActions();
-          break;
         case 'logout':
           this.logout();
           break;
@@ -2199,6 +2196,8 @@ class ReservationApp {
   }
 
   // =============== TODAY'S OPERATIONS ===============
+  // TODO: Later implement pop-up modals for "Details anzeigen" buttons instead of filtering the table
+  
   updateTodaysOperations() {
     const reservations = state.get('reservations') || [];
     const today = new Date().toISOString().split('T')[0];
@@ -2218,16 +2217,10 @@ class ReservationApp {
       r.arrival <= today && r.departure > today && r.status === 'active'
     );
 
-    // Calculate pending actions (this could be customized based on your needs)
-    const pendingActions = reservations.filter(r => 
-      r.status === 'active' && (!r.confirmed || !r.payment_received)
-    );
-
     // Update UI
     this.updateElement('todayCheckins', todayCheckins.length);
     this.updateElement('todayCheckouts', todayCheckouts.length);
     this.updateElement('inhouseGuests', inhouseGuests.length);
-    this.updateElement('pendingActions', pendingActions.length);
   }
 
   viewTodaysCheckins() {
@@ -2286,20 +2279,6 @@ class ReservationApp {
     this.renderReservationTable();
     
     this.ui.showToast(`${inhouseReservations.length} Gäste im Haus`, 'info');
-  }
-
-  viewPendingActions() {
-    // Filter for reservations with pending actions
-    const reservations = state.get('reservations') || [];
-    const pendingReservations = reservations.filter(r => 
-      r.status === 'active' && (!r.confirmed || !r.payment_received)
-    );
-    
-    // Temporarily set filtered reservations
-    state.set('reservations', pendingReservations);
-    this.renderReservationTable();
-    
-    this.ui.showToast(`${pendingReservations.length} ausstehende Aktionen`, 'info');
   }
 }
 
