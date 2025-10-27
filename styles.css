@@ -347,6 +347,7 @@ header {
 }
 
 .navbar-brand h1 i {
+  font-size: 2rem;
   background: var(--primary-600);
   -webkit-text-fill-color: white;
   background-clip: unset;
@@ -368,7 +369,8 @@ header {
   gap: var(--space-3);
   align-items: center;
   flex: 1;
-  justify-content: center;
+  justify-content: flex-start;
+  margin-left: var(--space-20);
 }
 
 .toolbar-right {
