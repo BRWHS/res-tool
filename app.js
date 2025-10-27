@@ -512,7 +512,7 @@ class UIManager {
       if (input.value && !this.isValidEmail(input.value)) {
         errors.push({
           field: input.name,
-          message: 'UngÃ¼ltige E-Mail-Adresse'
+          message: 'UngÃƒÂ¼ltige E-Mail-Adresse'
         });
         input.classList.add('error');
       }
@@ -545,12 +545,12 @@ const HOTELS = [
   { code: 'MA7-M-HAF', group: 'MA7', name: 'Mannheim Hafen', city: 'Mannheim' },
   { code: 'RES-HD-ALT', group: 'RESERVIO', name: 'Heidelberg Altstadt', city: 'Heidelberg' },
   { code: 'RES-HD-BHF', group: 'RESERVIO', name: 'Heidelberg Bahnhof', city: 'Heidelberg' },
-  { code: 'GH-KA-SUD', group: 'GuestHouse', name: 'Karlsruhe SÃ¼dstadt', city: 'Karlsruhe' },
+  { code: 'GH-KA-SUD', group: 'GuestHouse', name: 'Karlsruhe SÃƒÂ¼dstadt', city: 'Karlsruhe' },
   { code: 'GH-S-MIT', group: 'GuestHouse', name: 'Stuttgart Mitte', city: 'Stuttgart' },
   { code: 'BW-FR-CTR', group: 'BestWay', name: 'Frankfurt City Center', city: 'Frankfurt' },
   { code: 'BW-FR-FLU', group: 'BestWay', name: 'Frankfurt Flughafen', city: 'Frankfurt' },
-  { code: 'UM-MUC-HBF', group: 'UrbanMotel', name: 'MÃ¼nchen Hauptbahnhof', city: 'MÃ¼nchen' },
-  { code: 'UM-MUC-OST', group: 'UrbanMotel', name: 'MÃ¼nchen Ost', city: 'MÃ¼nchen' }
+  { code: 'UM-MUC-HBF', group: 'UrbanMotel', name: 'MÃƒÂ¼nchen Hauptbahnhof', city: 'MÃƒÂ¼nchen' },
+  { code: 'UM-MUC-OST', group: 'UrbanMotel', name: 'MÃƒÂ¼nchen Ost', city: 'MÃƒÂ¼nchen' }
 ];
 
 // =============== DEMO DATA ===============
@@ -559,7 +559,7 @@ const DEMO_CATEGORIES = [
     id: 1, 
     code: 'STD', 
     name: 'Standard', 
-    size: '18mÂ²', 
+    size: '18mÃ‚Â²', 
     beds: '1 Doppelbett', 
     persons: 2, 
     price: 89,
@@ -569,7 +569,7 @@ const DEMO_CATEGORIES = [
     id: 2, 
     code: 'SUP', 
     name: 'Superior', 
-    size: '24mÂ²', 
+    size: '24mÃ‚Â²', 
     beds: '1 King-Size Bett', 
     persons: 2, 
     price: 119,
@@ -579,7 +579,7 @@ const DEMO_CATEGORIES = [
     id: 3, 
     code: 'DLX', 
     name: 'Deluxe', 
-    size: '32mÂ²', 
+    size: '32mÃ‚Â²', 
     beds: '1 King-Size Bett + Schlafsofa', 
     persons: 3, 
     price: 159,
@@ -589,7 +589,7 @@ const DEMO_CATEGORIES = [
     id: 4,
     code: 'JUN',
     name: 'Junior Suite',
-    size: '42mÂ²',
+    size: '42mÃ‚Â²',
     beds: '1 King-Size Bett',
     persons: 2,
     price: 199,
@@ -604,7 +604,7 @@ const DEMO_RATES = [
     name: 'Standardrate', 
     price: 89, 
     cancellation: 'Bis 24h vorher kostenlos stornierbar',
-    includes: ['FrÃ¼hstÃ¼ck']
+    includes: ['FrÃƒÂ¼hstÃƒÂ¼ck']
   },
   { 
     id: 2, 
@@ -612,15 +612,15 @@ const DEMO_RATES = [
     name: 'Flex Rate', 
     price: 109, 
     cancellation: 'Bis 6h vorher kostenlos stornierbar',
-    includes: ['FrÃ¼hstÃ¼ck', 'Late Check-out']
+    includes: ['FrÃƒÂ¼hstÃƒÂ¼ck', 'Late Check-out']
   },
   { 
     id: 3, 
     code: 'NREF', 
     name: 'Non-Refundable', 
     price: 69, 
-    cancellation: 'Nicht stornierbar - 20% gÃ¼nstiger',
-    includes: ['FrÃ¼hstÃ¼ck']
+    cancellation: 'Nicht stornierbar - 20% gÃƒÂ¼nstiger',
+    includes: ['FrÃƒÂ¼hstÃƒÂ¼ck']
   },
   {
     id: 4,
@@ -628,7 +628,7 @@ const DEMO_RATES = [
     name: 'Business Rate',
     price: 99,
     cancellation: 'Bis 18h vorher kostenlos stornierbar',
-    includes: ['FrÃ¼hstÃ¼ck', 'WLAN Premium', 'Parkplatz']
+    includes: ['FrÃƒÂ¼hstÃƒÂ¼ck', 'WLAN Premium', 'Parkplatz']
   }
 ];
 
@@ -931,6 +931,9 @@ class ReservationApp {
         case 'view-inhouse':
           this.viewInhouseGuests();
           break;
+        case 'cancel-reservation':
+          await this.handleCancelReservation();
+          break;
         case 'logout':
           this.logout();
           break;
@@ -982,7 +985,7 @@ class ReservationApp {
     const currentStepValid = this.validateWizardStep(this.wizard.currentStep);
     
     if (!currentStepValid) {
-      this.ui.showToast('Bitte alle Pflichtfelder ausfÃ¼llen', 'error');
+      this.ui.showToast('Bitte alle Pflichtfelder ausfÃƒÂ¼llen', 'error');
       return;
     }
 
@@ -1037,7 +1040,7 @@ class ReservationApp {
         const form = document.getElementById('formNewReservation');
         const categoryInput = form.querySelector('[name="category"]');
         if (!categoryInput || !categoryInput.value) {
-          this.ui.showToast('Bitte eine Kategorie auswÃ¤hlen', 'error');
+          this.ui.showToast('Bitte eine Kategorie auswÃƒÂ¤hlen', 'error');
           return false;
         }
         break;
@@ -1045,7 +1048,7 @@ class ReservationApp {
         // Validate rate selection
         const rateInput = document.getElementById('formNewReservation').querySelector('[name="rate_code"]');
         if (!rateInput || !rateInput.value) {
-          this.ui.showToast('Bitte eine Rate auswÃ¤hlen', 'error');
+          this.ui.showToast('Bitte eine Rate auswÃƒÂ¤hlen', 'error');
           return false;
         }
         break;
@@ -1183,8 +1186,8 @@ class ReservationApp {
       grid.innerHTML = `
         <div class="text-center text-muted" style="grid-column: 1/-1; padding: 2rem;">
           <i class="fas fa-bed" style="font-size: 3rem; opacity: 0.3;"></i>
-          <p style="margin-top: 1rem;">Keine Kategorien verfÃ¼gbar</p>
-          <p style="margin-top: 0.5rem; font-size: 0.875rem;">Bitte fÃ¼gen Sie Kategorien in den Einstellungen hinzu.</p>
+          <p style="margin-top: 1rem;">Keine Kategorien verfÃƒÂ¼gbar</p>
+          <p style="margin-top: 0.5rem; font-size: 0.875rem;">Bitte fÃƒÂ¼gen Sie Kategorien in den Einstellungen hinzu.</p>
         </div>
       `;
       return;
@@ -1195,7 +1198,7 @@ class ReservationApp {
         <div class="category-header">
           <h4>${cat.name}</h4>
           <div class="category-price">
-            â‚¬${cat.price}
+            Ã¢â€šÂ¬${cat.price}
             <small>/Nacht</small>
           </div>
         </div>
@@ -1220,7 +1223,7 @@ class ReservationApp {
         ` : ''}
         <button type="button" class="btn primary btn-select-category" data-category-code="${cat.code}">
           <i class="fas fa-check"></i>
-          AuswÃ¤hlen
+          AuswÃƒÂ¤hlen
         </button>
       </div>
     `).join('');
@@ -1263,7 +1266,7 @@ class ReservationApp {
     // Update wizard data
     this.wizard.data.category = code;
     
-    this.ui.showToast(`Kategorie "${code}" ausgewÃ¤hlt`, 'success');
+    this.ui.showToast(`Kategorie "${code}" ausgewÃƒÂ¤hlt`, 'success');
   }
 
   renderRateGrid() {
@@ -1276,8 +1279,8 @@ class ReservationApp {
       grid.innerHTML = `
         <div class="text-center text-muted" style="grid-column: 1/-1; padding: 2rem;">
           <i class="fas fa-tag" style="font-size: 3rem; opacity: 0.3;"></i>
-          <p style="margin-top: 1rem;">Keine Raten verfÃ¼gbar</p>
-          <p style="margin-top: 0.5rem; font-size: 0.875rem;">Bitte fÃ¼gen Sie Raten in den Einstellungen hinzu.</p>
+          <p style="margin-top: 1rem;">Keine Raten verfÃƒÂ¼gbar</p>
+          <p style="margin-top: 0.5rem; font-size: 0.875rem;">Bitte fÃƒÂ¼gen Sie Raten in den Einstellungen hinzu.</p>
         </div>
       `;
       return;
@@ -1288,7 +1291,7 @@ class ReservationApp {
         <div class="rate-header">
           <h4>${rate.name}</h4>
           <div class="rate-price">
-            â‚¬${rate.price}
+            Ã¢â€šÂ¬${rate.price}
             <small>/Nacht</small>
           </div>
         </div>
@@ -1308,7 +1311,7 @@ class ReservationApp {
         ` : ''}
         <button type="button" class="btn primary btn-select-rate" data-rate-code="${rate.code}" data-rate-price="${rate.price}">
           <i class="fas fa-check"></i>
-          AuswÃ¤hlen
+          AuswÃƒÂ¤hlen
         </button>
       </div>
     `).join('');
@@ -1363,7 +1366,7 @@ class ReservationApp {
     this.wizard.data.rate_code = code;
     this.wizard.data.rate_price = price;
     
-    this.ui.showToast(`Rate "${code}" ausgewÃ¤hlt`, 'success');
+    this.ui.showToast(`Rate "${code}" ausgewÃƒÂ¤hlt`, 'success');
   }
 
   renderReservationSummary(data) {
@@ -1395,31 +1398,31 @@ class ReservationApp {
       <div class="summary-grid">
         <div class="summary-item">
           <span class="label"><i class="fas fa-hotel" style="margin-right: 0.5rem; color: var(--primary-400);"></i>Hotel:</span>
-          <span class="value">${hotel ? hotel.name : data.hotel_code || 'Nicht ausgewÃ¤hlt'}</span>
+          <span class="value">${hotel ? hotel.name : data.hotel_code || 'Nicht ausgewÃƒÂ¤hlt'}</span>
         </div>
         <div class="summary-item">
           <span class="label"><i class="fas fa-calendar-plus" style="margin-right: 0.5rem; color: var(--primary-400);"></i>Anreise:</span>
-          <span class="value">${data.arrival ? this.formatDate(data.arrival) : 'Nicht ausgewÃ¤hlt'}</span>
+          <span class="value">${data.arrival ? this.formatDate(data.arrival) : 'Nicht ausgewÃƒÂ¤hlt'}</span>
         </div>
         <div class="summary-item">
           <span class="label"><i class="fas fa-calendar-minus" style="margin-right: 0.5rem; color: var(--primary-400);"></i>Abreise:</span>
-          <span class="value">${data.departure ? this.formatDate(data.departure) : 'Nicht ausgewÃ¤hlt'}</span>
+          <span class="value">${data.departure ? this.formatDate(data.departure) : 'Nicht ausgewÃƒÂ¤hlt'}</span>
         </div>
         <div class="summary-item">
-          <span class="label"><i class="fas fa-moon" style="margin-right: 0.5rem; color: var(--primary-400);"></i>NÃ¤chte:</span>
+          <span class="label"><i class="fas fa-moon" style="margin-right: 0.5rem; color: var(--primary-400);"></i>NÃƒÂ¤chte:</span>
           <span class="value">${nights}</span>
         </div>
         <div class="summary-item">
           <span class="label"><i class="fas fa-bed" style="margin-right: 0.5rem; color: var(--primary-400);"></i>Kategorie:</span>
-          <span class="value">${category ? category.name : data.category || 'Nicht ausgewÃ¤hlt'}</span>
+          <span class="value">${category ? category.name : data.category || 'Nicht ausgewÃƒÂ¤hlt'}</span>
         </div>
         <div class="summary-item">
           <span class="label"><i class="fas fa-tag" style="margin-right: 0.5rem; color: var(--primary-400);"></i>Rate:</span>
-          <span class="value">${rate ? rate.name : data.rate_code || 'Nicht ausgewÃ¤hlt'}</span>
+          <span class="value">${rate ? rate.name : data.rate_code || 'Nicht ausgewÃƒÂ¤hlt'}</span>
         </div>
         <div class="summary-item">
           <span class="label"><i class="fas fa-euro-sign" style="margin-right: 0.5rem; color: var(--primary-400);"></i>Preis/Nacht:</span>
-          <span class="value">${data.rate_price ? this.formatCurrency(data.rate_price) : '0 â‚¬'}</span>
+          <span class="value">${data.rate_price ? this.formatCurrency(data.rate_price) : '0 Ã¢â€šÂ¬'}</span>
         </div>
         <div class="summary-item highlight">
           <span class="label"><i class="fas fa-wallet" style="margin-right: 0.5rem;"></i>Gesamtpreis:</span>
@@ -1579,7 +1582,15 @@ class ReservationApp {
 
   async updateReservation(data) {
     try {
-      const { id, ...updates } = data;
+      // Get ID from currentEditReservation if not in data
+      const id = data.id || this.currentEditReservation?.id;
+      
+      if (!id) {
+        throw new Error('Keine Reservierungs-ID gefunden');
+      }
+      
+      // Remove ID from updates to avoid sending it as a field
+      const { id: _, ...updates } = data;
       updates.updated_at = new Date().toISOString();
       
       const reservation = await this.api.updateReservation(id, updates);
@@ -1588,26 +1599,30 @@ class ReservationApp {
       const reservations = state.get('reservations') || [];
       const index = reservations.findIndex(r => r.id === id);
       if (index !== -1) {
-        reservations[index] = reservation;
+        reservations[index] = { ...reservations[index], ...reservation };
         state.set('reservations', reservations);
       }
+      
+      // Clear current edit reservation
+      this.currentEditReservation = null;
       
       this.ui.closeModal('modalEditReservation');
       this.renderReservationTable();
       this.updateKPIs();
+      this.updateTodaysOperations();
       
-      this.ui.showToast('Reservation updated successfully', 'success');
+      this.ui.showToast('Reservierung erfolgreich aktualisiert!', 'success');
       return reservation;
     } catch (error) {
       console.error('Failed to update reservation:', error);
-      this.ui.showToast('Failed to update reservation: ' + error.message, 'error');
+      this.ui.showToast('Fehler beim Aktualisieren der Reservierung: ' + error.message, 'error');
       throw error;
     }
   }
 
   async cancelReservation(id) {
     try {
-      if (!confirm('Are you sure you want to cancel this reservation?')) {
+      if (!confirm('Möchten Sie diese Reservierung wirklich stornieren?')) {
         return;
       }
       
@@ -1621,18 +1636,30 @@ class ReservationApp {
       const index = reservations.findIndex(r => r.id === id);
       if (index !== -1) {
         reservations[index].status = 'canceled';
+        reservations[index].canceled_at = new Date().toISOString();
         state.set('reservations', reservations);
       }
       
       this.ui.closeModal('modalEditReservation');
       this.renderReservationTable();
       this.updateKPIs();
+      this.updateTodaysOperations();
       
-      this.ui.showToast('Reservation canceled', 'success');
+      this.ui.showToast('Reservierung erfolgreich storniert', 'success');
     } catch (error) {
       console.error('Failed to cancel reservation:', error);
-      this.ui.showToast('Failed to cancel reservation: ' + error.message, 'error');
+      this.ui.showToast('Fehler beim Stornieren der Reservierung: ' + error.message, 'error');
     }
+  }
+
+  async handleCancelReservation() {
+    if (!this.currentEditReservation) {
+      this.ui.showToast('Keine Reservierung zum Stornieren gefunden', 'error');
+      return;
+    }
+    
+    await this.cancelReservation(this.currentEditReservation.id);
+    this.currentEditReservation = null;
   }
 
   generateReservationNumber() {
@@ -1835,7 +1862,7 @@ class ReservationApp {
       const currentValue = select.value;
       const hasAllOption = select.querySelector('option[value=""]');
       
-      select.innerHTML = hasAllOption ? '<option value="">Alle Hotels</option>' : '<option value="">Bitte wÃ¤hlen...</option>';
+      select.innerHTML = hasAllOption ? '<option value="">Alle Hotels</option>' : '<option value="">Bitte wÃƒÂ¤hlen...</option>';
       
       hotels.forEach(hotel => {
         const option = document.createElement('option');
@@ -1909,7 +1936,7 @@ class ReservationApp {
     
     if (emailSubject) {
       const hotel = state.get('hotels')?.find(h => h.code === reservation.hotel_code);
-      emailSubject.value = `ReservierungsbestÃ¤tigung - ${hotel?.name || 'Hotel'} - ${reservation.reservation_number}`;
+      emailSubject.value = `ReservierungsbestÃƒÂ¤tigung - ${hotel?.name || 'Hotel'} - ${reservation.reservation_number}`;
     }
     
     if (emailBody) {
@@ -1918,10 +1945,10 @@ class ReservationApp {
       
       emailBody.value = `Sehr geehrte/r ${reservation.guest_first_name || ''} ${reservation.guest_last_name || 'Gast'},
 
-vielen Dank fÃ¼r Ihre Reservierung!
+vielen Dank fÃƒÂ¼r Ihre Reservierung!
 
 Reservierungsdetails:
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+Ã¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€Â
 
 Reservierungsnummer: ${reservation.reservation_number}
 Hotel: ${hotel?.name || reservation.hotel_code}
@@ -1930,14 +1957,14 @@ Rate: ${reservation.rate_code || 'N/A'}
 
 Anreise: ${this.formatDate(reservation.arrival)}
 Abreise: ${this.formatDate(reservation.departure)}
-NÃ¤chte: ${nights}
+NÃƒÂ¤chte: ${nights}
 
 ${reservation.guest_company ? `Firma: ${reservation.guest_company}\n` : ''}${reservation.notes ? `\nNotizen: ${reservation.notes}\n` : ''}
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+Ã¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€Â
 
 Wir freuen uns auf Ihren Besuch!
 
-Mit freundlichen GrÃ¼ÃŸen
+Mit freundlichen GrÃƒÂ¼ÃƒÅ¸en
 Ihr Reservierungsteam`;
     }
     
@@ -1963,6 +1990,89 @@ Ihr Reservierungsteam`;
     this.ui.showToast('Quick search coming soon', 'info');
   }
 
+  openEditReservationModal(reservation) {
+    // Store current reservation being edited
+    this.currentEditReservation = reservation;
+    
+    // Load hotels for select
+    this.loadHotelsForEditSelect();
+    
+    // Fill form with reservation data
+    const form = document.getElementById('formEditReservation');
+    if (!form) {
+      console.error('Edit form not found');
+      return;
+    }
+    
+    // Fill all form fields
+    const fields = [
+      'reservation_number', 'hotel_code', 'arrival', 'departure',
+      'guests_adults', 'guests_children', 'status',
+      'guest_first_name', 'guest_last_name', 'guest_email', 
+      'guest_phone', 'guest_company', 'guest_address',
+      'category', 'rate_code', 'rate_price', 'total_price', 
+      'payment_status', 'notes', 'guest_notes'
+    ];
+    
+    fields.forEach(field => {
+      const input = form.querySelector(`[name="${field}"]`);
+      if (input && reservation[field] !== undefined && reservation[field] !== null) {
+        input.value = reservation[field];
+      }
+    });
+    
+    // Initialize tab switching
+    this.initEditModalTabs();
+    
+    // Open the modal
+    this.ui.openModal('modalEditReservation');
+  }
+
+  loadHotelsForEditSelect() {
+    const select = document.querySelector('#modalEditReservation .hotel-select');
+    if (!select) return;
+    
+    const hotels = state.get('hotels') || [];
+    
+    // Clear existing options except first
+    while (select.options.length > 1) {
+      select.remove(1);
+    }
+    
+    // Add hotel options
+    hotels.forEach(hotel => {
+      const option = document.createElement('option');
+      option.value = hotel.code;
+      option.textContent = `${hotel.name} (${hotel.code})`;
+      select.appendChild(option);
+    });
+  }
+
+  initEditModalTabs() {
+    const modal = document.getElementById('modalEditReservation');
+    if (!modal) return;
+    
+    const tabButtons = modal.querySelectorAll('.tab-button');
+    const tabPanes = modal.querySelectorAll('.tab-pane');
+    
+    tabButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        const targetTab = button.dataset.tab;
+        
+        // Remove active class from all buttons and panes
+        tabButtons.forEach(btn => btn.classList.remove('active'));
+        tabPanes.forEach(pane => pane.classList.add('hidden'));
+        
+        // Add active class to clicked button and corresponding pane
+        button.classList.add('active');
+        const targetPane = modal.querySelector(`[data-tab-content="${targetTab}"]`);
+        if (targetPane) {
+          targetPane.classList.remove('hidden');
+        }
+      });
+    });
+  }
+
   resetForm(formId) {
     const form = document.getElementById(formId);
     if (form) {
@@ -1984,7 +2094,12 @@ Ihr Reservierungsteam`;
   handleTableRowClick(id) {
     // Open edit modal for this reservation
     console.log('Edit reservation:', id);
-    this.ui.showToast('Edit functionality coming soon', 'info');
+    const reservation = state.get('reservations')?.find(r => r.id === id);
+    if (reservation) {
+      this.openEditReservationModal(reservation);
+    } else {
+      this.ui.showToast('Reservierung nicht gefunden', 'error');
+    }
   }
 
   // =============== UTILITY METHODS ===============
@@ -1999,7 +2114,7 @@ Ihr Reservierungsteam`;
   }
 
   formatCurrency(amount) {
-    if (!amount && amount !== 0) return '0 â‚¬';
+    if (!amount && amount !== 0) return '0 Ã¢â€šÂ¬';
     return new Intl.NumberFormat('de-DE', {
       style: 'currency',
       currency: 'EUR'
@@ -2080,7 +2195,7 @@ Ihr Reservierungsteam`;
       feed.innerHTML = `
         <div class="text-center text-muted" style="padding: 2rem;">
           <i class="fas fa-history" style="font-size: 2rem; opacity: 0.3;"></i>
-          <p style="margin-top: 1rem;">Keine AktivitÃ¤ten</p>
+          <p style="margin-top: 1rem;">Keine AktivitÃƒÂ¤ten</p>
         </div>
       `;
       return;
@@ -2093,7 +2208,7 @@ Ihr Reservierungsteam`;
         </div>
         <div class="activity-content">
           <div class="activity-title">Neue Reservierung: ${r.guest_last_name}</div>
-          <div class="activity-meta">${r.reservation_number} Â· ${this.formatDate(r.created_at)}</div>
+          <div class="activity-meta">${r.reservation_number} Ã‚Â· ${this.formatDate(r.created_at)}</div>
         </div>
       </div>
     `).join('');
@@ -2155,7 +2270,7 @@ Ihr Reservierungsteam`;
       <div class="yoy-item">
         <div class="yoy-item-info">
           <div class="yoy-item-name">${perf.hotel.name}</div>
-          <div class="yoy-item-meta">${perf.todayBookings} heute Â· ${perf.lastYearBookings} letztes Jahr</div>
+          <div class="yoy-item-meta">${perf.todayBookings} heute Ã‚Â· ${perf.lastYearBookings} letztes Jahr</div>
         </div>
         <div class="yoy-item-trend ${perf.trend}">
           <i class="fas ${perf.icon}"></i>
@@ -2211,16 +2326,16 @@ Ihr Reservierungsteam`;
   }
 
   async logout() {
-    if (confirm('MÃ¶chten Sie sich wirklich abmelden?')) {
-      console.log('🔓 App logout initiated...');
+    if (confirm('MÃƒÂ¶chten Sie sich wirklich abmelden?')) {
+      console.log('ðŸ”“ App logout initiated...');
       
       // Use the proper auth logout function if available
       if (window.HRS_AUTH && typeof window.HRS_AUTH.logout === 'function') {
-        console.log('✅ Using HRS_AUTH.logout()');
+        console.log('âœ… Using HRS_AUTH.logout()');
         await window.HRS_AUTH.logout();
       } else {
         // Fallback: Manual logout
-        console.log('⚠️ Fallback logout (HRS_AUTH not available)');
+        console.log('âš ï¸ Fallback logout (HRS_AUTH not available)');
         Storage.remove('USER_SESSION');
         localStorage.removeItem('hrs_v2_session');
         localStorage.removeItem('hrs_v2_login_attempts');
@@ -2290,7 +2405,7 @@ Ihr Reservierungsteam`;
       // Validate email format
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(emailTo)) {
-        this.ui.showToast('Bitte geben Sie eine gÃ¼ltige E-Mail-Adresse ein', 'error');
+        this.ui.showToast('Bitte geben Sie eine gÃƒÂ¼ltige E-Mail-Adresse ein', 'error');
         return;
       }
       
@@ -2320,7 +2435,7 @@ Ihr Reservierungsteam`;
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      this.ui.showToast(`BestÃ¤tigungs-E-Mail erfolgreich an ${data.to} gesendet!`, 'success');
+      this.ui.showToast(`BestÃƒÂ¤tigungs-E-Mail erfolgreich an ${data.to} gesendet!`, 'success');
       
       // Here you would integrate with your email service:
       // - SendGrid
@@ -2418,7 +2533,7 @@ Ihr Reservierungsteam`;
     state.set('reservations', inhouseReservations);
     this.renderReservationTable();
     
-    this.ui.showToast(`${inhouseReservations.length} GÃ¤ste im Haus`, 'info');
+    this.ui.showToast(`${inhouseReservations.length} GÃƒÂ¤ste im Haus`, 'info');
   }
 }
 
