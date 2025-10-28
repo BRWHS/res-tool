@@ -5,11 +5,12 @@
 'use strict';
 
 // =============== CONFIGURATION ===============
+// Nutze window.HRS_CONFIG falls vorhanden, sonst Fallback
 const CONFIG = {
   VERSION: '2.0.0',
   API: {
-    SUPABASE_URL: 'https://kcqmcwfbapcuiatwixwm.supabase.co',
-    SUPABASE_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtjcW1jd2ZiYXBjdWlhdHdpeHdtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE2Mzg5MTksImV4cCI6MjA3NzIxNDkxOX0.xy8Iwz1nl8kBbSQio00ogy5sU_cFI2R4CPe5HdqIFDQ',
+    SUPABASE_URL: window.HRS_CONFIG?.API?.SUPABASE?.URL || 'https://ncrczhlwqwqirvdgbrfb.supabase.co',
+    SUPABASE_KEY: window.HRS_CONFIG?.API?.SUPABASE?.ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5jcmN6aGx3cXdxaXJ2ZGdicmZiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzY0MTMyNDAsImV4cCI6MjA1MTk4OTI0MH0.jYNGgg6jT0-tSsWnWnWsZOW5Y-n0hHD2eI82ktl2YzA',
     HNS: {
       PROD: 'https://api.hotelnetsolutions.de/v1',
       TEST: 'https://test-api.hotelnetsolutions.de/v1',
@@ -238,11 +239,38 @@ class API {
   }
 
   updateConnectionStatus(type, connected) {
-    const indicator = document.querySelector(`[data-tooltip="${type === 'SB' ? 'Supabase Connected' : 'HotelNetSolutions'}"]`);
-    if (indicator) {
-      indicator.classList.toggle('active', connected);
-      indicator.classList.toggle('error', !connected);
-    }
+    // Warte kurz, damit DOM sicher geladen ist
+    setTimeout(() => {
+      const indicator = document.querySelector(`[data-status-type="${type}"]`);
+      
+      if (indicator) {
+        // Entferne beide Klassen erst
+        indicator.classList.remove('active', 'error');
+        
+        // Füge die richtige Klasse hinzu
+        if (connected) {
+          indicator.classList.add('active');
+          // Update tooltip
+          if (type === 'SB') {
+            indicator.setAttribute('data-tooltip', '✅ Supabase Connected');
+          } else {
+            indicator.setAttribute('data-tooltip', '✅ HotelNetSolutions Connected');
+          }
+        } else {
+          indicator.classList.add('error');
+          // Update tooltip
+          if (type === 'SB') {
+            indicator.setAttribute('data-tooltip', '❌ Supabase - Nicht verbunden');
+          } else {
+            indicator.setAttribute('data-tooltip', '❌ HotelNetSolutions - Nicht verbunden');
+          }
+        }
+        
+        console.log(`🔄 Connection status updated: ${type} = ${connected ? '✅ Connected' : '❌ Disconnected'}`);
+      } else {
+        console.warn(`⚠️ Status indicator not found for: ${type}`);
+      }
+    }, 100);
   }
 
   // Cache methods
