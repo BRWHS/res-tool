@@ -9,8 +9,8 @@
 const CONFIG = {
   VERSION: '2.0.0',
   API: {
-    SUPABASE_URL: window.HRS_CONFIG?.API?.SUPABASE?.URL || 'https://ncrczhlwqwqirvdgbrfb.supabase.co',
-    SUPABASE_KEY: window.HRS_CONFIG?.API?.SUPABASE?.ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5jcmN6aGx3cXdxaXJ2ZGdicmZiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzY0MTMyNDAsImV4cCI6MjA1MTk4OTI0MH0.jYNGgg6jT0-tSsWnWnWsZOW5Y-n0hHD2eI82ktl2YzA',
+    SUPABASE_URL: window.HRS_CONFIG?.API?.SUPABASE?.URL || 'https://kcqmcwfbapcuiatwixwm.supabase.co',
+    SUPABASE_KEY: window.HRS_CONFIG?.API?.SUPABASE?.ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtjcW1jd2ZiYXBjdWlhdHdpeHdtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE2Mzg5MTksImV4cCI6MjA3NzIxNDkxOX0.xy8Iwz1nl8kBbSQio00ogy5sU_cFI2R4CPe5HdqIFDQ',
     HNS: {
       PROD: 'https://api.hotelnetsolutions.de/v1',
       TEST: 'https://test-api.hotelnetsolutions.de/v1',
