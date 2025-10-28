@@ -70,7 +70,7 @@
         </button>
         <button class="btn secondary" data-action="open-availability">
           <i class="fas fa-calendar-check"></i>
-          VerfÃ¼gbarkeit
+          VerfÃƒÂ¼gbarkeit
         </button>
         <button class="btn secondary" data-action="open-reports">
           <i class="fas fa-chart-line"></i>
@@ -105,7 +105,7 @@
 
         <div class="clock mono">
           <span id="dateLocal">--.--.----</span>
-          <span class="sep">Â·</span>
+          <span class="sep">Ã‚Â·</span>
           <span id="clockLocal">--:--:--</span>
         </div>
       </div>
@@ -156,11 +156,11 @@
                 <div class="label">Buchungen</div>
               </div>
               <div class="kpi">
-                <div class="value" id="tRevenue">0,00 â‚¬</div>
+                <div class="value" id="tRevenue">0,00 Ã¢â€šÂ¬</div>
                 <div class="label">Umsatz</div>
               </div>
               <div class="kpi">
-                <div class="value" id="tADR">0,00 â‚¬</div>
+                <div class="value" id="tADR">0,00 Ã¢â€šÂ¬</div>
                 <div class="label">ADR</div>
               </div>
               <div class="kpi">
@@ -175,7 +175,7 @@
             <div class="card-head compact">
               <div class="performance-title-inline">
                 <i class="fas fa-calendar-week"></i>
-                <h3>NÃ¤chste 7 Tage</h3>
+                <h3>NÃƒÂ¤chste 7 Tage</h3>
               </div>
               <select class="select sm hotel-select" data-filter="hotel-next">
                 <option value="">Alle Hotels</option>
@@ -184,14 +184,14 @@
             <div class="kpis">
               <div class="kpi">
                 <div class="value" id="nBookings">0</div>
-                <div class="label">AnkÃ¼nfte</div>
+                <div class="label">AnkÃƒÂ¼nfte</div>
               </div>
               <div class="kpi">
-                <div class="value" id="nRevenue">0,00 â‚¬</div>
+                <div class="value" id="nRevenue">0,00 Ã¢â€šÂ¬</div>
                 <div class="label">Umsatz</div>
               </div>
               <div class="kpi">
-                <div class="value" id="nADR">0,00 â‚¬</div>
+                <div class="value" id="nADR">0,00 Ã¢â€šÂ¬</div>
                 <div class="label">ADR</div>
               </div>
               <div class="kpi">
@@ -258,7 +258,7 @@
                 </button>
                 <button class="btn secondary" data-action="reset-filters">
                   <i class="fas fa-times"></i>
-                  ZurÃ¼cksetzen
+                  ZurÃƒÂ¼cksetzen
                 </button>
               </div>
             </div>
@@ -366,7 +366,7 @@
                 </div>
                 <div class="operation-content">
                   <div class="operation-value" id="inhouseGuests">0</div>
-                  <div class="operation-label">GÃ¤ste im Haus</div>
+                  <div class="operation-label">GÃƒÂ¤ste im Haus</div>
                   <button class="btn-link" data-action="view-inhouse">
                     Details anzeigen <i class="fas fa-arrow-right"></i>
                   </button>
@@ -437,7 +437,7 @@
             <div class="form-group">
               <label class="form-label">Hotel *</label>
               <select class="select hotel-select" name="hotel_code" required>
-                <option value="">Bitte wÃ¤hlen...</option>
+                <option value="">Bitte wÃƒÂ¤hlen...</option>
               </select>
             </div>
             
@@ -516,7 +516,7 @@
         <div class="modal-footer">
           <button type="button" class="btn secondary" data-wizard-action="prev" disabled>
             <i class="fas fa-arrow-left"></i>
-            ZurÃ¼ck
+            ZurÃƒÂ¼ck
           </button>
           <button type="button" class="btn primary" data-wizard-action="next">
             Weiter
@@ -533,9 +533,17 @@
 
   <!-- Edit Reservation Modal -->
   <div id="modalEditReservation" class="modal hidden" aria-hidden="true">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2>Reservierung bearbeiten</h2>
+    <div class="modal-content modal-content-wide">
+      <div class="modal-header modern-header">
+        <div class="header-content">
+          <div class="header-icon">
+            <i class="fas fa-edit"></i>
+          </div>
+          <div class="header-text">
+            <h2>Reservierung bearbeiten</h2>
+            <p class="header-subtitle" id="editReservationSubtitle">Reservierungsnummer wird geladen...</p>
+          </div>
+        </div>
         <button class="modal-close">
           <i class="fas fa-times"></i>
         </button>
@@ -544,154 +552,326 @@
       <form id="formEditReservation" data-form="edit-reservation">
         <div class="modal-body">
           <!-- Edit form content -->
-          <div class="tabs">
+          <div class="tabs modern-tabs">
             <div class="tab-buttons">
-              <button type="button" class="tab-button active" data-tab="details">Details</button>
-              <button type="button" class="tab-button" data-tab="guest">Gast</button>
-              <button type="button" class="tab-button" data-tab="pricing">Preise</button>
-              <button type="button" class="tab-button" data-tab="notes">Notizen</button>
+              <button type="button" class="tab-button active" data-tab="details">
+                <i class="fas fa-info-circle"></i>
+                <span>Details</span>
+              </button>
+              <button type="button" class="tab-button" data-tab="guest">
+                <i class="fas fa-user"></i>
+                <span>Gast</span>
+              </button>
+              <button type="button" class="tab-button" data-tab="pricing">
+                <i class="fas fa-euro-sign"></i>
+                <span>Preise</span>
+              </button>
+              <button type="button" class="tab-button" data-tab="traces">
+                <i class="fas fa-history"></i>
+                <span>Traces</span>
+              </button>
             </div>
             
-            <div class="tab-content">
+            <div class="tab-content modern-tab-content">
               <!-- Details Tab -->
               <div class="tab-pane active" data-tab-content="details">
-                <div class="form-group">
-                  <label class="form-label">Reservierungsnummer</label>
-                  <input type="text" class="input" name="reservation_number" readonly>
+                <input type="hidden" name="reservation_number">
+                
+                <!-- Reservation Info Card -->
+                <div class="info-card glass-effect">
+                  <div class="info-card-header">
+                    <i class="fas fa-hotel"></i>
+                    <h4>Hoteldetails</h4>
+                  </div>
+                  
+                  <div class="form-group">
+                    <label class="form-label">
+                      <i class="fas fa-building"></i>
+                      Hotel
+                    </label>
+                    <select class="select hotel-select disabled-select" name="hotel_code" disabled>
+                      <option value="">Bitte wählen...</option>
+                    </select>
+                    <p class="field-hint">
+                      <i class="fas fa-lock"></i>
+                      Hotel kann nach Erstellung nicht geändert werden
+                    </p>
+                  </div>
+                  
+                  <div class="form-group">
+                    <label class="form-label">
+                      <i class="fas fa-traffic-light"></i>
+                      Status
+                    </label>
+                    <select class="select status-select disabled-select" name="status" disabled>
+                      <option value="pending">Ausstehend</option>
+                      <option value="active">Aktiv</option>
+                      <option value="inhouse">In House</option>
+                      <option value="done">Abgeschlossen</option>
+                      <option value="canceled">Storniert</option>
+                    </select>
+                    <p class="field-hint">
+                      <i class="fas fa-info-circle"></i>
+                      Status ändert sich automatisch basierend auf Daten
+                    </p>
+                  </div>
                 </div>
                 
-                <div class="form-group">
-                  <label class="form-label">Hotel *</label>
-                  <select class="select hotel-select" name="hotel_code" required>
-                    <option value="">Bitte wählen...</option>
-                  </select>
+                <!-- Stay Details Card -->
+                <div class="info-card glass-effect">
+                  <div class="info-card-header">
+                    <i class="fas fa-calendar-alt"></i>
+                    <h4>Aufenthaltsdetails</h4>
+                  </div>
+                  
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label class="form-label">
+                        <i class="fas fa-calendar-check"></i>
+                        Anreise *
+                      </label>
+                      <input type="date" class="input modern-input" name="arrival" required>
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">
+                        <i class="fas fa-calendar-times"></i>
+                        Abreise *
+                      </label>
+                      <input type="date" class="input modern-input" name="departure" required>
+                    </div>
+                  </div>
+                  
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label class="form-label">
+                        <i class="fas fa-user"></i>
+                        Erwachsene
+                      </label>
+                      <input type="number" class="input modern-input" name="guests_adults" min="1" max="10">
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">
+                        <i class="fas fa-child"></i>
+                        Kinder
+                      </label>
+                      <input type="number" class="input modern-input" name="guests_children" min="0" max="10">
+                    </div>
+                  </div>
+                  
+                  <div class="nights-display" id="nightsDisplay">
+                    <i class="fas fa-moon"></i>
+                    <span id="nightsCount">0</span> Nächte
+                  </div>
                 </div>
                 
-                <div class="form-row">
-                  <div class="form-group">
-                    <label class="form-label">Anreise *</label>
-                    <input type="date" class="input" name="arrival" required>
+                <!-- Rate Info Card -->
+                <div class="info-card glass-effect">
+                  <div class="info-card-header">
+                    <i class="fas fa-tags"></i>
+                    <h4>Tarif & Kategorie</h4>
                   </div>
+                  
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label class="form-label">
+                        <i class="fas fa-bed"></i>
+                        Kategorie
+                      </label>
+                      <input type="text" class="input modern-input" name="category" readonly>
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">
+                        <i class="fas fa-tag"></i>
+                        Rate Code
+                      </label>
+                      <input type="text" class="input modern-input" name="rate_code" readonly>
+                    </div>
+                  </div>
+                  
                   <div class="form-group">
-                    <label class="form-label">Abreise *</label>
-                    <input type="date" class="input" name="departure" required>
+                    <label class="form-label">
+                      <i class="fas fa-calculator"></i>
+                      Gesamtpreis
+                    </label>
+                    <div class="total-price-display">
+                      <input type="number" class="input modern-input price-input" name="total_price" step="0.01" min="0" readonly>
+                      <span class="currency-symbol">€</span>
+                    </div>
                   </div>
                 </div>
                 
-                <div class="form-row">
-                  <div class="form-group">
-                    <label class="form-label">Erwachsene</label>
-                    <input type="number" class="input" name="guests_adults" min="1" max="10">
+                <!-- Internal Notes Card -->
+                <div class="info-card glass-effect">
+                  <div class="info-card-header">
+                    <i class="fas fa-sticky-note"></i>
+                    <h4>Interne Notizen</h4>
                   </div>
+                  
                   <div class="form-group">
-                    <label class="form-label">Kinder</label>
-                    <input type="number" class="input" name="guests_children" min="0" max="10">
+                    <label class="form-label">
+                      <i class="fas fa-pen"></i>
+                      Notizen (nur für das Team sichtbar)
+                    </label>
+                    <textarea class="input modern-input modern-textarea" name="notes" rows="4" placeholder="Interne Bemerkungen zur Reservierung..."></textarea>
                   </div>
-                </div>
-                
-                <div class="form-group">
-                  <label class="form-label">Status</label>
-                  <select class="select" name="status">
-                    <option value="active">Aktiv</option>
-                    <option value="pending">Ausstehend</option>
-                    <option value="done">Abgeschlossen</option>
-                    <option value="canceled">Storniert</option>
-                  </select>
                 </div>
               </div>
               
               <!-- Guest Tab -->
               <div class="tab-pane hidden" data-tab-content="guest">
-                <div class="form-row">
-                  <div class="form-group">
-                    <label class="form-label">Vorname</label>
-                    <input type="text" class="input" name="guest_first_name">
+                <div class="info-card glass-effect">
+                  <div class="info-card-header">
+                    <i class="fas fa-user-circle"></i>
+                    <h4>Gastinformationen</h4>
                   </div>
-                  <div class="form-group">
-                    <label class="form-label">Nachname *</label>
-                    <input type="text" class="input" name="guest_last_name" required>
+                  
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label class="form-label">
+                        <i class="fas fa-user"></i>
+                        Vorname
+                      </label>
+                      <input type="text" class="input modern-input" name="guest_first_name" placeholder="Max">
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">
+                        <i class="fas fa-user"></i>
+                        Nachname *
+                      </label>
+                      <input type="text" class="input modern-input" name="guest_last_name" placeholder="Mustermann" required>
+                    </div>
                   </div>
-                </div>
-                
-                <div class="form-group">
-                  <label class="form-label">E-Mail</label>
-                  <input type="email" class="input" name="guest_email">
-                </div>
-                
-                <div class="form-group">
-                  <label class="form-label">Telefon</label>
-                  <input type="tel" class="input" name="guest_phone">
-                </div>
-                
-                <div class="form-group">
-                  <label class="form-label">Firma</label>
-                  <input type="text" class="input" name="guest_company">
-                </div>
-                
-                <div class="form-group">
-                  <label class="form-label">Adresse</label>
-                  <textarea class="input" name="guest_address" rows="3"></textarea>
+                  
+                  <div class="form-group">
+                    <label class="form-label">
+                      <i class="fas fa-envelope"></i>
+                      E-Mail
+                    </label>
+                    <input type="email" class="input modern-input" name="guest_email" placeholder="max.mustermann@beispiel.de">
+                  </div>
+                  
+                  <div class="form-group">
+                    <label class="form-label">
+                      <i class="fas fa-phone"></i>
+                      Telefon
+                    </label>
+                    <input type="tel" class="input modern-input" name="guest_phone" placeholder="+49 123 456789">
+                  </div>
+                  
+                  <div class="form-group">
+                    <label class="form-label">
+                      <i class="fas fa-building"></i>
+                      Firma
+                    </label>
+                    <input type="text" class="input modern-input" name="guest_company" placeholder="Firma GmbH">
+                  </div>
+                  
+                  <div class="form-group">
+                    <label class="form-label">
+                      <i class="fas fa-map-marker-alt"></i>
+                      Adresse
+                    </label>
+                    <textarea class="input modern-input modern-textarea" name="guest_address" rows="3" placeholder="Straße 123&#10;12345 Stadt&#10;Deutschland"></textarea>
+                  </div>
                 </div>
               </div>
               
               <!-- Pricing Tab -->
               <div class="tab-pane hidden" data-tab-content="pricing">
-                <div class="form-group">
-                  <label class="form-label">Kategorie</label>
-                  <input type="text" class="input" name="category" readonly>
+                <div class="pricing-header">
+                  <div class="pricing-summary">
+                    <div class="summary-item">
+                      <span class="summary-label">Rate:</span>
+                      <span class="summary-value" id="pricingRateCode">-</span>
+                    </div>
+                    <div class="summary-item">
+                      <span class="summary-label">Kategorie:</span>
+                      <span class="summary-value" id="pricingCategory">-</span>
+                    </div>
+                    <div class="summary-item highlight">
+                      <span class="summary-label">Gesamt:</span>
+                      <span class="summary-value" id="pricingTotal">0,00 €</span>
+                    </div>
+                  </div>
                 </div>
                 
-                <div class="form-group">
-                  <label class="form-label">Rate Code</label>
-                  <input type="text" class="input" name="rate_code" readonly>
+                <div id="nightCardsContainer" class="night-cards-container">
+                  <!-- Night cards will be dynamically generated here -->
                 </div>
                 
-                <div class="form-group">
-                  <label class="form-label">Preis pro Nacht</label>
-                  <input type="number" class="input" name="rate_price" step="0.01" min="0">
-                </div>
-                
-                <div class="form-group">
-                  <label class="form-label">Gesamtpreis</label>
-                  <input type="number" class="input" name="total_price" step="0.01" min="0">
-                </div>
-                
-                <div class="form-group">
-                  <label class="form-label">Zahlungsstatus</label>
-                  <select class="select" name="payment_status">
-                    <option value="pending">Ausstehend</option>
-                    <option value="partial">Teilweise bezahlt</option>
-                    <option value="paid">Bezahlt</option>
-                    <option value="refunded">Erstattet</option>
-                  </select>
+                <div class="info-card glass-effect">
+                  <div class="info-card-header">
+                    <i class="fas fa-credit-card"></i>
+                    <h4>Zahlungsinformationen</h4>
+                  </div>
+                  
+                  <div class="form-group">
+                    <label class="form-label">
+                      <i class="fas fa-money-check-alt"></i>
+                      Zahlungsstatus
+                    </label>
+                    <select class="select modern-select" name="payment_status">
+                      <option value="pending">Ausstehend</option>
+                      <option value="partial">Teilweise bezahlt</option>
+                      <option value="paid">Bezahlt</option>
+                      <option value="refunded">Erstattet</option>
+                    </select>
+                  </div>
                 </div>
               </div>
               
-              <!-- Notes Tab -->
-              <div class="tab-pane hidden" data-tab-content="notes">
-                <div class="form-group">
-                  <label class="form-label">Interne Notizen</label>
-                  <textarea class="input" name="notes" rows="6" placeholder="Interne Notizen zur Reservierung..."></textarea>
-                </div>
-                
-                <div class="form-group">
-                  <label class="form-label">Gastnotizen</label>
-                  <textarea class="input" name="guest_notes" rows="6" placeholder="Notizen vom Gast oder besondere Wünsche..."></textarea>
+              <!-- Traces Tab -->
+              <div class="tab-pane hidden" data-tab-content="traces">
+                <div class="info-card glass-effect">
+                  <div class="info-card-header">
+                    <i class="fas fa-history"></i>
+                    <h4>Systemprotokolle</h4>
+                  </div>
+                  
+                  <div id="tracesContainer" class="traces-container">
+                    <div class="trace-item">
+                      <div class="trace-icon">
+                        <i class="fas fa-plus-circle"></i>
+                      </div>
+                      <div class="trace-content">
+                        <div class="trace-header">
+                          <span class="trace-action">Reservierung erstellt</span>
+                          <span class="trace-time">Lädt...</span>
+                        </div>
+                        <div class="trace-details">
+                          Erstellt durch: <span class="trace-user">System</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <p class="text-muted text-center" style="margin-top: 1.5rem;">
+                    <i class="fas fa-info-circle"></i>
+                    Traces zeigen alle Änderungen und Aktionen dieser Reservierung
+                  </p>
                 </div>
               </div>
             </div>
           </div>
         </div>
         
-        <div class="modal-footer">
-          <button type="button" class="btn danger" data-action="cancel-reservation">
-            <i class="fas fa-ban"></i>
-            Stornieren
-          </button>
-          <button type="submit" class="btn primary">
-            <i class="fas fa-save"></i>
-            Ã„nderungen speichern
-          </button>
+        <div class="modal-footer modern-footer">
+          <div class="footer-actions-left">
+            <button type="button" class="btn danger btn-icon-text" data-action="cancel-reservation">
+              <i class="fas fa-ban"></i>
+              <span>Stornieren</span>
+            </button>
+          </div>
+          <div class="footer-actions-right">
+            <button type="button" class="btn secondary btn-icon-text" data-close-modal>
+              <i class="fas fa-times"></i>
+              <span>Abbrechen</span>
+            </button>
+            <button type="submit" class="btn primary btn-icon-text">
+              <i class="fas fa-save"></i>
+              <span>Änderungen speichern</span>
+            </button>
+          </div>
         </div>
       </form>
     </div>
@@ -701,7 +881,7 @@
   <div id="modalAvailability" class="modal hidden" aria-hidden="true">
     <div class="modal-content large">
       <div class="modal-header">
-        <h2>VerfÃ¼gbarkeit</h2>
+        <h2>VerfÃƒÂ¼gbarkeit</h2>
         <button class="modal-close">
           <i class="fas fa-times"></i>
         </button>
@@ -845,7 +1025,7 @@
       <div class="modal-body">
         <div class="sketch-controls">
           <select class="select hotel-select" id="sketchHotel">
-            <option value="">Hotel wÃ¤hlen...</option>
+            <option value="">Hotel wÃƒÂ¤hlen...</option>
           </select>
           <button class="btn primary" data-action="load-sketch">
             <i class="fas fa-map"></i>
@@ -854,7 +1034,7 @@
         </div>
         
         <div id="sketchCanvas" class="sketch-canvas">
-          <p class="text-center text-muted">Bitte wÃ¤hlen Sie ein Hotel aus</p>
+          <p class="text-center text-muted">Bitte wÃƒÂ¤hlen Sie ein Hotel aus</p>
         </div>
       </div>
     </div>
@@ -868,7 +1048,7 @@
           <div style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, var(--primary-500), var(--accent-500)); border-radius: var(--radius-lg); color: white;">
             <i class="fas fa-envelope"></i>
           </div>
-          <h2>BestÃ¤tigungs-E-Mail senden</h2>
+          <h2>BestÃƒÂ¤tigungs-E-Mail senden</h2>
         </div>
         <button class="modal-close">
           <i class="fas fa-times"></i>
@@ -879,7 +1059,7 @@
         <div class="form-group">
           <label class="form-label">
             <i class="fas fa-at" style="margin-right: 0.5rem; color: var(--primary-400);"></i>
-            EmpfÃ¤nger E-Mail
+            EmpfÃƒÂ¤nger E-Mail
           </label>
           <input type="email" class="input" id="confirmEmailTo" placeholder="gast@beispiel.de" required>
         </div>
@@ -900,7 +1080,7 @@
           <textarea class="input" id="confirmEmailBody" rows="12" style="font-family: 'JetBrains Mono', monospace; font-size: 0.875rem; line-height: 1.6;" required></textarea>
           <p class="text-muted" style="font-size: 0.75rem; margin-top: 0.5rem;">
             <i class="fas fa-info-circle"></i>
-            Sie kÃ¶nnen die Nachricht beliebig anpassen
+            Sie kÃƒÂ¶nnen die Nachricht beliebig anpassen
           </p>
         </div>
       </div>
@@ -921,7 +1101,6 @@
   <!-- Scripts -->
   <script src="i18n.js"></script>
   <script src="auth.js"></script>
-  <script src="config.js"></script>
   <script src="app.js"></script>
   
 </body>
