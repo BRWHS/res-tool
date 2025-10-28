@@ -1133,6 +1133,9 @@ class ReservationApp {
         case 'cancel-reservation':
           await this.handleCancelReservation();
           break;
+        case 'add-trace':
+          this.openAddTraceModal();
+          break;
         case 'logout':
           this.logout();
           break;
@@ -2240,23 +2243,58 @@ Ihr Reservierungsteam`;
       return;
     }
     
-    // Update header subtitle with reservation number
-    const subtitle = document.getElementById('editReservationSubtitle');
-    if (subtitle) {
-      subtitle.textContent = `Reservierung #${reservation.reservation_number || reservation.id}`;
+    // Update header
+    const resId = document.getElementById('editReservationId');
+    const resStatus = document.getElementById('editReservationStatus');
+    if (resId) resId.textContent = `#${reservation.reservation_number || reservation.id}`;
+    if (resStatus) {
+      const statusMap = {
+        'pending': 'Ausstehend',
+        'active': 'Aktiv',
+        'inhouse': 'In House',
+        'done': 'Abgeschlossen',
+        'canceled': 'Storniert'
+      };
+      resStatus.textContent = statusMap[reservation.status] || reservation.status;
     }
     
-    // Fill all form fields
-    const fields = [
+    // Fill all form fields - basic fields
+    const basicFields = [
       'reservation_number', 'hotel_code', 'arrival', 'departure',
       'guests_adults', 'guests_children', 'status',
-      'guest_first_name', 'guest_last_name', 'guest_email', 
-      'guest_phone', 'guest_company', 'guest_address',
-      'category', 'rate_code', 'rate_price', 'total_price', 
-      'payment_status', 'notes'
+      'category', 'rate_code', 'total_price', 'payment_status', 'notes'
     ];
     
-    fields.forEach(field => {
+    basicFields.forEach(field => {
+      const input = form.querySelector(`[name="${field}"]`);
+      if (input && reservation[field] !== undefined && reservation[field] !== null) {
+        input.value = reservation[field];
+      }
+    });
+    
+    // Fill guest fields - extended
+    const guestFields = [
+      'guest_title', 'guest_first_name', 'guest_last_name', 'guest_birthdate',
+      'guest_nationality', 'guest_language', 'guest_document_number', 'guest_vip',
+      'guest_email', 'guest_phone', 'guest_mobile', 'guest_address',
+      'guest_company', 'guest_company_address', 'guest_vat_id', 'guest_department',
+      'guest_room_preference', 'guest_bed_preference', 'guest_allergies', 'guest_notes'
+    ];
+    
+    guestFields.forEach(field => {
+      const input = form.querySelector(`[name="${field}"]`);
+      if (input && reservation[field] !== undefined && reservation[field] !== null) {
+        input.value = reservation[field];
+      }
+    });
+    
+    // Fill pricing extras
+    const pricingFields = [
+      'extra_breakfast_price', 'extra_parking_price', 'extra_minibar_price',
+      'discount_amount', 'discount_reason'
+    ];
+    
+    pricingFields.forEach(field => {
       const input = form.querySelector(`[name="${field}"]`);
       if (input && reservation[field] !== undefined && reservation[field] !== null) {
         input.value = reservation[field];
@@ -2270,50 +2308,61 @@ Ihr Reservierungsteam`;
     if (statusSelect) statusSelect.disabled = true;
     
     // Calculate and display nights
-    this.updateNightsDisplay(reservation.arrival, reservation.departure);
+    this.updateNightsDisplayCompact(reservation.arrival, reservation.departure);
     
-    // Generate night cards for pricing tab
-    this.generateNightCards(reservation);
+    // Generate night price cards with editable prices
+    this.generateEditableNightPrices(reservation);
     
     // Update pricing summary
-    this.updatePricingSummary(reservation);
+    this.updatePricingSummaryCompact(reservation);
     
-    // Load traces
-    this.loadReservationTraces(reservation);
+    // Calculate and display breakdown
+    this.calculatePricingBreakdown(reservation);
+    
+    // Load traces (alerts/reminders, not system logs)
+    this.loadReservationTracesModern(reservation);
     
     // Initialize tab switching
-    this.initEditModalTabs();
+    this.initEditModalTabsModern();
     
-    // Add listeners for date changes to update nights display
+    // Add listeners for date changes
     const arrivalInput = form.querySelector('[name="arrival"]');
     const departureInput = form.querySelector('[name="departure"]');
     if (arrivalInput && departureInput) {
-      const updateNights = () => {
-        this.updateNightsDisplay(arrivalInput.value, departureInput.value);
+      const updateDisplay = () => {
+        this.updateNightsDisplayCompact(arrivalInput.value, departureInput.value);
+        this.generateEditableNightPrices({
+          ...reservation,
+          arrival: arrivalInput.value,
+          departure: departureInput.value
+        });
       };
-      arrivalInput.addEventListener('change', updateNights);
-      departureInput.addEventListener('change', updateNights);
+      arrivalInput.addEventListener('change', updateDisplay);
+      departureInput.addEventListener('change', updateDisplay);
     }
+    
+    // Add listeners for pricing changes
+    this.initPricingChangeListeners(form, reservation);
     
     // Open the modal
     this.ui.openModal('modalEditReservation');
   }
   
-  updateNightsDisplay(arrival, departure) {
+  updateNightsDisplayCompact(arrival, departure) {
     if (!arrival || !departure) return;
     
     const arrivalDate = new Date(arrival);
     const departureDate = new Date(departure);
     const nights = Math.ceil((departureDate - arrivalDate) / (1000 * 60 * 60 * 24));
     
-    const nightsDisplay = document.getElementById('nightsCount');
+    const nightsDisplay = document.getElementById('nightsCountCompact');
     if (nightsDisplay) {
       nightsDisplay.textContent = nights > 0 ? nights : 0;
     }
   }
   
-  generateNightCards(reservation) {
-    const container = document.getElementById('nightCardsContainer');
+  generateEditableNightPrices(reservation) {
+    const container = document.getElementById('nightPriceGrid');
     if (!container) return;
     
     container.innerHTML = '';
@@ -2333,114 +2382,291 @@ Ihr Reservierungsteam`;
       return;
     }
     
-    // Generate a card for each night
+    // Generate editable card for each night
     for (let i = 0; i < nights; i++) {
       const currentDate = new Date(arrivalDate);
       currentDate.setDate(currentDate.getDate() + i);
       
       const card = document.createElement('div');
-      card.className = 'night-card';
+      card.className = 'night-price-card';
       card.innerHTML = `
-        <div class="night-card-header">
-          <div class="night-number">
-            <i class="fas fa-moon"></i>
-            Nacht ${i + 1}
-          </div>
+        <div class="night-card-header-compact">
+          <span class="night-num"><i class="fas fa-moon"></i> Nacht ${i + 1}</span>
+          <span class="night-date-compact">${this.formatDate(currentDate.toISOString().split('T')[0])}</span>
         </div>
-        <div class="night-card-body">
-          <div class="night-date">
-            ${this.formatDate(currentDate.toISOString().split('T')[0])}
-          </div>
-          <div class="night-price">
-            <span class="night-price-value">${pricePerNight.toFixed(2)}</span>
-            <span class="night-price-currency">€</span>
-          </div>
-        </div>
+        <input 
+          type="number" 
+          class="night-price-input" 
+          data-night-index="${i}"
+          value="${pricePerNight.toFixed(2)}" 
+          step="0.01" 
+          min="0"
+          placeholder="0.00"
+        />
       `;
+      
+      const input = card.querySelector('.night-price-input');
+      input.addEventListener('change', () => {
+        this.updateTotalFromNightPrices();
+      });
       
       container.appendChild(card);
     }
   }
   
-  updatePricingSummary(reservation) {
-    const rateCodeEl = document.getElementById('pricingRateCode');
-    const categoryEl = document.getElementById('pricingCategory');
-    const totalEl = document.getElementById('pricingTotal');
+  updateTotalFromNightPrices() {
+    const inputs = document.querySelectorAll('.night-price-input');
+    let total = 0;
     
-    if (rateCodeEl) rateCodeEl.textContent = reservation.rate_code || '-';
-    if (categoryEl) categoryEl.textContent = reservation.category || '-';
+    inputs.forEach(input => {
+      const value = parseFloat(input.value) || 0;
+      total += value;
+    });
+    
+    // Update total price field
+    const totalInput = document.querySelector('[name="total_price"]');
+    if (totalInput) {
+      totalInput.value = total.toFixed(2);
+    }
+    
+    // Recalculate breakdown
+    this.calculatePricingBreakdown(this.currentEditReservation);
+  }
+  
+  updatePricingSummaryCompact(reservation) {
+    const catEl = document.getElementById('priceCat');
+    const rateEl = document.getElementById('priceRate');
+    const totalEl = document.getElementById('priceTotal');
+    
+    if (catEl) catEl.textContent = reservation.category || '-';
+    if (rateEl) rateEl.textContent = reservation.rate_code || '-';
     if (totalEl) {
       const total = reservation.total_price || 0;
-      totalEl.textContent = `${total.toFixed(2)} €`;
+      totalEl.textContent = `${parseFloat(total).toFixed(2)} €`;
     }
   }
   
-  loadReservationTraces(reservation) {
-    const container = document.getElementById('tracesContainer');
-    if (!container) return;
-    
-    // In a real application, this would fetch traces from the database
-    // For now, we'll create some example traces
-    const traces = [
-      {
-        action: 'Reservierung erstellt',
-        icon: 'fa-plus-circle',
-        time: reservation.created_at || new Date().toISOString(),
-        user: reservation.created_by || 'System',
-        details: `Erstellt durch ${reservation.created_by || 'System'}`
-      }
+  initPricingChangeListeners(form, reservation) {
+    const extrasInputs = [
+      'extra_breakfast_price',
+      'extra_parking_price',
+      'extra_minibar_price',
+      'discount_amount'
     ];
     
-    // Add modification trace if updated_at exists
-    if (reservation.updated_at && reservation.updated_at !== reservation.created_at) {
-      traces.push({
-        action: 'Reservierung aktualisiert',
-        icon: 'fa-edit',
-        time: reservation.updated_at,
-        user: reservation.updated_by || 'System',
-        details: `Geändert durch ${reservation.updated_by || 'System'}`
-      });
-    }
-    
-    // Add status change traces if available
-    if (reservation.status === 'canceled') {
-      traces.push({
-        action: 'Reservierung storniert',
-        icon: 'fa-ban',
-        time: reservation.canceled_at || new Date().toISOString(),
-        user: reservation.canceled_by || 'System',
-        details: `Storniert durch ${reservation.canceled_by || 'System'}`
-      });
-    }
-    
-    container.innerHTML = traces.map(trace => `
-      <div class="trace-item">
-        <div class="trace-icon">
-          <i class="fas ${trace.icon}"></i>
-        </div>
-        <div class="trace-content">
-          <div class="trace-header">
-            <span class="trace-action">${trace.action}</span>
-            <span class="trace-time">${this.formatDateTime(trace.time)}</span>
-          </div>
-          <div class="trace-details">
-            ${trace.details}
-          </div>
-        </div>
-      </div>
-    `).join('');
+    extrasInputs.forEach(fieldName => {
+      const input = form.querySelector(`[name="${fieldName}"]`);
+      if (input) {
+        input.addEventListener('input', () => {
+          this.calculatePricingBreakdown(reservation);
+        });
+      }
+    });
   }
   
-  formatDateTime(dateString) {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('de-DE', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+  calculatePricingBreakdown(reservation) {
+    // Get accommodation price from night inputs or total
+    let accommodation = 0;
+    const nightInputs = document.querySelectorAll('.night-price-input');
+    if (nightInputs.length > 0) {
+      nightInputs.forEach(input => {
+        accommodation += parseFloat(input.value) || 0;
+      });
+    } else {
+      accommodation = parseFloat(document.querySelector('[name="total_price"]')?.value) || 0;
+    }
+    
+    // Get extras
+    const breakfast = parseFloat(document.querySelector('[name="extra_breakfast_price"]')?.value) || 0;
+    const parking = parseFloat(document.querySelector('[name="extra_parking_price"]')?.value) || 0;
+    const minibar = parseFloat(document.querySelector('[name="extra_minibar_price"]')?.value) || 0;
+    const extras = breakfast + parking + minibar;
+    
+    // Get discount
+    const discount = parseFloat(document.querySelector('[name="discount_amount"]')?.value) || 0;
+    
+    // Calculate subtotal
+    const subtotal = accommodation + extras - discount;
+    
+    // Calculate tax (7% for hotels in Germany)
+    const taxRate = 0.07;
+    const tax = subtotal * taxRate;
+    
+    // Calculate total
+    const total = subtotal + tax;
+    
+    // Update breakdown display
+    document.getElementById('breakdownAccommodation').textContent = `${accommodation.toFixed(2)} €`;
+    document.getElementById('breakdownExtras').textContent = `${extras.toFixed(2)} €`;
+    document.getElementById('breakdownDiscount').textContent = discount > 0 ? `-${discount.toFixed(2)} €` : `0,00 €`;
+    document.getElementById('breakdownSubtotal').textContent = `${subtotal.toFixed(2)} €`;
+    document.getElementById('breakdownTax').textContent = `${tax.toFixed(2)} €`;
+    document.getElementById('breakdownTotal').textContent = `${total.toFixed(2)} €`;
+    
+    // Also update the main total field
+    const totalInput = document.querySelector('[name="total_price"]');
+    if (totalInput) {
+      totalInput.value = total.toFixed(2);
+    }
+    
+    // Update summary header
+    document.getElementById('priceTotal').textContent = `${total.toFixed(2)} €`;
+  }
+  
+  loadReservationTracesModern(reservation) {
+    const container = document.getElementById('tracesListModern');
+    const emptyState = document.getElementById('tracesEmpty');
+    
+    if (!container || !emptyState) return;
+    
+    // In real app, fetch traces from database
+    // For now, create example traces (alerts/reminders, not system logs)
+    const traces = reservation.traces || [];
+    
+    if (traces.length === 0) {
+      container.style.display = 'none';
+      emptyState.classList.remove('hidden');
+      return;
+    }
+    
+    container.style.display = 'flex';
+    emptyState.classList.add('hidden');
+    
+    container.innerHTML = traces.map(trace => {
+      const typeIcons = {
+        'reminder': 'fa-bell',
+        'alert': 'fa-exclamation-triangle',
+        'note': 'fa-sticky-note',
+        'request': 'fa-star'
+      };
+      
+      const typeColors = {
+        'reminder': 'primary',
+        'alert': 'error',
+        'note': 'success',
+        'request': 'warning'
+      };
+      
+      return `
+        <div class="trace-card trace-${trace.type || 'note'}">
+          <div class="trace-header-row">
+            <span class="trace-type-badge">
+              <i class="fas ${typeIcons[trace.type] || 'fa-sticky-note'}"></i>
+              ${trace.type || 'note'}
+            </span>
+            <span class="trace-datetime">${trace.datetime || 'Kein Datum'}</span>
+          </div>
+          <div class="trace-message">${trace.message || 'Keine Nachricht'}</div>
+          <div class="trace-actions">
+            <button class="trace-btn" data-action="edit-trace" data-trace-id="${trace.id}">
+              <i class="fas fa-edit"></i> Bearbeiten
+            </button>
+            <button class="trace-btn" data-action="delete-trace" data-trace-id="${trace.id}">
+              <i class="fas fa-trash"></i> Löschen
+            </button>
+            ${trace.type === 'reminder' ? `
+              <button class="trace-btn" data-action="complete-trace" data-trace-id="${trace.id}">
+                <i class="fas fa-check"></i> Erledigt
+              </button>
+            ` : ''}
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+  
+  initEditModalTabsModern() {
+    const modal = document.getElementById('modalEditReservation');
+    if (!modal) return;
+    
+    const tabButtons = modal.querySelectorAll('.tab-btn');
+    const tabPanels = modal.querySelectorAll('.tab-panel');
+    
+    tabButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        const targetTab = button.dataset.tab;
+        
+        // Remove active class from all
+        tabButtons.forEach(btn => btn.classList.remove('active'));
+        tabPanels.forEach(panel => panel.classList.remove('active'));
+        
+        // Add active class to clicked
+        button.classList.add('active');
+        const targetPanel = modal.querySelector(`[data-tab-panel="${targetTab}"]`);
+        if (targetPanel) {
+          targetPanel.classList.add('active');
+        }
+      });
     });
+  }
+  
+  openAddTraceModal() {
+    if (!this.currentEditReservation) {
+      this.ui.showToast('Keine Reservierung ausgewählt', 'error');
+      return;
+    }
+    
+    // Set default datetime to now
+    const datetimeInput = document.querySelector('#formAddTrace [name="trace_datetime"]');
+    if (datetimeInput) {
+      const now = new Date();
+      now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+      datetimeInput.value = now.toISOString().slice(0, 16);
+    }
+    
+    // Setup form submit handler
+    const form = document.getElementById('formAddTrace');
+    if (form) {
+      form.onsubmit = (e) => {
+        e.preventDefault();
+        this.handleAddTrace(form);
+      };
+    }
+    
+    this.ui.openModal('modalAddTrace');
+  }
+  
+  async handleAddTrace(form) {
+    const formData = new FormData(form);
+    const traceData = {
+      type: formData.get('trace_type'),
+      datetime: formData.get('trace_datetime'),
+      message: formData.get('trace_message'),
+      reservation_id: this.currentEditReservation.id,
+      created_at: new Date().toISOString(),
+      created_by: state.get('user')?.email || 'System'
+    };
+    
+    try {
+      // In real app, save to database
+      // For now, add to current reservation
+      if (!this.currentEditReservation.traces) {
+        this.currentEditReservation.traces = [];
+      }
+      
+      traceData.id = Date.now(); // Simple ID for demo
+      this.currentEditReservation.traces.push(traceData);
+      
+      // Update local state
+      const reservations = state.get('reservations') || [];
+      const index = reservations.findIndex(r => r.id === this.currentEditReservation.id);
+      if (index !== -1) {
+        reservations[index].traces = this.currentEditReservation.traces;
+        state.set('reservations', reservations);
+      }
+      
+      // Reload traces in edit modal
+      this.loadReservationTracesModern(this.currentEditReservation);
+      
+      // Close add trace modal
+      this.ui.closeModal('modalAddTrace');
+      form.reset();
+      
+      this.ui.showToast('Trace erfolgreich hinzugefügt', 'success');
+    } catch (error) {
+      console.error('Failed to add trace:', error);
+      this.ui.showToast('Fehler beim Hinzufügen des Trace', 'error');
+    }
   }
 
   loadHotelsForEditSelect() {
