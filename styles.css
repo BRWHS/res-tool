@@ -4041,14 +4041,10 @@ tbody td .pill {
   }
 }
 
-/* Enhanced Section Titles */
+/* ENTFERNT die Float Animation */
 .section-title {
-  animation: float 3s ease-in-out infinite;
-}
-
-.section-title:hover {
-  animation: none;
-  transform: translateX(8px);
+  animation: none !important;
+  transition: transform 0.2s ease;
 }
 
 /* Enhanced Input Focus States */
@@ -4379,4 +4375,20 @@ select.input-compact:focus {
     var(--primary-400),
     var(--accent-400)
   );
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #6366F1 0%, #06B6D4 100%);
+  border-radius: 10px;
 }
