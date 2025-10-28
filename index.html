@@ -552,9 +552,8 @@
           <div class="tabs-modern">
             <div class="tab-nav">
               <button type="button" class="tab-btn active" data-tab="details">
-  <i class="fas fa-info-circle"></i>
-  <span class="tab-label">Details</span>
-</button>
+                <i class="fas fa-info-circle"></i>Details
+              </button>
               <button type="button" class="tab-btn" data-tab="guest">
                 <i class="fas fa-address-card"></i>Gast
               </button>
@@ -595,11 +594,11 @@
                   <div class="form-row-compact">
                     <div class="form-field">
                       <label>Anreise</label>
-                      <input type="date" class="input-compact" name="arrival_display" disabled>
+                      <input type="date" class="input-compact" name="arrival" required>
                     </div>
                     <div class="form-field">
                       <label>Abreise</label>
-                      <input type="date" class="input-compact" name="departure_display" disabled>
+                      <input type="date" class="input-compact" name="departure" required>
                     </div>
                     <div class="form-field nights-badge-field">
                       <div class="nights-badge" id="nightsBadge">
@@ -618,25 +617,8 @@
                       <label>Kinder</label>
                       <input type="number" class="input-compact" name="guests_children" min="0" max="10" value="0">
                     </div>
-                    <!-- Small price calculation here -->
-<div class="price-summary-compact">
-  <div class="price-summary-item">
-    <span>Übernachtung:</span>
-    <span id="accommodationPrice">0,00 €</span>
-  </div>
-  <div class="price-summary-item">
-    <span>Extras:</span>
-    <span id="extrasPrice">0,00 €</span>
-  </div>
-  <div class="price-summary-item total">
-    <span>Gesamt:</span>
-    <span id="totalPriceCompact">0,00 €</span>
-  </div>
-</div>
                   </div>
                 </div>
-
-                
                 
                 <!-- Right Column -->
                 <div class="compact-section">
@@ -661,6 +643,14 @@
                     </div>
                   </div>
                   
+                  <div class="form-field">
+                    <label>Zahlungsstatus</label>
+                    <select class="input-compact" name="payment_status">
+                      <option value="pending">Ausstehend</option>
+                      <option value="partial">Teilweise</option>
+                      <option value="paid">Bezahlt</option>
+                      <option value="refunded">Erstattet</option>
+                    </select>
                   </div>
                 </div>
               </div>
@@ -827,82 +817,100 @@
               </div>
             </div>
             
-        <!-- Pricing Tab -->
-<div class="tab-panel" data-tab-panel="pricing">
-  <div class="pricing-overview">
-    <div class="pricing-summary-row">
-      <!-- Kategorie und Rate jetzt änderbar -->
-      <div class="summary-box">
-        <span class="summary-label">Kategorie</span>
-        <select class="input-compact" name="category_select" id="categorySelect">
-          <option value="">Wählen...</option>
-        </select>
-      </div>
-      <div class="summary-box">
-        <span class="summary-label">Rate</span>
-        <select class="input-compact" name="rate_select" id="rateSelect">
-          <option value="">Wählen...</option>
-        </select>
-      </div>
-      <div class="summary-box highlight-box">
-        <span class="summary-label">Gesamt</span>
-        <span class="summary-val" id="priceTotal">0,00 €</span>
-      </div>
-    </div>
-  </div>
-  
-  <!-- Anreise und Abreise hier änderbar -->
-  <div class="date-edit-section">
-    <div class="section-title">Reisedaten bearbeiten</div>
-    <div class="form-row-compact">
-      <div class="form-field">
-        <label>Anreise</label>
-        <input type="date" class="input-compact" name="arrival" required>
-      </div>
-      <div class="form-field">
-        <label>Abreise</label>
-        <input type="date" class="input-compact" name="departure" required>
-      </div>
-      <div class="form-field">
-        <button type="button" class="btn secondary" id="nightAdjustBtn">
-          <i class="fas fa-cut"></i> Nächte anpassen
-        </button>
-      </div>
-    </div>
-  </div>
-  
-  <div class="section-title">Preis pro Nacht (editierbar)</div>
-  <div id="nightPriceGrid" class="night-price-grid">
-    <!-- Wird dynamisch generiert mit Wochentagen und Fixleistungen -->
-  </div>
-</div>
-
-            <button type="button" class="tab-btn" data-tab="fixleistungen">
-  <i class="fas fa-clipboard-list"></i>
-  <span class="tab-label">Fixleistungen</span>
-</button>
-          <!-- Fixleistungen Tab -->
-<div class="tab-panel" data-tab-panel="fixleistungen">
-  <div class="fixleistungen-content">
-    <div class="section-title">Extras & Rabatte</div>
-    
-    <div class="extras-grid">
-      <div class="form-field">
-        <label>Frühstück</label>
-        <div class="input-with-toggle">
-          <label class="switch">
-            <input type="checkbox" name="extra_breakfast">
-            <span class="slider"></span>
-          </label>
-          <input type="number" class="input-compact" name="extra_breakfast_price" placeholder="0.00" step="0.01" min="0">
-          <span class="currency">€</span>
-        </div>
-      </div>
-      
-      <!-- Weitere Extras... -->
-    </div>
-  </div>
-</div>
+            <!-- Pricing Tab -->
+            <div class="tab-panel" data-tab-panel="pricing">
+              <div class="pricing-overview">
+                <div class="pricing-summary-row">
+                  <div class="summary-box">
+                    <span class="summary-label">Kategorie</span>
+                    <span class="summary-val" id="priceCat">-</span>
+                  </div>
+                  <div class="summary-box">
+                    <span class="summary-label">Rate</span>
+                    <span class="summary-val" id="priceRate">-</span>
+                  </div>
+                  <div class="summary-box highlight-box">
+                    <span class="summary-label">Gesamt</span>
+                    <span class="summary-val" id="priceTotal">0,00 €</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="section-title">Preis pro Nacht (editierbar)</div>
+              <div id="nightPriceGrid" class="night-price-grid">
+                <!-- Generated dynamically -->
+              </div>
+              
+              <div class="pricing-extras">
+                <div class="section-title">Extras & Rabatte</div>
+                
+                <div class="extras-grid">
+                  <div class="form-field">
+                    <label>Frühstück</label>
+                    <div class="input-with-toggle">
+                      <input type="number" class="input-compact" name="extra_breakfast_price" step="0.01" min="0" placeholder="0.00">
+                      <span class="currency">€</span>
+                    </div>
+                  </div>
+                  
+                  <div class="form-field">
+                    <label>Parkplatz</label>
+                    <div class="input-with-toggle">
+                      <input type="number" class="input-compact" name="extra_parking_price" step="0.01" min="0" placeholder="0.00">
+                      <span class="currency">€</span>
+                    </div>
+                  </div>
+                  
+                  <div class="form-field">
+                    <label>Minibar</label>
+                    <div class="input-with-toggle">
+                      <input type="number" class="input-compact" name="extra_minibar_price" step="0.01" min="0" placeholder="0.00">
+                      <span class="currency">€</span>
+                    </div>
+                  </div>
+                  
+                  <div class="form-field">
+                    <label>Rabatt</label>
+                    <div class="input-with-toggle">
+                      <input type="number" class="input-compact" name="discount_amount" step="0.01" min="0" placeholder="0.00">
+                      <span class="currency">€</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="form-field">
+                  <label>Rabatt-Grund</label>
+                  <input type="text" class="input-compact" name="discount_reason" placeholder="z.B. Corporate Rate, Treue-Rabatt">
+                </div>
+              </div>
+              
+              <div class="pricing-breakdown">
+                <div class="breakdown-row">
+                  <span>Unterkunft</span>
+                  <span id="breakdownAccommodation">0,00 €</span>
+                </div>
+                <div class="breakdown-row">
+                  <span>Extras</span>
+                  <span id="breakdownExtras">0,00 €</span>
+                </div>
+                <div class="breakdown-row">
+                  <span>Rabatt</span>
+                  <span id="breakdownDiscount">-0,00 €</span>
+                </div>
+                <div class="breakdown-row subtotal">
+                  <span>Netto</span>
+                  <span id="breakdownSubtotal">0,00 €</span>
+                </div>
+                <div class="breakdown-row">
+                  <span>MwSt. (7%)</span>
+                  <span id="breakdownTax">0,00 €</span>
+                </div>
+                <div class="breakdown-row total">
+                  <span>GESAMT</span>
+                  <span id="breakdownTotal">0,00 €</span>
+                </div>
+              </div>
+            </div>
             
             <!-- Traces Tab -->
             <div class="tab-panel" data-tab-panel="traces">

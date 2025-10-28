@@ -2579,28 +2579,26 @@ Ihr Reservierungsteam`;
     const modal = document.getElementById('modalEditReservation');
     if (!modal) return;
     
-   function initTabNavigation() {
-  const tabButtons = document.querySelectorAll('.tab-btn');
-  const tabPanels = document.querySelectorAll('.tab-panel');
-  
-  tabButtons.forEach(button => {
-    button.addEventListener('click', (e) => {
-      e.preventDefault();
-      const targetTab = button.getAttribute('data-tab');
-      
-      // Remove active class from all tabs and panels
-      tabButtons.forEach(btn => btn.classList.remove('active'));
-      tabPanels.forEach(panel => panel.classList.remove('active'));
-      
-      // Add active class to clicked tab and corresponding panel
-      button.classList.add('active');
-      const targetPanel = document.querySelector(`[data-tab-panel="${targetTab}"]`);
-      if (targetPanel) {
-        targetPanel.classList.add('active');
-      }
+    const tabButtons = modal.querySelectorAll('.tab-btn');
+    const tabPanels = modal.querySelectorAll('.tab-panel');
+    
+    tabButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        const targetTab = button.dataset.tab;
+        
+        // Remove active class from all
+        tabButtons.forEach(btn => btn.classList.remove('active'));
+        tabPanels.forEach(panel => panel.classList.remove('active'));
+        
+        // Add active class to clicked
+        button.classList.add('active');
+        const targetPanel = modal.querySelector(`[data-tab-panel="${targetTab}"]`);
+        if (targetPanel) {
+          targetPanel.classList.add('active');
+        }
+      });
     });
-  });
-}
+  }
   
   openAddTraceModal() {
     if (!this.currentEditReservation) {
@@ -3197,39 +3195,3 @@ document.addEventListener('DOMContentLoaded', () => {
     console.error('Failed to initialize app:', error);
   });
 });
-function fixEncodingIssues() {
-  const encodingMap = {
-    'Ã¤': 'ä',
-    'Ã¶': 'ö',
-    'Ã¼': 'ü',
-    'ÃŸ': 'ß',
-    'VerfÃƒÆ\'Ã‚Â¼gbarkeit': 'Verfügbarkeit',
-    'ZurÃƒÆ\'Ã‚Â¼cksetzen': 'Zurücksetzen'
-    // etc.
-  };
-  
-  // Fix all text nodes in the document
-  const textNodes = document.evaluate(
-    "//text()[normalize-space(.) != '']",
-    document.body,
-    null,
-    XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE,
-    null
-  );
-  
-  for (let i = 0; i < textNodes.snapshotLength; i++) {
-    const node = textNodes.snapshotItem(i);
-    let text = node.textContent;
-    
-    for (const [wrong, correct] of Object.entries(encodingMap)) {
-      text = text.replace(new RegExp(wrong, 'g'), correct);
-    }
-    
-    if (text !== node.textContent) {
-      node.textContent = text;
-    }
-  }
-}
-
-// Run on load
-document.addEventListener('DOMContentLoaded', fixEncodingIssues);
