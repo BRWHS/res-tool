@@ -36,6 +36,16 @@
   --danger-500: #ef4444;
   --danger-600: #dc2626;
   
+  /* ===== NEUTRAL COLORS (Modern Grays) ===== */
+  --neutral-900: #0f172a;
+  --neutral-850: #1e293b;
+  --neutral-800: #1e293b;
+  --neutral-750: #334155;
+  --neutral-700: #475569;
+  --neutral-650: #64748b;
+  --neutral-600: #64748b;
+  --neutral-500: #94a3b8;
+  
   /* ===== DARK THEME COLORS ===== */
   --bg-app: #0a0a0f;
   --bg-base: #0f0f16;
@@ -724,7 +734,7 @@ textarea {
   position: sticky;
   top: calc(var(--space-8) + 80px);
   align-self: start;
-  height: calc(100vh - 200px); /* Gleiche HÃ¶he! */
+  height: calc(100vh - 200px); /* Gleiche HÃƒÂ¶he! */
 }
 
 .sidebar-card {
@@ -1103,7 +1113,7 @@ textarea {
   background: var(--bg-surface);
   border: 1px solid var(--border-primary);
   border-radius: var(--radius-xl);
-  padding: 0 !important; /* Entferne Padding fÃ¼r bessere Kontrolle */
+  padding: 0 !important; /* Entferne Padding fÃƒÂ¼r bessere Kontrolle */
   overflow: hidden;
 }
 
@@ -1243,7 +1253,7 @@ textarea {
   transition: all var(--transition-base);
   position: relative;
   z-index: 1;
-  white-space: nowrap; /* WICHTIG: Keine UmbrÃ¼che! */
+  white-space: nowrap; /* WICHTIG: Keine UmbrÃƒÂ¼che! */
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -1855,13 +1865,18 @@ tbody td .pill {
   width: 100%;
   max-width: 600px;
   max-height: 90vh;
-  background: var(--bg-surface);
-  border: 1px solid var(--border-primary);
+  background: linear-gradient(135deg, 
+    rgba(30, 41, 59, 0.98) 0%, 
+    rgba(51, 65, 85, 0.98) 100%
+  );
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(99, 102, 241, 0.3);
   border-radius: var(--radius-2xl);
   box-shadow: 
     0 24px 48px rgba(0, 0, 0, 0.5),
-    0 0 0 1px rgba(99, 102, 241, 0.1),
-    0 0 80px rgba(99, 102, 241, 0.15);
+    0 0 0 1px rgba(99, 102, 241, 0.2),
+    0 0 80px rgba(99, 102, 241, 0.2),
+    inset 0 1px 1px rgba(255, 255, 255, 0.1);
   animation: slideUpScale 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
   overflow: hidden;
   display: flex;
@@ -2143,7 +2158,7 @@ tbody td .pill {
 }
 
 .wizard-step.completed .wizard-step-number::after {
-  content: 'âœ“';
+  content: 'Ã¢Å“â€œ';
   position: absolute;
   inset: 0;
   display: flex;
@@ -2874,7 +2889,10 @@ tbody td .pill {
   padding: 0;
   max-height: calc(90vh - 180px);
   overflow-y: auto;
-  background: var(--neutral-850);
+  background: linear-gradient(135deg, 
+    rgba(15, 23, 42, 0.95) 0%, 
+    rgba(30, 41, 59, 0.95) 100%
+  );
 }
 
 /* Modern Tabs */
@@ -2887,16 +2905,17 @@ tbody td .pill {
 .tab-nav {
   display: flex;
   gap: var(--space-1);
-  background: var(--neutral-800);
-  border-bottom: 2px solid var(--neutral-700);
+  background: rgba(15, 23, 42, 0.5);
+  border-bottom: 1px solid rgba(99, 102, 241, 0.2);
   padding: var(--space-3) var(--space-5);
   flex-shrink: 0;
+  backdrop-filter: blur(10px);
 }
 
 .tab-btn {
   padding: var(--space-3) var(--space-5);
-  background: var(--neutral-750);
-  border: 1px solid var(--neutral-700);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   color: var(--text-secondary);
   font-weight: 600;
@@ -2906,12 +2925,23 @@ tbody td .pill {
   align-items: center;
   gap: var(--space-2);
   font-size: 0.9375rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.tab-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, var(--primary-500), var(--accent-500));
+  opacity: 0;
+  transition: opacity var(--transition-base);
 }
 
 .tab-btn:hover {
   color: var(--text-primary);
-  background: var(--neutral-700);
-  border-color: var(--neutral-600);
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.18);
   transform: translateY(-2px);
 }
 
@@ -2922,8 +2952,19 @@ tbody td .pill {
   box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
 }
 
+.tab-btn.active::before {
+  opacity: 1;
+}
+
 .tab-btn i {
   font-size: 1rem;
+  position: relative;
+  z-index: 1;
+}
+
+.tab-btn span {
+  position: relative;
+  z-index: 1;
 }
 
 /* Tab Panels */
@@ -2947,11 +2988,19 @@ tbody td .pill {
 }
 
 .compact-section {
-  background: var(--neutral-800);
-  border: 2px solid var(--neutral-700);
-  border-radius: var(--radius-lg);
-  padding: var(--space-5);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+  transition: all var(--transition-base);
+}
+
+.compact-section:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(99, 102, 241, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(99, 102, 241, 0.15);
 }
 
 .compact-section.full-width {
@@ -2963,18 +3012,25 @@ tbody td .pill {
   font-weight: 700;
   color: var(--primary-400);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em;
   margin-bottom: var(--space-4);
   display: flex;
   align-items: center;
   gap: var(--space-2);
   padding-bottom: var(--space-3);
-  border-bottom: 2px solid var(--neutral-700);
+  border-bottom: 1px solid rgba(99, 102, 241, 0.2);
 }
 
 .section-title i {
   color: var(--primary-400);
   font-size: 1.125rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: rgba(99, 102, 241, 0.15);
+  border-radius: var(--radius-md);
 }
 
 /* Compact Forms */
@@ -2999,32 +3055,38 @@ tbody td .pill {
   font-weight: 600;
   color: var(--text-primary);
   margin-bottom: var(--space-2);
+  letter-spacing: 0.01em;
 }
 
 .input-compact {
-  padding: var(--space-3) var(--space-3);
-  background: var(--neutral-750);
-  border: 2px solid var(--neutral-650);
-  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-lg);
   color: var(--text-primary);
   font-size: 0.9375rem;
   font-weight: 500;
   transition: all var(--transition-base);
+  outline: none;
+}
+
+.input-compact:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.18);
 }
 
 .input-compact:focus {
-  outline: none;
+  background: rgba(255, 255, 255, 0.06);
   border-color: var(--primary-400);
-  background: var(--neutral-700);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
 }
 
 .input-compact:disabled,
 .disabled-field {
   opacity: 0.5;
   cursor: not-allowed;
-  background: var(--neutral-800);
-  border-color: var(--neutral-700);
+  background: rgba(255, 255, 255, 0.02);
+  border-color: rgba(255, 255, 255, 0.08);
 }
 
 .textarea-compact {
@@ -3066,8 +3128,8 @@ tbody td .pill {
   padding-right: 2.5rem;
   font-weight: 700;
   font-size: 1rem;
-  background: var(--neutral-750);
-  border: 2px solid var(--neutral-650);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .price-input-wrapper .currency {
@@ -3089,11 +3151,19 @@ tbody td .pill {
 }
 
 .guest-section {
-  background: var(--neutral-800);
-  border: 2px solid var(--neutral-700);
-  border-radius: var(--radius-lg);
-  padding: var(--space-5);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+  transition: all var(--transition-base);
+}
+
+.guest-section:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(99, 102, 241, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(99, 102, 241, 0.15);
 }
 
 .guest-section.full-width-section {
@@ -3148,17 +3218,18 @@ tbody td .pill {
 }
 
 .night-price-card {
-  background: var(--neutral-800);
-  border: 2px solid var(--neutral-700);
-  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-xl);
   padding: var(--space-4);
   transition: all var(--transition-base);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .night-price-card:hover {
+  background: rgba(255, 255, 255, 0.05);
   border-color: var(--primary-400);
-  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.25);
   transform: translateY(-2px);
 }
 
@@ -3168,7 +3239,7 @@ tbody td .pill {
   align-items: center;
   margin-bottom: var(--space-3);
   padding-bottom: var(--space-3);
-  border-bottom: 2px solid var(--neutral-700);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .night-num {
@@ -3191,11 +3262,24 @@ tbody td .pill {
   font-size: 1.25rem;
   font-weight: 700;
   text-align: center;
-  background: var(--neutral-750);
-  border: 2px solid var(--neutral-650);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   padding: var(--space-3);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   color: var(--primary-400);
+  transition: all var(--transition-base);
+}
+
+.night-price-input:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.night-price-input:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.06);
+  border-color: var(--primary-400);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
 }
 
 .night-price-input:focus {
