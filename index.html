@@ -533,286 +533,121 @@
 
   <!-- Edit Reservation Modal -->
   <div id="modalEditReservation" class="modal hidden" aria-hidden="true">
-    <div class="modal-content modal-content-wide">
-      <div class="modal-header modern-header">
-        <div class="header-content">
-          <div class="header-icon">
-            <i class="fas fa-edit"></i>
-          </div>
-          <div class="header-text">
-            <h2>Reservierung bearbeiten</h2>
-            <p class="header-subtitle" id="editReservationSubtitle">Reservierungsnummer wird geladen...</p>
-          </div>
+    <div class="modal-content modal-xl">
+      <div class="modal-header gradient-header">
+        <div class="header-left">
+          <h2><i class="fas fa-edit"></i> Reservierung bearbeiten</h2>
+          <span class="reservation-id" id="editReservationId">#Loading...</span>
         </div>
-        <button class="modal-close">
-          <i class="fas fa-times"></i>
-        </button>
+        <div class="header-right">
+          <span class="status-badge" id="editReservationStatus">Aktiv</span>
+          <button class="modal-close"><i class="fas fa-times"></i></button>
+        </div>
       </div>
       
       <form id="formEditReservation" data-form="edit-reservation">
-        <div class="modal-body">
-          <!-- Edit form content -->
-          <div class="tabs modern-tabs">
-            <div class="tab-buttons">
-              <button type="button" class="tab-button active" data-tab="details">
-                <i class="fas fa-info-circle"></i>
-                <span>Details</span>
+        <input type="hidden" name="reservation_number">
+        
+        <div class="modal-body compact-body">
+          <div class="tabs-modern">
+            <div class="tab-nav">
+              <button type="button" class="tab-btn active" data-tab="details">
+                <i class="fas fa-info-circle"></i>Details
               </button>
-              <button type="button" class="tab-button" data-tab="guest">
-                <i class="fas fa-user"></i>
-                <span>Gast</span>
+              <button type="button" class="tab-btn" data-tab="guest">
+                <i class="fas fa-address-card"></i>Gast
               </button>
-              <button type="button" class="tab-button" data-tab="pricing">
-                <i class="fas fa-euro-sign"></i>
-                <span>Preise</span>
+              <button type="button" class="tab-btn" data-tab="pricing">
+                <i class="fas fa-calculator"></i>Preise
               </button>
-              <button type="button" class="tab-button" data-tab="traces">
-                <i class="fas fa-history"></i>
-                <span>Traces</span>
+              <button type="button" class="tab-btn" data-tab="traces">
+                <i class="fas fa-bell"></i>Traces
               </button>
             </div>
             
-            <div class="tab-content modern-tab-content">
-              <!-- Details Tab -->
-              <div class="tab-pane active" data-tab-content="details">
-                <input type="hidden" name="reservation_number">
+            <!-- Details Tab -->
+            <div class="tab-panel active" data-tab-panel="details">
+              <div class="compact-grid">
+                <!-- Left Column -->
+                <div class="compact-section">
+                  <div class="section-title">Reservierungsdetails</div>
+                  
+                  <div class="form-row-compact">
+                    <div class="form-field">
+                      <label>Hotel</label>
+                      <select class="input-compact disabled-field" name="hotel_code" disabled>
+                        <option value="">Wählen...</option>
+                      </select>
+                    </div>
+                    <div class="form-field">
+                      <label>Status</label>
+                      <select class="input-compact disabled-field" name="status" disabled>
+                        <option value="pending">Ausstehend</option>
+                        <option value="active">Aktiv</option>
+                        <option value="inhouse">In House</option>
+                        <option value="done">Abgeschlossen</option>
+                        <option value="canceled">Storniert</option>
+                      </select>
+                    </div>
+                  </div>
+                  
+                  <div class="form-row-compact">
+                    <div class="form-field">
+                      <label>Anreise</label>
+                      <input type="date" class="input-compact" name="arrival" required>
+                    </div>
+                    <div class="form-field">
+                      <label>Abreise</label>
+                      <input type="date" class="input-compact" name="departure" required>
+                    </div>
+                    <div class="form-field nights-badge-field">
+                      <div class="nights-badge" id="nightsBadge">
+                        <i class="fas fa-moon"></i>
+                        <span id="nightsCountCompact">0</span> Nächte
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="form-row-compact">
+                    <div class="form-field">
+                      <label>Erwachsene</label>
+                      <input type="number" class="input-compact" name="guests_adults" min="1" max="10" value="1">
+                    </div>
+                    <div class="form-field">
+                      <label>Kinder</label>
+                      <input type="number" class="input-compact" name="guests_children" min="0" max="10" value="0">
+                    </div>
+                  </div>
+                </div>
                 
-                <!-- Reservation Info Card -->
-                <div class="info-card glass-effect">
-                  <div class="info-card-header">
-                    <i class="fas fa-hotel"></i>
-                    <h4>Hoteldetails</h4>
+                <!-- Right Column -->
+                <div class="compact-section">
+                  <div class="section-title">Tarif & Preise</div>
+                  
+                  <div class="form-row-compact">
+                    <div class="form-field">
+                      <label>Kategorie</label>
+                      <input type="text" class="input-compact" name="category" readonly>
+                    </div>
+                    <div class="form-field">
+                      <label>Rate Code</label>
+                      <input type="text" class="input-compact" name="rate_code" readonly>
+                    </div>
                   </div>
                   
-                  <div class="form-group">
-                    <label class="form-label">
-                      <i class="fas fa-building"></i>
-                      Hotel
-                    </label>
-                    <select class="select hotel-select disabled-select" name="hotel_code" disabled>
-                      <option value="">Bitte wählen...</option>
-                    </select>
-                    <p class="field-hint">
-                      <i class="fas fa-lock"></i>
-                      Hotel kann nach Erstellung nicht geändert werden
-                    </p>
+                  <div class="form-field">
+                    <label>Gesamtpreis</label>
+                    <div class="price-input-wrapper">
+                      <input type="number" class="input-compact price-field" name="total_price" step="0.01" min="0" readonly>
+                      <span class="currency">€</span>
+                    </div>
                   </div>
                   
-                  <div class="form-group">
-                    <label class="form-label">
-                      <i class="fas fa-traffic-light"></i>
-                      Status
-                    </label>
-                    <select class="select status-select disabled-select" name="status" disabled>
+                  <div class="form-field">
+                    <label>Zahlungsstatus</label>
+                    <select class="input-compact" name="payment_status">
                       <option value="pending">Ausstehend</option>
-                      <option value="active">Aktiv</option>
-                      <option value="inhouse">In House</option>
-                      <option value="done">Abgeschlossen</option>
-                      <option value="canceled">Storniert</option>
-                    </select>
-                    <p class="field-hint">
-                      <i class="fas fa-info-circle"></i>
-                      Status ändert sich automatisch basierend auf Daten
-                    </p>
-                  </div>
-                </div>
-                
-                <!-- Stay Details Card -->
-                <div class="info-card glass-effect">
-                  <div class="info-card-header">
-                    <i class="fas fa-calendar-alt"></i>
-                    <h4>Aufenthaltsdetails</h4>
-                  </div>
-                  
-                  <div class="form-row">
-                    <div class="form-group">
-                      <label class="form-label">
-                        <i class="fas fa-calendar-check"></i>
-                        Anreise *
-                      </label>
-                      <input type="date" class="input modern-input" name="arrival" required>
-                    </div>
-                    <div class="form-group">
-                      <label class="form-label">
-                        <i class="fas fa-calendar-times"></i>
-                        Abreise *
-                      </label>
-                      <input type="date" class="input modern-input" name="departure" required>
-                    </div>
-                  </div>
-                  
-                  <div class="form-row">
-                    <div class="form-group">
-                      <label class="form-label">
-                        <i class="fas fa-user"></i>
-                        Erwachsene
-                      </label>
-                      <input type="number" class="input modern-input" name="guests_adults" min="1" max="10">
-                    </div>
-                    <div class="form-group">
-                      <label class="form-label">
-                        <i class="fas fa-child"></i>
-                        Kinder
-                      </label>
-                      <input type="number" class="input modern-input" name="guests_children" min="0" max="10">
-                    </div>
-                  </div>
-                  
-                  <div class="nights-display" id="nightsDisplay">
-                    <i class="fas fa-moon"></i>
-                    <span id="nightsCount">0</span> Nächte
-                  </div>
-                </div>
-                
-                <!-- Rate Info Card -->
-                <div class="info-card glass-effect">
-                  <div class="info-card-header">
-                    <i class="fas fa-tags"></i>
-                    <h4>Tarif & Kategorie</h4>
-                  </div>
-                  
-                  <div class="form-row">
-                    <div class="form-group">
-                      <label class="form-label">
-                        <i class="fas fa-bed"></i>
-                        Kategorie
-                      </label>
-                      <input type="text" class="input modern-input" name="category" readonly>
-                    </div>
-                    <div class="form-group">
-                      <label class="form-label">
-                        <i class="fas fa-tag"></i>
-                        Rate Code
-                      </label>
-                      <input type="text" class="input modern-input" name="rate_code" readonly>
-                    </div>
-                  </div>
-                  
-                  <div class="form-group">
-                    <label class="form-label">
-                      <i class="fas fa-calculator"></i>
-                      Gesamtpreis
-                    </label>
-                    <div class="total-price-display">
-                      <input type="number" class="input modern-input price-input" name="total_price" step="0.01" min="0" readonly>
-                      <span class="currency-symbol">€</span>
-                    </div>
-                  </div>
-                </div>
-                
-                <!-- Internal Notes Card -->
-                <div class="info-card glass-effect">
-                  <div class="info-card-header">
-                    <i class="fas fa-sticky-note"></i>
-                    <h4>Interne Notizen</h4>
-                  </div>
-                  
-                  <div class="form-group">
-                    <label class="form-label">
-                      <i class="fas fa-pen"></i>
-                      Notizen (nur für das Team sichtbar)
-                    </label>
-                    <textarea class="input modern-input modern-textarea" name="notes" rows="4" placeholder="Interne Bemerkungen zur Reservierung..."></textarea>
-                  </div>
-                </div>
-              </div>
-              
-              <!-- Guest Tab -->
-              <div class="tab-pane hidden" data-tab-content="guest">
-                <div class="info-card glass-effect">
-                  <div class="info-card-header">
-                    <i class="fas fa-user-circle"></i>
-                    <h4>Gastinformationen</h4>
-                  </div>
-                  
-                  <div class="form-row">
-                    <div class="form-group">
-                      <label class="form-label">
-                        <i class="fas fa-user"></i>
-                        Vorname
-                      </label>
-                      <input type="text" class="input modern-input" name="guest_first_name" placeholder="Max">
-                    </div>
-                    <div class="form-group">
-                      <label class="form-label">
-                        <i class="fas fa-user"></i>
-                        Nachname *
-                      </label>
-                      <input type="text" class="input modern-input" name="guest_last_name" placeholder="Mustermann" required>
-                    </div>
-                  </div>
-                  
-                  <div class="form-group">
-                    <label class="form-label">
-                      <i class="fas fa-envelope"></i>
-                      E-Mail
-                    </label>
-                    <input type="email" class="input modern-input" name="guest_email" placeholder="max.mustermann@beispiel.de">
-                  </div>
-                  
-                  <div class="form-group">
-                    <label class="form-label">
-                      <i class="fas fa-phone"></i>
-                      Telefon
-                    </label>
-                    <input type="tel" class="input modern-input" name="guest_phone" placeholder="+49 123 456789">
-                  </div>
-                  
-                  <div class="form-group">
-                    <label class="form-label">
-                      <i class="fas fa-building"></i>
-                      Firma
-                    </label>
-                    <input type="text" class="input modern-input" name="guest_company" placeholder="Firma GmbH">
-                  </div>
-                  
-                  <div class="form-group">
-                    <label class="form-label">
-                      <i class="fas fa-map-marker-alt"></i>
-                      Adresse
-                    </label>
-                    <textarea class="input modern-input modern-textarea" name="guest_address" rows="3" placeholder="Straße 123&#10;12345 Stadt&#10;Deutschland"></textarea>
-                  </div>
-                </div>
-              </div>
-              
-              <!-- Pricing Tab -->
-              <div class="tab-pane hidden" data-tab-content="pricing">
-                <div class="pricing-header">
-                  <div class="pricing-summary">
-                    <div class="summary-item">
-                      <span class="summary-label">Rate:</span>
-                      <span class="summary-value" id="pricingRateCode">-</span>
-                    </div>
-                    <div class="summary-item">
-                      <span class="summary-label">Kategorie:</span>
-                      <span class="summary-value" id="pricingCategory">-</span>
-                    </div>
-                    <div class="summary-item highlight">
-                      <span class="summary-label">Gesamt:</span>
-                      <span class="summary-value" id="pricingTotal">0,00 €</span>
-                    </div>
-                  </div>
-                </div>
-                
-                <div id="nightCardsContainer" class="night-cards-container">
-                  <!-- Night cards will be dynamically generated here -->
-                </div>
-                
-                <div class="info-card glass-effect">
-                  <div class="info-card-header">
-                    <i class="fas fa-credit-card"></i>
-                    <h4>Zahlungsinformationen</h4>
-                  </div>
-                  
-                  <div class="form-group">
-                    <label class="form-label">
-                      <i class="fas fa-money-check-alt"></i>
-                      Zahlungsstatus
-                    </label>
-                    <select class="select modern-select" name="payment_status">
-                      <option value="pending">Ausstehend</option>
-                      <option value="partial">Teilweise bezahlt</option>
+                      <option value="partial">Teilweise</option>
                       <option value="paid">Bezahlt</option>
                       <option value="refunded">Erstattet</option>
                     </select>
@@ -820,58 +655,337 @@
                 </div>
               </div>
               
-              <!-- Traces Tab -->
-              <div class="tab-pane hidden" data-tab-content="traces">
-                <div class="info-card glass-effect">
-                  <div class="info-card-header">
-                    <i class="fas fa-history"></i>
-                    <h4>Systemprotokolle</h4>
-                  </div>
+              <!-- Notes Section -->
+              <div class="compact-section full-width">
+                <div class="section-title">Interne Notizen</div>
+                <textarea class="input-compact textarea-compact" name="notes" rows="3" placeholder="Notizen zur Reservierung..."></textarea>
+              </div>
+            </div>
+            
+            <!-- Guest Tab -->
+            <div class="tab-panel" data-tab-panel="guest">
+              <div class="guest-grid">
+                <!-- Personal Information -->
+                <div class="guest-section">
+                  <div class="section-title"><i class="fas fa-user"></i> Persönliche Daten</div>
                   
-                  <div id="tracesContainer" class="traces-container">
-                    <div class="trace-item">
-                      <div class="trace-icon">
-                        <i class="fas fa-plus-circle"></i>
-                      </div>
-                      <div class="trace-content">
-                        <div class="trace-header">
-                          <span class="trace-action">Reservierung erstellt</span>
-                          <span class="trace-time">Lädt...</span>
-                        </div>
-                        <div class="trace-details">
-                          Erstellt durch: <span class="trace-user">System</span>
-                        </div>
-                      </div>
+                  <div class="form-row-compact">
+                    <div class="form-field">
+                      <label>Anrede</label>
+                      <select class="input-compact" name="guest_title">
+                        <option value="">-</option>
+                        <option value="Herr">Herr</option>
+                        <option value="Frau">Frau</option>
+                        <option value="Divers">Divers</option>
+                      </select>
+                    </div>
+                    <div class="form-field">
+                      <label>Vorname</label>
+                      <input type="text" class="input-compact" name="guest_first_name">
+                    </div>
+                    <div class="form-field">
+                      <label>Nachname *</label>
+                      <input type="text" class="input-compact" name="guest_last_name" required>
                     </div>
                   </div>
                   
-                  <p class="text-muted text-center" style="margin-top: 1.5rem;">
-                    <i class="fas fa-info-circle"></i>
-                    Traces zeigen alle Änderungen und Aktionen dieser Reservierung
-                  </p>
+                  <div class="form-row-compact">
+                    <div class="form-field">
+                      <label>Geburtstag</label>
+                      <input type="date" class="input-compact" name="guest_birthdate">
+                    </div>
+                    <div class="form-field">
+                      <label>Nationalität</label>
+                      <input type="text" class="input-compact" name="guest_nationality" placeholder="Deutschland">
+                    </div>
+                    <div class="form-field">
+                      <label>Sprache</label>
+                      <select class="input-compact" name="guest_language">
+                        <option value="de">Deutsch</option>
+                        <option value="en">English</option>
+                        <option value="fr">Français</option>
+                        <option value="es">Español</option>
+                        <option value="it">Italiano</option>
+                      </select>
+                    </div>
+                  </div>
+                  
+                  <div class="form-row-compact">
+                    <div class="form-field">
+                      <label>Dokument-Nr</label>
+                      <input type="text" class="input-compact" name="guest_document_number" placeholder="Pass/Ausweis-Nr">
+                    </div>
+                    <div class="form-field">
+                      <label>VIP Status</label>
+                      <select class="input-compact" name="guest_vip">
+                        <option value="">Standard</option>
+                        <option value="vip">VIP</option>
+                        <option value="vvip">VVIP</option>
+                        <option value="repeat">Stammgast</option>
+                      </select>
+                    </div>
+                  </div>
                 </div>
+                
+                <!-- Contact Information -->
+                <div class="guest-section">
+                  <div class="section-title"><i class="fas fa-address-book"></i> Kontaktdaten</div>
+                  
+                  <div class="form-field">
+                    <label>E-Mail</label>
+                    <input type="email" class="input-compact" name="guest_email" placeholder="gast@beispiel.de">
+                  </div>
+                  
+                  <div class="form-row-compact">
+                    <div class="form-field">
+                      <label>Telefon</label>
+                      <input type="tel" class="input-compact" name="guest_phone" placeholder="+49 123 456789">
+                    </div>
+                    <div class="form-field">
+                      <label>Mobil</label>
+                      <input type="tel" class="input-compact" name="guest_mobile" placeholder="+49 170 1234567">
+                    </div>
+                  </div>
+                  
+                  <div class="form-field">
+                    <label>Private Adresse</label>
+                    <textarea class="input-compact textarea-compact" name="guest_address" rows="2" placeholder="Straße, PLZ Stadt, Land"></textarea>
+                  </div>
+                </div>
+                
+                <!-- Company Information -->
+                <div class="guest-section">
+                  <div class="section-title"><i class="fas fa-building"></i> Firmendaten</div>
+                  
+                  <div class="form-field">
+                    <label>Firma</label>
+                    <input type="text" class="input-compact" name="guest_company" placeholder="Firma GmbH">
+                  </div>
+                  
+                  <div class="form-field">
+                    <label>Firmenadresse</label>
+                    <textarea class="input-compact textarea-compact" name="guest_company_address" rows="2" placeholder="Firmenstraße, PLZ Stadt"></textarea>
+                  </div>
+                  
+                  <div class="form-row-compact">
+                    <div class="form-field">
+                      <label>USt-ID</label>
+                      <input type="text" class="input-compact" name="guest_vat_id" placeholder="DE123456789">
+                    </div>
+                    <div class="form-field">
+                      <label>Abteilung</label>
+                      <input type="text" class="input-compact" name="guest_department" placeholder="z.B. Vertrieb">
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Special Requests -->
+                <div class="guest-section full-width-section">
+                  <div class="section-title"><i class="fas fa-star"></i> Besondere Wünsche & Präferenzen</div>
+                  
+                  <div class="form-row-compact">
+                    <div class="form-field">
+                      <label>Zimmer-Präferenz</label>
+                      <select class="input-compact" name="guest_room_preference">
+                        <option value="">Keine</option>
+                        <option value="high-floor">Hohe Etage</option>
+                        <option value="low-floor">Niedrige Etage</option>
+                        <option value="quiet">Ruhig</option>
+                        <option value="view">Mit Aussicht</option>
+                      </select>
+                    </div>
+                    <div class="form-field">
+                      <label>Bett-Präferenz</label>
+                      <select class="input-compact" name="guest_bed_preference">
+                        <option value="">Keine</option>
+                        <option value="double">Doppelbett</option>
+                        <option value="twin">Twin Betten</option>
+                        <option value="extra">Extra Bett</option>
+                      </select>
+                    </div>
+                    <div class="form-field">
+                      <label>Allergien</label>
+                      <input type="text" class="input-compact" name="guest_allergies" placeholder="z.B. Nüsse, Laktose">
+                    </div>
+                  </div>
+                  
+                  <div class="form-field">
+                    <label>Gastnotizen / Special Requests</label>
+                    <textarea class="input-compact textarea-compact" name="guest_notes" rows="3" placeholder="Besondere Wünsche des Gastes..."></textarea>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Pricing Tab -->
+            <div class="tab-panel" data-tab-panel="pricing">
+              <div class="pricing-overview">
+                <div class="pricing-summary-row">
+                  <div class="summary-box">
+                    <span class="summary-label">Kategorie</span>
+                    <span class="summary-val" id="priceCat">-</span>
+                  </div>
+                  <div class="summary-box">
+                    <span class="summary-label">Rate</span>
+                    <span class="summary-val" id="priceRate">-</span>
+                  </div>
+                  <div class="summary-box highlight-box">
+                    <span class="summary-label">Gesamt</span>
+                    <span class="summary-val" id="priceTotal">0,00 €</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="section-title">Preis pro Nacht (editierbar)</div>
+              <div id="nightPriceGrid" class="night-price-grid">
+                <!-- Generated dynamically -->
+              </div>
+              
+              <div class="pricing-extras">
+                <div class="section-title">Extras & Rabatte</div>
+                
+                <div class="extras-grid">
+                  <div class="form-field">
+                    <label>Frühstück</label>
+                    <div class="input-with-toggle">
+                      <input type="number" class="input-compact" name="extra_breakfast_price" step="0.01" min="0" placeholder="0.00">
+                      <span class="currency">€</span>
+                    </div>
+                  </div>
+                  
+                  <div class="form-field">
+                    <label>Parkplatz</label>
+                    <div class="input-with-toggle">
+                      <input type="number" class="input-compact" name="extra_parking_price" step="0.01" min="0" placeholder="0.00">
+                      <span class="currency">€</span>
+                    </div>
+                  </div>
+                  
+                  <div class="form-field">
+                    <label>Minibar</label>
+                    <div class="input-with-toggle">
+                      <input type="number" class="input-compact" name="extra_minibar_price" step="0.01" min="0" placeholder="0.00">
+                      <span class="currency">€</span>
+                    </div>
+                  </div>
+                  
+                  <div class="form-field">
+                    <label>Rabatt</label>
+                    <div class="input-with-toggle">
+                      <input type="number" class="input-compact" name="discount_amount" step="0.01" min="0" placeholder="0.00">
+                      <span class="currency">€</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="form-field">
+                  <label>Rabatt-Grund</label>
+                  <input type="text" class="input-compact" name="discount_reason" placeholder="z.B. Corporate Rate, Treue-Rabatt">
+                </div>
+              </div>
+              
+              <div class="pricing-breakdown">
+                <div class="breakdown-row">
+                  <span>Unterkunft</span>
+                  <span id="breakdownAccommodation">0,00 €</span>
+                </div>
+                <div class="breakdown-row">
+                  <span>Extras</span>
+                  <span id="breakdownExtras">0,00 €</span>
+                </div>
+                <div class="breakdown-row">
+                  <span>Rabatt</span>
+                  <span id="breakdownDiscount">-0,00 €</span>
+                </div>
+                <div class="breakdown-row subtotal">
+                  <span>Netto</span>
+                  <span id="breakdownSubtotal">0,00 €</span>
+                </div>
+                <div class="breakdown-row">
+                  <span>MwSt. (7%)</span>
+                  <span id="breakdownTax">0,00 €</span>
+                </div>
+                <div class="breakdown-row total">
+                  <span>GESAMT</span>
+                  <span id="breakdownTotal">0,00 €</span>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Traces Tab -->
+            <div class="tab-panel" data-tab-panel="traces">
+              <div class="traces-header">
+                <button type="button" class="btn secondary btn-sm" data-action="add-trace">
+                  <i class="fas fa-plus"></i> Neuer Trace
+                </button>
+              </div>
+              
+              <div id="tracesListModern" class="traces-list-modern">
+                <!-- Traces will be loaded dynamically -->
+              </div>
+              
+              <div class="empty-state" id="tracesEmpty">
+                <i class="fas fa-bell-slash"></i>
+                <p>Keine Traces vorhanden</p>
+                <p class="text-small">Traces sind Erinnerungen, Alerts oder Notizen für diese Reservierung</p>
               </div>
             </div>
           </div>
         </div>
         
-        <div class="modal-footer modern-footer">
-          <div class="footer-actions-left">
-            <button type="button" class="btn danger btn-icon-text" data-action="cancel-reservation">
-              <i class="fas fa-ban"></i>
-              <span>Stornieren</span>
+        <div class="modal-footer-modern">
+          <div class="footer-left">
+            <button type="button" class="btn danger" data-action="cancel-reservation">
+              <i class="fas fa-ban"></i> Stornieren
             </button>
           </div>
-          <div class="footer-actions-right">
-            <button type="button" class="btn secondary btn-icon-text" data-close-modal>
-              <i class="fas fa-times"></i>
-              <span>Abbrechen</span>
+          <div class="footer-right">
+            <button type="button" class="btn secondary" data-close-modal>
+              Abbrechen
             </button>
-            <button type="submit" class="btn primary btn-icon-text">
-              <i class="fas fa-save"></i>
-              <span>Änderungen speichern</span>
+            <button type="submit" class="btn primary">
+              <i class="fas fa-save"></i> Speichern
             </button>
           </div>
+        </div>
+      </form>
+    </div>
+  </div>
+  
+  <!-- Add Trace Modal -->
+  <div id="modalAddTrace" class="modal hidden" aria-hidden="true">
+    <div class="modal-content modal-sm">
+      <div class="modal-header">
+        <h2><i class="fas fa-bell"></i> Neuer Trace</h2>
+        <button class="modal-close"><i class="fas fa-times"></i></button>
+      </div>
+      
+      <form id="formAddTrace">
+        <div class="modal-body">
+          <div class="form-field">
+            <label>Typ</label>
+            <select class="input-compact" name="trace_type" required>
+              <option value="reminder">Erinnerung</option>
+              <option value="alert">Alert / Warnung</option>
+              <option value="note">Notiz</option>
+              <option value="request">Special Request</option>
+            </select>
+          </div>
+          
+          <div class="form-field">
+            <label>Datum & Zeit</label>
+            <input type="datetime-local" class="input-compact" name="trace_datetime" required>
+          </div>
+          
+          <div class="form-field">
+            <label>Nachricht</label>
+            <textarea class="input-compact textarea-compact" name="trace_message" rows="4" required placeholder="Trace-Nachricht..."></textarea>
+          </div>
+        </div>
+        
+        <div class="modal-footer">
+          <button type="button" class="btn secondary" data-close-modal>Abbrechen</button>
+          <button type="submit" class="btn primary"><i class="fas fa-check"></i> Hinzufügen</button>
         </div>
       </form>
     </div>
