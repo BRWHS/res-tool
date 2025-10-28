@@ -70,7 +70,7 @@
         </button>
         <button class="btn secondary" data-action="open-availability">
           <i class="fas fa-calendar-check"></i>
-          VerfÃƒÆ’Ã‚Â¼gbarkeit
+          VerfÃƒÂ¼gbarkeit
         </button>
         <button class="btn secondary" data-action="open-reports">
           <i class="fas fa-chart-line"></i>
@@ -105,7 +105,7 @@
 
         <div class="clock mono">
           <span id="dateLocal">--.--.----</span>
-          <span class="sep">Ãƒâ€šÃ‚Â·</span>
+          <span class="sep">Ã‚Â·</span>
           <span id="clockLocal">--:--:--</span>
         </div>
       </div>
@@ -156,11 +156,11 @@
                 <div class="label">Buchungen</div>
               </div>
               <div class="kpi">
-                <div class="value" id="tRevenue">0,00 ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬</div>
+                <div class="value" id="tRevenue">0,00 Ã¢â€šÂ¬</div>
                 <div class="label">Umsatz</div>
               </div>
               <div class="kpi">
-                <div class="value" id="tADR">0,00 ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬</div>
+                <div class="value" id="tADR">0,00 Ã¢â€šÂ¬</div>
                 <div class="label">ADR</div>
               </div>
               <div class="kpi">
@@ -175,7 +175,7 @@
             <div class="card-head compact">
               <div class="performance-title-inline">
                 <i class="fas fa-calendar-week"></i>
-                <h3>NÃƒÆ’Ã‚Â¤chste 7 Tage</h3>
+                <h3>NÃƒÂ¤chste 7 Tage</h3>
               </div>
               <select class="select sm hotel-select" data-filter="hotel-next">
                 <option value="">Alle Hotels</option>
@@ -184,14 +184,14 @@
             <div class="kpis">
               <div class="kpi">
                 <div class="value" id="nBookings">0</div>
-                <div class="label">AnkÃƒÆ’Ã‚Â¼nfte</div>
+                <div class="label">AnkÃƒÂ¼nfte</div>
               </div>
               <div class="kpi">
-                <div class="value" id="nRevenue">0,00 ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬</div>
+                <div class="value" id="nRevenue">0,00 Ã¢â€šÂ¬</div>
                 <div class="label">Umsatz</div>
               </div>
               <div class="kpi">
-                <div class="value" id="nADR">0,00 ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬</div>
+                <div class="value" id="nADR">0,00 Ã¢â€šÂ¬</div>
                 <div class="label">ADR</div>
               </div>
               <div class="kpi">
@@ -258,7 +258,7 @@
                 </button>
                 <button class="btn secondary" data-action="reset-filters">
                   <i class="fas fa-times"></i>
-                  ZurÃƒÆ’Ã‚Â¼cksetzen
+                  ZurÃƒÂ¼cksetzen
                 </button>
               </div>
             </div>
@@ -366,7 +366,7 @@
                 </div>
                 <div class="operation-content">
                   <div class="operation-value" id="inhouseGuests">0</div>
-                  <div class="operation-label">GÃƒÆ’Ã‚Â¤ste im Haus</div>
+                  <div class="operation-label">GÃƒÂ¤ste im Haus</div>
                   <button class="btn-link" data-action="view-inhouse">
                     Details anzeigen <i class="fas fa-arrow-right"></i>
                   </button>
@@ -437,7 +437,7 @@
             <div class="form-group">
               <label class="form-label">Hotel *</label>
               <select class="select hotel-select" name="hotel_code" required>
-                <option value="">Bitte wÃƒÆ’Ã‚Â¤hlen...</option>
+                <option value="">Bitte wÃƒÂ¤hlen...</option>
               </select>
             </div>
             
@@ -516,7 +516,7 @@
         <div class="modal-footer">
           <button type="button" class="btn secondary" data-wizard-action="prev" disabled>
             <i class="fas fa-arrow-left"></i>
-            ZurÃƒÆ’Ã‚Â¼ck
+            ZurÃƒÂ¼ck
           </button>
           <button type="button" class="btn primary" data-wizard-action="next">
             Weiter
@@ -560,9 +560,6 @@
               <button type="button" class="tab-btn" data-tab="pricing">
                 <i class="fas fa-calculator"></i>Preise
               </button>
-              <button type="button" class="tab-btn" data-tab="extras">
-                <i class="fas fa-gift"></i>Extras & Rabatte
-              </button>
               <button type="button" class="tab-btn" data-tab="traces">
                 <i class="fas fa-bell"></i>Traces
               </button>
@@ -578,13 +575,13 @@
                   <div class="form-row-compact">
                     <div class="form-field">
                       <label>Hotel</label>
-                      <select class="input-compact hotel-select" name="hotel_code">
+                      <select class="input-compact disabled-field" name="hotel_code" disabled>
                         <option value="">Wählen...</option>
                       </select>
                     </div>
                     <div class="form-field">
                       <label>Status</label>
-                      <select class="input-compact" name="status">
+                      <select class="input-compact disabled-field" name="status" disabled>
                         <option value="pending">Ausstehend</option>
                         <option value="active">Aktiv</option>
                         <option value="inhouse">In House</option>
@@ -606,7 +603,7 @@
                     <div class="form-field nights-badge-field">
                       <div class="nights-badge" id="nightsBadge">
                         <i class="fas fa-moon"></i>
-                        <span id="nightsCountCompact">0</span> NÃ¤chte
+                        <span id="nightsCountCompact">0</span> Nächte
                       </div>
                     </div>
                   </div>
@@ -630,26 +627,11 @@
                   <div class="form-row-compact">
                     <div class="form-field">
                       <label>Kategorie</label>
-                      <select class="input-compact" name="category" required>
-                        <option value="">Wählen...</option>
-                        <option value="SINGLE">Single</option>
-                        <option value="DOUBLE">Double</option>
-                        <option value="SUITE">Suite</option>
-                        <option value="DELUXE">Deluxe</option>
-                        <option value="FAMILY">Family</option>
-                      </select>
+                      <input type="text" class="input-compact" name="category" readonly>
                     </div>
                     <div class="form-field">
                       <label>Rate Code</label>
-                      <select class="input-compact" name="rate_code" required>
-                        <option value="">Wählen...</option>
-                        <option value="BAR">BAR (Best Available Rate)</option>
-                        <option value="CORP">Corporate</option>
-                        <option value="GOV">Government</option>
-                        <option value="PROMO">Promotional</option>
-                        <option value="GROUP">Group Rate</option>
-                        <option value="LRA">Long-term Rate</option>
-                      </select>
+                      <input type="text" class="input-compact" name="rate_code" readonly>
                     </div>
                   </div>
                   
@@ -662,22 +644,13 @@
                   </div>
                   
                   <div class="form-field">
-                    <label>Zahlungskonto</label>
-                    <select class="input-compact" name="payment_account">
-                      <option value="">Kein Konto hinterlegt</option>
-                      <option value="cash">Barzahlung</option>
-                      <option value="invoice">Rechnung</option>
-                      <option value="card">Kreditkarte</option>
+                    <label>Zahlungsstatus</label>
+                    <select class="input-compact" name="payment_status">
+                      <option value="pending">Ausstehend</option>
+                      <option value="partial">Teilweise</option>
+                      <option value="paid">Bezahlt</option>
+                      <option value="refunded">Erstattet</option>
                     </select>
-                  </div>
-                  
-                  <div class="form-field" id="cardDetailsField" style="display: none;">
-                    <label>Kreditkarten-Details</label>
-                    <input type="text" class="input-compact" name="card_number" placeholder="**** **** **** 1234" maxlength="19">
-                    <div class="form-row-compact" style="margin-top: 0.5rem;">
-                      <input type="text" class="input-compact" name="card_expiry" placeholder="MM/YY" maxlength="5">
-                      <input type="text" class="input-compact" name="card_cvv" placeholder="CVV" maxlength="4">
-                    </div>
                   </div>
                 </div>
               </div>
@@ -694,7 +667,7 @@
               <div class="guest-grid">
                 <!-- Personal Information -->
                 <div class="guest-section">
-                  <div class="section-title"><i class="fas fa-user"></i> PersÃ¶nliche Daten</div>
+                  <div class="section-title"><i class="fas fa-user"></i> Persönliche Daten</div>
                   
                   <div class="form-row-compact">
                     <div class="form-field">
@@ -722,7 +695,7 @@
                       <input type="date" class="input-compact" name="guest_birthdate">
                     </div>
                     <div class="form-field">
-                      <label>NationalitÃ¤t</label>
+                      <label>Nationalität</label>
                       <input type="text" class="input-compact" name="guest_nationality" placeholder="Deutschland">
                     </div>
                     <div class="form-field">
@@ -730,8 +703,8 @@
                       <select class="input-compact" name="guest_language">
                         <option value="de">Deutsch</option>
                         <option value="en">English</option>
-                        <option value="fr">FranÃ§ais</option>
-                        <option value="es">EspaÃ±ol</option>
+                        <option value="fr">Français</option>
+                        <option value="es">Español</option>
                         <option value="it">Italiano</option>
                       </select>
                     </div>
@@ -776,7 +749,7 @@
                   
                   <div class="form-field">
                     <label>Private Adresse</label>
-                    <textarea class="input-compact textarea-compact" name="guest_address" rows="2" placeholder="StraÃŸe, PLZ Stadt, Land"></textarea>
+                    <textarea class="input-compact textarea-compact" name="guest_address" rows="2" placeholder="Straße, PLZ Stadt, Land"></textarea>
                   </div>
                 </div>
                 
@@ -791,7 +764,7 @@
                   
                   <div class="form-field">
                     <label>Firmenadresse</label>
-                    <textarea class="input-compact textarea-compact" name="guest_company_address" rows="2" placeholder="FirmenstraÃŸe, PLZ Stadt"></textarea>
+                    <textarea class="input-compact textarea-compact" name="guest_company_address" rows="2" placeholder="Firmenstraße, PLZ Stadt"></textarea>
                   </div>
                   
                   <div class="form-row-compact">
@@ -808,11 +781,11 @@
                 
                 <!-- Special Requests -->
                 <div class="guest-section full-width-section">
-                  <div class="section-title"><i class="fas fa-star"></i> Besondere WÃ¼nsche & PrÃ¤ferenzen</div>
+                  <div class="section-title"><i class="fas fa-star"></i> Besondere Wünsche & Präferenzen</div>
                   
                   <div class="form-row-compact">
                     <div class="form-field">
-                      <label>Zimmer-PrÃ¤ferenz</label>
+                      <label>Zimmer-Präferenz</label>
                       <select class="input-compact" name="guest_room_preference">
                         <option value="">Keine</option>
                         <option value="high-floor">Hohe Etage</option>
@@ -822,7 +795,7 @@
                       </select>
                     </div>
                     <div class="form-field">
-                      <label>Bett-PrÃ¤ferenz</label>
+                      <label>Bett-Präferenz</label>
                       <select class="input-compact" name="guest_bed_preference">
                         <option value="">Keine</option>
                         <option value="double">Doppelbett</option>
@@ -832,13 +805,13 @@
                     </div>
                     <div class="form-field">
                       <label>Allergien</label>
-                      <input type="text" class="input-compact" name="guest_allergies" placeholder="z.B. NÃ¼sse, Laktose">
+                      <input type="text" class="input-compact" name="guest_allergies" placeholder="z.B. Nüsse, Laktose">
                     </div>
                   </div>
                   
                   <div class="form-field">
                     <label>Gastnotizen / Special Requests</label>
-                    <textarea class="input-compact textarea-compact" name="guest_notes" rows="3" placeholder="Besondere WÃ¼nsche des Gastes..."></textarea>
+                    <textarea class="input-compact textarea-compact" name="guest_notes" rows="3" placeholder="Besondere Wünsche des Gastes..."></textarea>
                   </div>
                 </div>
               </div>
@@ -866,6 +839,49 @@
               <div class="section-title">Preis pro Nacht (editierbar)</div>
               <div id="nightPriceGrid" class="night-price-grid">
                 <!-- Generated dynamically -->
+              </div>
+              
+              <div class="pricing-extras">
+                <div class="section-title">Extras & Rabatte</div>
+                
+                <div class="extras-grid">
+                  <div class="form-field">
+                    <label>Frühstück</label>
+                    <div class="input-with-toggle">
+                      <input type="number" class="input-compact" name="extra_breakfast_price" step="0.01" min="0" placeholder="0.00">
+                      <span class="currency">€</span>
+                    </div>
+                  </div>
+                  
+                  <div class="form-field">
+                    <label>Parkplatz</label>
+                    <div class="input-with-toggle">
+                      <input type="number" class="input-compact" name="extra_parking_price" step="0.01" min="0" placeholder="0.00">
+                      <span class="currency">€</span>
+                    </div>
+                  </div>
+                  
+                  <div class="form-field">
+                    <label>Minibar</label>
+                    <div class="input-with-toggle">
+                      <input type="number" class="input-compact" name="extra_minibar_price" step="0.01" min="0" placeholder="0.00">
+                      <span class="currency">€</span>
+                    </div>
+                  </div>
+                  
+                  <div class="form-field">
+                    <label>Rabatt</label>
+                    <div class="input-with-toggle">
+                      <input type="number" class="input-compact" name="discount_amount" step="0.01" min="0" placeholder="0.00">
+                      <span class="currency">€</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="form-field">
+                  <label>Rabatt-Grund</label>
+                  <input type="text" class="input-compact" name="discount_reason" placeholder="z.B. Corporate Rate, Treue-Rabatt">
+                </div>
               </div>
               
               <div class="pricing-breakdown">
@@ -896,98 +912,6 @@
               </div>
             </div>
             
-            <!-- Extras & Rabatte Tab (NEU) -->
-            <div class="tab-panel" data-tab-panel="extras">
-              <div class="extras-header">
-                <div class="section-title">
-                  <i class="fas fa-sparkles"></i>
-                  Zusatzleistungen & Vergünstigungen
-                </div>
-              </div>
-              
-              <div class="extras-content">
-                <div class="extras-section">
-                  <h4 class="extras-section-title">
-                    <i class="fas fa-plus-circle"></i>
-                    Extras
-                  </h4>
-                  
-                  <div class="extras-grid">
-                    <div class="extra-card">
-                      <div class="extra-card-header">
-                        <i class="fas fa-coffee"></i>
-                        <span>Frühstück</span>
-                      </div>
-                      <div class="input-with-toggle">
-                        <input type="number" class="input-compact" name="extra_breakfast_price" step="0.01" min="0" placeholder="0.00">
-                        <span class="currency">€</span>
-                      </div>
-                    </div>
-                    
-                    <div class="extra-card">
-                      <div class="extra-card-header">
-                        <i class="fas fa-car"></i>
-                        <span>Parkplatz</span>
-                      </div>
-                      <div class="input-with-toggle">
-                        <input type="number" class="input-compact" name="extra_parking_price" step="0.01" min="0" placeholder="0.00">
-                        <span class="currency">€</span>
-                      </div>
-                    </div>
-                    
-                    <div class="extra-card">
-                      <div class="extra-card-header">
-                        <i class="fas fa-wine-glass"></i>
-                        <span>Minibar</span>
-                      </div>
-                      <div class="input-with-toggle">
-                        <input type="number" class="input-compact" name="extra_minibar_price" step="0.01" min="0" placeholder="0.00">
-                        <span class="currency">€</span>
-                      </div>
-                    </div>
-                    
-                    <div class="extra-card">
-                      <div class="extra-card-header">
-                        <i class="fas fa-spa"></i>
-                        <span>Spa / Wellness</span>
-                      </div>
-                      <div class="input-with-toggle">
-                        <input type="number" class="input-compact" name="extra_spa_price" step="0.01" min="0" placeholder="0.00">
-                        <span class="currency">€</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                <div class="extras-section">
-                  <h4 class="extras-section-title">
-                    <i class="fas fa-percentage"></i>
-                    Rabatte
-                  </h4>
-                  
-                  <div class="discount-card">
-                    <div class="form-field">
-                      <label>Rabattbetrag</label>
-                      <div class="input-with-toggle">
-                        <input type="number" class="input-compact" name="discount_amount" step="0.01" min="0" placeholder="0.00">
-                        <span class="currency">€</span>
-                      </div>
-                    </div>
-                    
-                    <div class="form-field">
-                      <label>Rabatt-Grund</label>
-                      <input type="text" class="input-compact" name="discount_reason" placeholder="z.B. Corporate Rate, Treue-Rabatt, Sonderangebot">
-                    </div>
-                    
-                    <div class="form-field">
-                      <label>Rabatt-Code</label>
-                      <input type="text" class="input-compact" name="discount_code" placeholder="z.B. SUMMER2024, CORP15">
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
             <!-- Traces Tab -->
             <div class="tab-panel" data-tab-panel="traces">
               <div class="traces-header">
@@ -1003,7 +927,7 @@
               <div class="empty-state" id="tracesEmpty">
                 <i class="fas fa-bell-slash"></i>
                 <p>Keine Traces vorhanden</p>
-                <p class="text-small">Traces sind Erinnerungen, Alerts oder Notizen fÃ¼r diese Reservierung</p>
+                <p class="text-small">Traces sind Erinnerungen, Alerts oder Notizen für diese Reservierung</p>
               </div>
             </div>
           </div>
@@ -1061,7 +985,7 @@
         
         <div class="modal-footer">
           <button type="button" class="btn secondary" data-close-modal>Abbrechen</button>
-          <button type="submit" class="btn primary"><i class="fas fa-check"></i> HinzufÃ¼gen</button>
+          <button type="submit" class="btn primary"><i class="fas fa-check"></i> Hinzufügen</button>
         </div>
       </form>
     </div>
@@ -1071,7 +995,7 @@
   <div id="modalAvailability" class="modal hidden" aria-hidden="true">
     <div class="modal-content large">
       <div class="modal-header">
-        <h2>VerfÃƒÆ’Ã‚Â¼gbarkeit</h2>
+        <h2>VerfÃƒÂ¼gbarkeit</h2>
         <button class="modal-close">
           <i class="fas fa-times"></i>
         </button>
@@ -1215,7 +1139,7 @@
       <div class="modal-body">
         <div class="sketch-controls">
           <select class="select hotel-select" id="sketchHotel">
-            <option value="">Hotel wÃƒÆ’Ã‚Â¤hlen...</option>
+            <option value="">Hotel wÃƒÂ¤hlen...</option>
           </select>
           <button class="btn primary" data-action="load-sketch">
             <i class="fas fa-map"></i>
@@ -1224,7 +1148,7 @@
         </div>
         
         <div id="sketchCanvas" class="sketch-canvas">
-          <p class="text-center text-muted">Bitte wÃƒÆ’Ã‚Â¤hlen Sie ein Hotel aus</p>
+          <p class="text-center text-muted">Bitte wÃƒÂ¤hlen Sie ein Hotel aus</p>
         </div>
       </div>
     </div>
@@ -1238,7 +1162,7 @@
           <div style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, var(--primary-500), var(--accent-500)); border-radius: var(--radius-lg); color: white;">
             <i class="fas fa-envelope"></i>
           </div>
-          <h2>BestÃƒÆ’Ã‚Â¤tigungs-E-Mail senden</h2>
+          <h2>BestÃƒÂ¤tigungs-E-Mail senden</h2>
         </div>
         <button class="modal-close">
           <i class="fas fa-times"></i>
@@ -1249,7 +1173,7 @@
         <div class="form-group">
           <label class="form-label">
             <i class="fas fa-at" style="margin-right: 0.5rem; color: var(--primary-400);"></i>
-            EmpfÃƒÆ’Ã‚Â¤nger E-Mail
+            EmpfÃƒÂ¤nger E-Mail
           </label>
           <input type="email" class="input" id="confirmEmailTo" placeholder="gast@beispiel.de" required>
         </div>
@@ -1270,7 +1194,7 @@
           <textarea class="input" id="confirmEmailBody" rows="12" style="font-family: 'JetBrains Mono', monospace; font-size: 0.875rem; line-height: 1.6;" required></textarea>
           <p class="text-muted" style="font-size: 0.75rem; margin-top: 0.5rem;">
             <i class="fas fa-info-circle"></i>
-            Sie kÃƒÆ’Ã‚Â¶nnen die Nachricht beliebig anpassen
+            Sie kÃƒÂ¶nnen die Nachricht beliebig anpassen
           </p>
         </div>
       </div>
