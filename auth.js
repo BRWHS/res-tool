@@ -37,14 +37,14 @@ class AuthManager {
     
     // If logging out, force clear everything and stay on auth page
     if (isLoggingOut) {
-      console.log('🔒 Logout detected - clearing all session data');
+      console.log('ðŸ”’ Logout detected - clearing all session data');
       this.session = null;
       localStorage.removeItem(AUTH_CONFIG.SESSION_KEY);
       localStorage.removeItem(AUTH_CONFIG.ATTEMPTS_KEY);
       sessionStorage.clear();
       // Remove logout parameter from URL without reloading
       window.history.replaceState({}, '', window.location.pathname);
-      console.log('✅ Session cleared - staying on auth page');
+      console.log('âœ… Session cleared - staying on auth page');
       return; // Stay on auth page - DON'T proceed further
     }
     
@@ -53,15 +53,15 @@ class AuthManager {
     
     // Redirect logic
     if (!isAuthPage && !this.isAuthenticated()) {
-      // Not on auth page and not authenticated → redirect to login
+      // Not on auth page and not authenticated â†’ redirect to login
       this.redirectToLogin();
       return; // Stop further execution
     } else if (isAuthPage && this.isAuthenticated()) {
-      // On auth page and authenticated → redirect to dashboard
+      // On auth page and authenticated â†’ redirect to dashboard
       this.redirectToDashboard();
       return; // Stop further execution
     }
-    // If on auth page and not authenticated → stay on auth page (do nothing)
+    // If on auth page and not authenticated â†’ stay on auth page (do nothing)
     
     // Setup auto-logout only if authenticated
     if (this.isAuthenticated()) {
@@ -152,7 +152,7 @@ class AuthManager {
         const demoAccount = DEMO_ACCOUNTS[email.toLowerCase()];
         
         if (password === demoAccount.password) {
-          console.log('✅ Demo login successful (bypassing Supabase)');
+          console.log('âœ… Demo login successful (bypassing Supabase)');
           
           // Create demo session
           const duration = remember ? AUTH_CONFIG.REMEMBER_DURATION : AUTH_CONFIG.SESSION_DURATION;
@@ -183,7 +183,7 @@ class AuthManager {
       // ============ END DEMO MODE ============
 
       // Regular Supabase authentication for non-demo accounts
-      console.log('🔐 Attempting Supabase authentication...');
+      console.log('ðŸ” Attempting Supabase authentication...');
       
       // Initialize Supabase
       const { createClient } = window.supabase;
@@ -236,7 +236,7 @@ class AuthManager {
   // Logout
   async logout() {
     try {
-      console.log('🔓 Starting logout process...');
+      console.log('ðŸ”“ Starting logout process...');
       
       // Log activity before clearing session
       await this.logActivity('logout', {});
@@ -258,19 +258,19 @@ class AuthManager {
       localStorage.removeItem(AUTH_CONFIG.ATTEMPTS_KEY);
       sessionStorage.clear();
       
-      console.log('✅ All session data cleared');
+      console.log('âœ… All session data cleared');
       
       // Force a short delay to ensure localStorage is cleared
       await new Promise(resolve => setTimeout(resolve, 100));
       
       // Use replace instead of href to prevent back button issues
       // CRITICAL: Add ?logout=true parameter to prevent immediate redirect back
-      console.log('🔄 Redirecting to auth page with logout parameter...');
+      console.log('ðŸ”„ Redirecting to auth page with logout parameter...');
       window.location.replace('/auth.html?logout=true');
       
       return { success: true };
     } catch (error) {
-      console.error('❌ Logout failed:', error);
+      console.error('âŒ Logout failed:', error);
       // Even if there's an error, clear session and redirect
       this.session = null;
       localStorage.removeItem(AUTH_CONFIG.SESSION_KEY);
@@ -693,23 +693,23 @@ class AuthUIController {
     this.setLoading(form, true);
     this.clearErrors();
     
-    console.log('🔐 Attempting login...');
+    console.log('ðŸ” Attempting login...');
     
     // Attempt login
     const result = await this.auth.login(email, password, remember);
     
     if (result.success) {
-      console.log('✅ Login successful!');
+      console.log('âœ… Login successful!');
       this.showSuccess('Login successful! Redirecting...');
       
       // Wait a bit longer to ensure session is saved
       await new Promise(resolve => setTimeout(resolve, 500));
       
-      console.log('🔄 Redirecting to dashboard...');
+      console.log('ðŸ”„ Redirecting to dashboard...');
       // Use replace to prevent back button issues
       window.location.replace('/index.html');
     } else {
-      console.error('❌ Login failed:', result.error);
+      console.error('âŒ Login failed:', result.error);
       this.showError(result.error);
       this.setLoading(form, false);
     }
