@@ -3026,6 +3026,12 @@ tbody td .pill {
   gap: var(--space-2);
   padding-bottom: var(--space-3);
   border-bottom: 1px solid rgba(99, 102, 241, 0.2);
+  position: sticky;
+  top: 0;
+  background: var(--bg-elevated);
+  z-index: 10;
+  padding-top: var(--space-3);
+  margin-top: calc(var(--space-3) * -1);
 }
 
 .section-title i {
