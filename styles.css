@@ -2157,7 +2157,7 @@ tbody td .pill {
 }
 
 .wizard-step.completed .wizard-step-number::after {
-  content: 'ÃƒÂ¢Ã…â€œÃ¢€Å“';
+  content: 'ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“';
   position: absolute;
   inset: 0;
   display: flex;
@@ -2949,10 +2949,13 @@ tbody td .pill {
   background: linear-gradient(135deg, var(--primary-500), var(--accent-500));
   border-color: var(--primary-400);
   box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+  position: relative;
+  z-index: 1;
 }
 
 .tab-btn.active::before {
-  opacity: 1;
+  opacity: 0;
+  /* Deaktiviert, damit Text immer sichtbar bleibt */
 }
 
 .tab-btn i {
@@ -3211,6 +3214,40 @@ tbody td .pill {
 
 .highlight-box .summary-val {
   font-size: 1.5rem;
+}
+
+/* Editable Summary Boxes */
+.editable-box {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.editable-box .input-compact {
+  width: 100%;
+  text-align: center;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  padding: var(--space-2) var(--space-3);
+  font-size: 0.9375rem;
+}
+
+.editable-box .input-compact:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: var(--primary-400);
+}
+
+.editable-box .input-compact:focus {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: var(--primary-400);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+}
+
+.editable-box .input-compact option {
+  background: var(--surface-dark);
+  color: var(--text-primary);
 }
 
 /* Night Price Grid */
@@ -4043,7 +4080,7 @@ tbody td .pill {
 
 /* Enhanced Section Titles */
 .section-title {
-  /* Animation removed for better UX */
+  animation: float 3s ease-in-out infinite;
 }
 
 .section-title:hover {
@@ -4379,256 +4416,4 @@ select.input-compact:focus {
     var(--primary-400),
     var(--accent-400)
   );
-}
-
-
-/* ================================================
-   IMPROVED TAB DESIGN (V2.1)
-   ================================================ */
-
-.tab-btn.active {
-  color: var(--primary-400) !important;
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(6, 182, 212, 0.08)) !important;
-  font-weight: 600 !important;
-  box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.3) !important;
-}
-
-.tab-btn.active i {
-  opacity: 1 !important;
-  color: var(--primary-400) !important;
-}
-
-.tab-btn.active::after {
-  content: '';
-  position: absolute;
-  bottom: -2px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 60%;
-  height: 3px;
-  background: linear-gradient(90deg, transparent, var(--primary-400), transparent);
-  border-radius: var(--radius-full);
-}
-
-
-/* ================================================
-   CUSTOM SCROLLBAR DESIGN (V2.1)
-   ================================================ */
-
-* {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(99, 102, 241, 0.3) rgba(255, 255, 255, 0.05);
-}
-
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.02);
-  border-radius: var(--radius-md);
-}
-
-::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, rgba(99, 102, 241, 0.4), rgba(6, 182, 212, 0.3));
-  border-radius: var(--radius-md);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, rgba(99, 102, 241, 0.6), rgba(6, 182, 212, 0.4));
-}
-
-::-webkit-scrollbar-thumb:active {
-  background: linear-gradient(180deg, rgba(99, 102, 241, 0.8), rgba(6, 182, 212, 0.6));
-}
-
-
-/* ================================================
-   OPTIMIZED SPACING (V2.1)
-   ================================================ */
-
-.compact-body {
-  padding: var(--space-4) !important;
-}
-
-.compact-grid {
-  gap: var(--space-3) !important;
-}
-
-.compact-section {
-  margin-bottom: var(--space-4) !important;
-}
-
-.form-row-compact {
-  gap: var(--space-2) !important;
-}
-
-/* Reduce excessive spacing in general */
-.card {
-  padding: var(--space-5) !important;
-}
-
-.card-head {
-  margin-bottom: var(--space-4) !important;
-}
-
-
-/* ================================================
-   SERVICE ICONS (V2.1)
-   ================================================ */
-
-.service-icons {
-  display: flex;
-  gap: var(--space-1);
-  margin-top: var(--space-1);
-  font-size: 0.75rem;
-  color: var(--text-tertiary);
-}
-
-.service-icons i {
-  padding: var(--space-1);
-  background: var(--glass-bg);
-  border: 1px solid var(--border-primary);
-  border-radius: var(--radius-sm);
-  transition: all var(--transition-fast);
-}
-
-.service-icons i:hover {
-  color: var(--primary-400);
-  background: var(--glass-bg-hover);
-}
-
-/* Night Cards with Scissors */
-.night-card {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  padding: var(--space-3);
-  background: var(--bg-surface);
-  border: 1px solid var(--border-primary);
-  border-radius: var(--radius-md);
-  transition: all var(--transition-base);
-}
-
-.night-card:hover {
-  border-color: var(--border-hover);
-  box-shadow: var(--shadow-sm);
-}
-
-.night-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.night-info {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-}
-
-.day-name {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--primary-400);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.night-date {
-  font-size: 0.875rem;
-  color: var(--text-secondary);
-  font-family: 'JetBrains Mono', monospace;
-}
-
-.btn-remove-night {
-  opacity: 0;
-  transition: all var(--transition-base);
-  color: var(--danger-400);
-}
-
-.night-card:hover .btn-remove-night {
-  opacity: 1;
-}
-
-.btn-remove-night:hover {
-  color: var(--danger-500);
-  background: rgba(239, 68, 68, 0.1) !important;
-}
-
-.add-night-card {
-  border-style: dashed;
-  border-color: var(--border-hover);
-  background: transparent;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 100px;
-}
-
-.btn-add-night {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-4);
-  background: none;
-  border: none;
-  color: var(--text-tertiary);
-  cursor: pointer;
-  transition: all var(--transition-base);
-}
-
-.btn-add-night:hover {
-  color: var(--primary-400);
-}
-
-.btn-add-night i {
-  font-size: 1.5rem;
-}
-
-/* Compact Price Summary */
-.price-summary-compact {
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-  padding: var(--space-3);
-  background: var(--glass-bg);
-  border: 1px solid var(--border-primary);
-  border-radius: var(--radius-md);
-  margin-top: var(--space-4);
-}
-
-.price-summary-compact .price-item {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-}
-
-.price-summary-compact .price-item label {
-  font-size: 0.75rem;
-  color: var(--text-tertiary);
-  font-weight: 500;
-}
-
-.price-summary-compact .price-item .value {
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.price-summary-compact .price-item.total {
-  margin-left: auto;
-  padding-left: var(--space-4);
-  border-left: 1px solid var(--border-primary);
-}
-
-.price-summary-compact .price-item.total .value {
-  font-size: 1.5rem;
-  background: linear-gradient(135deg, var(--primary-400), var(--accent-400));
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
 }
