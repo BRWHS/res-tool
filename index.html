@@ -645,6 +645,16 @@
                       <span class="currency">â‚¬</span>
                     </div>
                   </div>
+                  
+                  <div class="form-field">
+                    <label>Zahlungsstatus</label>
+                    <select class="input-compact" name="payment_status">
+                      <option value="pending">Ausstehend</option>
+                      <option value="partial">Teilweise</option>
+                      <option value="paid">Bezahlt</option>
+                      <option value="refunded">Erstattet</option>
+                    </select>
+                  </div>
                 </div>
               </div>
               
@@ -652,6 +662,37 @@
               <div class="compact-section full-width">
                 <div class="section-title">Interne Notizen</div>
                 <textarea class="input-compact textarea-compact" name="notes" rows="3" placeholder="Notizen zur Reservierung..."></textarea>
+              </div>
+              
+              <!-- Pricing Breakdown - Compact Version -->
+              <div class="compact-section full-width">
+                <div class="section-title">Preisberechnung</div>
+                <div class="pricing-breakdown compact">
+                  <div class="breakdown-row">
+                    <span>Unterkunft</span>
+                    <span id="breakdownAccommodation">0,00 €</span>
+                  </div>
+                  <div class="breakdown-row">
+                    <span>Extras</span>
+                    <span id="breakdownExtras">0,00 €</span>
+                  </div>
+                  <div class="breakdown-row">
+                    <span>Rabatt</span>
+                    <span id="breakdownDiscount">-0,00 €</span>
+                  </div>
+                  <div class="breakdown-row subtotal">
+                    <span>Netto</span>
+                    <span id="breakdownSubtotal">0,00 €</span>
+                  </div>
+                  <div class="breakdown-row">
+                    <span>MwSt. (7%)</span>
+                    <span id="breakdownTax">0,00 €</span>
+                  </div>
+                  <div class="breakdown-row total">
+                    <span>GESAMT</span>
+                    <span id="breakdownTotal">0,00 €</span>
+                  </div>
+                </div>
               </div>
             </div>
             
@@ -832,33 +873,6 @@
               <div class="section-title">Preis pro Nacht (editierbar)</div>
               <div id="nightPriceGrid" class="night-price-grid">
                 <!-- Generated dynamically -->
-              </div>
-              
-              <div class="pricing-breakdown">
-                <div class="breakdown-row">
-                  <span>Unterkunft</span>
-                  <span id="breakdownAccommodation">0,00 â‚¬</span>
-                </div>
-                <div class="breakdown-row">
-                  <span>Extras</span>
-                  <span id="breakdownExtras">0,00 â‚¬</span>
-                </div>
-                <div class="breakdown-row">
-                  <span>Rabatt</span>
-                  <span id="breakdownDiscount">-0,00 â‚¬</span>
-                </div>
-                <div class="breakdown-row subtotal">
-                  <span>Netto</span>
-                  <span id="breakdownSubtotal">0,00 â‚¬</span>
-                </div>
-                <div class="breakdown-row">
-                  <span>MwSt. (7%)</span>
-                  <span id="breakdownTax">0,00 â‚¬</span>
-                </div>
-                <div class="breakdown-row total">
-                  <span>GESAMT</span>
-                  <span id="breakdownTotal">0,00 â‚¬</span>
-                </div>
               </div>
             </div>
             
