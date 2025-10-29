@@ -2949,13 +2949,10 @@ tbody td .pill {
   background: linear-gradient(135deg, var(--primary-500), var(--accent-500));
   border-color: var(--primary-400);
   box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
-  position: relative;
-  z-index: 1;
 }
 
 .tab-btn.active::before {
-  opacity: 0;
-  /* Deaktiviert, damit Text immer sichtbar bleibt */
+  opacity: 1;
 }
 
 .tab-btn i {
@@ -2995,16 +2992,19 @@ tbody td .pill {
 }
 
 .compact-section {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: var(--radius-xl);
   padding: var(--space-6);
-  transition: background 0.2s ease, border-color 0.2s ease;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  transition: all var(--transition-base);
 }
 
 .compact-section:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(99, 102, 241, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(99, 102, 241, 0.2);
 }
 
 .compact-section.full-width {
@@ -3012,23 +3012,29 @@ tbody td .pill {
 }
 
 .section-title {
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--text-secondary);
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--primary-400);
   text-transform: uppercase;
-  letter-spacing: 0.1em;
-  margin-bottom: var(--space-3);
+  letter-spacing: 0.08em;
+  margin-bottom: var(--space-4);
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  padding-bottom: var(--space-2);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid rgba(99, 102, 241, 0.2);
 }
 
 .section-title i {
-  color: var(--text-tertiary);
-  font-size: 0.875rem;
-  opacity: 0.6;
+  color: var(--primary-400);
+  font-size: 1.125rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: rgba(99, 102, 241, 0.15);
+  border-radius: var(--radius-md);
 }
 
 /* Compact Forms */
@@ -3149,16 +3155,19 @@ tbody td .pill {
 }
 
 .guest-section {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: var(--radius-xl);
   padding: var(--space-6);
-  transition: background 0.2s ease, border-color 0.2s ease;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  transition: all var(--transition-base);
 }
 
 .guest-section:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(99, 102, 241, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(99, 102, 241, 0.2);
 }
 
 .guest-section.full-width-section {
@@ -3202,40 +3211,6 @@ tbody td .pill {
 
 .highlight-box .summary-val {
   font-size: 1.5rem;
-}
-
-/* Editable Summary Boxes */
-.editable-box {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
-.editable-box .input-compact {
-  width: 100%;
-  text-align: center;
-  font-weight: 600;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: white;
-  padding: var(--space-2) var(--space-3);
-  font-size: 0.9375rem;
-}
-
-.editable-box .input-compact:hover {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: var(--primary-400);
-}
-
-.editable-box .input-compact:focus {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: var(--primary-400);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
-}
-
-.editable-box .input-compact option {
-  background: var(--surface-dark);
-  color: var(--text-primary);
 }
 
 /* Night Price Grid */
@@ -3357,6 +3332,29 @@ tbody td .pill {
   border-radius: var(--radius-lg);
   padding: var(--space-5);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Compact version for Details Tab */
+.pricing-breakdown.compact {
+  padding: var(--space-4);
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(139, 92, 246, 0.05) 100%);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+}
+
+.pricing-breakdown.compact .breakdown-row {
+  padding: var(--space-2) 0;
+  font-size: 0.875rem;
+}
+
+.pricing-breakdown.compact .breakdown-row.subtotal {
+  padding-top: var(--space-3);
+  font-size: 0.9375rem;
+}
+
+.pricing-breakdown.compact .breakdown-row.total {
+  padding-top: var(--space-3);
+  font-size: 1.25rem;
+  font-weight: 700;
 }
 
 .breakdown-row {
@@ -4055,6 +4053,18 @@ tbody td .pill {
     transform: scale(1.05);
   }
 }
+
+/* Floating Animation - DEACTIVATED */
+/*
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+*/
 
 /* Enhanced Section Titles */
 .section-title {
