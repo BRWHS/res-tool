@@ -560,6 +560,9 @@
               <button type="button" class="tab-btn" data-tab="pricing">
                 <i class="fas fa-calculator"></i>Preise
               </button>
+              <button type="button" class="tab-btn" data-tab="services">
+                <i class="fas fa-list-check"></i>Fixleistungen
+              </button>
               <button type="button" class="tab-btn" data-tab="traces">
                 <i class="fas fa-bell"></i>Traces
               </button>
@@ -594,11 +597,13 @@
                   <div class="form-row-compact">
                     <div class="form-field">
                       <label>Anreise</label>
-                      <input type="date" class="input-compact" name="arrival" required>
+                      <input type="date" class="input-compact disabled-field" name="arrival_display" readonly>
+                      <small style="font-size: 0.75rem; color: var(--text-tertiary); margin-top: 0.25rem; display: block;">Änderbar unter "Preise"</small>
                     </div>
                     <div class="form-field">
                       <label>Abreise</label>
-                      <input type="date" class="input-compact" name="departure" required>
+                      <input type="date" class="input-compact disabled-field" name="departure_display" readonly>
+                      <small style="font-size: 0.75rem; color: var(--text-tertiary); margin-top: 0.25rem; display: block;">Änderbar unter "Preise"</small>
                     </div>
                     <div class="form-field nights-badge-field">
                       <div class="nights-badge" id="nightsBadge">
@@ -643,15 +648,7 @@
                     </div>
                   </div>
                   
-                  <div class="form-field">
-                    <label>Zahlungsstatus</label>
-                    <select class="input-compact" name="payment_status">
-                      <option value="pending">Ausstehend</option>
-                      <option value="partial">Teilweise</option>
-                      <option value="paid">Bezahlt</option>
-                      <option value="refunded">Erstattet</option>
-                    </select>
-                  </div>
+                  <!-- Zahlungsstatus entfernt wie gewünscht -->
                 </div>
               </div>
               
@@ -819,6 +816,45 @@
             
             <!-- Pricing Tab -->
             <div class="tab-panel" data-tab-panel="pricing">
+              
+              <!-- Tarif & Daten Anpassung -->
+              <div style="background: var(--bg-surface); border: 1px solid var(--border-primary); border-radius: var(--radius-lg); padding: var(--space-4); margin-bottom: var(--space-5);">
+                <div class="section-title">Tarif & Daten anpassen</div>
+                <div class="form-row-compact">
+                  <div class="form-field">
+                    <label>Kategorie</label>
+                    <select class="input-compact" id="editCategory" name="category_select">
+                      <option value="">Wählen...</option>
+                      <!-- Wird dynamisch gefüllt -->
+                    </select>
+                  </div>
+                  <div class="form-field">
+                    <label>Rate</label>
+                    <select class="input-compact" id="editRate" name="rate_select">
+                      <option value="">Wählen...</option>
+                      <!-- Wird dynamisch gefüllt -->
+                    </select>
+                  </div>
+                </div>
+                
+                <div class="form-row-compact" style="margin-top: var(--space-3);">
+                  <div class="form-field">
+                    <label>Anreise</label>
+                    <input type="date" class="input-compact" name="arrival_edit" required>
+                  </div>
+                  <div class="form-field">
+                    <label>Abreise</label>
+                    <input type="date" class="input-compact" name="departure_edit" required>
+                  </div>
+                  <div class="form-field nights-badge-field">
+                    <div class="nights-badge" id="nightsBadgePricing">
+                      <i class="fas fa-moon"></i>
+                      <span id="nightsCountPricing">0</span> Nächte
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
               <div class="pricing-overview">
                 <div class="pricing-summary-row">
                   <div class="summary-box">
@@ -909,6 +945,90 @@
                   <span>GESAMT</span>
                   <span id="breakdownTotal">0,00 €</span>
                 </div>
+              </div>
+            </div>
+            
+            
+            <!-- Fixleistungen Tab -->
+            <div class="tab-panel" data-tab-panel="services">
+              <div class="section-title">Inkludierte Leistungen</div>
+              
+              <div class="extras-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-3); margin-bottom: var(--space-6);">
+                <div class="form-field">
+                  <label>Frühstück</label>
+                  <div style="display: flex; align-items: center; gap: var(--space-2);">
+                    <input type="checkbox" id="editBreakfast" name="includes_breakfast" style="width: 20px; height: 20px; cursor: pointer; accent-color: var(--primary-500);">
+                    <span style="font-size: 0.875rem; color: var(--text-secondary); cursor: pointer; user-select: none;">Inkludiert</span>
+                  </div>
+                </div>
+                
+                <div class="form-field">
+                  <label>Parkplatz</label>
+                  <div style="display: flex; align-items: center; gap: var(--space-2);">
+                    <input type="checkbox" id="editParking" name="includes_parking" style="width: 20px; height: 20px; cursor: pointer; accent-color: var(--primary-500);">
+                    <span style="font-size: 0.875rem; color: var(--text-secondary); cursor: pointer; user-select: none;">Inkludiert</span>
+                  </div>
+                </div>
+                
+                <div class="form-field">
+                  <label>WLAN</label>
+                  <div style="display: flex; align-items: center; gap: var(--space-2);">
+                    <input type="checkbox" id="editWifi" name="includes_wifi" style="width: 20px; height: 20px; cursor: pointer; accent-color: var(--primary-500);">
+                    <span style="font-size: 0.875rem; color: var(--text-secondary); cursor: pointer; user-select: none;">Inkludiert</span>
+                  </div>
+                </div>
+                
+                <div class="form-field">
+                  <label>Minibar</label>
+                  <div style="display: flex; align-items: center; gap: var(--space-2);">
+                    <input type="checkbox" id="editMinibar" name="includes_minibar" style="width: 20px; height: 20px; cursor: pointer; accent-color: var(--primary-500);">
+                    <span style="font-size: 0.875rem; color: var(--text-secondary); cursor: pointer; user-select: none;">Inkludiert</span>
+                  </div>
+                </div>
+                
+                <div class="form-field">
+                  <label>City Tax</label>
+                  <div style="display: flex; align-items: center; gap: var(--space-2);">
+                    <input type="checkbox" id="editCityTax" name="includes_city_tax" style="width: 20px; height: 20px; cursor: pointer; accent-color: var(--primary-500);">
+                    <span style="font-size: 0.875rem; color: var(--text-secondary); cursor: pointer; user-select: none;">Inkludiert</span>
+                  </div>
+                </div>
+                
+                <div class="form-field">
+                  <label>Spa-Zugang</label>
+                  <div style="display: flex; align-items: center; gap: var(--space-2);">
+                    <input type="checkbox" id="editSpa" name="includes_spa" style="width: 20px; height: 20px; cursor: pointer; accent-color: var(--primary-500);">
+                    <span style="font-size: 0.875rem; color: var(--text-secondary); cursor: pointer; user-select: none;">Inkludiert</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="section-title">Rabatte & Aufschläge</div>
+              
+              <div class="form-row-compact">
+                <div class="form-field">
+                  <label>Rabatt-Typ</label>
+                  <select class="input-compact" id="editDiscountType" name="discount_type">
+                    <option value="none">Kein Rabatt</option>
+                    <option value="percentage">Prozentual</option>
+                    <option value="fixed">Festbetrag</option>
+                    <option value="early_bird">Early Bird</option>
+                    <option value="last_minute">Last Minute</option>
+                  </select>
+                </div>
+                <div class="form-field">
+                  <label>Rabatt-Wert</label>
+                  <input type="number" class="input-compact" id="editDiscountValue" name="discount_value" step="0.01" min="0" value="0" placeholder="0.00">
+                </div>
+                <div class="form-field">
+                  <label>Aufschlag (%)</label>
+                  <input type="number" class="input-compact" id="editSurcharge" name="surcharge" step="0.01" min="0" value="0" placeholder="0.00">
+                </div>
+              </div>
+              
+              <div class="form-field" style="margin-top: var(--space-4);">
+                <label>Zusätzliche Gebühren / Notizen</label>
+                <textarea class="input-compact textarea-compact" name="additional_fees" rows="3" placeholder="z.B. Haustiergebühr: 15€ pro Nacht, Extra Reinigung..."></textarea>
               </div>
             </div>
             
