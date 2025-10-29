@@ -560,6 +560,9 @@
               <button type="button" class="tab-btn" data-tab="pricing">
                 <i class="fas fa-calculator"></i>Preise
               </button>
+              <button type="button" class="tab-btn" data-tab="fixleistungen">
+                <i class="fas fa-boxes"></i>Fixleistungen
+              </button>
               <button type="button" class="tab-btn" data-tab="traces">
                 <i class="fas fa-bell"></i>Traces
               </button>
@@ -840,10 +843,10 @@
                 
                 <div class="extras-grid">
                   <div class="form-field">
-                    <label>FrÃ¼hstÃ¼ck</label>
+                    <label>Frühstück</label>
                     <div class="input-with-toggle">
                       <input type="number" class="input-compact" name="extra_breakfast_price" step="0.01" min="0" placeholder="0.00">
-                      <span class="currency">â‚¬</span>
+                      <span class="currency">€</span>
                     </div>
                   </div>
                   
@@ -851,7 +854,7 @@
                     <label>Parkplatz</label>
                     <div class="input-with-toggle">
                       <input type="number" class="input-compact" name="extra_parking_price" step="0.01" min="0" placeholder="0.00">
-                      <span class="currency">â‚¬</span>
+                      <span class="currency">€</span>
                     </div>
                   </div>
                   
@@ -859,7 +862,7 @@
                     <label>Minibar</label>
                     <div class="input-with-toggle">
                       <input type="number" class="input-compact" name="extra_minibar_price" step="0.01" min="0" placeholder="0.00">
-                      <span class="currency">â‚¬</span>
+                      <span class="currency">€</span>
                     </div>
                   </div>
                   
@@ -867,10 +870,16 @@
                     <label>Rabatt</label>
                     <div class="input-with-toggle">
                       <input type="number" class="input-compact" name="discount_amount" step="0.01" min="0" placeholder="0.00">
-                      <span class="currency">â‚¬</span>
+                      <span class="currency">€</span>
                     </div>
                   </div>
                 </div>
+                
+                <div class="form-field">
+                  <label>Rabatt-Grund</label>
+                  <input type="text" class="input-compact" name="discount_reason" placeholder="z.B. Corporate Rate, Treue-Rabatt">
+                </div>
+              </div>
                 
                 <div class="form-field">
                   <label>Rabatt-Grund</label>
@@ -905,6 +914,97 @@
                 </div>
               </div>
             </div>
+            
+            <!-- Fixleistungen Tab -->
+            <div class="tab-panel" data-tab-panel="fixleistungen">
+              <div class="section-title">
+                <i class="fas fa-boxes"></i>
+                Extras & Rabatte
+              </div>
+              
+              <div class="extras-grid">
+                <div class="form-field">
+                  <label>Frühstück</label>
+                  <div class="input-with-toggle">
+                    <input type="number" class="input-compact" name="extra_breakfast_price" step="0.01" min="0" placeholder="0.00">
+                    <span class="currency">€</span>
+                  </div>
+                </div>
+                
+                <div class="form-field">
+                  <label>Parkplatz</label>
+                  <div class="input-with-toggle">
+                    <input type="number" class="input-compact" name="extra_parking_price" step="0.01" min="0" placeholder="0.00">
+                    <span class="currency">€</span>
+                  </div>
+                </div>
+                
+                <div class="form-field">
+                  <label>Minibar</label>
+                  <div class="input-with-toggle">
+                    <input type="number" class="input-compact" name="extra_minibar_price" step="0.01" min="0" placeholder="0.00">
+                    <span class="currency">€</span>
+                  </div>
+                </div>
+                
+                <div class="form-field">
+                  <label>Sonstige Extras</label>
+                  <div class="input-with-toggle">
+                    <input type="number" class="input-compact" name="extra_other_price" step="0.01" min="0" placeholder="0.00">
+                    <span class="currency">€</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="section-title" style="margin-top: var(--space-6);">
+                <i class="fas fa-percentage"></i>
+                Rabatte
+              </div>
+              
+              <div class="form-row-compact">
+                <div class="form-field">
+                  <label>Rabatt-Betrag</label>
+                  <div class="input-with-toggle">
+                    <input type="number" class="input-compact" name="discount_amount" step="0.01" min="0" placeholder="0.00">
+                    <span class="currency">€</span>
+                  </div>
+                </div>
+                
+                <div class="form-field">
+                  <label>Rabatt-Typ</label>
+                  <select class="input-compact" name="discount_type">
+                    <option value="">Betrag (€)</option>
+                    <option value="percent">Prozent (%)</option>
+                  </select>
+                </div>
+              </div>
+              
+              <div class="form-field">
+                <label>Rabatt-Grund</label>
+                <input type="text" class="input-compact" name="discount_reason" placeholder="z.B. Corporate Rate, Treue-Rabatt, Stammgast">
+              </div>
+              
+              <div class="section-title" style="margin-top: var(--space-6);">
+                <i class="fas fa-info-circle"></i>
+                Übersicht
+              </div>
+              
+              <div class="pricing-breakdown">
+                <div class="breakdown-row">
+                  <span>Extras Gesamt</span>
+                  <span id="fixleistungenExtrasTotal">0,00 €</span>
+                </div>
+                <div class="breakdown-row">
+                  <span>Rabatt Gesamt</span>
+                  <span id="fixleistungenDiscountTotal">-0,00 €</span>
+                </div>
+                <div class="breakdown-row total">
+                  <span>NETTO FIXLEISTUNGEN</span>
+                  <span id="fixleistungenNetTotal">0,00 €</span>
+                </div>
+              </div>
+            </div>
+          
             
             <!-- Traces Tab -->
             <div class="tab-panel" data-tab-panel="traces">
