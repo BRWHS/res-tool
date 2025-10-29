@@ -645,6 +645,16 @@
                       <span class="currency">â‚¬</span>
                     </div>
                   </div>
+                  
+                  <div class="form-field">
+                    <label>Zahlungsstatus</label>
+                    <select class="input-compact" name="payment_status">
+                      <option value="pending">Ausstehend</option>
+                      <option value="partial">Teilweise</option>
+                      <option value="paid">Bezahlt</option>
+                      <option value="refunded">Erstattet</option>
+                    </select>
+                  </div>
                 </div>
               </div>
               
@@ -814,21 +824,17 @@
             <div class="tab-panel" data-tab-panel="pricing">
               <div class="pricing-overview">
                 <div class="pricing-summary-row">
-                  <div class="summary-box editable-box">
+                  <div class="summary-box">
                     <span class="summary-label">Kategorie</span>
-                    <select class="input-compact" id="priceCatSelect" name="category_edit">
-                      <option value="">Laden...</option>
-                    </select>
+                    <span class="summary-val" id="priceCat">-</span>
                   </div>
-                  <div class="summary-box editable-box">
+                  <div class="summary-box">
                     <span class="summary-label">Rate</span>
-                    <select class="input-compact" id="priceRateSelect" name="rate_code_edit">
-                      <option value="">Laden...</option>
-                    </select>
+                    <span class="summary-val" id="priceRate">-</span>
                   </div>
                   <div class="summary-box highlight-box">
                     <span class="summary-label">Gesamt</span>
-                    <span class="summary-val" id="priceTotal">0,00 €</span>
+                    <span class="summary-val" id="priceTotal">0,00 â‚¬</span>
                   </div>
                 </div>
               </div>
@@ -836,55 +842,6 @@
               <div class="section-title">Preis pro Nacht (editierbar)</div>
               <div id="nightPriceGrid" class="night-price-grid">
                 <!-- Generated dynamically -->
-              </div>
-              
-              <div class="pricing-extras">
-                <div class="section-title">Extras & Rabatte</div>
-                
-                <div class="extras-grid">
-                  <div class="form-field">
-                    <label>Frühstück</label>
-                    <div class="input-with-toggle">
-                      <input type="number" class="input-compact" name="extra_breakfast_price" step="0.01" min="0" placeholder="0.00">
-                      <span class="currency">€</span>
-                    </div>
-                  </div>
-                  
-                  <div class="form-field">
-                    <label>Parkplatz</label>
-                    <div class="input-with-toggle">
-                      <input type="number" class="input-compact" name="extra_parking_price" step="0.01" min="0" placeholder="0.00">
-                      <span class="currency">€</span>
-                    </div>
-                  </div>
-                  
-                  <div class="form-field">
-                    <label>Minibar</label>
-                    <div class="input-with-toggle">
-                      <input type="number" class="input-compact" name="extra_minibar_price" step="0.01" min="0" placeholder="0.00">
-                      <span class="currency">€</span>
-                    </div>
-                  </div>
-                  
-                  <div class="form-field">
-                    <label>Rabatt</label>
-                    <div class="input-with-toggle">
-                      <input type="number" class="input-compact" name="discount_amount" step="0.01" min="0" placeholder="0.00">
-                      <span class="currency">€</span>
-                    </div>
-                  </div>
-                </div>
-                
-                <div class="form-field">
-                  <label>Rabatt-Grund</label>
-                  <input type="text" class="input-compact" name="discount_reason" placeholder="z.B. Corporate Rate, Treue-Rabatt">
-                </div>
-              </div>
-                
-                <div class="form-field">
-                  <label>Rabatt-Grund</label>
-                  <input type="text" class="input-compact" name="discount_reason" placeholder="z.B. Corporate Rate, Treue-Rabatt">
-                </div>
               </div>
               
               <div class="pricing-breakdown">
@@ -919,7 +876,7 @@
             <div class="tab-panel" data-tab-panel="fixleistungen">
               <div class="section-title">
                 <i class="fas fa-boxes"></i>
-                Extras & Rabatte
+                Extras & Zusatzleistungen
               </div>
               
               <div class="extras-grid">
@@ -958,7 +915,7 @@
               
               <div class="section-title" style="margin-top: var(--space-6);">
                 <i class="fas fa-percentage"></i>
-                Rabatte
+                Rabatte & Nachlässe
               </div>
               
               <div class="form-row-compact">
@@ -973,7 +930,7 @@
                 <div class="form-field">
                   <label>Rabatt-Typ</label>
                   <select class="input-compact" name="discount_type">
-                    <option value="">Betrag (€)</option>
+                    <option value="amount">Betrag (€)</option>
                     <option value="percent">Prozent (%)</option>
                   </select>
                 </div>
@@ -986,7 +943,7 @@
               
               <div class="section-title" style="margin-top: var(--space-6);">
                 <i class="fas fa-info-circle"></i>
-                Übersicht
+                Übersicht Fixleistungen
               </div>
               
               <div class="pricing-breakdown">
@@ -1004,7 +961,6 @@
                 </div>
               </div>
             </div>
-          
             
             <!-- Traces Tab -->
             <div class="tab-panel" data-tab-panel="traces">
