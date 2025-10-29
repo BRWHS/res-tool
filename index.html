@@ -597,11 +597,11 @@
                   <div class="form-row-compact">
                     <div class="form-field">
                       <label>Anreise</label>
-                      <input type="date" class="input-compact" name="arrival" required>
+                      <input type="date" class="input-compact disabled-field" name="arrival_readonly" readonly>
                     </div>
                     <div class="form-field">
                       <label>Abreise</label>
-                      <input type="date" class="input-compact" name="departure" required>
+                      <input type="date" class="input-compact disabled-field" name="departure_readonly" readonly>
                     </div>
                     <div class="form-field nights-badge-field">
                       <div class="nights-badge" id="nightsBadge">
@@ -630,11 +630,11 @@
                   <div class="form-row-compact">
                     <div class="form-field">
                       <label>Kategorie</label>
-                      <input type="text" class="input-compact" name="category" readonly>
+                      <input type="text" class="input-compact disabled-field" name="category_readonly" readonly>
                     </div>
                     <div class="form-field">
                       <label>Rate Code</label>
-                      <input type="text" class="input-compact" name="rate_code" readonly>
+                      <input type="text" class="input-compact disabled-field" name="rate_code_readonly" readonly>
                     </div>
                   </div>
                   
@@ -871,7 +871,42 @@
                 </div>
               </div>
               
-              <div class="section-title">Preis pro Nacht (editierbar)</div>
+              <div class="section-title mini">Buchungsdetails (editierbar)</div>
+              <div class="form-row-compact">
+                <div class="form-field">
+                  <label>Anreise</label>
+                  <input type="date" class="input-compact" name="arrival" required>
+                </div>
+                <div class="form-field">
+                  <label>Abreise</label>
+                  <input type="date" class="input-compact" name="departure" required>
+                </div>
+                <div class="form-field nights-badge-field">
+                  <div class="nights-badge" id="nightsBadgePricing">
+                    <i class="fas fa-moon"></i>
+                    <span id="nightsCountPricing">0</span> Nächte
+                  </div>
+                </div>
+              </div>
+              
+              <div class="form-row-compact">
+                <div class="form-field">
+                  <label>Kategorie</label>
+                  <select class="input-compact" name="category" required>
+                    <option value="">Wählen...</option>
+                    <!-- Options will be loaded dynamically -->
+                  </select>
+                </div>
+                <div class="form-field">
+                  <label>Rate Code</label>
+                  <select class="input-compact" name="rate_code" required>
+                    <option value="">Wählen...</option>
+                    <!-- Options will be loaded dynamically -->
+                  </select>
+                </div>
+              </div>
+              
+              <div class="section-title mini">Preis pro Nacht (editierbar)</div>
               <div id="nightPriceGrid" class="night-price-grid">
                 <!-- Generated dynamically -->
               </div>
