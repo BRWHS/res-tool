@@ -3195,3 +3195,33 @@ document.addEventListener('DOMContentLoaded', () => {
     console.error('Failed to initialize app:', error);
   });
 });
+
+// =============== V2.1 NEUE FUNKTIONEN ===============
+
+// Wochentage bei Datumsanzeige
+function formatDateWithDay(dateString) {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  const dayNames = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
+  const dayName = dayNames[date.getDay()];
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+  return `<span style="font-weight: 600; color: var(--primary-400); font-size: 0.75rem; text-transform: uppercase;">${dayName}</span> ${day}.${month}.${year}`;
+}
+
+// Service-Icons für Reservierungen
+function getServiceIcons(reservation) {
+  const services = [];
+  if (reservation.includes_breakfast) services.push('<i class="fas fa-coffee" title="Frühstück" style="color: var(--text-tertiary);"></i>');
+  if (reservation.includes_parking) services.push('<i class="fas fa-parking" title="Parkplatz" style="color: var(--text-tertiary);"></i>');
+  if (reservation.includes_wifi) services.push('<i class="fas fa-wifi" title="WLAN" style="color: var(--text-tertiary);"></i>');
+  if (reservation.includes_minibar) services.push('<i class="fas fa-cocktail" title="Minibar" style="color: var(--text-tertiary);"></i>');
+  if (reservation.includes_spa) services.push('<i class="fas fa-spa" title="Spa" style="color: var(--text-tertiary);"></i>');
+  
+  return services.length > 0 
+    ? `<div style="display: flex; gap: 0.25rem; margin-top: 0.25rem; font-size: 0.75rem;">${services.join('')}</div>` 
+    : '';
+}
+
+console.log('✓ Hasco V2.1 Funktionen geladen');
