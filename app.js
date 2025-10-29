@@ -758,7 +758,7 @@ const DEMO_CATEGORIES = [
     id: 1, 
     code: 'STD', 
     name: 'Standard', 
-    size: '18mÃƒÆ’Ã¢€Å¡Ãƒâ€šÃ‚Â²', 
+    size: '18mÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â²', 
     beds: '1 Doppelbett', 
     persons: 2, 
     price: 89,
@@ -768,7 +768,7 @@ const DEMO_CATEGORIES = [
     id: 2, 
     code: 'SUP', 
     name: 'Superior', 
-    size: '24mÃƒÆ’Ã¢€Å¡Ãƒâ€šÃ‚Â²', 
+    size: '24mÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â²', 
     beds: '1 King-Size Bett', 
     persons: 2, 
     price: 119,
@@ -778,7 +778,7 @@ const DEMO_CATEGORIES = [
     id: 3, 
     code: 'DLX', 
     name: 'Deluxe', 
-    size: '32mÃƒÆ’Ã¢€Å¡Ãƒâ€šÃ‚Â²', 
+    size: '32mÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â²', 
     beds: '1 King-Size Bett + Schlafsofa', 
     persons: 3, 
     price: 159,
@@ -788,7 +788,7 @@ const DEMO_CATEGORIES = [
     id: 4,
     code: 'JUN',
     name: 'Junior Suite',
-    size: '42mÃƒÆ’Ã¢€Å¡Ãƒâ€šÃ‚Â²',
+    size: '42mÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â²',
     beds: '1 King-Size Bett',
     persons: 2,
     price: 199,
@@ -1857,7 +1857,7 @@ class ReservationApp {
 
   async cancelReservation(id) {
     try {
-      if (!confirm('Möchten Sie diese Reservierung wirklich stornieren?')) {
+      if (!confirm('MÃ¶chten Sie diese Reservierung wirklich stornieren?')) {
         return;
       }
       
@@ -2368,7 +2368,7 @@ Ihr Reservierungsteam`;
     container.innerHTML = '';
     
     if (!reservation.arrival || !reservation.departure) {
-      container.innerHTML = '<p class="text-center text-muted">Keine Daten verfügbar</p>';
+      container.innerHTML = '<p class="text-center text-muted">Keine Daten verfÃ¼gbar</p>';
       return;
     }
     
@@ -2378,7 +2378,7 @@ Ihr Reservierungsteam`;
     const pricePerNight = reservation.rate_price || 0;
     
     if (nights <= 0) {
-      container.innerHTML = '<p class="text-center text-muted">Ungültige Daten</p>';
+      container.innerHTML = '<p class="text-center text-muted">UngÃ¼ltige Daten</p>';
       return;
     }
     
@@ -2434,12 +2434,37 @@ Ihr Reservierungsteam`;
   }
   
   updatePricingSummaryCompact(reservation) {
-    const catEl = document.getElementById('priceCat');
-    const rateEl = document.getElementById('priceRate');
+    const catSelect = document.getElementById('priceCatSelect');
+    const rateSelect = document.getElementById('priceRateSelect');
     const totalEl = document.getElementById('priceTotal');
     
-    if (catEl) catEl.textContent = reservation.category || '-';
-    if (rateEl) rateEl.textContent = reservation.rate_code || '-';
+    // Fülle Kategorie-Dropdown
+    if (catSelect) {
+      const categories = state.get('categories') || [];
+      catSelect.innerHTML = '<option value="">Kategorie wählen...</option>';
+      categories.forEach(cat => {
+        const option = document.createElement('option');
+        option.value = cat.code;
+        option.textContent = `${cat.code} - ${cat.name}`;
+        option.selected = cat.code === reservation.category;
+        catSelect.appendChild(option);
+      });
+    }
+    
+    // Fülle Rate-Dropdown
+    if (rateSelect) {
+      const rates = state.get('rates') || [];
+      rateSelect.innerHTML = '<option value="">Rate wählen...</option>';
+      rates.forEach(rate => {
+        const option = document.createElement('option');
+        option.value = rate.code;
+        option.textContent = `${rate.code} - ${rate.name}`;
+        option.selected = rate.code === reservation.rate_code;
+        rateSelect.appendChild(option);
+      });
+    }
+    
+    // Update Total
     if (totalEl) {
       const total = reservation.total_price || 0;
       totalEl.textContent = `${parseFloat(total).toFixed(2)} €`;
@@ -2462,6 +2487,40 @@ Ihr Reservierungsteam`;
         });
       }
     });
+    
+    // Add listeners for category and rate changes
+    const catSelect = document.getElementById('priceCatSelect');
+    const rateSelect = document.getElementById('priceRateSelect');
+    
+    if (catSelect) {
+      catSelect.addEventListener('change', (e) => {
+        const newCategory = e.target.value;
+        if (newCategory) {
+          reservation.category = newCategory;
+          // Update the main form field
+          const mainCatField = form.querySelector('[name="category"]');
+          if (mainCatField) mainCatField.value = newCategory;
+          
+          // Recalculate prices based on new category
+          this.recalculatePriceOnCategoryChange(reservation, newCategory);
+        }
+      });
+    }
+    
+    if (rateSelect) {
+      rateSelect.addEventListener('change', (e) => {
+        const newRate = e.target.value;
+        if (newRate) {
+          reservation.rate_code = newRate;
+          // Update the main form field
+          const mainRateField = form.querySelector('[name="rate_code"]');
+          if (mainRateField) mainRateField.value = newRate;
+          
+          // Recalculate prices based on new rate
+          this.recalculatePriceOnRateChange(reservation, newRate);
+        }
+      });
+    }
   }
   
   calculatePricingBreakdown(reservation) {
@@ -2496,12 +2555,12 @@ Ihr Reservierungsteam`;
     const total = subtotal + tax;
     
     // Update breakdown display
-    document.getElementById('breakdownAccommodation').textContent = `${accommodation.toFixed(2)} €`;
-    document.getElementById('breakdownExtras').textContent = `${extras.toFixed(2)} €`;
-    document.getElementById('breakdownDiscount').textContent = discount > 0 ? `-${discount.toFixed(2)} €` : `0,00 €`;
-    document.getElementById('breakdownSubtotal').textContent = `${subtotal.toFixed(2)} €`;
-    document.getElementById('breakdownTax').textContent = `${tax.toFixed(2)} €`;
-    document.getElementById('breakdownTotal').textContent = `${total.toFixed(2)} €`;
+    document.getElementById('breakdownAccommodation').textContent = `${accommodation.toFixed(2)} â‚¬`;
+    document.getElementById('breakdownExtras').textContent = `${extras.toFixed(2)} â‚¬`;
+    document.getElementById('breakdownDiscount').textContent = discount > 0 ? `-${discount.toFixed(2)} â‚¬` : `0,00 â‚¬`;
+    document.getElementById('breakdownSubtotal').textContent = `${subtotal.toFixed(2)} â‚¬`;
+    document.getElementById('breakdownTax').textContent = `${tax.toFixed(2)} â‚¬`;
+    document.getElementById('breakdownTotal').textContent = `${total.toFixed(2)} â‚¬`;
     
     // Also update the main total field
     const totalInput = document.querySelector('[name="total_price"]');
@@ -2511,6 +2570,91 @@ Ihr Reservierungsteam`;
     
     // Update summary header
     document.getElementById('priceTotal').textContent = `${total.toFixed(2)} €`;
+  }
+  
+  recalculatePriceOnCategoryChange(reservation, newCategory) {
+    // Get the new category details
+    const categories = state.get('categories') || [];
+    const category = categories.find(c => c.code === newCategory);
+    
+    if (!category) return;
+    
+    // Get the current rate
+    const rates = state.get('rates') || [];
+    const rate = rates.find(r => r.code === reservation.rate_code);
+    
+    if (!rate) return;
+    
+    // Calculate new base price
+    const basePrice = parseFloat(category.base_price) || 0;
+    const rateMultiplier = parseFloat(rate.price_multiplier) || 1.0;
+    const nightCount = this.calculateNights(reservation.arrival, reservation.departure);
+    
+    const newTotalPrice = basePrice * rateMultiplier * nightCount;
+    
+    // Update the reservation
+    reservation.total_price = newTotalPrice;
+    
+    // Update night price inputs if they exist
+    const nightInputs = document.querySelectorAll('.night-price-input');
+    if (nightInputs.length > 0) {
+      const pricePerNight = newTotalPrice / nightCount;
+      nightInputs.forEach(input => {
+        input.value = pricePerNight.toFixed(2);
+      });
+    }
+    
+    // Recalculate breakdown
+    this.calculatePricingBreakdown(reservation);
+    
+    console.log(`Category changed to ${newCategory}, new price: ${newTotalPrice.toFixed(2)} €`);
+  }
+  
+  recalculatePriceOnRateChange(reservation, newRate) {
+    // Get the new rate details
+    const rates = state.get('rates') || [];
+    const rate = rates.find(r => r.code === newRate);
+    
+    if (!rate) return;
+    
+    // Get the current category
+    const categories = state.get('categories') || [];
+    const category = categories.find(c => c.code === reservation.category);
+    
+    if (!category) return;
+    
+    // Calculate new base price
+    const basePrice = parseFloat(category.base_price) || 0;
+    const rateMultiplier = parseFloat(rate.price_multiplier) || 1.0;
+    const nightCount = this.calculateNights(reservation.arrival, reservation.departure);
+    
+    const newTotalPrice = basePrice * rateMultiplier * nightCount;
+    
+    // Update the reservation
+    reservation.total_price = newTotalPrice;
+    
+    // Update night price inputs if they exist
+    const nightInputs = document.querySelectorAll('.night-price-input');
+    if (nightInputs.length > 0) {
+      const pricePerNight = newTotalPrice / nightCount;
+      nightInputs.forEach(input => {
+        input.value = pricePerNight.toFixed(2);
+      });
+    }
+    
+    // Recalculate breakdown
+    this.calculatePricingBreakdown(reservation);
+    
+    console.log(`Rate changed to ${newRate}, new price: ${newTotalPrice.toFixed(2)} €`);
+  }
+  
+  calculateNights(arrival, departure) {
+    if (!arrival || !departure) return 0;
+    const arrivalDate = new Date(arrival);
+    const departureDate = new Date(departure);
+    const diffTime = Math.abs(departureDate - arrivalDate);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
   }
   
   loadReservationTracesModern(reservation) {
@@ -2562,7 +2706,7 @@ Ihr Reservierungsteam`;
               <i class="fas fa-edit"></i> Bearbeiten
             </button>
             <button class="trace-btn" data-action="delete-trace" data-trace-id="${trace.id}">
-              <i class="fas fa-trash"></i> Löschen
+              <i class="fas fa-trash"></i> LÃ¶schen
             </button>
             ${trace.type === 'reminder' ? `
               <button class="trace-btn" data-action="complete-trace" data-trace-id="${trace.id}">
@@ -2602,7 +2746,7 @@ Ihr Reservierungsteam`;
   
   openAddTraceModal() {
     if (!this.currentEditReservation) {
-      this.ui.showToast('Keine Reservierung ausgewählt', 'error');
+      this.ui.showToast('Keine Reservierung ausgewÃ¤hlt', 'error');
       return;
     }
     
@@ -2662,10 +2806,10 @@ Ihr Reservierungsteam`;
       this.ui.closeModal('modalAddTrace');
       form.reset();
       
-      this.ui.showToast('Trace erfolgreich hinzugefügt', 'success');
+      this.ui.showToast('Trace erfolgreich hinzugefÃ¼gt', 'success');
     } catch (error) {
       console.error('Failed to add trace:', error);
-      this.ui.showToast('Fehler beim Hinzufügen des Trace', 'error');
+      this.ui.showToast('Fehler beim HinzufÃ¼gen des Trace', 'error');
     }
   }
 
@@ -2857,7 +3001,7 @@ Ihr Reservierungsteam`;
         </div>
         <div class="activity-content">
           <div class="activity-title">Neue Reservierung: ${r.guest_last_name}</div>
-          <div class="activity-meta">${r.reservation_number} ÃƒÆ’Ã¢€Å¡Ãƒâ€š· ${this.formatDate(r.created_at)}</div>
+          <div class="activity-meta">${r.reservation_number} ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· ${this.formatDate(r.created_at)}</div>
         </div>
       </div>
     `).join('');
@@ -2919,7 +3063,7 @@ Ihr Reservierungsteam`;
       <div class="yoy-item">
         <div class="yoy-item-info">
           <div class="yoy-item-name">${perf.hotel.name}</div>
-          <div class="yoy-item-meta">${perf.todayBookings} heute ÃƒÆ’Ã¢€Å¡Ãƒâ€š· ${perf.lastYearBookings} letztes Jahr</div>
+          <div class="yoy-item-meta">${perf.todayBookings} heute ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· ${perf.lastYearBookings} letztes Jahr</div>
         </div>
         <div class="yoy-item-trend ${perf.trend}">
           <i class="fas ${perf.icon}"></i>
@@ -2976,11 +3120,11 @@ Ihr Reservierungsteam`;
 
   async logout() {
     if (confirm('MÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¶chten Sie sich wirklich abmelden?')) {
-      console.log('ÃƒÂ°Ã…Â¸Ã¢€ÂÃ¢€Å“ App logout initiated...');
+      console.log('ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ¢â‚¬Å“ App logout initiated...');
       
       // Use the proper auth logout function if available
       if (window.HRS_AUTH && typeof window.HRS_AUTH.logout === 'function') {
-        console.log('ÃƒÂ¢Ã…â€œÃ¢€Â¦ Using HRS_AUTH.logout()');
+        console.log('ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Using HRS_AUTH.logout()');
         await window.HRS_AUTH.logout();
       } else {
         // Fallback: Manual logout
@@ -3195,33 +3339,3 @@ document.addEventListener('DOMContentLoaded', () => {
     console.error('Failed to initialize app:', error);
   });
 });
-
-// =============== V2.1 NEUE FUNKTIONEN ===============
-
-// Wochentage bei Datumsanzeige
-function formatDateWithDay(dateString) {
-  if (!dateString) return '';
-  const date = new Date(dateString);
-  const dayNames = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
-  const dayName = dayNames[date.getDay()];
-  const day = String(date.getDate()).padStart(2, '0');
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const year = date.getFullYear();
-  return `<span style="font-weight: 600; color: var(--primary-400); font-size: 0.75rem; text-transform: uppercase;">${dayName}</span> ${day}.${month}.${year}`;
-}
-
-// Service-Icons für Reservierungen
-function getServiceIcons(reservation) {
-  const services = [];
-  if (reservation.includes_breakfast) services.push('<i class="fas fa-coffee" title="Frühstück" style="color: var(--text-tertiary);"></i>');
-  if (reservation.includes_parking) services.push('<i class="fas fa-parking" title="Parkplatz" style="color: var(--text-tertiary);"></i>');
-  if (reservation.includes_wifi) services.push('<i class="fas fa-wifi" title="WLAN" style="color: var(--text-tertiary);"></i>');
-  if (reservation.includes_minibar) services.push('<i class="fas fa-cocktail" title="Minibar" style="color: var(--text-tertiary);"></i>');
-  if (reservation.includes_spa) services.push('<i class="fas fa-spa" title="Spa" style="color: var(--text-tertiary);"></i>');
-  
-  return services.length > 0 
-    ? `<div style="display: flex; gap: 0.25rem; margin-top: 0.25rem; font-size: 0.75rem;">${services.join('')}</div>` 
-    : '';
-}
-
-console.log('✓ Hasco V2.1 Funktionen geladen');
