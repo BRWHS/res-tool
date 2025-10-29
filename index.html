@@ -105,7 +105,7 @@
 
         <div class="clock mono">
           <span id="dateLocal">--.--.----</span>
-          <span class="sep">Ãƒâ€š·</span>
+          <span class="sep">Ãƒâ€šÃ‚Â·</span>
           <span id="clockLocal">--:--:--</span>
         </div>
       </div>
@@ -156,11 +156,11 @@
                 <div class="label">Buchungen</div>
               </div>
               <div class="kpi">
-                <div class="value" id="tRevenue">0,00 ÃƒÂ¢Ã¢€Å¡Ã‚Â¬</div>
+                <div class="value" id="tRevenue">0,00 ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬</div>
                 <div class="label">Umsatz</div>
               </div>
               <div class="kpi">
-                <div class="value" id="tADR">0,00 ÃƒÂ¢Ã¢€Å¡Ã‚Â¬</div>
+                <div class="value" id="tADR">0,00 ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬</div>
                 <div class="label">ADR</div>
               </div>
               <div class="kpi">
@@ -187,11 +187,11 @@
                 <div class="label">AnkÃƒÆ’Ã‚Â¼nfte</div>
               </div>
               <div class="kpi">
-                <div class="value" id="nRevenue">0,00 ÃƒÂ¢Ã¢€Å¡Ã‚Â¬</div>
+                <div class="value" id="nRevenue">0,00 ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬</div>
                 <div class="label">Umsatz</div>
               </div>
               <div class="kpi">
-                <div class="value" id="nADR">0,00 ÃƒÂ¢Ã¢€Å¡Ã‚Â¬</div>
+                <div class="value" id="nADR">0,00 ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬</div>
                 <div class="label">ADR</div>
               </div>
               <div class="kpi">
@@ -560,9 +560,6 @@
               <button type="button" class="tab-btn" data-tab="pricing">
                 <i class="fas fa-calculator"></i>Preise
               </button>
-              <button type="button" class="tab-btn" data-tab="services">
-                <i class="fas fa-list-check"></i>Fixleistungen
-              </button>
               <button type="button" class="tab-btn" data-tab="traces">
                 <i class="fas fa-bell"></i>Traces
               </button>
@@ -579,7 +576,7 @@
                     <div class="form-field">
                       <label>Hotel</label>
                       <select class="input-compact disabled-field" name="hotel_code" disabled>
-                        <option value="">Wählen...</option>
+                        <option value="">WÃ¤hlen...</option>
                       </select>
                     </div>
                     <div class="form-field">
@@ -597,18 +594,16 @@
                   <div class="form-row-compact">
                     <div class="form-field">
                       <label>Anreise</label>
-                      <input type="date" class="input-compact disabled-field" name="arrival_display" readonly>
-                      <small style="font-size: 0.75rem; color: var(--text-tertiary); margin-top: 0.25rem; display: block;">Änderbar unter "Preise"</small>
+                      <input type="date" class="input-compact" name="arrival" required>
                     </div>
                     <div class="form-field">
                       <label>Abreise</label>
-                      <input type="date" class="input-compact disabled-field" name="departure_display" readonly>
-                      <small style="font-size: 0.75rem; color: var(--text-tertiary); margin-top: 0.25rem; display: block;">Änderbar unter "Preise"</small>
+                      <input type="date" class="input-compact" name="departure" required>
                     </div>
                     <div class="form-field nights-badge-field">
                       <div class="nights-badge" id="nightsBadge">
                         <i class="fas fa-moon"></i>
-                        <span id="nightsCountCompact">0</span> Nächte
+                        <span id="nightsCountCompact">0</span> NÃ¤chte
                       </div>
                     </div>
                   </div>
@@ -644,11 +639,19 @@
                     <label>Gesamtpreis</label>
                     <div class="price-input-wrapper">
                       <input type="number" class="input-compact price-field" name="total_price" step="0.01" min="0" readonly>
-                      <span class="currency">€</span>
+                      <span class="currency">â‚¬</span>
                     </div>
                   </div>
                   
-                  <!-- Zahlungsstatus entfernt wie gewünscht -->
+                  <div class="form-field">
+                    <label>Zahlungsstatus</label>
+                    <select class="input-compact" name="payment_status">
+                      <option value="pending">Ausstehend</option>
+                      <option value="partial">Teilweise</option>
+                      <option value="paid">Bezahlt</option>
+                      <option value="refunded">Erstattet</option>
+                    </select>
+                  </div>
                 </div>
               </div>
               
@@ -664,7 +667,7 @@
               <div class="guest-grid">
                 <!-- Personal Information -->
                 <div class="guest-section">
-                  <div class="section-title"><i class="fas fa-user"></i> Persönliche Daten</div>
+                  <div class="section-title"><i class="fas fa-user"></i> PersÃ¶nliche Daten</div>
                   
                   <div class="form-row-compact">
                     <div class="form-field">
@@ -692,7 +695,7 @@
                       <input type="date" class="input-compact" name="guest_birthdate">
                     </div>
                     <div class="form-field">
-                      <label>Nationalität</label>
+                      <label>NationalitÃ¤t</label>
                       <input type="text" class="input-compact" name="guest_nationality" placeholder="Deutschland">
                     </div>
                     <div class="form-field">
@@ -746,7 +749,7 @@
                   
                   <div class="form-field">
                     <label>Private Adresse</label>
-                    <textarea class="input-compact textarea-compact" name="guest_address" rows="2" placeholder="Straße, PLZ Stadt, Land"></textarea>
+                    <textarea class="input-compact textarea-compact" name="guest_address" rows="2" placeholder="StraÃŸe, PLZ Stadt, Land"></textarea>
                   </div>
                 </div>
                 
@@ -761,7 +764,7 @@
                   
                   <div class="form-field">
                     <label>Firmenadresse</label>
-                    <textarea class="input-compact textarea-compact" name="guest_company_address" rows="2" placeholder="Firmenstraße, PLZ Stadt"></textarea>
+                    <textarea class="input-compact textarea-compact" name="guest_company_address" rows="2" placeholder="FirmenstraÃŸe, PLZ Stadt"></textarea>
                   </div>
                   
                   <div class="form-row-compact">
@@ -778,11 +781,11 @@
                 
                 <!-- Special Requests -->
                 <div class="guest-section full-width-section">
-                  <div class="section-title"><i class="fas fa-star"></i> Besondere Wünsche & Präferenzen</div>
+                  <div class="section-title"><i class="fas fa-star"></i> Besondere WÃ¼nsche & PrÃ¤ferenzen</div>
                   
                   <div class="form-row-compact">
                     <div class="form-field">
-                      <label>Zimmer-Präferenz</label>
+                      <label>Zimmer-PrÃ¤ferenz</label>
                       <select class="input-compact" name="guest_room_preference">
                         <option value="">Keine</option>
                         <option value="high-floor">Hohe Etage</option>
@@ -792,7 +795,7 @@
                       </select>
                     </div>
                     <div class="form-field">
-                      <label>Bett-Präferenz</label>
+                      <label>Bett-PrÃ¤ferenz</label>
                       <select class="input-compact" name="guest_bed_preference">
                         <option value="">Keine</option>
                         <option value="double">Doppelbett</option>
@@ -802,13 +805,13 @@
                     </div>
                     <div class="form-field">
                       <label>Allergien</label>
-                      <input type="text" class="input-compact" name="guest_allergies" placeholder="z.B. Nüsse, Laktose">
+                      <input type="text" class="input-compact" name="guest_allergies" placeholder="z.B. NÃ¼sse, Laktose">
                     </div>
                   </div>
                   
                   <div class="form-field">
                     <label>Gastnotizen / Special Requests</label>
-                    <textarea class="input-compact textarea-compact" name="guest_notes" rows="3" placeholder="Besondere Wünsche des Gastes..."></textarea>
+                    <textarea class="input-compact textarea-compact" name="guest_notes" rows="3" placeholder="Besondere WÃ¼nsche des Gastes..."></textarea>
                   </div>
                 </div>
               </div>
@@ -816,54 +819,19 @@
             
             <!-- Pricing Tab -->
             <div class="tab-panel" data-tab-panel="pricing">
-              
-              <!-- Tarif & Daten Anpassung -->
-              <div style="background: var(--bg-surface); border: 1px solid var(--border-primary); border-radius: var(--radius-lg); padding: var(--space-4); margin-bottom: var(--space-5);">
-                <div class="section-title">Tarif & Daten anpassen</div>
-                <div class="form-row-compact">
-                  <div class="form-field">
-                    <label>Kategorie</label>
-                    <select class="input-compact" id="editCategory" name="category_select">
-                      <option value="">Wählen...</option>
-                      <!-- Wird dynamisch gefüllt -->
-                    </select>
-                  </div>
-                  <div class="form-field">
-                    <label>Rate</label>
-                    <select class="input-compact" id="editRate" name="rate_select">
-                      <option value="">Wählen...</option>
-                      <!-- Wird dynamisch gefüllt -->
-                    </select>
-                  </div>
-                </div>
-                
-                <div class="form-row-compact" style="margin-top: var(--space-3);">
-                  <div class="form-field">
-                    <label>Anreise</label>
-                    <input type="date" class="input-compact" name="arrival_edit" required>
-                  </div>
-                  <div class="form-field">
-                    <label>Abreise</label>
-                    <input type="date" class="input-compact" name="departure_edit" required>
-                  </div>
-                  <div class="form-field nights-badge-field">
-                    <div class="nights-badge" id="nightsBadgePricing">
-                      <i class="fas fa-moon"></i>
-                      <span id="nightsCountPricing">0</span> Nächte
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
               <div class="pricing-overview">
                 <div class="pricing-summary-row">
-                  <div class="summary-box">
+                  <div class="summary-box editable-box">
                     <span class="summary-label">Kategorie</span>
-                    <span class="summary-val" id="priceCat">-</span>
+                    <select class="input-compact" id="priceCatSelect" name="category_edit">
+                      <option value="">Laden...</option>
+                    </select>
                   </div>
-                  <div class="summary-box">
+                  <div class="summary-box editable-box">
                     <span class="summary-label">Rate</span>
-                    <span class="summary-val" id="priceRate">-</span>
+                    <select class="input-compact" id="priceRateSelect" name="rate_code_edit">
+                      <option value="">Laden...</option>
+                    </select>
                   </div>
                   <div class="summary-box highlight-box">
                     <span class="summary-label">Gesamt</span>
@@ -882,10 +850,10 @@
                 
                 <div class="extras-grid">
                   <div class="form-field">
-                    <label>Frühstück</label>
+                    <label>FrÃ¼hstÃ¼ck</label>
                     <div class="input-with-toggle">
                       <input type="number" class="input-compact" name="extra_breakfast_price" step="0.01" min="0" placeholder="0.00">
-                      <span class="currency">€</span>
+                      <span class="currency">â‚¬</span>
                     </div>
                   </div>
                   
@@ -893,7 +861,7 @@
                     <label>Parkplatz</label>
                     <div class="input-with-toggle">
                       <input type="number" class="input-compact" name="extra_parking_price" step="0.01" min="0" placeholder="0.00">
-                      <span class="currency">€</span>
+                      <span class="currency">â‚¬</span>
                     </div>
                   </div>
                   
@@ -901,7 +869,7 @@
                     <label>Minibar</label>
                     <div class="input-with-toggle">
                       <input type="number" class="input-compact" name="extra_minibar_price" step="0.01" min="0" placeholder="0.00">
-                      <span class="currency">€</span>
+                      <span class="currency">â‚¬</span>
                     </div>
                   </div>
                   
@@ -909,7 +877,7 @@
                     <label>Rabatt</label>
                     <div class="input-with-toggle">
                       <input type="number" class="input-compact" name="discount_amount" step="0.01" min="0" placeholder="0.00">
-                      <span class="currency">€</span>
+                      <span class="currency">â‚¬</span>
                     </div>
                   </div>
                 </div>
@@ -923,112 +891,28 @@
               <div class="pricing-breakdown">
                 <div class="breakdown-row">
                   <span>Unterkunft</span>
-                  <span id="breakdownAccommodation">0,00 €</span>
+                  <span id="breakdownAccommodation">0,00 â‚¬</span>
                 </div>
                 <div class="breakdown-row">
                   <span>Extras</span>
-                  <span id="breakdownExtras">0,00 €</span>
+                  <span id="breakdownExtras">0,00 â‚¬</span>
                 </div>
                 <div class="breakdown-row">
                   <span>Rabatt</span>
-                  <span id="breakdownDiscount">-0,00 €</span>
+                  <span id="breakdownDiscount">-0,00 â‚¬</span>
                 </div>
                 <div class="breakdown-row subtotal">
                   <span>Netto</span>
-                  <span id="breakdownSubtotal">0,00 €</span>
+                  <span id="breakdownSubtotal">0,00 â‚¬</span>
                 </div>
                 <div class="breakdown-row">
                   <span>MwSt. (7%)</span>
-                  <span id="breakdownTax">0,00 €</span>
+                  <span id="breakdownTax">0,00 â‚¬</span>
                 </div>
                 <div class="breakdown-row total">
                   <span>GESAMT</span>
-                  <span id="breakdownTotal">0,00 €</span>
+                  <span id="breakdownTotal">0,00 â‚¬</span>
                 </div>
-              </div>
-            </div>
-            
-            
-            <!-- Fixleistungen Tab -->
-            <div class="tab-panel" data-tab-panel="services">
-              <div class="section-title">Inkludierte Leistungen</div>
-              
-              <div class="extras-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-3); margin-bottom: var(--space-6);">
-                <div class="form-field">
-                  <label>Frühstück</label>
-                  <div style="display: flex; align-items: center; gap: var(--space-2);">
-                    <input type="checkbox" id="editBreakfast" name="includes_breakfast" style="width: 20px; height: 20px; cursor: pointer; accent-color: var(--primary-500);">
-                    <span style="font-size: 0.875rem; color: var(--text-secondary); cursor: pointer; user-select: none;">Inkludiert</span>
-                  </div>
-                </div>
-                
-                <div class="form-field">
-                  <label>Parkplatz</label>
-                  <div style="display: flex; align-items: center; gap: var(--space-2);">
-                    <input type="checkbox" id="editParking" name="includes_parking" style="width: 20px; height: 20px; cursor: pointer; accent-color: var(--primary-500);">
-                    <span style="font-size: 0.875rem; color: var(--text-secondary); cursor: pointer; user-select: none;">Inkludiert</span>
-                  </div>
-                </div>
-                
-                <div class="form-field">
-                  <label>WLAN</label>
-                  <div style="display: flex; align-items: center; gap: var(--space-2);">
-                    <input type="checkbox" id="editWifi" name="includes_wifi" style="width: 20px; height: 20px; cursor: pointer; accent-color: var(--primary-500);">
-                    <span style="font-size: 0.875rem; color: var(--text-secondary); cursor: pointer; user-select: none;">Inkludiert</span>
-                  </div>
-                </div>
-                
-                <div class="form-field">
-                  <label>Minibar</label>
-                  <div style="display: flex; align-items: center; gap: var(--space-2);">
-                    <input type="checkbox" id="editMinibar" name="includes_minibar" style="width: 20px; height: 20px; cursor: pointer; accent-color: var(--primary-500);">
-                    <span style="font-size: 0.875rem; color: var(--text-secondary); cursor: pointer; user-select: none;">Inkludiert</span>
-                  </div>
-                </div>
-                
-                <div class="form-field">
-                  <label>City Tax</label>
-                  <div style="display: flex; align-items: center; gap: var(--space-2);">
-                    <input type="checkbox" id="editCityTax" name="includes_city_tax" style="width: 20px; height: 20px; cursor: pointer; accent-color: var(--primary-500);">
-                    <span style="font-size: 0.875rem; color: var(--text-secondary); cursor: pointer; user-select: none;">Inkludiert</span>
-                  </div>
-                </div>
-                
-                <div class="form-field">
-                  <label>Spa-Zugang</label>
-                  <div style="display: flex; align-items: center; gap: var(--space-2);">
-                    <input type="checkbox" id="editSpa" name="includes_spa" style="width: 20px; height: 20px; cursor: pointer; accent-color: var(--primary-500);">
-                    <span style="font-size: 0.875rem; color: var(--text-secondary); cursor: pointer; user-select: none;">Inkludiert</span>
-                  </div>
-                </div>
-              </div>
-              
-              <div class="section-title">Rabatte & Aufschläge</div>
-              
-              <div class="form-row-compact">
-                <div class="form-field">
-                  <label>Rabatt-Typ</label>
-                  <select class="input-compact" id="editDiscountType" name="discount_type">
-                    <option value="none">Kein Rabatt</option>
-                    <option value="percentage">Prozentual</option>
-                    <option value="fixed">Festbetrag</option>
-                    <option value="early_bird">Early Bird</option>
-                    <option value="last_minute">Last Minute</option>
-                  </select>
-                </div>
-                <div class="form-field">
-                  <label>Rabatt-Wert</label>
-                  <input type="number" class="input-compact" id="editDiscountValue" name="discount_value" step="0.01" min="0" value="0" placeholder="0.00">
-                </div>
-                <div class="form-field">
-                  <label>Aufschlag (%)</label>
-                  <input type="number" class="input-compact" id="editSurcharge" name="surcharge" step="0.01" min="0" value="0" placeholder="0.00">
-                </div>
-              </div>
-              
-              <div class="form-field" style="margin-top: var(--space-4);">
-                <label>Zusätzliche Gebühren / Notizen</label>
-                <textarea class="input-compact textarea-compact" name="additional_fees" rows="3" placeholder="z.B. Haustiergebühr: 15€ pro Nacht, Extra Reinigung..."></textarea>
               </div>
             </div>
             
@@ -1047,7 +931,7 @@
               <div class="empty-state" id="tracesEmpty">
                 <i class="fas fa-bell-slash"></i>
                 <p>Keine Traces vorhanden</p>
-                <p class="text-small">Traces sind Erinnerungen, Alerts oder Notizen für diese Reservierung</p>
+                <p class="text-small">Traces sind Erinnerungen, Alerts oder Notizen fÃ¼r diese Reservierung</p>
               </div>
             </div>
           </div>
@@ -1105,7 +989,7 @@
         
         <div class="modal-footer">
           <button type="button" class="btn secondary" data-close-modal>Abbrechen</button>
-          <button type="submit" class="btn primary"><i class="fas fa-check"></i> Hinzufügen</button>
+          <button type="submit" class="btn primary"><i class="fas fa-check"></i> HinzufÃ¼gen</button>
         </div>
       </form>
     </div>
