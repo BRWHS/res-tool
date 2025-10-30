@@ -2247,21 +2247,6 @@ Ihr Reservierungsteam`;
     // Update header
     const resId = document.getElementById('editReservationId');
     const resStatus = document.getElementById('editReservationStatus');
-     loadCategoriesForEditSelect() {
-  const categories = state.get('categories') || [];
-  
-  // Load categories into pricing tab select
-  const catSelect = document.querySelector('#modalEditReservation [name="category"]');
-  if (catSelect) {
-    catSelect.innerHTML = '<option value="">Wählen...</option>';
-    categories.forEach(cat => {
-      const option = document.createElement('option');
-      option.value = cat.code;
-      option.textContent = `${cat.code} - ${cat.name}`;
-      catSelect.appendChild(option);
-    });
-  }
-}
     if (resId) resId.textContent = `#${reservation.reservation_number || reservation.id}`;
     if (resStatus) {
       const statusMap = {
@@ -2388,6 +2373,22 @@ if (categorySelect) {
     const nightsDisplay = document.getElementById('nightsCountCompact');
     if (nightsDisplay) {
       nightsDisplay.textContent = nights > 0 ? nights : 0;
+    }
+  }
+  
+  loadCategoriesForEditSelect() {
+    const categories = state.get('categories') || [];
+    
+    // Load categories into pricing tab select
+    const catSelect = document.querySelector('#modalEditReservation [name="category"]');
+    if (catSelect) {
+      catSelect.innerHTML = '<option value="">Wählen...</option>';
+      categories.forEach(cat => {
+        const option = document.createElement('option');
+        option.value = cat.code;
+        option.textContent = `${cat.code} - ${cat.name}`;
+        catSelect.appendChild(option);
+      });
     }
   }
   
