@@ -2369,9 +2369,6 @@ Ihr Reservierungsteam`;
     // Generate night price cards with editable prices
     this.generateEditableNightPrices(reservation);
     
-    // Update pricing summary
-    this.updatePricingSummaryCompact(reservation);
-    
     // Calculate and display breakdown
     this.calculatePricingBreakdown(reservation);
     
@@ -2600,7 +2597,8 @@ Ihr Reservierungsteam`;
       'extra_breakfast_price',
       'extra_parking_price',
       'extra_minibar_price',
-      'discount_amount'
+      'discount_amount',
+      'discount_type'
     ];
     
     extrasInputs.forEach(fieldName => {
@@ -2612,39 +2610,8 @@ Ihr Reservierungsteam`;
       }
     });
     
-    // Add listeners for category and rate changes
-    const catSelect = document.getElementById('priceCatSelect');
-    const rateSelect = document.getElementById('priceRateSelect');
-    
-    if (catSelect) {
-      catSelect.addEventListener('change', (e) => {
-        const newCategory = e.target.value;
-        if (newCategory) {
-          reservation.category = newCategory;
-          // Update the main form field
-          const mainCatField = form.querySelector('[name="category"]');
-          if (mainCatField) mainCatField.value = newCategory;
-          
-          // Recalculate prices based on new category
-          this.recalculatePriceOnCategoryChange(reservation, newCategory);
-        }
-      });
-    }
-    
-    if (rateSelect) {
-      rateSelect.addEventListener('change', (e) => {
-        const newRate = e.target.value;
-        if (newRate) {
-          reservation.rate_code = newRate;
-          // Update the main form field
-          const mainRateField = form.querySelector('[name="rate_code"]');
-          if (mainRateField) mainRateField.value = newRate;
-          
-          // Recalculate prices based on new rate
-          this.recalculatePriceOnRateChange(reservation, newRate);
-        }
-      });
-    }
+    // Note: Category and rate change listeners are set up in openEditReservationModal
+    // for category_display and rate_code_display fields
   }
   
   calculatePricingBreakdown(reservation) {
