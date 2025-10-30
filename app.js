@@ -2235,6 +2235,7 @@ Ihr Reservierungsteam`;
     
     // Load hotels for select
     this.loadHotelsForEditSelect();
+   this.loadCategoriesForEditSelect();
     
     // Fill form with reservation data
     const form = document.getElementById('formEditReservation');
@@ -2246,6 +2247,21 @@ Ihr Reservierungsteam`;
     // Update header
     const resId = document.getElementById('editReservationId');
     const resStatus = document.getElementById('editReservationStatus');
+     loadCategoriesForEditSelect() {
+  const categories = state.get('categories') || [];
+  
+  // Load categories into pricing tab select
+  const catSelect = document.querySelector('#modalEditReservation [name="category"]');
+  if (catSelect) {
+    catSelect.innerHTML = '<option value="">Wählen...</option>';
+    categories.forEach(cat => {
+      const option = document.createElement('option');
+      option.value = cat.code;
+      option.textContent = `${cat.code} - ${cat.name}`;
+      catSelect.appendChild(option);
+    });
+  }
+}
     if (resId) resId.textContent = `#${reservation.reservation_number || reservation.id}`;
     if (resStatus) {
       const statusMap = {
@@ -2271,6 +2287,20 @@ Ihr Reservierungsteam`;
         input.value = reservation[field];
       }
     });
+
+     // Ensure category select is populated with options
+const categorySelect = form.querySelector('[name="category"]');
+if (categorySelect) {
+  const categories = state.get('categories') || [];
+  categorySelect.innerHTML = '<option value="">Wählen...</option>';
+  categories.forEach(cat => {
+    const option = document.createElement('option');
+    option.value = cat.code;
+    option.textContent = `${cat.code} - ${cat.name}`;
+    option.selected = cat.code === reservation.category;
+    categorySelect.appendChild(option);
+  });
+}
     
     // Fill guest fields - extended
     const guestFields = [
@@ -2362,57 +2392,105 @@ Ihr Reservierungsteam`;
   }
   
   generateEditableNightPrices(reservation) {
-    const container = document.getElementById('nightPriceGrid');
-    if (!container) return;
-    
-    container.innerHTML = '';
-    
-    if (!reservation.arrival || !reservation.departure) {
-      container.innerHTML = '<p class="text-center text-muted">Keine Daten verfÃ¼gbar</p>';
-      return;
-    }
-    
-    const arrivalDate = new Date(reservation.arrival);
-    const departureDate = new Date(reservation.departure);
-    const nights = Math.ceil((departureDate - arrivalDate) / (1000 * 60 * 60 * 24));
-    const pricePerNight = reservation.rate_price || 0;
-    
-    if (nights <= 0) {
-      container.innerHTML = '<p class="text-center text-muted">UngÃ¼ltige Daten</p>';
-      return;
-    }
-    
-    // Generate editable card for each night
-    for (let i = 0; i < nights; i++) {
-      const currentDate = new Date(arrivalDate);
-      currentDate.setDate(currentDate.getDate() + i);
-      
-      const card = document.createElement('div');
-      card.className = 'night-price-card';
-      card.innerHTML = `
-        <div class="night-card-header-compact">
-          <span class="night-num"><i class="fas fa-moon"></i> Nacht ${i + 1}</span>
-          <span class="night-date-compact">${this.formatDate(currentDate.toISOString().split('T')[0])}</span>
-        </div>
-        <input 
-          type="number" 
-          class="night-price-input" 
-          data-night-index="${i}"
-          value="${pricePerNight.toFixed(2)}" 
-          step="0.01" 
-          min="0"
-          placeholder="0.00"
-        />
-      `;
-      
-      const input = card.querySelector('.night-price-input');
-      input.addEventListener('change', () => {
-        this.updateTotalFromNightPrices();
-      });
-      
-      container.appendChild(card);
-    }
+  const container = document.getElementById('nightPriceGrid');
+  if (!container) return;
+  
+  container.innerHTML = '';
+  
+  if (!reservation.arrival || !reservation.departure) {
+    container.innerHTML = '<p class="text-center text-muted">Keine Daten verfügbar</p>';
+    return;
   }
+  
+  const arrivalDate = new Date(reservation.arrival);
+  const departureDate = new Date(reservation.departure);
+  const nights = Math.ceil((departureDate - arrivalDate) / (1000 * 60 * 60 * 24));
+  const pricePerNight = reservation.rate_price || 0;
+  
+  if (nights <= 0) {
+    container.innerHTML = '<p class="text-center text-muted">Ungültige Daten</p>';
+    return;
+  }
+  
+  // Get available rates
+  const rates = state.get('rates') || [];
+  
+  // Generate editable card for each night with rate selector
+  for (let i = 0; i < nights; i++) {
+    const currentDate = new Date(arrivalDate);
+    currentDate.setDate(currentDate.getDate() + i);
+    
+    const dateStr = currentDate.toLocaleDateString('de-DE', {
+      weekday: 'short',
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+    
+    const card = document.createElement('div');
+    card.className = 'night-price-card';
+    card.innerHTML = `
+      <div class="night-header">
+        <i class="fas fa-moon"></i>
+        <span>Nacht ${i + 1}</span>
+        <span class="night-date">${dateStr}</span>
+      </div>
+      <div class="night-body">
+        <div class="form-field" style="margin-bottom: 0.5rem;">
+          <label style="font-size: 0.75rem; margin-bottom: 0.25rem;">Rate Code</label>
+          <select class="input-compact night-rate-select" data-night="${i}">
+            ${rates.map(rate => `
+              <option value="${rate.code}" ${rate.code === reservation.rate_code ? 'selected' : ''}>
+                ${rate.code} - ${rate.name}
+              </option>
+            `).join('')}
+          </select>
+        </div>
+        <div class="form-field">
+          <label style="font-size: 0.75rem; margin-bottom: 0.25rem;">Preis</label>
+          <div class="input-with-toggle">
+            <input 
+              type="number" 
+              class="input-compact night-price-input" 
+              value="${pricePerNight.toFixed(2)}" 
+              step="0.01" 
+              min="0" 
+              data-night="${i}"
+            >
+            <span class="currency">€</span>
+          </div>
+        </div>
+      </div>
+    `;
+    
+    container.appendChild(card);
+  }
+  
+  // Add event listeners for rate changes
+  container.querySelectorAll('.night-rate-select').forEach(select => {
+    select.addEventListener('change', (e) => {
+      const nightIndex = parseInt(e.target.dataset.night);
+      const newRateCode = e.target.value;
+      const rates = state.get('rates') || [];
+      const rate = rates.find(r => r.code === newRateCode);
+      
+      if (rate && rate.price) {
+        const priceInput = container.querySelector(`[data-night="${nightIndex}"].night-price-input`);
+        if (priceInput) {
+          priceInput.value = parseFloat(rate.price).toFixed(2);
+          this.updateTotalFromNightPrices();
+        }
+      }
+    });
+  });
+  
+  // Add event listeners for price inputs
+  container.querySelectorAll('.night-price-input').forEach(input => {
+    input.addEventListener('input', () => {
+      this.updateTotalFromNightPrices();
+    });
+  });
+}
   
   updateTotalFromNightPrices() {
     const inputs = document.querySelectorAll('.night-price-input');
@@ -2433,43 +2511,57 @@ Ihr Reservierungsteam`;
     this.calculatePricingBreakdown(this.currentEditReservation);
   }
   
-  updatePricingSummaryCompact(reservation) {
-    const catSelect = document.getElementById('priceCatSelect');
-    const rateSelect = document.getElementById('priceRateSelect');
-    const totalEl = document.getElementById('priceTotal');
-    
-    // Fülle Kategorie-Dropdown
-    if (catSelect) {
-      const categories = state.get('categories') || [];
-      catSelect.innerHTML = '<option value="">Kategorie wählen...</option>';
-      categories.forEach(cat => {
-        const option = document.createElement('option');
-        option.value = cat.code;
-        option.textContent = `${cat.code} - ${cat.name}`;
-        option.selected = cat.code === reservation.category;
-        catSelect.appendChild(option);
-      });
-    }
-    
-    // Fülle Rate-Dropdown
-    if (rateSelect) {
-      const rates = state.get('rates') || [];
-      rateSelect.innerHTML = '<option value="">Rate wählen...</option>';
-      rates.forEach(rate => {
-        const option = document.createElement('option');
-        option.value = rate.code;
-        option.textContent = `${rate.code} - ${rate.name}`;
-        option.selected = rate.code === reservation.rate_code;
-        rateSelect.appendChild(option);
-      });
-    }
-    
-    // Update Total
-    if (totalEl) {
-      const total = reservation.total_price || 0;
-      totalEl.textContent = `${parseFloat(total).toFixed(2)} €`;
-    }
+ updatePricingSummaryCompact(reservation) {
+  const catDisplay = document.getElementById('priceCat');
+  const rateDisplay = document.getElementById('priceRate');
+  const catSelect = document.getElementById('priceCatSelect');
+  const rateSelect = document.getElementById('priceRateSelect');
+  const totalEl = document.getElementById('priceTotal');
+  
+  // Get category and rate names
+  const categories = state.get('categories') || [];
+  const rates = state.get('rates') || [];
+  const category = categories.find(c => c.code === reservation.category);
+  const rate = rates.find(r => r.code === reservation.rate_code);
+  
+  // Update display elements (read-only summary boxes)
+  if (catDisplay) {
+    catDisplay.textContent = category ? `${category.code} - ${category.name}` : '-';
   }
+  if (rateDisplay) {
+    rateDisplay.textContent = rate ? `${rate.code} - ${rate.name}` : '-';
+  }
+  
+  // Fill Kategorie-Dropdown
+  if (catSelect) {
+    catSelect.innerHTML = '<option value="">Kategorie wählen...</option>';
+    categories.forEach(cat => {
+      const option = document.createElement('option');
+      option.value = cat.code;
+      option.textContent = `${cat.code} - ${cat.name}`;
+      option.selected = cat.code === reservation.category;
+      catSelect.appendChild(option);
+    });
+  }
+  
+  // Fill Rate-Dropdown
+  if (rateSelect) {
+    rateSelect.innerHTML = '<option value="">Rate wählen...</option>';
+    rates.forEach(rt => {
+      const option = document.createElement('option');
+      option.value = rt.code;
+      option.textContent = `${rt.code} - ${rt.name}`;
+      option.selected = rt.code === reservation.rate_code;
+      rateSelect.appendChild(option);
+    });
+  }
+  
+  // Update Total
+  if (totalEl) {
+    const total = reservation.total_price || 0;
+    totalEl.textContent = `${parseFloat(total).toFixed(2)} €`;
+  }
+}
   
   initPricingChangeListeners(form, reservation) {
     const extrasInputs = [
