@@ -4346,23 +4346,121 @@ select.input-compact:focus {
   background-image: url('data:image/svg+xml,<svg width="12" height="8" viewBox="0 0 12 8" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 1.5L6 6.5L11 1.5" stroke="%2306b6d4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>');
 }
 
-/* Fix dropdown options styling - remove buggy blue background */
+/* ========== ULTRA-AGGRESSIVE SELECT DROPDOWN FIX ========== */
+/* Remove ALL browser default styling completely */
+
+select.input-compact,
+select.input-compact::-ms-expand,
+select.input-compact:focus,
+select.input-compact:active,
+select.input-compact:hover {
+  /* Kill all browser defaults */
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  appearance: none !important;
+  
+  /* Remove any highlights/outlines */
+  outline: none !important;
+  outline-offset: 0 !important;
+  -webkit-tap-highlight-color: transparent !important;
+  
+  /* Force our background */
+  background-color: var(--bg-elevated) !important;
+  
+  /* Remove weird browser effects */
+  box-shadow: none !important;
+  text-shadow: none !important;
+  
+  /* Remove autofill colors */
+  -webkit-box-shadow: 0 0 0 30px var(--bg-elevated) inset !important;
+  -webkit-text-fill-color: var(--text-primary) !important;
+}
+
+/* Hover state */
+select.input-compact:hover {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  border-color: var(--border-hover) !important;
+}
+
+/* Focus state */
+select.input-compact:focus {
+  background-color: var(--bg-overlay) !important;
+  border-color: var(--primary-500) !important;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1) !important;
+}
+
+/* CRITICAL FIX: Option elements - remove ALL blue highlighting */
 select.input-compact option {
-  background-color: var(--bg-elevated);
-  color: var(--text-primary);
-  padding: 0.75rem 1rem;
+  background-color: var(--bg-elevated) !important;
+  background: var(--bg-elevated) !important;
+  color: var(--text-primary) !important;
+  padding: 0.75rem 1rem !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
 }
 
+/* Checked/selected option styling */
 select.input-compact option:checked,
-select.input-compact option:hover {
-  background-color: var(--bg-overlay);
-  color: var(--text-primary);
+select.input-compact option[selected] {
+  background-color: var(--primary-600) !important;
+  background: var(--primary-600) !important;
+  color: white !important;
+  font-weight: 600 !important;
 }
 
-/* Fix for Safari/WebKit browsers */
+/* Hover state for options */
+select.input-compact option:hover {
+  background-color: var(--bg-overlay) !important;
+  background: var(--bg-overlay) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Firefox specific fixes */
+@-moz-document url-prefix() {
+  select.input-compact option:checked {
+    background-color: var(--primary-600) !important;
+    background: var(--primary-600) !important;
+    color: white !important;
+  }
+}
+
+/* Webkit/Chrome/Safari specific fixes */
+@supports (-webkit-appearance: none) {
+  select.input-compact option:checked {
+    background: linear-gradient(0deg, var(--primary-600) 0%, var(--primary-600) 100%) !important;
+    color: white !important;
+  }
+  
+  /* Remove blue highlight from option on hover/select in dropdown */
+  select.input-compact option::selection {
+    background-color: var(--primary-600) !important;
+    color: white !important;
+  }
+}
+
+/* Additional fix for any remaining blue highlights */
 select.input-compact:focus option:checked {
-  background: linear-gradient(0deg, var(--primary-600) 0%, var(--primary-600) 100%);
-  color: white;
+  background-color: var(--primary-600) !important;
+  background: var(--primary-600) !important;
+  color: white !important;
+}
+
+/* Remove blue tint when dropdown is open */
+select.input-compact[size],
+select.input-compact[multiple] {
+  background-color: var(--bg-elevated) !important;
+}
+
+/* Fix for Edge/IE */
+select.input-compact::-ms-value {
+  background-color: transparent !important;
+  color: var(--text-primary) !important;
+}
+
+select.input-compact::-ms-expand {
+  display: none !important;
 }
 
 /* Form Labels Enhanced */
