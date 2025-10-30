@@ -734,7 +734,7 @@ textarea {
   position: sticky;
   top: calc(var(--space-8) + 80px);
   align-self: start;
-  height: calc(100vh - 200px); /* Gleiche HÃƒÆ’Ã‚Â¶he! */
+  height: calc(100vh - 200px); /* Gleiche HÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¶he! */
 }
 
 .sidebar-card {
@@ -1113,7 +1113,7 @@ textarea {
   background: var(--bg-surface);
   border: 1px solid var(--border-primary);
   border-radius: var(--radius-xl);
-  padding: 0 !important; /* Entferne Padding fÃƒÆ’Ã‚Â¼r bessere Kontrolle */
+  padding: 0 !important; /* Entferne Padding fÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¼r bessere Kontrolle */
   overflow: hidden;
 }
 
@@ -1253,7 +1253,7 @@ textarea {
   transition: all var(--transition-base);
   position: relative;
   z-index: 1;
-  white-space: nowrap; /* WICHTIG: Keine UmbrÃƒÆ’Ã‚Â¼che! */
+  white-space: nowrap; /* WICHTIG: Keine UmbrÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¼che! */
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -2157,7 +2157,7 @@ tbody td .pill {
 }
 
 .wizard-step.completed .wizard-step-number::after {
-  content: 'ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“';
+  content: 'ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ';
   position: absolute;
   inset: 0;
   display: flex;
@@ -4344,6 +4344,25 @@ select.input-compact:hover {
 
 select.input-compact:focus {
   background-image: url('data:image/svg+xml,<svg width="12" height="8" viewBox="0 0 12 8" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 1.5L6 6.5L11 1.5" stroke="%2306b6d4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>');
+}
+
+/* Fix dropdown options styling - remove buggy blue background */
+select.input-compact option {
+  background-color: var(--bg-elevated);
+  color: var(--text-primary);
+  padding: 0.75rem 1rem;
+}
+
+select.input-compact option:checked,
+select.input-compact option:hover {
+  background-color: var(--bg-overlay);
+  color: var(--text-primary);
+}
+
+/* Fix for Safari/WebKit browsers */
+select.input-compact:focus option:checked {
+  background: linear-gradient(0deg, var(--primary-600) 0%, var(--primary-600) 100%);
+  color: white;
 }
 
 /* Form Labels Enhanced */
