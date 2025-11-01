@@ -94,7 +94,7 @@
       'settings.cats': 'Kategorieverwaltung',
       'settings.rates': 'Rateneinstellungen',
       'settings.help': 'Hilfe & FAQ',
-      'sysinfo.title': 'Live-Systeminfo',
+      'sysinfo.title': 'Live‑Systeminfo',
       'modal.rate.edit': 'Rate bearbeiten',
       'modal.rate.create': 'Neue Rate',
       'btn.rate.create': 'Rate erstellen',
@@ -192,44 +192,43 @@
       'btn.export.pdf': 'Export PDF',
       'modal.settings.title': 'Settings',
       'settings.lang': 'Language',
-      'settings.hue': 'Hue',
+      'settings.hue': 'Hue (color)',
       'settings.save': 'Save settings',
-      'settings.userprefs': 'User Preferences',
-      'settings.channel': 'Channel – Settings',
+      'settings.userprefs': 'User preferences',
+      'settings.channel': 'Channel settings',
       'settings.log': 'Log Activity',
       'settings.cats': 'Category Management',
-      'settings.rates': 'Rate Settings',
+      'settings.rates': 'Rate settings',
       'settings.help': 'Help & FAQ',
-      'sysinfo.title': 'Live System Info',
+      'sysinfo.title': 'Live system info',
       'modal.rate.edit': 'Edit Rate',
-      'modal.rate.create': 'New Rate',
+      'modal.rate.create': 'Create Rate',
       'btn.rate.create': 'Create rate',
-      'btn.rate.update': 'Update rate',
+      'btn.rate.update': 'Save changes',
       'btn.rate.delete': 'Delete rate',
       'modal.cats.title': 'Category Management',
       'cats.new.title': 'New Category',
       'btn.sync.now': 'Sync now',
-      'channel.title': 'Channel – Settings',
-      'channel.api.title': 'API – Settings',
-      'channel.prop.title': 'Property – Mapping',
+      'channel.title': 'Channel settings',
+      'channel.api.title': 'API settings',
+      'channel.prop.title': 'Property mapping',
       'channel.monitor.title': 'Monitoring',
-      'channel.system.title': 'System – Tech',
+      'channel.system.title': 'System / Tech',
       'channel.admin.title': 'Admin',
-      'dock.toggle': 'Toggle dock'
+      'dock.toggle': 'Collapse/Expand'
     }
   };
 
-  // --- Mapping --------------------------------------------------------------
+  // --- Mapping of DOM targets to keys ---------------------------------------
   const MAP = [
-    // Navbar buttons
-    {sel:'.btn-primary:contains("Neue Reservierung")', key:'btn.new'},
-    {sel:'nav .btn:contains("GruppenResa")', key:'btn.group'},
-    {sel:'nav .btn:contains("Verfügbarkeit")', key:'btn.avail'},
-    {sel:'nav .btn:contains("Reporting")', key:'btn.reporting'},
-    {sel:'nav .btn:contains("Einstellungen")', key:'btn.settings'},
-    {sel:'nav .btn:contains("Hotelskizze")', key:'btn.sketch'},
+    // Top toolbar
+    {sel:'#btnNew', key:'btn.new'},
+    {sel:'#btnAvail', key:'btn.avail'},
+    {sel:'#btnReporting', key:'btn.reporting'},
+    {sel:'#btnSettings', key:'btn.settings'},
+    {sel:'#btnSketch', key:'btn.sketch'},
 
-    // Performance cards
+    // KPI titles
     {sel:'.hero article:nth-of-type(1) .card-head h3', key:'kpi.today.title'},
     {sel:'.hero article:nth-of-type(2) .card-head h3', key:'kpi.next.title'},
 
