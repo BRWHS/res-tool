@@ -3251,8 +3251,224 @@ Ihr Reservierungsteam`;
     // Implementation
   }
 
-  loadAvailability() {
-    this.ui.showToast('Availability loading coming soon', 'info');
+ async loadAvailability() {
+    try {
+      // Show loading state
+      const grid = document.getElementById('availabilityGrid');
+      grid.innerHTML = '<div class="availability-loading"><div class="spinner large"></div><p>Lade Verfügbarkeitsdaten...</p></div>';
+      
+      // Get date range
+      const fromDate = document.getElementById('availFrom').value || new Date().toISOString().split('T')[0];
+      const days = parseInt(document.getElementById('availDays').value) || 14;
+      const selectedHotel = document.getElementById('availHotel').value;
+      
+      // Generate mock availability data (später durch echte API ersetzen)
+      const availabilityData = await this.generateAvailabilityData(fromDate, days, selectedHotel);
+      
+      // Render the availability calendar
+      this.renderAvailabilityCalendar(availabilityData, fromDate, days);
+      
+    } catch (error) {
+      console.error('Error loading availability:', error);
+      this.ui.showToast('Fehler beim Laden der Verfügbarkeit', 'error');
+    }
+  }
+
+  // Neue Hilfsfunktion für Mock-Daten (später durch API ersetzen)
+  async generateAvailabilityData(startDate, days, hotelFilter = null) {
+    const hotels = state.get('hotels') || [
+      { code: 'HTL001', name: 'Hotel Berlin Mitte', categories: ['STD', 'DLX', 'SUI'] },
+      { code: 'HTL002', name: 'Hotel München Zentrum', categories: ['ECO', 'STD', 'DLX'] },
+      { code: 'HTL003', name: 'Hotel Hamburg Hafen', categories: ['STD', 'SUP', 'SUI'] }
+    ];
+    
+    const filteredHotels = hotelFilter ? hotels.filter(h => h.code === hotelFilter) : hotels;
+    const data = {};
+    
+    filteredHotels.forEach(hotel => {
+      data[hotel.code] = {
+        name: hotel.name,
+        days: []
+      };
+      
+      const start = new Date(startDate);
+      for (let i = 0; i < days; i++) {
+        const date = new Date(start);
+        date.setDate(start.getDate() + i);
+        const dateStr = date.toISOString().split('T')[0];
+        
+        // Generate random availability
+        const totalRooms = 50;
+        const occupied = Math.floor(Math.random() * totalRooms);
+        const available = totalRooms - occupied;
+        const occupancyRate = (occupied / totalRooms) * 100;
+        
+        // Generate room details
+        const roomDetails = {};
+        (hotel.categories || ['STD', 'DLX', 'SUI']).forEach(cat => {
+          const catTotal = Math.floor(totalRooms / 3);
+          const catOccupied = Math.floor(Math.random() * catTotal);
+          roomDetails[cat] = {
+            total: catTotal,
+            available: catTotal - catOccupied,
+            occupied: catOccupied
+          };
+        });
+        
+        data[hotel.code].days.push({
+          date: dateStr,
+          dayName: date.toLocaleDateString('de-DE', { weekday: 'short' }),
+          dayNumber: date.getDate(),
+          month: date.toLocaleDateString('de-DE', { month: 'short' }),
+          totalRooms,
+          available,
+          occupied,
+          occupancyRate,
+          roomDetails,
+          status: occupancyRate < 50 ? 'low' : occupancyRate < 80 ? 'medium' : 'high'
+        });
+      }
+    });
+    
+    return data;
+  }
+
+  // Neue Funktion für das Rendern des Kalenders
+  renderAvailabilityCalendar(data, startDate, days) {
+    const grid = document.getElementById('availabilityGrid');
+    
+    let html = '<div class="availability-calendar">';
+    
+    // Render each hotel
+    Object.entries(data).forEach(([hotelCode, hotelData]) => {
+      html += `
+        <div class="hotel-availability" data-hotel="${hotelCode}">
+          <div class="hotel-availability-header">
+            <h3>
+              <i class="fas fa-hotel"></i>
+              ${hotelData.name}
+            </h3>
+            <div class="availability-stats">
+              <span class="stat-item">
+                <span class="stat-value">${this.calculateAverageOccupancy(hotelData.days).toFixed(1)}%</span>
+                <span class="stat-label">Ø Auslastung</span>
+              </span>
+            </div>
+          </div>
+          
+          <div class="availability-timeline">
+            <div class="timeline-scroll">
+              <div class="timeline-days">
+                ${hotelData.days.map(day => this.renderAvailabilityDay(day, hotelCode)).join('')}
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+    
+    html += '</div>';
+    grid.innerHTML = html;
+    
+    // Add event listeners for hover tooltips
+    this.initAvailabilityTooltips();
+  }
+
+  // Neue Funktion für einzelne Tage
+  renderAvailabilityDay(day, hotelCode) {
+    const occupancyClass = day.status === 'low' ? 'occupancy-low' : 
+                           day.status === 'medium' ? 'occupancy-medium' : 
+                           'occupancy-high';
+    
+    const isWeekend = new Date(day.date).getDay() === 0 || new Date(day.date).getDay() === 6;
+    
+    return `
+      <div class="availability-day ${occupancyClass} ${isWeekend ? 'weekend' : ''}" 
+           data-date="${day.date}"
+           data-hotel="${hotelCode}"
+           data-tooltip="hover">
+        <div class="day-header">
+          <span class="day-name">${day.dayName}</span>
+          <span class="day-number">${day.dayNumber}</span>
+          <span class="day-month">${day.month}</span>
+        </div>
+        <div class="day-occupancy">
+          <div class="occupancy-bar">
+            <div class="occupancy-fill" style="height: ${day.occupancyRate}%"></div>
+          </div>
+          <span class="occupancy-percent">${Math.round(day.occupancyRate)}%</span>
+        </div>
+        <div class="day-rooms">
+          <span class="rooms-available">${day.available}</span>
+          <span class="rooms-label">frei</span>
+        </div>
+        
+        <!-- Tooltip Content -->
+        <div class="availability-tooltip">
+          <div class="tooltip-header">
+            <strong>${day.dayName}, ${day.dayNumber}. ${day.month}</strong>
+          </div>
+          <div class="tooltip-stats">
+            <div class="tooltip-stat">
+              <span>Gesamt:</span>
+              <strong>${day.totalRooms} Zimmer</strong>
+            </div>
+            <div class="tooltip-stat">
+              <span>Belegt:</span>
+              <strong>${day.occupied} Zimmer</strong>
+            </div>
+            <div class="tooltip-stat">
+              <span>Verfügbar:</span>
+              <strong>${day.available} Zimmer</strong>
+            </div>
+          </div>
+          <div class="tooltip-categories">
+            <div class="tooltip-section-title">Kategorien:</div>
+            ${Object.entries(day.roomDetails).map(([cat, details]) => `
+              <div class="tooltip-category">
+                <span class="category-name">${cat}:</span>
+                <span class="category-available">${details.available}/${details.total} frei</span>
+                <div class="category-bar">
+                  <div class="category-fill" style="width: ${((details.total - details.available) / details.total) * 100}%"></div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  // Neue Hilfsfunktion
+  calculateAverageOccupancy(days) {
+    const total = days.reduce((sum, day) => sum + day.occupancyRate, 0);
+    return total / days.length;
+  }
+
+  // Neue Funktion für Tooltips
+  initAvailabilityTooltips() {
+    const days = document.querySelectorAll('.availability-day[data-tooltip="hover"]');
+    
+    days.forEach(day => {
+      const tooltip = day.querySelector('.availability-tooltip');
+      
+      day.addEventListener('mouseenter', (e) => {
+        tooltip.classList.add('active');
+        
+        // Position tooltip
+        const rect = day.getBoundingClientRect();
+        const tooltipRect = tooltip.getBoundingClientRect();
+        
+        if (rect.left + tooltipRect.width > window.innerWidth) {
+          tooltip.style.left = 'auto';
+          tooltip.style.right = '0';
+        }
+      });
+      
+      day.addEventListener('mouseleave', () => {
+        tooltip.classList.remove('active');
+      });
+    });
   }
 
   loadReports() {
