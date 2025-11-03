@@ -1140,7 +1140,7 @@ class ReservationApp {
           this.logout();
           break;
         case 'load-availability':
-          await this.loadAvailability();
+          await this.loadAvailabilityData();
           break;
         default:
           console.warn('Unknown action:', action);
@@ -2188,6 +2188,249 @@ class ReservationApp {
   openAvailabilityModal() {
     this.ui.openModal('modalAvailability');
     this.loadAvailability();
+  }
+
+  loadAvailability() {
+    // Call the new async version
+    this.loadAvailabilityData();
+  }
+
+  async loadAvailabilityData() {
+    try {
+      // Show loading state
+      const grid = document.getElementById('availabilityGrid');
+      if (!grid) return;
+      
+      grid.innerHTML = '<div class="availability-loading"><div class="spinner large"></div><p>Lade Verfügbarkeitsdaten...</p></div>';
+      
+      // Get date range
+      const fromDate = document.getElementById('availFrom').value || new Date().toISOString().split('T')[0];
+      const days = parseInt(document.getElementById('availDays').value) || 14;
+      const selectedHotel = document.getElementById('availHotel').value;
+      
+      // Generate mock availability data
+      const availabilityData = await this.generateAvailabilityData(fromDate, days, selectedHotel);
+      
+      // Render the availability calendar
+      this.renderAvailabilityCalendar(availabilityData, fromDate, days);
+      
+    } catch (error) {
+      console.error('Error loading availability:', error);
+      this.ui.showToast('Fehler beim Laden der Verfügbarkeit', 'error');
+    }
+  }
+
+  async generateAvailabilityData(startDate, days, hotelFilter = null) {
+    const hotels = [
+      { code: 'HTL001', name: 'Mannheim Downtown', categories: ['STD', 'DLX', 'SUI'] },
+      { code: 'HTL002', name: 'Mannheim Hauptbahnhof', categories: ['ECO', 'STD', 'SUP'] },
+      { code: 'HTL003', name: 'Heidelberg Altstadt', categories: ['DLX', 'SUI', 'PEN'] },
+      { code: 'HTL004', name: 'Heidelberg Bahnstadt', categories: ['STD', 'SUP', 'DLX'] },
+      { code: 'HTL005', name: 'Karlsruhe Südstadt', categories: ['ECO', 'STD', 'DLX'] },
+      { code: 'HTL006', name: 'Stuttgart Mitte', categories: ['STD', 'DLX', 'SUI'] },
+      { code: 'HTL007', name: 'Frankfurt City', categories: ['DLX', 'SUI', 'PEN'] },
+      { code: 'HTL008', name: 'Frankfurt Flughafen', categories: ['ECO', 'STD', 'SUP'] }
+    ];
+    
+    const filteredHotels = hotelFilter ? hotels.filter(h => h.code === hotelFilter) : hotels;
+    const data = {};
+    
+    filteredHotels.forEach(hotel => {
+      data[hotel.code] = {
+        name: hotel.name,
+        days: []
+      };
+      
+      const start = new Date(startDate);
+      for (let i = 0; i < days; i++) {
+        const date = new Date(start);
+        date.setDate(start.getDate() + i);
+        const dateStr = date.toISOString().split('T')[0];
+        
+        const totalRooms = 50;
+        const occupied = Math.floor(Math.random() * totalRooms);
+        const available = totalRooms - occupied;
+        const occupancyRate = (occupied / totalRooms) * 100;
+        
+        const roomDetails = {};
+        (hotel.categories || ['STD', 'DLX', 'SUI']).forEach(cat => {
+          const catTotal = Math.floor(totalRooms / 3);
+          const catOccupied = Math.floor(Math.random() * catTotal);
+          roomDetails[cat] = {
+            total: catTotal,
+            available: catTotal - catOccupied,
+            occupied: catOccupied
+          };
+        });
+        
+        data[hotel.code].days.push({
+          date: dateStr,
+          dayName: date.toLocaleDateString('de-DE', { weekday: 'short' }),
+          dayNumber: date.getDate(),
+          month: date.toLocaleDateString('de-DE', { month: 'short' }),
+          totalRooms,
+          available,
+          occupied,
+          occupancyRate,
+          roomDetails,
+          status: occupancyRate < 50 ? 'low' : occupancyRate < 80 ? 'medium' : 'high'
+        });
+      }
+    });
+    
+    return data;
+  }
+
+  renderAvailabilityCalendar(data, startDate, days) {
+    const grid = document.getElementById('availabilityGrid');
+    if (!grid) return;
+    
+    const dates = data[Object.keys(data)[0]]?.days || [];
+    
+    let html = `
+      <div class="availability-grid-premium">
+        <div class="grid-header-row">
+          <div class="grid-hotel-header">Hotels</div>
+          <div class="grid-dates-container">
+            ${dates.map(day => `
+              <div class="grid-date-cell ${new Date(day.date).getDay() === 0 || new Date(day.date).getDay() === 6 ? 'weekend' : ''}">
+                <div class="date-compact">
+                  <span class="date-num">${day.dayNumber}</span>
+                  <span class="date-day">${day.dayName.substring(0, 2)}</span>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+        
+        <div class="grid-data-container">
+          ${Object.entries(data).map(([hotelCode, hotelData]) => `
+            <div class="grid-data-row" data-hotel="${hotelCode}">
+              <div class="grid-hotel-cell">
+                <div class="hotel-name-compact">
+                  <i class="fas fa-building"></i>
+                  <span class="hotel-text">${hotelData.name}</span>
+                  <span class="hotel-avg">${Math.round(hotelData.days.reduce((sum, day) => sum + day.occupancyRate, 0) / hotelData.days.length)}%</span>
+                </div>
+              </div>
+              <div class="grid-cells-container">
+                ${hotelData.days.map(day => this.renderGridCell(day, hotelCode)).join('')}
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+    
+    grid.innerHTML = html;
+    this.initAvailabilityTooltips();
+  }
+
+  renderGridCell(day, hotelCode) {
+    const occupancyClass = day.status === 'low' ? 'cell-low' : 
+                           day.status === 'medium' ? 'cell-medium' : 
+                           'cell-high';
+    
+    return `
+      <div class="grid-value-cell ${occupancyClass}" 
+           data-date="${day.date}"
+           data-hotel="${hotelCode}"
+           data-tooltip="hover">
+        <div class="cell-percent">${Math.round(day.occupancyRate)}%</div>
+        <div class="cell-free">${day.available}</div>
+        
+        <div class="availability-tooltip-premium">
+          <div class="tooltip-inner">
+            <div class="tooltip-title">
+              ${day.dayName}, ${day.dayNumber}. ${day.month}
+            </div>
+            <div class="tooltip-metrics">
+              <div class="metric">
+                <span class="metric-label">Auslastung</span>
+                <span class="metric-value">${Math.round(day.occupancyRate)}%</span>
+              </div>
+              <div class="metric">
+                <span class="metric-label">Verfügbar</span>
+                <span class="metric-value">${day.available}/${day.totalRooms}</span>
+              </div>
+            </div>
+            <div class="tooltip-rooms">
+              ${Object.entries(day.roomDetails).map(([cat, details]) => `
+                <div class="room-cat">
+                  <span class="room-cat-name">${cat}</span>
+                  <span class="room-cat-avail">${details.available}/${details.total}</span>
+                  <div class="room-cat-bar">
+                    <div class="room-cat-fill" style="width: ${((details.total - details.available) / details.total) * 100}%"></div>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  initAvailabilityTooltips() {
+    const cells = document.querySelectorAll('.grid-value-cell[data-tooltip="hover"]');
+    
+    cells.forEach(cell => {
+      const tooltip = cell.querySelector('.availability-tooltip-premium');
+      if (!tooltip) return;
+      
+      let hideTimeout;
+      
+      cell.addEventListener('mouseenter', (e) => {
+        clearTimeout(hideTimeout);
+        
+        document.querySelectorAll('.availability-tooltip-premium.active').forEach(t => {
+          if (t !== tooltip) t.classList.remove('active');
+        });
+        
+        tooltip.classList.add('active');
+        
+        const rect = cell.getBoundingClientRect();
+        const tooltipRect = tooltip.getBoundingClientRect();
+        const viewportWidth = window.innerWidth;
+        
+        tooltip.style.left = '';
+        tooltip.style.right = '';
+        tooltip.style.top = '';
+        tooltip.style.bottom = '';
+        
+        if (rect.left + tooltipRect.width > viewportWidth - 20) {
+          tooltip.style.right = '0';
+          tooltip.style.left = 'auto';
+        } else {
+          tooltip.style.left = '50%';
+          tooltip.style.transform = 'translateX(-50%)';
+        }
+        
+        if (rect.top - tooltipRect.height < 60) {
+          tooltip.style.top = 'calc(100% + 8px)';
+          tooltip.style.bottom = 'auto';
+          tooltip.classList.add('tooltip-below');
+        } else {
+          tooltip.style.bottom = 'calc(100% + 8px)';
+          tooltip.style.top = 'auto';
+          tooltip.classList.remove('tooltip-below');
+        }
+      });
+      
+      cell.addEventListener('mouseleave', () => {
+        hideTimeout = setTimeout(() => {
+          tooltip.classList.remove('active');
+        }, 100);
+      });
+      
+      tooltip.addEventListener('mouseenter', () => {
+        clearTimeout(hideTimeout);
+      });
+      
+      tooltip.addEventListener('mouseleave', () => {
+        tooltip.classList.remove('active');
+      });
+    });
   }
 
   openReportsModal() {
@@ -3254,104 +3497,7 @@ Ihr Reservierungsteam`;
     // Implementation
   }
 
-  async loadAvailability() {
-    try {
-      // Show loading state
-      const grid = document.getElementById('availabilityGrid');
-      grid.innerHTML = '<div class="availability-loading"><div class="spinner large"></div><p>Lade Verfügbarkeitsdaten...</p></div>';
-      
-      // Get date range
-      const fromDate = document.getElementById('availFrom').value || new Date().toISOString().split('T')[0];
-      const days = parseInt(document.getElementById('availDays').value) || 14;
-      const selectedHotel = document.getElementById('availHotel').value;
-      
-      // Generate mock availability data (später durch echte API ersetzen)
-      const availabilityData = await this.generateAvailabilityData(fromDate, days, selectedHotel);
-      
-      // Render the availability calendar
-      this.renderAvailabilityCalendar(availabilityData, fromDate, days);
-      
-    } catch (error) {
-      console.error('Error loading availability:', error);
-      this.ui.showToast('Fehler beim Laden der Verfügbarkeit', 'error');
-    }
-  }
-
-  // Neue Hilfsfunktion für Mock-Daten (später durch API ersetzen)
-  async generateAvailabilityData(startDate, days, hotelFilter = null) {
-    const hotels = state.get('hotels') || [
-      { code: 'HTL001', name: 'Hotel Berlin Mitte', categories: ['STD', 'DLX', 'SUI'] },
-      { code: 'HTL002', name: 'Hotel München Zentrum', categories: ['ECO', 'STD', 'DLX'] },
-      { code: 'HTL003', name: 'Hotel Hamburg Hafen', categories: ['STD', 'SUP', 'SUI'] },
-      { code: 'HTL004', name: 'Mannheim Downtown', categories: ['STD', 'DLX', 'SUI'] },
-      { code: 'HTL005', name: 'Mannheim Hauptbahnhof', categories: ['ECO', 'STD', 'SUP'] },
-      { code: 'HTL006', name: 'Heidelberg Altstadt', categories: ['DLX', 'SUI', 'PEN'] },
-      { code: 'HTL007', name: 'Heidelberg Bahnstadt', categories: ['STD', 'SUP', 'DLX'] },
-      { code: 'HTL008', name: 'Karlsruhe Südstadt', categories: ['ECO', 'STD', 'DLX'] },
-      { code: 'HTL009', name: 'Stuttgart Mitte', categories: ['STD', 'DLX', 'SUI'] },
-      { code: 'HTL010', name: 'Frankfurt City', categories: ['DLX', 'SUI', 'PEN'] },
-      { code: 'HTL011', name: 'Frankfurt Flughafen', categories: ['ECO', 'STD', 'SUP'] }
-    ];
-    
-    const filteredHotels = hotelFilter ? hotels.filter(h => h.code === hotelFilter) : hotels;
-    const data = {};
-    
-    filteredHotels.forEach(hotel => {
-      data[hotel.code] = {
-        name: hotel.name,
-        days: []
-      };
-      
-      const start = new Date(startDate);
-      for (let i = 0; i < days; i++) {
-        const date = new Date(start);
-        date.setDate(start.getDate() + i);
-        const dateStr = date.toISOString().split('T')[0];
-        
-        // Generate random availability
-        const totalRooms = 50;
-        const occupied = Math.floor(Math.random() * totalRooms);
-        const available = totalRooms - occupied;
-        const occupancyRate = (occupied / totalRooms) * 100;
-        
-        // Generate room details
-        const roomDetails = {};
-        (hotel.categories || ['STD', 'DLX', 'SUI']).forEach(cat => {
-          const catTotal = Math.floor(totalRooms / 3);
-          const catOccupied = Math.floor(Math.random() * catTotal);
-          roomDetails[cat] = {
-            total: catTotal,
-            available: catTotal - catOccupied,
-            occupied: catOccupied
-          };
-        });
-        
-        data[hotel.code].days.push({
-          date: dateStr,
-          dayName: date.toLocaleDateString('de-DE', { weekday: 'short' }),
-          dayNumber: date.getDate(),
-          month: date.toLocaleDateString('de-DE', { month: 'short' }),
-          totalRooms,
-          available,
-          occupied,
-          occupancyRate,
-          roomDetails,
-          status: occupancyRate < 50 ? 'low' : occupancyRate < 80 ? 'medium' : 'high'
-        });
-      }
-    });
-    
-    return data;
-  }
-
-  // Premium kompaktes Grid-Design
-  renderAvailabilityCalendar(data, startDate, days) {
-    const grid = document.getElementById('availabilityGrid');
-    
-    // Get all dates for header
-    const dates = data[Object.keys(data)[0]]?.days || [];
-    
-    let html = `
+ let html = `
       <div class="availability-grid-premium">
         <div class="grid-header-row">
           <div class="grid-hotel-header">Hotels</div>
@@ -3455,6 +3601,119 @@ Ihr Reservierungsteam`;
         
         tooltip.classList.add('active');
         
+
+   yId('availabilityGrid');
+    if (!grid) return;
+    
+    // Get all dates for header
+    const dates = data[Object.keys(data)[0]]?.days || [];
+    
+    let html = `
+      <div class="availability-grid-premium">
+        <div class="grid-header-row">
+          <div class="grid-hotel-header">Hotels</div>
+          <div class="grid-dates-container">
+            ${dates.map(day => `
+              <div class="grid-date-cell ${new Date(day.date).getDay() === 0 || new Date(day.date).getDay() === 6 ? 'weekend' : ''}">
+                <div class="date-compact">
+                  <span class="date-num">${day.dayNumber}</span>
+                  <span class="date-day">${day.dayName.substring(0, 2)}</span>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+        
+        <div class="grid-data-container">
+          ${Object.entries(data).map(([hotelCode, hotelData]) => `
+            <div class="grid-data-row" data-hotel="${hotelCode}">
+              <div class="grid-hotel-cell">
+                <div class="hotel-name-compact">
+                  <i class="fas fa-building"></i>
+                  <span class="hotel-text">${hotelData.name}</span>
+                  <span class="hotel-avg">${Math.round(hotelData.days.reduce((sum, day) => sum + day.occupancyRate, 0) / hotelData.days.length)}%</span>
+                </div>
+              </div>
+              <div class="grid-cells-container">
+                ${hotelData.days.map(day => this.renderGridCell(day, hotelCode)).join('')}
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+    
+    grid.innerHTML = html;
+    this.initAvailabilityTooltips();
+  }
+
+  // Premium Grid Cell
+  renderGridCell(day, hotelCode) {
+    const occupancyClass = day.status === 'low' ? 'cell-low' : 
+                           day.status === 'medium' ? 'cell-medium' : 
+                           'cell-high';
+    
+    return `
+      <div class="grid-value-cell ${occupancyClass}" 
+           data-date="${day.date}"
+           data-hotel="${hotelCode}"
+           data-tooltip="hover">
+        <div class="cell-percent">${Math.round(day.occupancyRate)}%</div>
+        <div class="cell-free">${day.available}</div>
+        
+        <!-- Premium Tooltip -->
+        <div class="availability-tooltip-premium">
+          <div class="tooltip-inner">
+            <div class="tooltip-title">
+              ${day.dayName}, ${day.dayNumber}. ${day.month}
+            </div>
+            <div class="tooltip-metrics">
+              <div class="metric">
+                <span class="metric-label">Auslastung</span>
+                <span class="metric-value">${Math.round(day.occupancyRate)}%</span>
+              </div>
+              <div class="metric">
+                <span class="metric-label">Verfügbar</span>
+                <span class="metric-value">${day.available}/${day.totalRooms}</span>
+              </div>
+            </div>
+            <div class="tooltip-rooms">
+              ${Object.entries(day.roomDetails).map(([cat, details]) => `
+                <div class="room-cat">
+                  <span class="room-cat-name">${cat}</span>
+                  <span class="room-cat-avail">${details.available}/${details.total}</span>
+                  <div class="room-cat-bar">
+                    <div class="room-cat-fill" style="width: ${((details.total - details.available) / details.total) * 100}%"></div>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  // Premium Tooltips mit korrektem z-index
+  initAvailabilityTooltips() {
+    const cells = document.querySelectorAll('.grid-value-cell[data-tooltip="hover"]');
+    
+    cells.forEach(cell => {
+      const tooltip = cell.querySelector('.availability-tooltip-premium');
+      if (!tooltip) return;
+      
+      let hideTimeout;
+      
+      cell.addEventListener('mouseenter', (e) => {
+        clearTimeout(hideTimeout);
+        
+        // Close all other tooltips
+        document.querySelectorAll('.availability-tooltip-premium.active').forEach(t => {
+          if (t !== tooltip) t.classList.remove('active');
+        });
+        
+        tooltip.classList.add('active');
+        
         // Smart positioning
         const rect = cell.getBoundingClientRect();
         const tooltipRect = tooltip.getBoundingClientRect();
@@ -3505,6 +3764,8 @@ Ihr Reservierungsteam`;
     });
   }
 
+
+
   loadReports() {
     this.ui.showToast('Reports coming soon', 'info');
   }
@@ -3531,62 +3792,130 @@ Ihr Reservierungsteam`;
       const emailSubject = document.getElementById('confirmEmailSubject').value;
       const emailBody = document.getElementById('confirmEmailBody').value;
       
-      if (!emailTo) {
-        this.ui.showToast('Bitte geben Sie eine E-Mail-Adresse ein', 'error');
+      if (!emailTo || !emailSubject || !emailBody) {
+        this.ui.showToast('Bitte füllen Sie alle Felder aus', 'error');
         return;
       }
       
-      // Validate email format
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(emailTo)) {
-        this.ui.showToast('Bitte geben Sie eine gÃ¼ltige E-Mail-Adresse ein', 'error');
-        return;
-      }
+      // TODO: Implement actual email sending
+      console.log('Sending email:', { to: emailTo, subject: emailSubject, body: emailBody });
       
-      // Send confirmation email
-      await this.sendConfirmationEmail({
-        to: emailTo,
-        subject: emailSubject,
-        body: emailBody,
-        reservation: reservation
-      });
-      
-      // Close modal
+      this.ui.showToast('E-Mail wurde versendet', 'success');
       this.ui.closeModal('modalConfirmationEmail');
       
     } catch (error) {
-      console.error('Failed to send confirmation email:', error);
-      this.ui.showToast('Fehler beim Senden der E-Mail: ' + error.message, 'error');
+      console.error('Error sending email:', error);
+      this.ui.showToast('Fehler beim Versenden der E-Mail', 'error');
     }
   }
 
-  async sendConfirmationEmail(data) {
-    try {
-      // In a production environment, this would call an email API
-      // For now, we'll simulate sending an email
-      console.log('Sending confirmation email:', data);
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      this.ui.showToast(`BestÃ¤tigungs-E-Mail erfolgreich an ${data.to} gesendet!`, 'success');
-      
-      // Here you would integrate with your email service:
-      // - SendGrid
-      // - Mailgun
-      // - AWS SES
-      // - Or your custom email API
-      
-      return true;
-    } catch (error) {
-      console.error('Failed to send confirmation email:', error);
-      throw error;
+  async loadSystemStatus() {
+    // Check Supabase connection
+    const sbStatus = this.database ? 'success' : 'error';
+    const sbIndicator = document.querySelector('[data-status-type="SB"]');
+    if (sbIndicator) {
+      sbIndicator.className = `pill ${sbStatus}`;
+      sbIndicator.dataset.tooltip = `Supabase - ${sbStatus === 'success' ? 'Verbunden' : 'Nicht verbunden'}`;
     }
+    
+    // Check HotelNetSolutions connection
+    const hnsStatus = 'error'; // TODO: Implement actual check
+    const hnsIndicator = document.querySelector('[data-status-type="HNS"]');
+    if (hnsIndicator) {
+      hnsIndicator.className = `pill ${hnsStatus}`;
+      hnsIndicator.dataset.tooltip = `HotelNetSolutions - ${hnsStatus === 'success' ? 'Verbunden' : 'Nicht verbunden'}`;
+    }
+  }
+
+  updateElement(id, value) {
+    const element = document.getElementById(id);
+    if (element) {
+      element.textContent = value;
+    }
+  }
+
+  formatCurrency(amount) {
+    return new Intl.NumberFormat('de-DE', { 
+      style: 'currency', 
+      currency: CONFIG.UI.CURRENCY_FORMAT 
+    }).format(amount);
+  }
+
+  formatDate(date) {
+    if (!date) return 'N/A';
+    return new Date(date).toLocaleDateString('de-DE');
+  }
+
+  calculateNights(arrival, departure) {
+    const arrivalDate = new Date(arrival);
+    const departureDate = new Date(departure);
+    const diffTime = Math.abs(departureDate - arrivalDate);
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  }
+
+  // =============== ACTIVITY FEED ===============
+  updateActivityFeed() {
+    const feed = document.getElementById('activityFeed');
+    if (!feed) return;
+
+    const activities = [
+      { type: 'booking', text: 'Neue Reservierung #R2024001', time: '2 Min', icon: 'fa-calendar-plus' },
+      { type: 'checkin', text: 'Check-in: Müller, HTL001', time: '5 Min', icon: 'fa-sign-in-alt' },
+      { type: 'checkout', text: 'Check-out: Schmidt, HTL002', time: '10 Min', icon: 'fa-sign-out-alt' },
+      { type: 'cancellation', text: 'Stornierung #R2024002', time: '15 Min', icon: 'fa-times-circle' },
+      { type: 'modification', text: 'Änderung #R2024003', time: '20 Min', icon: 'fa-edit' },
+      { type: 'payment', text: 'Zahlung erhalten #R2024004', time: '25 Min', icon: 'fa-credit-card' }
+    ];
+
+    feed.innerHTML = activities.map(activity => `
+      <div class="activity-item ${activity.type}">
+        <div class="activity-icon">
+          <i class="fas ${activity.icon}"></i>
+        </div>
+        <div class="activity-content">
+          <div class="activity-text">${activity.text}</div>
+          <div class="activity-time">${activity.time}</div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // =============== YOY PERFORMANCE ===============
+  updateYoYPerformance() {
+    const container = document.getElementById('yoyPerformance');
+    if (!container) return;
+
+    const data = {
+      bookings: { current: 1234, previous: 1180, change: 4.6 },
+      revenue: { current: 89450, previous: 85200, change: 5.0 },
+      adr: { current: 125, previous: 118, change: 5.9 },
+      occupancy: { current: 78.5, previous: 75.2, change: 4.4 }
+    };
+
+    container.innerHTML = Object.entries(data).map(([key, values]) => {
+      const isPositive = values.change > 0;
+      const icon = isPositive ? 'fa-arrow-up' : 'fa-arrow-down';
+      const colorClass = isPositive ? 'success' : 'danger';
+      
+      return `
+        <div class="yoy-metric">
+          <div class="yoy-label">${key.charAt(0).toUpperCase() + key.slice(1)}</div>
+          <div class="yoy-value">
+            ${key === 'revenue' ? this.formatCurrency(values.current) :
+              key === 'adr' ? this.formatCurrency(values.current) :
+              key === 'occupancy' ? values.current + '%' :
+              values.current}
+          </div>
+          <div class="yoy-change ${colorClass}">
+            <i class="fas ${icon}"></i>
+            ${Math.abs(values.change)}%
+          </div>
+        </div>
+      `;
+    }).join('');
   }
 
   // =============== TODAY'S OPERATIONS ===============
-  // TODO: Later implement pop-up modals for "Details anzeigen" buttons instead of filtering the table
-  
   updateTodaysOperations() {
     const reservations = state.get('reservations') || [];
     const today = new Date().toISOString().split('T')[0];
@@ -3629,14 +3958,15 @@ Ihr Reservierungsteam`;
     if (dateFromInput) dateFromInput.value = today;
     if (dateToInput) dateToInput.value = today;
     
-    this.applyFilters();
+    // Reload reservations with new filters
+    this.loadReservations();
     this.ui.showToast('Zeige heutige Check-ins', 'info');
   }
 
   viewTodaysCheckouts() {
     const today = new Date().toISOString().split('T')[0];
     
-    // Update filters to show today's check-outs
+    // Similar to check-ins but filter by departure date
     state.set('filters', {
       ...state.get('filters'),
       dateFrom: today,
@@ -3644,39 +3974,28 @@ Ihr Reservierungsteam`;
       status: 'active'
     });
     
-    // Update filter UI
-    const dateFromInput = document.getElementById('filterDateFrom');
-    const dateToInput = document.getElementById('filterDateTo');
-    if (dateFromInput) dateFromInput.value = today;
-    if (dateToInput) dateToInput.value = today;
-    
-    this.applyFilters();
+    this.loadReservations();
     this.ui.showToast('Zeige heutige Check-outs', 'info');
   }
 
   viewInhouseGuests() {
     const today = new Date().toISOString().split('T')[0];
     
-    // Filter for in-house guests
-    const reservations = state.get('reservations') || [];
-    const inhouseReservations = reservations.filter(r => 
-      r.arrival <= today && r.departure > today && r.status === 'active'
-    );
+    // Show all current in-house guests
+    state.set('filters', {
+      ...state.get('filters'),
+      dateFrom: null,
+      dateTo: null,
+      status: 'active'
+    });
     
-    // Temporarily set filtered reservations
-    state.set('reservations', inhouseReservations);
-    this.renderReservationTable();
-    
-    this.ui.showToast(`${inhouseReservations.length} GÃ¤ste im Haus`, 'info');
+    this.loadReservations();
+    this.ui.showToast('Zeige In-House Gäste', 'info');
   }
 }
 
-// =============== APPLICATION INITIALIZATION ===============
+// =============== INITIALIZATION ===============
 document.addEventListener('DOMContentLoaded', () => {
-  console.log('Hotel Reservation System V2.0 - Initializing...');
-  
-  window.app = new ReservationApp();
-  window.app.init().catch(error => {
-    console.error('Failed to initialize app:', error);
-  });
+  const app = new ReservationApp();
+  window.app = app; // For debugging
 });
