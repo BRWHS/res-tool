@@ -3336,103 +3336,84 @@ Ihr Reservierungsteam`;
     return data;
   }
 
-  // Neue Funktion für das Rendern des Kalenders
+  // Neue Funktion für das Rendern des Kalenders als Grid
   renderAvailabilityCalendar(data, startDate, days) {
     const grid = document.getElementById('availabilityGrid');
     
-    let html = '<div class="availability-calendar">';
+    // Get all dates for header
+    const dates = data[Object.keys(data)[0]]?.days || [];
     
-    // Render each hotel
-    Object.entries(data).forEach(([hotelCode, hotelData]) => {
-      html += `
-        <div class="hotel-availability" data-hotel="${hotelCode}">
-          <div class="hotel-availability-header">
-            <h3>
-              <i class="fas fa-hotel"></i>
-              ${hotelData.name}
-            </h3>
-            <div class="availability-stats">
-              <span class="stat-item">
-                <span class="stat-value">${this.calculateAverageOccupancy(hotelData.days).toFixed(1)}%</span>
-                <span class="stat-label">Ø Auslastung</span>
-              </span>
+    let html = `
+      <div class="availability-grid-container">
+        <div class="availability-grid-header">
+          <div class="grid-corner">Hotel / Datum</div>
+          ${dates.map(day => `
+            <div class="grid-date-header ${new Date(day.date).getDay() === 0 || new Date(day.date).getDay() === 6 ? 'weekend' : ''}">
+              <div class="date-day">${day.dayName}</div>
+              <div class="date-number">${day.dayNumber}</div>
+              <div class="date-month">${day.month}</div>
             </div>
-          </div>
-          
-          <div class="availability-timeline">
-            <div class="timeline-scroll">
-              <div class="timeline-days">
-                ${hotelData.days.map(day => this.renderAvailabilityDay(day, hotelCode)).join('')}
-              </div>
-            </div>
-          </div>
+          `).join('')}
         </div>
-      `;
-    });
+        
+        <div class="availability-grid-body">
+          ${Object.entries(data).map(([hotelCode, hotelData]) => `
+            <div class="grid-hotel-row" data-hotel="${hotelCode}">
+              <div class="grid-hotel-name">
+                <i class="fas fa-hotel"></i>
+                <span>${hotelData.name}</span>
+                <div class="hotel-avg-occupancy">${this.calculateAverageOccupancy(hotelData.days).toFixed(0)}%</div>
+              </div>
+              ${hotelData.days.map(day => this.renderGridCell(day, hotelCode)).join('')}
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
     
-    html += '</div>';
     grid.innerHTML = html;
     
     // Add event listeners for hover tooltips
     this.initAvailabilityTooltips();
   }
 
-  // Neue Funktion für einzelne Tage
-  renderAvailabilityDay(day, hotelCode) {
+  // Neue Funktion für Grid-Zellen
+  renderGridCell(day, hotelCode) {
     const occupancyClass = day.status === 'low' ? 'occupancy-low' : 
                            day.status === 'medium' ? 'occupancy-medium' : 
                            'occupancy-high';
     
-    const isWeekend = new Date(day.date).getDay() === 0 || new Date(day.date).getDay() === 6;
-    
     return `
-      <div class="availability-day ${occupancyClass} ${isWeekend ? 'weekend' : ''}" 
+      <div class="grid-cell ${occupancyClass}" 
            data-date="${day.date}"
            data-hotel="${hotelCode}"
            data-tooltip="hover">
-        <div class="day-header">
-          <span class="day-name">${day.dayName}</span>
-          <span class="day-number">${day.dayNumber}</span>
-          <span class="day-month">${day.month}</span>
-        </div>
-        <div class="day-occupancy">
-          <div class="occupancy-bar">
-            <div class="occupancy-fill" style="height: ${day.occupancyRate}%"></div>
-          </div>
-          <span class="occupancy-percent">${Math.round(day.occupancyRate)}%</span>
-        </div>
-        <div class="day-rooms">
-          <span class="rooms-available">${day.available}</span>
-          <span class="rooms-label">frei</span>
-        </div>
+        <div class="cell-occupancy">${Math.round(day.occupancyRate)}%</div>
+        <div class="cell-rooms">${day.available}</div>
         
         <!-- Tooltip Content -->
         <div class="availability-tooltip">
+          <div class="tooltip-arrow"></div>
           <div class="tooltip-header">
             <strong>${day.dayName}, ${day.dayNumber}. ${day.month}</strong>
           </div>
           <div class="tooltip-stats">
             <div class="tooltip-stat">
-              <span>Gesamt:</span>
-              <strong>${day.totalRooms} Zimmer</strong>
-            </div>
-            <div class="tooltip-stat">
-              <span>Belegt:</span>
-              <strong>${day.occupied} Zimmer</strong>
+              <span>Auslastung:</span>
+              <strong>${Math.round(day.occupancyRate)}%</strong>
             </div>
             <div class="tooltip-stat">
               <span>Verfügbar:</span>
-              <strong>${day.available} Zimmer</strong>
+              <strong>${day.available} / ${day.totalRooms}</strong>
             </div>
           </div>
           <div class="tooltip-categories">
-            <div class="tooltip-section-title">Kategorien:</div>
             ${Object.entries(day.roomDetails).map(([cat, details]) => `
-              <div class="tooltip-category">
-                <span class="category-name">${cat}:</span>
-                <span class="category-available">${details.available}/${details.total} frei</span>
-                <div class="category-bar">
-                  <div class="category-fill" style="width: ${((details.total - details.available) / details.total) * 100}%"></div>
+              <div class="tooltip-category-compact">
+                <span class="cat-name">${cat}:</span>
+                <span class="cat-available">${details.available}/${details.total}</span>
+                <div class="cat-bar">
+                  <div class="cat-fill" style="width: ${((details.total - details.available) / details.total) * 100}%"></div>
                 </div>
               </div>
             `).join('')}
@@ -3442,33 +3423,50 @@ Ihr Reservierungsteam`;
     `;
   }
 
-  // Neue Hilfsfunktion
-  calculateAverageOccupancy(days) {
-    const total = days.reduce((sum, day) => sum + day.occupancyRate, 0);
-    return total / days.length;
-  }
-
-  // Neue Funktion für Tooltips
+  // Angepasste Tooltip-Funktion
   initAvailabilityTooltips() {
-    const days = document.querySelectorAll('.availability-day[data-tooltip="hover"]');
+    const cells = document.querySelectorAll('.grid-cell[data-tooltip="hover"]');
     
-    days.forEach(day => {
-      const tooltip = day.querySelector('.availability-tooltip');
+    cells.forEach(cell => {
+      const tooltip = cell.querySelector('.availability-tooltip');
       
-      day.addEventListener('mouseenter', (e) => {
+      cell.addEventListener('mouseenter', (e) => {
+        // Close all other tooltips
+        document.querySelectorAll('.availability-tooltip.active').forEach(t => {
+          if (t !== tooltip) t.classList.remove('active');
+        });
+        
         tooltip.classList.add('active');
         
-        // Position tooltip
-        const rect = day.getBoundingClientRect();
+        // Smart positioning
+        const rect = cell.getBoundingClientRect();
         const tooltipRect = tooltip.getBoundingClientRect();
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
         
-        if (rect.left + tooltipRect.width > window.innerWidth) {
+        // Horizontal positioning
+        if (rect.left + tooltipRect.width > viewportWidth - 20) {
           tooltip.style.left = 'auto';
           tooltip.style.right = '0';
+        } else {
+          tooltip.style.left = '50%';
+          tooltip.style.right = 'auto';
+          tooltip.style.transform = 'translateX(-50%)';
+        }
+        
+        // Vertical positioning - show below if not enough space above
+        if (rect.top - tooltipRect.height < 20) {
+          tooltip.style.bottom = 'auto';
+          tooltip.style.top = 'calc(100% + 8px)';
+          tooltip.classList.add('tooltip-below');
+        } else {
+          tooltip.style.top = 'auto';
+          tooltip.style.bottom = 'calc(100% + 8px)';
+          tooltip.classList.remove('tooltip-below');
         }
       });
       
-      day.addEventListener('mouseleave', () => {
+      cell.addEventListener('mouseleave', () => {
         tooltip.classList.remove('active');
       });
     });
