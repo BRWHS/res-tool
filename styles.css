@@ -4514,13 +4514,13 @@ select.input-compact::-ms-expand {
 }
 
 /* ============================================
-   AVAILABILITY MODULE - Ultra Modern Design
+   AVAILABILITY MODULE - Compact Grid Design
    ============================================ */
 
 .availability-controls {
   display: flex;
   gap: 12px;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
   padding: 16px;
   background: var(--surface);
   border-radius: 12px;
@@ -4534,7 +4534,7 @@ select.input-compact::-ms-expand {
 }
 
 .availability-controls .btn {
-  min-width: 120px;
+  min-width: 100px;
 }
 
 /* Loading State */
@@ -4547,285 +4547,216 @@ select.input-compact::-ms-expand {
   color: var(--text-muted);
 }
 
-.availability-loading p {
-  margin-top: 16px;
-  font-size: 14px;
-}
-
-/* Calendar Container */
-.availability-calendar {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-  padding: 8px;
-}
-
-/* Hotel Section */
-.hotel-availability {
-  background: var(--surface);
-  border-radius: 16px;
-  border: 1px solid var(--border);
-  overflow: hidden;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.hotel-availability:hover {
-  transform: translateY(-2px);
-  box-shadow: 
-    0 10px 40px rgba(0, 0, 0, 0.1),
-    0 2px 8px rgba(0, 0, 0, 0.05);
-}
-
-.hotel-availability-header {
-  padding: 20px 24px;
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(6, 182, 212, 0.05) 100%);
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.hotel-availability-header h3 {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--text);
-  margin: 0;
-}
-
-.hotel-availability-header h3 i {
-  color: var(--primary);
-  font-size: 20px;
-}
-
-.availability-stats {
-  display: flex;
-  gap: 24px;
-}
-
-.stat-item {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-}
-
-.stat-value {
-  font-size: 24px;
-  font-weight: 700;
-  background: linear-gradient(135deg, var(--primary) 0%, var(--cyan) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.stat-label {
-  font-size: 12px;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-/* Timeline */
-.availability-timeline {
-  padding: 24px;
-  background: var(--bg);
-}
-
-.timeline-scroll {
-  overflow-x: auto;
-  overflow-y: visible;
-  padding-bottom: 8px;
-  margin-bottom: -8px;
-}
-
-.timeline-days {
-  display: flex;
-  gap: 8px;
-  min-width: fit-content;
-  padding: 4px;
-}
-
-/* Day Card */
-.availability-day {
-  position: relative;
+/* Grid Container */
+.availability-grid-container {
   background: var(--surface);
   border-radius: 12px;
-  padding: 12px;
-  min-width: 90px;
-  border: 2px solid;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  cursor: pointer;
+  border: 1px solid var(--border);
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
-.availability-day.weekend {
-  background: linear-gradient(135deg, var(--surface) 0%, rgba(99, 102, 241, 0.05) 100%);
+/* Grid Header */
+.availability-grid-header {
+  display: grid;
+  grid-template-columns: 200px repeat(auto-fit, minmax(50px, 1fr));
+  background: var(--bg);
+  border-bottom: 2px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
-/* Occupancy Colors */
-.availability-day.occupancy-low {
-  border-color: #10b981;
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(16, 185, 129, 0.02) 100%);
-}
-
-.availability-day.occupancy-medium {
-  border-color: #f59e0b;
-  background: linear-gradient(135deg, rgba(245, 158, 11, 0.05) 0%, rgba(245, 158, 11, 0.02) 100%);
-}
-
-.availability-day.occupancy-high {
-  border-color: #ef4444;
-  background: linear-gradient(135deg, rgba(239, 68, 68, 0.05) 0%, rgba(239, 68, 68, 0.02) 100%);
-}
-
-.availability-day:hover {
-  transform: translateY(-4px) scale(1.02);
-  box-shadow: 
-    0 12px 24px rgba(0, 0, 0, 0.15),
-    0 4px 8px rgba(0, 0, 0, 0.1);
-  z-index: 10;
-}
-
-/* Day Header */
-.day-header {
+.grid-corner {
+  padding: 12px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  background: var(--surface);
+  border-right: 1px solid var(--border);
   display: flex;
-  flex-direction: column;
   align-items: center;
-  margin-bottom: 12px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--border);
 }
 
-.day-name {
-  font-size: 11px;
+.grid-date-header {
+  padding: 8px 4px;
+  text-align: center;
+  border-right: 1px solid var(--border);
+  background: var(--surface);
+  min-width: 50px;
+}
+
+.grid-date-header.weekend {
+  background: linear-gradient(180deg, rgba(99, 102, 241, 0.05) 0%, var(--surface) 100%);
+}
+
+.date-day {
+  font-size: 10px;
   text-transform: uppercase;
   color: var(--text-muted);
-  letter-spacing: 0.5px;
   font-weight: 600;
 }
 
-.day-number {
-  font-size: 20px;
+.date-number {
+  font-size: 14px;
   font-weight: 700;
   color: var(--text);
   margin: 2px 0;
 }
 
-.day-month {
-  font-size: 11px;
-  color: var(--text-muted);
+.date-month {
+  font-size: 9px;
   text-transform: uppercase;
+  color: var(--text-muted);
 }
 
-/* Occupancy Display */
-.day-occupancy {
+/* Grid Body */
+.availability-grid-body {
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.grid-hotel-row {
+  display: grid;
+  grid-template-columns: 200px repeat(auto-fit, minmax(50px, 1fr));
+  border-bottom: 1px solid var(--border);
+  transition: background 0.2s ease;
+}
+
+.grid-hotel-row:hover {
+  background: rgba(99, 102, 241, 0.02);
+}
+
+.grid-hotel-name {
+  padding: 12px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  background: var(--surface);
+  border-right: 2px solid var(--border);
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 12px;
-}
-
-.occupancy-bar {
-  flex: 1;
-  height: 40px;
-  background: var(--bg);
-  border-radius: 6px;
-  position: relative;
-  overflow: hidden;
-}
-
-.occupancy-fill {
-  position: absolute;
-  bottom: 0;
+  position: sticky;
   left: 0;
-  right: 0;
-  background: linear-gradient(180deg, var(--primary) 0%, var(--cyan) 100%);
-  border-radius: 6px 6px 0 0;
-  transition: height 0.3s ease;
+  z-index: 50;
 }
 
-.occupancy-low .occupancy-fill {
-  background: linear-gradient(180deg, #10b981 0%, #34d399 100%);
-}
-
-.occupancy-medium .occupancy-fill {
-  background: linear-gradient(180deg, #f59e0b 0%, #fbbf24 100%);
-}
-
-.occupancy-high .occupancy-fill {
-  background: linear-gradient(180deg, #ef4444 0%, #f87171 100%);
-}
-
-.occupancy-percent {
+.grid-hotel-name i {
+  color: var(--primary);
   font-size: 14px;
-  font-weight: 700;
-  min-width: 35px;
-  text-align: right;
 }
 
-.occupancy-low .occupancy-percent {
+.grid-hotel-name span {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hotel-avg-occupancy {
+  font-size: 11px;
+  padding: 2px 6px;
+  background: var(--bg);
+  border-radius: 4px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+/* Grid Cells */
+.grid-cell {
+  position: relative;
+  padding: 8px 4px;
+  border-right: 1px solid var(--border);
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 50px;
+}
+
+.grid-cell:hover {
+  z-index: 10;
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Occupancy Colors */
+.grid-cell.occupancy-low {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(16, 185, 129, 0.05) 100%);
+}
+
+.grid-cell.occupancy-medium {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(245, 158, 11, 0.05) 100%);
+}
+
+.grid-cell.occupancy-high {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(239, 68, 68, 0.05) 100%);
+}
+
+.cell-occupancy {
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+
+.occupancy-low .cell-occupancy {
   color: #10b981;
 }
 
-.occupancy-medium .occupancy-percent {
+.occupancy-medium .cell-occupancy {
   color: #f59e0b;
 }
 
-.occupancy-high .occupancy-percent {
+.occupancy-high .cell-occupancy {
   color: #ef4444;
 }
 
-/* Rooms Display */
-.day-rooms {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 8px;
-  background: var(--bg);
-  border-radius: 8px;
-}
-
-.rooms-available {
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--text);
-}
-
-.rooms-label {
-  font-size: 10px;
-  text-transform: uppercase;
+.cell-rooms {
+  font-size: 11px;
   color: var(--text-muted);
-  letter-spacing: 0.5px;
 }
 
-/* Tooltip */
+/* Compact Tooltip */
 .availability-tooltip {
   position: absolute;
-  bottom: calc(100% + 12px);
+  bottom: calc(100% + 8px);
   left: 50%;
   transform: translateX(-50%);
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 16px;
-  min-width: 260px;
+  border-radius: 8px;
+  padding: 12px;
+  min-width: 200px;
+  max-width: 250px;
   box-shadow: 
-    0 20px 40px rgba(0, 0, 0, 0.2),
-    0 8px 16px rgba(0, 0, 0, 0.1);
+    0 10px 30px rgba(0, 0, 0, 0.2),
+    0 4px 12px rgba(0, 0, 0, 0.1);
   z-index: 1000;
   opacity: 0;
   visibility: hidden;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   pointer-events: none;
 }
 
 .availability-tooltip.active {
   opacity: 1;
   visibility: visible;
-  transform: translateX(-50%) translateY(-4px);
 }
 
-.availability-tooltip::after {
+.availability-tooltip.tooltip-below {
+  bottom: auto;
+  top: calc(100% + 8px);
+}
+
+.availability-tooltip.tooltip-below .tooltip-arrow {
+  bottom: 100%;
+  top: auto;
+  transform: translateX(-50%) rotate(180deg);
+}
+
+.tooltip-arrow {
   content: '';
   position: absolute;
   top: 100%;
@@ -4833,29 +4764,28 @@ select.input-compact::-ms-expand {
   transform: translateX(-50%);
   width: 0;
   height: 0;
-  border-left: 8px solid transparent;
-  border-right: 8px solid transparent;
-  border-top: 8px solid var(--surface);
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 6px solid var(--surface);
 }
 
 .tooltip-header {
-  margin-bottom: 12px;
-  padding-bottom: 12px;
+  margin-bottom: 8px;
+  padding-bottom: 8px;
   border-bottom: 1px solid var(--border);
-  font-size: 14px;
-  color: var(--text);
+  font-size: 12px;
 }
 
 .tooltip-stats {
   display: grid;
-  gap: 8px;
-  margin-bottom: 16px;
+  gap: 4px;
+  margin-bottom: 8px;
 }
 
 .tooltip-stat {
   display: flex;
   justify-content: space-between;
-  font-size: 13px;
+  font-size: 11px;
 }
 
 .tooltip-stat span {
@@ -4864,98 +4794,106 @@ select.input-compact::-ms-expand {
 
 .tooltip-stat strong {
   color: var(--text);
-  font-weight: 600;
 }
 
 .tooltip-categories {
-  margin-top: 16px;
-  padding-top: 16px;
+  padding-top: 8px;
   border-top: 1px solid var(--border);
 }
 
-.tooltip-section-title {
-  font-size: 12px;
-  font-weight: 600;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  margin-bottom: 12px;
-  letter-spacing: 0.5px;
-}
-
-.tooltip-category {
+.tooltip-category-compact {
   display: grid;
-  grid-template-columns: 60px 1fr;
-  gap: 12px;
+  grid-template-columns: 40px 50px 1fr;
+  gap: 8px;
   align-items: center;
-  margin-bottom: 10px;
+  margin-bottom: 6px;
+  font-size: 10px;
 }
 
-.category-name {
-  font-size: 12px;
+.cat-name {
   font-weight: 600;
   color: var(--text);
   text-transform: uppercase;
 }
 
-.category-available {
-  font-size: 12px;
+.cat-available {
   color: var(--text-muted);
   text-align: right;
 }
 
-.category-bar {
-  grid-column: span 2;
-  height: 4px;
+.cat-bar {
+  height: 3px;
   background: var(--bg);
   border-radius: 2px;
   overflow: hidden;
-  margin-top: -4px;
 }
 
-.category-fill {
+.cat-fill {
   height: 100%;
   background: linear-gradient(90deg, var(--primary) 0%, var(--cyan) 100%);
-  border-radius: 2px;
   transition: width 0.3s ease;
+}
+
+/* Scrollbar Styling */
+.availability-grid-body::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.availability-grid-body::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+
+.availability-grid-body::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+
+.availability-grid-body::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
 }
 
 /* Responsive */
 @media (max-width: 768px) {
-  .availability-controls {
-    flex-wrap: wrap;
+  .availability-grid-header,
+  .grid-hotel-row {
+    grid-template-columns: 150px repeat(auto-fit, minmax(45px, 1fr));
   }
   
-  .availability-day {
-    min-width: 80px;
+  .grid-hotel-name {
+    padding: 8px 12px;
+    font-size: 12px;
   }
   
-  .availability-tooltip {
-    left: 0;
-    transform: none;
-  }
-  
-  .availability-tooltip.active {
-    transform: translateY(-4px);
+  .grid-cell {
+    min-width: 45px;
   }
 }
 
 /* Dark Mode Optimizations */
 @media (prefers-color-scheme: dark) {
-  .availability-day {
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-  }
-  
-  .availability-day:hover {
-    box-shadow: 
-      0 12px 32px rgba(0, 0, 0, 0.4),
-      0 4px 12px rgba(0, 0, 0, 0.3);
-  }
-  
   .availability-tooltip {
     background: #1a1b26;
     border-color: #2a2b3d;
     box-shadow: 
-      0 20px 50px rgba(0, 0, 0, 0.5),
-      0 8px 20px rgba(0, 0, 0, 0.3);
+      0 10px 40px rgba(0, 0, 0, 0.5),
+      0 4px 16px rgba(0, 0, 0, 0.3);
+  }
+  
+  .grid-cell:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  }
+}
+
+/* Print Styles */
+@media print {
+  .availability-grid-container {
+    box-shadow: none;
+    border: 1px solid #ddd;
+  }
+  
+  .grid-cell:hover {
+    transform: none;
+    box-shadow: none;
   }
 }
