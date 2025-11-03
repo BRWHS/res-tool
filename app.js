@@ -3362,7 +3362,7 @@ Ihr Reservierungsteam`;
               <div class="grid-hotel-name">
                 <i class="fas fa-hotel"></i>
                 <span>${hotelData.name}</span>
-                <div class="hotel-avg-occupancy">${this.calculateAverageOccupancy(hotelData.days).toFixed(0)}%</div>
+                <div class="hotel-avg-occupancy">${Math.round(hotelData.days.reduce((sum, day) => sum + day.occupancyRate, 0) / hotelData.days.length)}%</div>
               </div>
               ${hotelData.days.map(day => this.renderGridCell(day, hotelCode)).join('')}
             </div>
