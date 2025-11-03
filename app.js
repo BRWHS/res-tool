@@ -1,4001 +1,4991 @@
 /* ================================================
-   HOTEL RESERVATION SYSTEM V2.0 - CORE APPLICATION
+   HOTEL RESERVATION SYSTEM V2.0 - ULTRA MODERN UI
+   Design inspiriert von Linear, Vercel, Stripe
    ================================================ */
 
-'use strict';
+:root {
+  /* ===== MODERN COLOR PALETTE ===== */
+  /* Primary - Purple/Indigo */
+  --primary-50: #eef2ff;
+  --primary-100: #e0e7ff;
+  --primary-200: #c7d2fe;
+  --primary-300: #a5b4fc;
+  --primary-400: #818cf8;
+  --primary-500: #6366f1;
+  --primary-600: #4f46e5;
+  --primary-700: #4338ca;
+  --primary-800: #3730a3;
+  --primary-900: #312e81;
+  
+  /* Accent - Cyan */
+  --accent-400: #22d3ee;
+  --accent-500: #06b6d4;
+  --accent-600: #0891b2;
+  
+  /* Success */
+  --success-400: #34d399;
+  --success-500: #10b981;
+  --success-600: #059669;
+  
+  /* Warning */
+  --warning-400: #fbbf24;
+  --warning-500: #f59e0b;
+  
+  /* Danger */
+  --danger-400: #f87171;
+  --danger-500: #ef4444;
+  --danger-600: #dc2626;
+  
+  /* ===== NEUTRAL COLORS (Modern Grays) ===== */
+  --neutral-900: #0f172a;
+  --neutral-850: #1e293b;
+  --neutral-800: #1e293b;
+  --neutral-750: #334155;
+  --neutral-700: #475569;
+  --neutral-650: #64748b;
+  --neutral-600: #64748b;
+  --neutral-500: #94a3b8;
+  
+  /* ===== DARK THEME COLORS ===== */
+  --bg-app: #0a0a0f;
+  --bg-base: #0f0f16;
+  --bg-surface: #16161f;
+  --bg-elevated: #1c1c26;
+  --bg-overlay: #22222e;
+  
+  /* Borders */
+  --border-primary: rgba(255, 255, 255, 0.08);
+  --border-hover: rgba(255, 255, 255, 0.12);
+  --border-active: rgba(99, 102, 241, 0.4);
+  
+  /* Text */
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-tertiary: #64748b;
+  --text-muted: #475569;
+  
+  /* ===== GLASS EFFECTS ===== */
+  --glass-bg: rgba(255, 255, 255, 0.02);
+  --glass-bg-hover: rgba(255, 255, 255, 0.04);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  --glass-blur: blur(12px);
+  
+  /* ===== SHADOWS ===== */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.15);
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.25);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.3);
+  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.4);
+  --shadow-glow: 0 0 20px rgba(99, 102, 241, 0.3);
+  
+  /* ===== SPACING ===== */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+  
+  /* ===== BORDER RADIUS ===== */
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+  --radius-2xl: 2rem;
+  --radius-full: 9999px;
+  
+  /* ===== TRANSITIONS ===== */
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-smooth: 350ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 500ms cubic-bezier(0.4, 0, 0.2, 1);
+  
+  /* ===== Z-INDEX ===== */
+  --z-base: 1;
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-modal: 300;
+  --z-tooltip: 400;
+  --z-toast: 500;
+}
 
-// =============== CONFIGURATION ===============
-// Nutze window.HRS_CONFIG falls vorhanden, sonst Fallback
-const CONFIG = {
-  VERSION: '2.0.0',
-  API: {
-    SUPABASE_URL: window.HRS_CONFIG?.API?.SUPABASE?.URL || 'https://kcqmcwfbapcuiatwixwm.supabase.co',
-    SUPABASE_KEY: window.HRS_CONFIG?.API?.SUPABASE?.ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtjcW1jd2ZiYXBjdWlhdHdpeHdtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE2Mzg5MTksImV4cCI6MjA3NzIxNDkxOX0.xy8Iwz1nl8kBbSQio00ogy5sU_cFI2R4CPe5HdqIFDQ',
-    HNS: {
-      PROD: 'https://api.hotelnetsolutions.de/v1',
-      TEST: 'https://test-api.hotelnetsolutions.de/v1',
-      TIMEOUT: 15000,
-      MAX_RETRIES: 3
-    }
-  },
-  STORAGE: {
-    PREFIX: 'hrs_v2_',
-    KEYS: {
-      USER_SESSION: 'userSession',
-      CHANNEL_SETTINGS: 'channelSettings',
-      HOTELS: 'hotels',
-      RATES: 'rates',
-      CATEGORIES: 'categories',
-      PREFERENCES: 'preferences',
-      CACHE: 'cache'
-    }
-  },
-  UI: {
-    ANIMATION_DURATION: 250,
-    DEBOUNCE_DELAY: 300,
-    TOAST_DURATION: 3000,
-    DATE_FORMAT: 'YYYY-MM-DD',
-    CURRENCY_FORMAT: 'EUR'
-  },
-  CACHE: {
-    TTL: 5 * 60 * 1000, // 5 minutes
-    MAX_SIZE: 100
+/* ================================================
+   BASE STYLES
+   ================================================ */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--bg-app);
+  color: var(--text-primary);
+  line-height: 1.6;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Animated gradient background */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 20% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 40%),
+    radial-gradient(circle at 80% 80%, rgba(6, 182, 212, 0.1) 0%, transparent 40%),
+    radial-gradient(circle at 40% 60%, rgba(139, 92, 246, 0.08) 0%, transparent 40%);
+  animation: gradientShift 20s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+@keyframes gradientShift {
+  0%, 100% { 
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
   }
-};
-
-// =============== STATE MANAGEMENT ===============
-class StateManager {
-  constructor() {
-    this.state = {
-      user: null,
-      hotels: [],
-      reservations: [],
-      categories: [],
-      rates: [],
-      filters: {
-        status: 'active',
-        hotel: null,
-        dateFrom: null,
-        dateTo: null,
-        search: ''
-      },
-      pagination: {
-        currentPage: 1,
-        pageSize: 25,
-        totalPages: 1,
-        totalItems: 0
-      },
-      ui: {
-        loading: false,
-        modal: null,
-        theme: 'dark'
-      }
-    };
-    this.listeners = new Map();
-  }
-
-  get(path) {
-    return path.split('.').reduce((acc, key) => acc?.[key], this.state);
-  }
-
-  set(path, value) {
-    const keys = path.split('.');
-    const lastKey = keys.pop();
-    const target = keys.reduce((acc, key) => {
-      if (!acc[key]) acc[key] = {};
-      return acc[key];
-    }, this.state);
-    
-    const oldValue = target[lastKey];
-    target[lastKey] = value;
-    
-    this.notify(path, value, oldValue);
-  }
-
-  subscribe(path, callback) {
-    if (!this.listeners.has(path)) {
-      this.listeners.set(path, new Set());
-    }
-    this.listeners.get(path).add(callback);
-    
-    return () => {
-      const callbacks = this.listeners.get(path);
-      if (callbacks) {
-        callbacks.delete(callback);
-        if (callbacks.size === 0) {
-          this.listeners.delete(path);
-        }
-      }
-    };
-  }
-
-  notify(path, newValue, oldValue) {
-    if (newValue === oldValue) return;
-    
-    const callbacks = this.listeners.get(path);
-    if (callbacks) {
-      callbacks.forEach(callback => callback(newValue, oldValue));
-    }
-    
-    // Notify parent paths
-    const pathParts = path.split('.');
-    while (pathParts.length > 1) {
-      pathParts.pop();
-      const parentPath = pathParts.join('.');
-      const parentCallbacks = this.listeners.get(parentPath);
-      if (parentCallbacks) {
-        parentCallbacks.forEach(callback => callback(this.get(parentPath)));
-      }
-    }
+  50% { 
+    opacity: 0.8;
+    transform: scale(1.1) rotate(5deg);
   }
 }
 
-const state = new StateManager();
+/* Scanline effect */
+body::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(255, 255, 255, 0.01) 0px,
+    transparent 1px,
+    transparent 2px
+  );
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.3;
+}
 
-// =============== STORAGE MANAGER ===============
-class StorageManager {
-  constructor(prefix = CONFIG.STORAGE.PREFIX) {
-    this.prefix = prefix;
+/* ================================================
+   TYPOGRAPHY
+   ================================================ */
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+}
+
+h2 {
+  font-size: 2rem;
+  font-weight: 600;
+}
+
+h3 {
+  font-size: 1.5rem;
+}
+
+h4 {
+  font-size: 1.25rem;
+}
+
+h5 {
+  font-size: 1.125rem;
+}
+
+h6 {
+  font-size: 1rem;
+}
+
+.text-primary {
+  color: var(--text-primary);
+}
+
+.text-secondary {
+  color: var(--text-secondary);
+}
+
+.text-tertiary,
+.text-muted {
+  color: var(--text-tertiary);
+}
+
+.text-small {
+  font-size: 0.875rem;
+}
+
+.text-xs {
+  font-size: 0.75rem;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.mono {
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-variant-ligatures: none;
+}
+
+/* ================================================
+   HEADER & NAVIGATION
+   ================================================ */
+
+header {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+  background: rgba(10, 10, 15, 0.8);
+  backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: 1px solid var(--border-primary);
+  animation: slideDown 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
   }
-
-  set(key, value) {
-    try {
-      const storageKey = this.prefix + key;
-      const serialized = JSON.stringify({
-        data: value,
-        timestamp: Date.now()
-      });
-      localStorage.setItem(storageKey, serialized);
-    } catch (error) {
-      console.error('Storage set failed:', error);
-    }
-  }
-
-  get(key) {
-    try {
-      const storageKey = this.prefix + key;
-      const item = localStorage.getItem(storageKey);
-      if (!item) return null;
-      
-      const { data, timestamp } = JSON.parse(item);
-      
-      // Check if cache is expired (optional)
-      if (CONFIG.CACHE.TTL && Date.now() - timestamp > CONFIG.CACHE.TTL) {
-        this.remove(key);
-        return null;
-      }
-      
-      return data;
-    } catch (error) {
-      console.error('Storage get failed:', error);
-      return null;
-    }
-  }
-
-  remove(key) {
-    try {
-      const storageKey = this.prefix + key;
-      localStorage.removeItem(storageKey);
-    } catch (error) {
-      console.error('Storage remove failed:', error);
-    }
-  }
-
-  clear() {
-    try {
-      const keys = Object.keys(localStorage);
-      keys.forEach(key => {
-        if (key.startsWith(this.prefix)) {
-          localStorage.removeItem(key);
-        }
-      });
-    } catch (error) {
-      console.error('Storage clear failed:', error);
-    }
+  to {
+    transform: translateY(0);
+    opacity: 1;
   }
 }
 
-const Storage = new StorageManager();
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-4) var(--space-6);
+  max-width: 1600px;
+  margin: 0 auto;
+  gap: var(--space-6);
+}
 
-// =============== API MANAGER ===============
-class API {
-  constructor(config) {
-    this.config = config;
-    this.supabase = null;
-    this.cache = new Map();
+.navbar-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-left: calc(-3 * var(--space-8));
+  padding-left: var(--space-4);
+  flex-shrink: 0;
+}
+
+.navbar-brand svg {
+  filter: drop-shadow(0 2px 8px rgba(99, 102, 241, 0.3));
+  transition: all var(--transition-base);
+}
+
+.navbar-brand svg:hover {
+  filter: drop-shadow(0 4px 12px rgba(99, 102, 241, 0.5));
+  transform: translateY(-1px);
+}
+
+/* Modern Logo Container */
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.logo-icon {
+  width: 40px;
+  height: 40px;
+  filter: drop-shadow(0 4px 12px rgba(99, 102, 241, 0.4));
+  transition: all var(--transition-base);
+}
+
+.logo-icon:hover {
+  filter: drop-shadow(0 6px 16px rgba(99, 102, 241, 0.6));
+  transform: translateY(-2px);
+}
+
+.logo-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.logo-name {
+  font-size: 1.375rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, var(--primary-400) 0%, var(--accent-400) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  line-height: 1;
+  text-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+}
+
+.logo-subtitle {
+  font-size: 0.625rem;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-top: 2px;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Old h1 styles - keep for backwards compatibility */
+.navbar-brand h1 {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: 1.5rem;
+  margin: 0;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--primary-400) 0%, var(--accent-400) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.navbar-brand h1 i {
+  font-size: 2rem;
+  background: var(--primary-600);
+  -webkit-text-fill-color: white;
+  background-clip: unset;
+  -webkit-background-clip: unset;
+}
+
+.version {
+  font-size: 0.625rem;
+  font-weight: 600;
+  padding: 0.125rem 0.375rem;
+  background: var(--primary-600);
+  color: white;
+  border-radius: var(--radius-sm);
+  margin-left: var(--space-1);
+}
+
+.toolbar {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  flex: 1;
+  justify-content: center;
+}
+
+.toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+}
+
+#statusIndicators {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.user-menu {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.clock {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  padding: var(--space-2) var(--space-4);
+  background: var(--glass-bg);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+}
+
+.sep {
+  opacity: 0.5;
+}
+
+/* ================================================
+   BUTTONS
+   ================================================ */
+
+.btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-5);
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1;
+  border: none;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  white-space: nowrap;
+  user-select: none;
+  outline: none;
+  overflow: hidden;
+}
+
+.btn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s ease-out, height 0.6s ease-out;
+}
+
+.btn:active::before {
+  width: 300px;
+  height: 300px;
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--primary-500);
+  outline-offset: 2px;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+/* Primary Button */
+.btn.primary {
+  background: linear-gradient(135deg, var(--primary-600), var(--primary-500));
+  color: white;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4), 0 0 0 1px rgba(99, 102, 241, 0.1);
+}
+
+.btn.primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--primary-700), var(--primary-600));
+  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.5), 0 0 0 1px rgba(99, 102, 241, 0.2);
+  transform: translateY(-2px);
+}
+
+.btn.primary:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4);
+}
+
+/* Secondary Button */
+.btn.secondary {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  border: 1px solid var(--border-primary);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.btn.secondary:hover:not(:disabled) {
+  background: var(--bg-overlay);
+  border-color: var(--primary-500);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.2);
+}
+
+/* Success Button */
+.btn.success {
+  background: linear-gradient(135deg, var(--success-600), var(--success-500));
+  color: white;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.btn.success:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--success-700), var(--success-600));
+  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4);
+  transform: translateY(-2px);
+}
+
+/* Danger Button */
+.btn.danger {
+  background: linear-gradient(135deg, var(--danger-600), var(--danger-500));
+  color: white;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4), 0 0 0 1px rgba(239, 68, 68, 0.1);
+}
+
+.btn.danger:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--danger-700), var(--danger-600));
+  box-shadow: 0 8px 24px rgba(239, 68, 68, 0.5), 0 0 0 1px rgba(239, 68, 68, 0.2);
+  transform: translateY(-2px);
+}
+
+.btn.danger:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
+}
+
+/* Button Sizes */
+.btn.sm {
+  padding: var(--space-2) var(--space-4);
+  font-size: 0.8125rem;
+}
+
+.btn.lg {
+  padding: var(--space-4) var(--space-6);
+  font-size: 1rem;
+}
+
+/* Icon Button */
+.btn-icon {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-lg);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-primary);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-icon::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--primary-500);
+  opacity: 0;
+  transition: opacity var(--transition-base);
+}
+
+.btn-icon:hover {
+  background: var(--primary-600);
+  border-color: var(--primary-500);
+  color: white;
+  transform: translateY(-2px) rotate(5deg);
+  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3);
+}
+
+.btn-icon:hover::before {
+  opacity: 0.1;
+}
+
+.btn-icon i {
+  position: relative;
+  z-index: 1;
+}
+
+/* ================================================
+   FORMS
+   ================================================ */
+
+.input,
+.select,
+textarea {
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  font-size: 0.875rem;
+  font-family: inherit;
+  color: var(--text-primary);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  transition: all var(--transition-base);
+  outline: none;
+}
+
+.input:hover,
+.select:hover,
+textarea:hover {
+  border-color: var(--border-hover);
+  background: var(--bg-overlay);
+}
+
+.input:focus,
+.select:focus,
+textarea:focus {
+  border-color: var(--primary-500);
+  background: var(--bg-overlay);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.input.error,
+.select.error,
+textarea.error {
+  border-color: var(--danger-500);
+}
+
+.input::placeholder {
+  color: var(--text-tertiary);
+  opacity: 0.6;
+}
+
+.select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2394a3b8' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right var(--space-3) center;
+  padding-right: var(--space-8);
+  cursor: pointer;
+}
+
+.select.sm {
+  padding: var(--space-2) var(--space-3);
+  padding-right: var(--space-6);
+  font-size: 0.8125rem;
+}
+
+textarea {
+  resize: vertical;
+  min-height: 100px;
+  line-height: 1.5;
+}
+
+.form-group {
+  margin-bottom: var(--space-5);
+}
+
+.form-label {
+  display: block;
+  margin-bottom: var(--space-2);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+}
+
+.checkbox {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  cursor: pointer;
+  user-select: none;
+}
+
+.checkbox input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: var(--primary-600);
+}
+
+/* ================================================
+   CONTAINER & LAYOUT
+   ================================================ */
+
+.container {
+  position: relative;
+  max-width: 1800px;
+  margin: 0 auto;
+  padding: var(--space-8);
+  z-index: var(--z-base);
+}
+
+/* 3-Column Layout: Left Sidebar - Main Content - Right Sidebar */
+.main-layout {
+  display: grid;
+  grid-template-columns: 320px 1fr 320px;
+  gap: var(--space-6);
+  align-items: stretch; /* Alle Spalten gleich hoch */
+}
+
+.main-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0; /* Prevents grid blowout */
+}
+
+/* Left & Right Sidebars - EXAKT GLEICH */
+.sidebar-left,
+.sidebar-right {
+  position: sticky;
+  top: calc(var(--space-8) + 80px);
+  align-self: start;
+  height: calc(100vh - 200px); /* Gleiche HÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¶he! */
+}
+
+.sidebar-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* Override card padding specifically for sidebar-card */
+.card.sidebar-card {
+  padding: 0 !important; /* Remove padding so card-head can go to edges */
+}
+
+.sidebar-card .card-head {
+  flex-shrink: 0;
+  padding: var(--space-5) var(--space-6);
+  margin: 0; /* No negative margin needed since card has no padding */
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.04) 0%, rgba(139, 92, 246, 0.04) 100%);
+  border-bottom: 1px solid rgba(99, 102, 241, 0.2);
+  position: relative;
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0; /* Round top corners to match card */
+}
+
+.sidebar-card .card-head::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--primary-500), transparent);
+  opacity: 0.3;
+}
+
+.sidebar-card .card-head h3 {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-primary);
+}
+
+.sidebar-card .card-head h3 i {
+  width: 24px;
+  height: 24px;
+  font-size: 0.9375rem;
+  background: rgba(99, 102, 241, 0.12);
+  box-shadow: 0 0 12px rgba(99, 102, 241, 0.15);
+  color: var(--primary-400);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sidebar-card .activity-feed,
+.sidebar-card .yoy-performance {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: var(--space-4);
+  min-height: 0;
+}
+
+/* Subtile Scrollbars - nur bei Hover sichtbar */
+.sidebar-card .activity-feed::-webkit-scrollbar,
+.sidebar-card .yoy-performance::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar-card .activity-feed::-webkit-scrollbar-track,
+.sidebar-card .yoy-performance::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar-card .activity-feed::-webkit-scrollbar-thumb,
+.sidebar-card .yoy-performance::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: var(--radius-full);
+  transition: background var(--transition-base);
+}
+
+.sidebar-card .activity-feed:hover::-webkit-scrollbar-thumb,
+.sidebar-card .yoy-performance:hover::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.3);
+}
+
+.sidebar-card .activity-feed:hover::-webkit-scrollbar-thumb:hover,
+.sidebar-card .yoy-performance:hover::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.5);
+}
+
+/* Firefox - Unsichtbare Scrollbar */
+.sidebar-card .activity-feed,
+.sidebar-card .yoy-performance {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+
+.sidebar-card .activity-feed:hover,
+.sidebar-card .yoy-performance:hover {
+  scrollbar-color: rgba(148, 163, 184, 0.3) transparent;
+}
+
+/* Performance Widgets Row - REMOVED (not needed anymore) */
+
+/* ================================================
+   CARDS
+   ================================================ */
+
+.card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-xl);
+  padding: var(--space-5);
+  transition: all var(--transition-base);
+  position: relative;
+  overflow: hidden;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, 
+    transparent,
+    var(--primary-500),
+    transparent
+  );
+  opacity: 0;
+  transition: opacity var(--transition-base);
+}
+
+.card:hover {
+  border-color: var(--border-hover);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.card:hover::before {
+  opacity: 1;
+}
+
+.card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-4);
+  position: relative;
+}
+
+.card-head h3 {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.card-head h3 i {
+  color: var(--primary-400);
+  font-size: 1.0625rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: rgba(99, 102, 241, 0.12);
+  border-radius: var(--radius-md);
+}
+
+.glass-morphism {
+  background: var(--glass-bg);
+  backdrop-filter: saturate(180%) blur(12px);
+  border: 1px solid var(--glass-border);
+}
+
+/* Year-over-Year Widget */
+.yoy-performance {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2); /* Gleich wie Activity Feed */
+}
+
+.yoy-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  background: var(--glass-bg);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  transition: all var(--transition-base);
+  position: relative;
+  overflow: hidden;
+}
+
+.yoy-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--primary-500);
+  transform: scaleY(0);
+  transition: transform var(--transition-base);
+}
+
+.yoy-item:hover {
+  background: var(--glass-bg-hover);
+  border-color: var(--border-hover);
+  transform: translateX(4px);
+  box-shadow: var(--shadow-md);
+}
+
+.yoy-item:hover::before {
+  transform: scaleY(1);
+}
+
+.yoy-item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+  min-width: 0; /* Important for text-overflow */
+}
+
+.yoy-item-name {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  word-break: break-word;
+}
+
+.yoy-item-meta {
+  font-size: 0.625rem;
+  color: var(--text-tertiary);
+  font-family: 'JetBrains Mono', monospace;
+  opacity: 0.8;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.yoy-item-trend {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-lg);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+  transition: all var(--transition-base);
+  flex-shrink: 0;
+}
+
+.yoy-item-trend.up {
+  background: rgba(16, 185, 129, 0.15);
+  color: var(--success-400);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.1);
+}
+
+.yoy-item-trend.down {
+  background: rgba(239, 68, 68, 0.15);
+  color: var(--danger-400);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.1);
+}
+
+.yoy-item-trend.neutral {
+  background: rgba(148, 163, 184, 0.15);
+  color: var(--text-secondary);
+  border: 1px solid rgba(148, 163, 184, 0.3);
+}
+
+.yoy-item:hover .yoy-item-trend.up {
+  box-shadow: 0 0 30px rgba(16, 185, 129, 0.2);
+  transform: scale(1.05);
+}
+
+.yoy-item:hover .yoy-item-trend.down {
+  box-shadow: 0 0 30px rgba(239, 68, 68, 0.2);
+  transform: scale(1.05);
+}
+
+.yoy-item-trend i {
+  font-size: 0.875rem;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
   }
-
-  async initSupabase() {
-    try {
-      // Check if Supabase library is loaded
-      if (typeof window.supabase === 'undefined') {
-        console.warn('Supabase library not loaded - running in Demo Mode');
-        this.updateConnectionStatus('SB', false);
-        return null;
-      }
-      
-      const { createClient } = window.supabase;
-      this.supabase = createClient(
-        this.config.API.SUPABASE_URL,
-        this.config.API.SUPABASE_KEY
-      );
-      
-      // Test connection
-      const { data, error } = await this.supabase
-        .from('reservations')
-        .select('count');
-      
-      if (error) throw error;
-      
-      console.log('âœ… Supabase connected successfully');
-      this.updateConnectionStatus('SB', true);
-      
-      return this.supabase;
-    } catch (error) {
-      console.warn('âš ï¸ Supabase connection failed - running in Demo Mode:', error.message);
-      this.updateConnectionStatus('SB', false);
-      return null;
-    }
-  }
-
-  updateConnectionStatus(type, connected) {
-    // Warte kurz, damit DOM sicher geladen ist
-    setTimeout(() => {
-      const indicator = document.querySelector(`[data-status-type="${type}"]`);
-      
-      if (indicator) {
-        // Entferne beide Klassen erst
-        indicator.classList.remove('active', 'error');
-        
-        // FÃ¼ge die richtige Klasse hinzu
-        if (connected) {
-          indicator.classList.add('active');
-          // Update tooltip
-          if (type === 'SB') {
-            indicator.setAttribute('data-tooltip', 'âœ… Supabase Connected');
-          } else {
-            indicator.setAttribute('data-tooltip', 'âœ… HotelNetSolutions Connected');
-          }
-        } else {
-          indicator.classList.add('error');
-          // Update tooltip
-          if (type === 'SB') {
-            indicator.setAttribute('data-tooltip', 'âŒ Supabase - Nicht verbunden');
-          } else {
-            indicator.setAttribute('data-tooltip', 'âŒ HotelNetSolutions - Nicht verbunden');
-          }
-        }
-        
-        console.log(`ðŸ”„ Connection status updated: ${type} = ${connected ? 'âœ… Connected' : 'âŒ Disconnected'}`);
-      } else {
-        console.warn(`âš ï¸ Status indicator not found for: ${type}`);
-      }
-    }, 100);
-  }
-
-  // Cache methods
-  getCached(key) {
-    const cached = this.cache.get(key);
-    if (!cached) return null;
-    
-    if (Date.now() - cached.timestamp > this.config.CACHE.TTL) {
-      this.cache.delete(key);
-      return null;
-    }
-    
-    return cached.data;
-  }
-
-  setCached(key, data) {
-    this.cache.set(key, {
-      data,
-      timestamp: Date.now()
-    });
-  }
-
-  // Reservations API
-  async getReservations(filters = {}) {
-    try {
-      if (!this.supabase) {
-        // Demo mode - return data from localStorage or sample data
-        let reservations = this.getStoredReservations();
-        
-        // If no stored reservations, use demo data
-        if (!reservations || reservations.length === 0) {
-          reservations = this.getDemoReservations();
-          this.saveReservationsToStorage(reservations);
-        }
-        
-        // Apply filters
-        return this.applyFiltersToReservations(reservations, filters);
-      }
-
-      let query = this.supabase
-        .from('reservations')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      // Apply filters
-      if (filters.status && filters.status !== 'all') {
-        query = query.eq('status', filters.status);
-      }
-
-      if (filters.hotel) {
-        query = query.eq('hotel_code', filters.hotel);
-      }
-
-      if (filters.dateFrom) {
-        query = query.gte('arrival', filters.dateFrom);
-      }
-
-      if (filters.dateTo) {
-        query = query.lte('departure', filters.dateTo);
-      }
-
-      if (filters.search) {
-        query = query.or(`guest_last_name.ilike.%${filters.search}%,guest_first_name.ilike.%${filters.search}%,reservation_number.ilike.%${filters.search}%`);
-      }
-
-      const { data, error } = await query;
-
-      if (error) throw error;
-
-      return data || [];
-    } catch (error) {
-      console.error('Failed to get reservations:', error);
-      return this.getStoredReservations() || this.getDemoReservations();
-    }
-  }
-
-  getStoredReservations() {
-    try {
-      const stored = localStorage.getItem('hrs_v2_demo_reservations');
-      return stored ? JSON.parse(stored) : null;
-    } catch (error) {
-      console.error('Failed to get stored reservations:', error);
-      return null;
-    }
-  }
-
-  saveReservationsToStorage(reservations) {
-    try {
-      localStorage.setItem('hrs_v2_demo_reservations', JSON.stringify(reservations));
-    } catch (error) {
-      console.error('Failed to save reservations to storage:', error);
-    }
-  }
-
-  applyFiltersToReservations(reservations, filters) {
-    let filtered = [...reservations];
-
-    // Sort by created_at descending
-    filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-
-    // Apply status filter
-    if (filters.status && filters.status !== 'all') {
-      filtered = filtered.filter(r => r.status === filters.status);
-    }
-
-    // Apply hotel filter
-    if (filters.hotel) {
-      filtered = filtered.filter(r => r.hotel_code === filters.hotel);
-    }
-
-    // Apply date filters
-    if (filters.dateFrom) {
-      filtered = filtered.filter(r => r.arrival >= filters.dateFrom);
-    }
-
-    if (filters.dateTo) {
-      filtered = filtered.filter(r => r.departure <= filters.dateTo);
-    }
-
-    // Apply search filter
-    if (filters.search) {
-      const searchLower = filters.search.toLowerCase();
-      filtered = filtered.filter(r => 
-        (r.guest_last_name && r.guest_last_name.toLowerCase().includes(searchLower)) ||
-        (r.guest_first_name && r.guest_first_name.toLowerCase().includes(searchLower)) ||
-        (r.reservation_number && r.reservation_number.toLowerCase().includes(searchLower))
-      );
-    }
-
-    return filtered;
-  }
-
-  getDemoReservations() {
-    // Return demo data if Supabase is not available
-    const today = new Date();
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const nextWeek = new Date(today);
-    nextWeek.setDate(nextWeek.getDate() + 7);
-    
-    const formatDate = (date) => date.toISOString().split('T')[0];
-    
-    return [
-      {
-        id: 1,
-        reservation_number: 'RES-2024-001',
-        hotel_code: 'MA7-M-DOR',
-        guest_first_name: 'Max',
-        guest_last_name: 'Mustermann',
-        guest_email: 'max.mustermann@email.com',
-        guest_phone: '+49 89 12345678',
-        arrival: formatDate(today),
-        departure: formatDate(new Date(today.getTime() + 2 * 24 * 60 * 60 * 1000)),
-        guests_adults: 2,
-        guests_children: 0,
-        category: 'SUP',
-        rate_code: 'STD',
-        rate_price: 119,
-        total_price: 238,
-        status: 'active',
-        payment_status: 'pending',
-        notes: 'FrÃ¼her Check-in gewÃ¼nscht',
-        created_at: new Date(today.getTime() - 5 * 24 * 60 * 60 * 1000).toISOString()
-      },
-      {
-        id: 2,
-        reservation_number: 'RES-2024-002',
-        hotel_code: 'RES-HD-ALT',
-        guest_first_name: 'Anna',
-        guest_last_name: 'Schmidt',
-        guest_email: 'anna.schmidt@example.de',
-        guest_phone: '+49 621 987654',
-        arrival: formatDate(tomorrow),
-        departure: formatDate(new Date(tomorrow.getTime() + 3 * 24 * 60 * 60 * 1000)),
-        guests_adults: 2,
-        guests_children: 1,
-        category: 'DLX',
-        rate_code: 'FLEX',
-        rate_price: 159,
-        total_price: 477,
-        status: 'active',
-        payment_status: 'paid',
-        guest_company: 'Schmidt GmbH',
-        created_at: new Date(today.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString()
-      },
-      {
-        id: 3,
-        reservation_number: 'RES-2024-003',
-        hotel_code: 'MA7-M-DOR',
-        guest_first_name: 'Thomas',
-        guest_last_name: 'Weber',
-        guest_email: 'thomas.weber@business.com',
-        guest_phone: '+49 89 555-1234',
-        arrival: formatDate(nextWeek),
-        departure: formatDate(new Date(nextWeek.getTime() + 5 * 24 * 60 * 60 * 1000)),
-        guests_adults: 1,
-        guests_children: 0,
-        category: 'EXE',
-        rate_code: 'CORP',
-        rate_price: 189,
-        total_price: 945,
-        status: 'active',
-        payment_status: 'partial',
-        guest_company: 'TechCorp AG',
-        notes: 'Business Gast - Rechnung an Firma',
-        created_at: new Date(today.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString()
-      },
-      {
-        id: 4,
-        reservation_number: 'RES-2024-004',
-        hotel_code: 'RES-HD-ALT',
-        guest_first_name: 'Julia',
-        guest_last_name: 'MÃ¼ller',
-        guest_email: 'julia.mueller@gmail.com',
-        arrival: '2024-11-20',
-        departure: '2024-11-22',
-        guests_adults: 2,
-        guests_children: 0,
-        category: 'SUP',
-        rate_code: 'STD',
-        rate_price: 129,
-        total_price: 258,
-        status: 'pending',
-        payment_status: 'pending',
-        created_at: new Date(today.getTime() - 1 * 24 * 60 * 60 * 1000).toISOString()
-      },
-      {
-        id: 5,
-        reservation_number: 'RES-2024-005',
-        hotel_code: 'MA7-M-DOR',
-        guest_first_name: 'Michael',
-        guest_last_name: 'Fischer',
-        guest_email: 'michael.fischer@email.de',
-        arrival: '2024-11-05',
-        departure: '2024-11-08',
-        guests_adults: 2,
-        guests_children: 2,
-        category: 'FAM',
-        rate_code: 'FAM',
-        rate_price: 149,
-        total_price: 447,
-        status: 'done',
-        payment_status: 'paid',
-        guest_notes: 'Hatten einen schÃ¶nen Aufenthalt',
-        created_at: new Date(today.getTime() - 25 * 24 * 60 * 60 * 1000).toISOString()
-      }
-    ];
-  }
-
-  async createReservation(data) {
-    try {
-      if (!this.supabase) {
-        // Demo mode - simulate creation and save to localStorage
-        const newReservation = {
-          ...data,
-          id: Date.now(),
-          created_at: new Date().toISOString()
-        };
-        
-        // Get existing reservations and add new one
-        const reservations = this.getStoredReservations() || [];
-        reservations.unshift(newReservation);
-        this.saveReservationsToStorage(reservations);
-        
-        return newReservation;
-      }
-
-      const { data: reservation, error } = await this.supabase
-        .from('reservations')
-        .insert([data])
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      return reservation;
-    } catch (error) {
-      console.error('Failed to create reservation:', error);
-      throw error;
-    }
-  }
-
-  async updateReservation(id, updates) {
-    try {
-      if (!this.supabase) {
-        // Demo mode - update in localStorage
-        const reservations = this.getStoredReservations() || [];
-        const index = reservations.findIndex(r => r.id === id || r.id === Number(id));
-        
-        if (index !== -1) {
-          reservations[index] = { ...reservations[index], ...updates };
-          this.saveReservationsToStorage(reservations);
-          return reservations[index];
-        }
-        
-        return { id, ...updates };
-      }
-
-      const { data, error } = await this.supabase
-        .from('reservations')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      return data;
-    } catch (error) {
-      console.error('Failed to update reservation:', error);
-      throw error;
-    }
-  }
-
-  async pushToHNS(reservation) {
-    // Placeholder for HNS integration
-    console.log('HNS push not yet implemented:', reservation);
-    return null;
+  50% {
+    opacity: 0.8;
+    transform: scale(1.1);
   }
 }
 
-// =============== UI MANAGER ===============
-class UIManager {
-  constructor() {
-    this.toastContainer = this.createToastContainer();
-  }
+/* ================================================
+   DASHBOARD & KPIs
+   ================================================ */
 
-  createToastContainer() {
-    let container = document.getElementById('toastContainer');
-    if (!container) {
-      container = document.createElement('div');
-      container.id = 'toastContainer';
-      container.className = 'toast-container';
-      document.body.appendChild(container);
-    }
-    return container;
-  }
+.kpi-section {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
 
-  showToast(message, type = 'info', duration = CONFIG.UI.TOAST_DURATION) {
-    const toast = document.createElement('div');
-    toast.className = `toast toast-${type}`;
-    
-    const icon = {
-      success: 'fa-check-circle',
-      error: 'fa-exclamation-circle',
-      warning: 'fa-exclamation-triangle',
-      info: 'fa-info-circle'
-    }[type] || 'fa-info-circle';
-    
-    toast.innerHTML = `
-      <i class="fas ${icon}"></i>
-      <span>${message}</span>
-    `;
-    
-    this.toastContainer.appendChild(toast);
-    
-    // Trigger animation
-    setTimeout(() => toast.classList.add('show'), 10);
-    
-    // Remove after duration
-    setTimeout(() => {
-      toast.classList.remove('show');
-      setTimeout(() => toast.remove(), 300);
-    }, duration);
-  }
+/* Performance Cards */
+.performance-card .card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-4);
+}
 
-  openModal(modalId) {
-    const modal = document.getElementById(modalId);
-    if (!modal) return;
-    
-    modal.classList.remove('hidden');
-    modal.setAttribute('aria-hidden', 'false');
-    document.body.style.overflow = 'hidden';
-    
-    // Focus trap
-    const focusableElements = modal.querySelectorAll(
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-    );
-    if (focusableElements.length > 0) {
-      focusableElements[0].focus();
-    }
-  }
+.performance-card .card-head.compact {
+  margin-bottom: var(--space-3);
+}
 
-  closeModal(modalId) {
-    const modal = document.getElementById(modalId);
-    if (!modal) return;
-    
-    modal.classList.add('hidden');
-    modal.setAttribute('aria-hidden', 'true');
-    document.body.style.overflow = '';
-  }
+.performance-title-inline {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
 
-  closeAllModals() {
-    document.querySelectorAll('.modal:not(.hidden)').forEach(modal => {
-      this.closeModal(modal.id);
-    });
-  }
+.performance-title-inline > i {
+  font-size: 1.25rem;
+  color: var(--primary-400);
+}
 
-  setLoading(element, loading) {
-    if (!element) return;
-    
-    if (loading) {
-      element.disabled = true;
-      element.classList.add('loading');
-      const icon = element.querySelector('i');
-      if (icon) {
-        icon.className = 'fas fa-spinner fa-spin';
-      }
-    } else {
-      element.disabled = false;
-      element.classList.remove('loading');
-      const icon = element.querySelector('i');
-      if (icon) {
-        // Restore original icon - you might need to store this
-        icon.className = 'fas fa-sync';
-      }
-    }
-  }
+.performance-title-inline h3 {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+  line-height: 1;
+  letter-spacing: -0.01em;
+}
 
-  validateForm(form) {
-    const errors = [];
-    const requiredInputs = form.querySelectorAll('[required]');
-    
-    requiredInputs.forEach(input => {
-      if (!input.value.trim()) {
-        errors.push({
-          field: input.name,
-          message: `${input.name} ist erforderlich`
-        });
-        input.classList.add('error');
-      } else {
-        input.classList.remove('error');
-      }
-    });
-    
-    // Validate specific field types
-    form.querySelectorAll('[type="email"]').forEach(input => {
-      if (input.value && !this.isValidEmail(input.value)) {
-        errors.push({
-          field: input.name,
-          message: 'UngÃ¼ltige E-Mail-Adresse'
-        });
-        input.classList.add('error');
-      }
-    });
-    
-    return { valid: errors.length === 0, errors };
-  }
+.performance-card .select {
+  margin: 0;
+}
 
-  isValidEmail(email) {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  }
+.reservations-block {
+  margin-top: 0; /* Kein extra Margin */
+}
 
-  isValidDate(date) {
-    return !isNaN(new Date(date).getTime());
-  }
+.reservations-block .card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-xl);
+  padding: 0 !important; /* Entferne Padding fÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¼r bessere Kontrolle */
+  overflow: hidden;
+}
 
-  // Debounce function for input events
-  debounce(func, delay) {
-    let timeoutId;
-    return function (...args) {
-      clearTimeout(timeoutId);
-      timeoutId = setTimeout(() => func.apply(this, args), delay);
-    };
+.reservations-block .card-head {
+  padding: var(--space-5) var(--space-6);
+  margin: 0;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.04) 0%, rgba(139, 92, 246, 0.04) 100%);
+  border-bottom: 1px solid rgba(99, 102, 241, 0.2);
+  position: relative;
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0; /* Round top corners to match card */
+}
+
+.reservations-block .card-head::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--primary-500), transparent);
+  opacity: 0.3;
+}
+
+.reservations-block .card-head h3 {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-primary);
+}
+
+.reservations-block .card-head h3 i {
+  width: 28px;
+  height: 28px;
+  font-size: 1.0625rem;
+  background: rgba(99, 102, 241, 0.12);
+  box-shadow: 0 0 12px rgba(99, 102, 241, 0.15);
+  color: var(--primary-400);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.reservations-block .filters-grid {
+  padding: var(--space-5) var(--space-6);
+  margin-bottom: 0;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-primary);
+}
+
+.filters-grid {
+  display: grid;
+  grid-template-columns: 2fr 1.5fr 1.5fr 1fr 1fr auto;
+  gap: var(--space-3);
+  align-items: end;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.filter-group label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.filter-actions {
+  display: flex;
+  gap: var(--space-2);
+  align-items: end;
+  padding-bottom: 0;
+}
+
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+
+.kpi {
+  text-align: center;
+  padding: var(--space-4) var(--space-3);
+  background: transparent;
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  transition: all var(--transition-base);
+  position: relative;
+  overflow: hidden;
+  min-width: 0; /* Important for responsive */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.kpi::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, var(--primary-500) 0%, transparent 70%);
+  opacity: 0;
+  transform: translate(-50%, -50%);
+  transition: opacity var(--transition-base);
+}
+
+.kpi:hover {
+  background: var(--glass-bg);
+  border-color: var(--primary-500);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 32px rgba(99, 102, 241, 0.2);
+}
+
+.kpi:hover::before {
+  opacity: 0.05;
+}
+
+.kpi .value {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: var(--space-2);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  transition: all var(--transition-base);
+  position: relative;
+  z-index: 1;
+  white-space: nowrap; /* WICHTIG: Keine UmbrÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¼che! */
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.kpi:hover .value {
+  background: linear-gradient(135deg, var(--primary-400), var(--accent-400));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  transform: scale(1.1);
+}
+
+.kpi .label {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  line-height: 1.3;
+  position: relative;
+  z-index: 1;
+  white-space: nowrap; /* Verhindert Zeilenumbruch */
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Activity Feed */
+.activity-feed {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.activity-item {
+  display: flex;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  background: var(--glass-bg);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  transition: all var(--transition-base);
+  position: relative;
+  overflow: hidden;
+}
+
+.activity-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: linear-gradient(180deg, var(--primary-500), var(--accent-500));
+  transform: scaleY(0);
+  transition: transform var(--transition-base);
+}
+
+.activity-item:hover {
+  background: var(--glass-bg-hover);
+  border-color: var(--primary-500);
+  transform: translateX(4px);
+  box-shadow: 0 4px 24px rgba(99, 102, 241, 0.15);
+}
+
+.activity-item:hover::before {
+  transform: scaleY(1);
+}
+
+.activity-icon {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--primary-600), var(--primary-500));
+  border-radius: var(--radius-lg);
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+  transition: all var(--transition-base);
+}
+
+.activity-item:hover .activity-icon {
+  transform: scale(1.1) rotate(5deg);
+  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.4);
+}
+
+.activity-icon i {
+  color: white;
+  font-size: 0.875rem;
+}
+
+.activity-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.activity-title {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.25rem;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.activity-meta {
+  font-size: 0.6875rem;
+  color: var(--text-tertiary);
+  font-family: 'JetBrains Mono', monospace;
+  opacity: 0.8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ================================================
+   TABLE
+   ================================================ */
+
+.table-wrapper {
+  overflow-x: auto;
+  background: var(--bg-surface);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: auto; /* Automatisches Layout */
+}
+
+thead {
+  background: var(--bg-elevated);
+  border-bottom: 2px solid var(--border-primary);
+}
+
+thead th {
+  padding: var(--space-5) var(--space-4);
+  text-align: left;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+}
+
+tbody tr {
+  border-bottom: 1px solid var(--border-primary);
+  border-left: 3px solid transparent;
+  transition: all var(--transition-fast);
+  cursor: pointer;
+}
+
+tbody tr:hover {
+  background: rgba(99, 102, 241, 0.05);
+  border-color: var(--primary-500);
+  border-left-color: var(--primary-500);
+}
+
+tbody tr:last-child {
+  border-bottom: none;
+}
+
+tbody td {
+  padding: var(--space-5) var(--space-4);
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+tbody td:first-child {
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--primary-400);
+  font-size: 0.8125rem;
+  letter-spacing: -0.01em;
+}
+
+tbody td:last-child {
+  text-align: center;
+}
+
+tbody td .pill {
+  font-size: 0.75rem;
+  padding: var(--space-1) var(--space-3);
+  font-weight: 600;
+}
+
+/* Kategorie-Badges in Tabelle */
+.category-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-3);
+  font-size: 0.75rem;
+  font-weight: 700;
+  border-radius: var(--radius-md);
+  background: rgba(99, 102, 241, 0.15);
+  color: var(--primary-400);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.02em;
+}
+
+/* Preis-Formatierung */
+.price-cell {
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--text-primary);
+  font-size: 0.9375rem;
+}
+
+/* ================================================
+   PAGINATION
+   ================================================ */
+
+.pagination-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-5) var(--space-6);
+  background: var(--bg-surface);
+  border-top: 1px solid var(--border-primary);
+  gap: var(--space-4);
+}
+
+.pagination-info {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.pagination-pages {
+  padding: 0 var(--space-4);
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  font-weight: 600;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.btn-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--border-primary);
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  font-size: 0.875rem;
+}
+
+.btn-pagination:hover:not(:disabled) {
+  background: var(--primary-500);
+  color: white;
+  border-color: var(--primary-500);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.btn-pagination:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.pagination-size .select {
+  min-width: 140px;
+}
+
+/* ================================================
+   TODAY'S OPERATIONS WIDGET
+   ================================================ */
+
+.operations-widget {
+  margin-top: var(--space-6);
+}
+
+/* Override card padding specifically for operations-widget */
+.operations-widget .card {
+  padding: 0 !important; /* Remove padding so card-head can go to edges */
+}
+
+.operations-widget .card-head {
+  padding: var(--space-5) var(--space-6);
+  margin: 0;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.04) 0%, rgba(139, 92, 246, 0.04) 100%);
+  border-bottom: 1px solid rgba(99, 102, 241, 0.2);
+  position: relative;
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0; /* Round top corners to match card */
+}
+
+.operations-widget .card-head::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--primary-500), transparent);
+  opacity: 0.3;
+}
+
+.operations-widget .card-head h3 {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-primary);
+}
+
+.operations-widget .card-head h3 i {
+  width: 28px;
+  height: 28px;
+  font-size: 1.0625rem;
+  background: rgba(99, 102, 241, 0.12);
+  box-shadow: 0 0 12px rgba(99, 102, 241, 0.15);
+  color: var(--primary-400);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.operations-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--space-5);
+  padding: var(--space-6);
+}
+
+.operation-card {
+  display: flex;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  transition: all var(--transition-base);
+  position: relative;
+  overflow: hidden;
+}
+
+.operation-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--primary-500), var(--accent-500));
+  opacity: 0;
+  transition: opacity var(--transition-base);
+}
+
+.operation-card:hover {
+  border-color: var(--primary-500);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.operation-card:hover::before {
+  opacity: 1;
+}
+
+.operation-card.checkin::before {
+  background: linear-gradient(90deg, #10b981, #059669);
+}
+
+.operation-card.checkout::before {
+  background: linear-gradient(90deg, #f59e0b, #d97706);
+}
+
+.operation-card.inhouse::before {
+  background: linear-gradient(90deg, #6366f1, #4f46e5);
+}
+
+.operation-card.pending::before {
+  background: linear-gradient(90deg, #ef4444, #dc2626);
+}
+
+.operation-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-lg);
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.operation-card.checkin .operation-icon {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+}
+
+.operation-card.checkout .operation-icon {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+}
+
+.operation-card.inhouse .operation-icon {
+  background: rgba(99, 102, 241, 0.15);
+  color: var(--primary-400);
+}
+
+.operation-card.pending .operation-icon {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
+.operation-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.operation-value {
+  font-size: 2rem;
+  font-weight: 800;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.operation-label {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.btn-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0;
+  background: none;
+  border: none;
+  color: var(--primary-400);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  margin-top: var(--space-1);
+}
+
+.btn-link:hover {
+  color: var(--primary-300);
+  gap: var(--space-3);
+}
+
+.btn-link i {
+  font-size: 0.75rem;
+  transition: transform var(--transition-fast);
+}
+
+.btn-link:hover i {
+  transform: translateX(2px);
+}
+
+/* ================================================
+   BADGES & PILLS
+   ================================================ */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-4);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  border-radius: var(--radius-full);
+  background: linear-gradient(135deg, var(--primary-600), var(--primary-500));
+  color: white;
+  border: none;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.35), 0 0 0 1px rgba(99, 102, 241, 0.1);
+  font-family: 'JetBrains Mono', monospace;
+  min-width: 36px;
+  justify-content: center;
+  transition: all var(--transition-fast);
+}
+
+.badge:hover {
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.45), 0 0 0 1px rgba(99, 102, 241, 0.2);
+  transform: scale(1.05);
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  border-radius: var(--radius-full);
+  border: 1px solid transparent;
+  transition: all var(--transition-base);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.pill.active {
+  background: rgba(16, 185, 129, 0.15);
+  color: var(--success-400);
+  border-color: rgba(16, 185, 129, 0.3);
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.1);
+}
+
+.pill.active:hover {
+  box-shadow: 0 0 30px rgba(16, 185, 129, 0.2);
+  transform: scale(1.05);
+}
+
+.pill.pending {
+  background: rgba(251, 191, 36, 0.15);
+  color: var(--warning-400);
+  border-color: rgba(251, 191, 36, 0.3);
+  box-shadow: 0 0 20px rgba(251, 191, 36, 0.1);
+}
+
+.pill.pending:hover {
+  box-shadow: 0 0 30px rgba(251, 191, 36, 0.2);
+  transform: scale(1.05);
+}
+
+.pill.canceled {
+  background: rgba(239, 68, 68, 0.15);
+  color: var(--danger-400);
+  border-color: rgba(239, 68, 68, 0.3);
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.1);
+}
+
+.pill.canceled:hover {
+  box-shadow: 0 0 30px rgba(239, 68, 68, 0.2);
+  transform: scale(1.05);
+}
+
+.pill.done {
+  background: rgba(148, 163, 184, 0.15);
+  color: var(--text-secondary);
+  border-color: rgba(148, 163, 184, 0.3);
+}
+
+.pill.error {
+  background: rgba(239, 68, 68, 0.15);
+  color: var(--danger-400);
+  border-color: rgba(239, 68, 68, 0.3);
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.1);
+}
+
+.pill i {
+  font-size: 0.875rem;
+}
+
+/* ================================================
+   MODAL
+   ================================================ */
+
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: var(--z-modal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-6);
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(12px) saturate(180%);
+  animation: fadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.modal.hidden {
+  display: none;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    backdrop-filter: blur(0px) saturate(100%);
+  }
+  to {
+    opacity: 1;
+    backdrop-filter: blur(12px) saturate(180%);
   }
 }
 
-// =============== HOTEL DATA ===============
-const HOTELS = [
-  { code: 'MA7-M-DOR', group: 'MA7', name: 'Mannheim Dorfplatz', city: 'Mannheim' },
-  { code: 'MA7-M-HAF', group: 'MA7', name: 'Mannheim Hafen', city: 'Mannheim' },
-  { code: 'RES-HD-ALT', group: 'RESERVIO', name: 'Heidelberg Altstadt', city: 'Heidelberg' },
-  { code: 'RES-HD-BHF', group: 'RESERVIO', name: 'Heidelberg Bahnhof', city: 'Heidelberg' },
-  { code: 'GH-KA-SUD', group: 'GuestHouse', name: 'Karlsruhe SÃ¼dstadt', city: 'Karlsruhe' },
-  { code: 'GH-S-MIT', group: 'GuestHouse', name: 'Stuttgart Mitte', city: 'Stuttgart' },
-  { code: 'BW-FR-CTR', group: 'BestWay', name: 'Frankfurt City Center', city: 'Frankfurt' },
-  { code: 'BW-FR-FLU', group: 'BestWay', name: 'Frankfurt Flughafen', city: 'Frankfurt' },
-  { code: 'UM-MUC-HBF', group: 'UrbanMotel', name: 'MÃ¼nchen Hauptbahnhof', city: 'MÃ¼nchen' },
-  { code: 'UM-MUC-OST', group: 'UrbanMotel', name: 'MÃ¼nchen Ost', city: 'MÃ¼nchen' }
-];
-
-// =============== DEMO DATA ===============
-const DEMO_CATEGORIES = [
-  { 
-    id: 1, 
-    code: 'STD', 
-    name: 'Standard', 
-    size: '18mÂ²', 
-    beds: '1 Doppelbett', 
-    persons: 2, 
-    price: 89,
-    amenities: ['WLAN', 'TV', 'Bad mit Dusche']
-  },
-  { 
-    id: 2, 
-    code: 'SUP', 
-    name: 'Superior', 
-    size: '24mÂ²', 
-    beds: '1 King-Size Bett', 
-    persons: 2, 
-    price: 119,
-    amenities: ['WLAN', 'Smart-TV', 'Bad mit Wanne', 'Minibar']
-  },
-  { 
-    id: 3, 
-    code: 'DLX', 
-    name: 'Deluxe', 
-    size: '32mÂ²', 
-    beds: '1 King-Size Bett + Schlafsofa', 
-    persons: 3, 
-    price: 159,
-    amenities: ['WLAN', 'Smart-TV', 'Bad mit Wanne & Dusche', 'Minibar', 'Balkon']
-  },
-  {
-    id: 4,
-    code: 'JUN',
-    name: 'Junior Suite',
-    size: '42mÂ²',
-    beds: '1 King-Size Bett',
-    persons: 2,
-    price: 199,
-    amenities: ['WLAN', 'Smart-TV', 'Luxus-Bad', 'Minibar', 'Sitzecke', 'Balkon']
-  }
-];
-
-const DEMO_RATES = [
-  { 
-    id: 1, 
-    code: 'STD', 
-    name: 'Standardrate', 
-    price: 89, 
-    cancellation: 'Bis 24h vorher kostenlos stornierbar',
-    includes: ['FrÃ¼hstÃ¼ck']
-  },
-  { 
-    id: 2, 
-    code: 'FLEX', 
-    name: 'Flex Rate', 
-    price: 109, 
-    cancellation: 'Bis 6h vorher kostenlos stornierbar',
-    includes: ['FrÃ¼hstÃ¼ck', 'Late Check-out']
-  },
-  { 
-    id: 3, 
-    code: 'NREF', 
-    name: 'Non-Refundable', 
-    price: 69, 
-    cancellation: 'Nicht stornierbar - 20% gÃ¼nstiger',
-    includes: ['FrÃ¼hstÃ¼ck']
-  },
-  {
-    id: 4,
-    code: 'BUSI',
-    name: 'Business Rate',
-    price: 99,
-    cancellation: 'Bis 18h vorher kostenlos stornierbar',
-    includes: ['FrÃ¼hstÃ¼ck', 'WLAN Premium', 'Parkplatz']
-  }
-];
-
-// =============== APPLICATION CONTROLLER ===============
-class ReservationApp {
-  constructor() {
-    this.api = new API(CONFIG);
-    this.ui = new UIManager();
-    this.initialized = false;
-    this.wizard = null;
-  }
-
-  async init() {
-    if (this.initialized) return;
-    
-    try {
-      // Show loading state
-      this.showLoadingOverlay();
-      
-      // Initialize components (Demo Mode)
-      try {
-        await this.initializeSupabase();
-      } catch (error) {
-        console.log('Continuing in demo mode without database connection');
-      }
-      this.loadStoredData();
-      this.initializeEventListeners();
-      this.initializeRouting();
-      
-      // Check authentication
-      let session = Storage.get('USER_SESSION');
-      
-      // Create demo session if none exists (for development/demo mode)
-      if (!session || !this.isSessionValid(session)) {
-        console.log('No valid session found - creating demo session');
-        session = this.createDemoSession();
-        Storage.set('USER_SESSION', session);
-      }
-      
-      state.set('user', session.user);
-      
-      // Load initial data
-      await Promise.all([
-        this.loadHotels(),
-        this.loadCategories(),
-        this.loadRates(),
-        this.loadReservations()
-      ]);
-      
-      // Start periodic updates
-      this.startPeriodicUpdates();
-      
-      // Update UI
-      this.updateDashboard();
-      this.hideLoadingOverlay();
-
-      // Start clock immediately
-      this.updateClock();
-      
-      // Update user display
-      this.updateUserDisplay();
-      
-      this.initialized = true;
-      this.ui.showToast('System initialized successfully', 'success');
-      
-    } catch (error) {
-      console.error('Initialization failed:', error);
-      this.hideLoadingOverlay();
-      this.ui.showToast('Failed to initialize system: ' + error.message, 'error');
-    }
-  }
-
-  async initializeSupabase() {
-    try {
-      return await this.api.initSupabase();
-    } catch (error) {
-      console.log('Continuing without Supabase - Demo Mode');
-      return null;
-    }
-  }
-
-  loadStoredData() {
-    // Load preferences
-    const preferences = Storage.get('PREFERENCES') || {};
-    if (preferences.theme) {
-      document.body.classList.toggle('light-theme', preferences.theme === 'light');
-    }
-    
-    // Load cached data
-    const cachedHotels = Storage.get('HOTELS');
-    if (cachedHotels) {
-      state.set('hotels', cachedHotels);
-    } else {
-      state.set('hotels', HOTELS);
-      Storage.set('HOTELS', HOTELS);
-    }
-  }
-
-  initializeEventListeners() {
-    // Global event delegation
-    document.addEventListener('click', this.handleGlobalClick.bind(this));
-    document.addEventListener('change', this.handleGlobalChange.bind(this));
-    document.addEventListener('submit', this.handleGlobalSubmit.bind(this));
-    
-    // Keyboard shortcuts
-    document.addEventListener('keydown', this.handleKeyboardShortcuts.bind(this));
-    
-    // Window events
-    window.addEventListener('resize', this.ui.debounce(this.handleResize.bind(this), 250));
-    window.addEventListener('beforeunload', this.handleBeforeUnload.bind(this));
-  }
-
-  initializeRouting() {
-    // Simple hash-based routing
-    window.addEventListener('hashchange', this.handleRoute.bind(this));
-    this.handleRoute();
-  }
-
-  handleRoute() {
-    const hash = window.location.hash.slice(1);
-    const [route, ...params] = hash.split('/');
-    
-    switch (route) {
-      case 'reservations':
-        this.showReservationsView();
-        break;
-      case 'reservation':
-        if (params[0]) {
-          this.showReservationDetail(params[0]);
-        }
-        break;
-      case 'settings':
-        this.showSettingsView();
-        break;
-      case 'reports':
-        this.showReportsView();
-        break;
-      default:
-        this.showDashboard();
-    }
-  }
-
-  handleGlobalClick(event) {
-    const target = event.target;
-    
-    // Button clicks
-    if (target.matches('[data-action]')) {
-      const action = target.dataset.action;
-      this.handleAction(action, target);
-    }
-    
-    // Modal close
-    if (target.matches('.modal-close, [data-close-modal]')) {
-      const modal = target.closest('.modal');
-      if (modal) {
-        this.ui.closeModal(modal.id);
-      }
-    }
-    
-    // Table row clicks
-    if (target.closest('tbody tr')) {
-      const row = target.closest('tbody tr');
-      if (row.dataset.id) {
-        this.handleTableRowClick(row.dataset.id);
-      }
-    }
-  }
-
-  handleGlobalChange(event) {
-    const target = event.target;
-    
-    // Filter changes
-    if (target.matches('[data-filter]')) {
-      const filterType = target.dataset.filter;
-      const value = target.value;
-      this.handleFilterChange(filterType, value);
-    }
-    
-    // Settings changes
-    if (target.matches('[data-setting]')) {
-      const setting = target.dataset.setting;
-      const value = target.type === 'checkbox' ? target.checked : target.value;
-      this.handleSettingChange(setting, value);
-    }
-    
-    // Page size change
-    if (target.id === 'pageSize') {
-      this.changePageSize(target.value);
-    }
-  }
-
-  handleGlobalSubmit(event) {
-    const form = event.target;
-    
-    if (form.matches('[data-form]')) {
-      event.preventDefault();
-      const formType = form.dataset.form;
-      this.handleFormSubmit(formType, form);
-    }
-  }
-
-  handleKeyboardShortcuts(event) {
-    // Ctrl/Cmd + K: Quick search
-    if ((event.ctrlKey || event.metaKey) && event.key === 'k') {
-      event.preventDefault();
-      this.openQuickSearch();
-    }
-    
-    // Escape: Close modal
-    if (event.key === 'Escape') {
-      this.ui.closeAllModals();
-    }
-    
-    // Ctrl/Cmd + N: New reservation
-    if ((event.ctrlKey || event.metaKey) && event.key === 'n') {
-      event.preventDefault();
-      this.openNewReservationModal();
-    }
-  }
-
-  handleResize() {
-    // Responsive adjustments
-    const width = window.innerWidth;
-    document.body.classList.toggle('mobile', width < 768);
-    document.body.classList.toggle('tablet', width >= 768 && width < 1024);
-    document.body.classList.toggle('desktop', width >= 1024);
-  }
-
-  handleBeforeUnload(event) {
-    // Save state before leaving
-    this.saveState();
-    
-    // Warn if there are unsaved changes
-    if (this.hasUnsavedChanges()) {
-      event.preventDefault();
-      event.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
-    }
-  }
-
-  async handleAction(action, element) {
-    try {
-      switch (action) {
-        case 'new-reservation':
-          this.openNewReservationModal();
-          break;
-        case 'group-reservation':
-          this.openGroupReservationModal();
-          break;
-        case 'refresh':
-          await this.loadReservations();
-          break;
-        case 'refresh-activity':
-          this.updateActivityFeed();
-          this.ui.showToast('Activity aktualisiert', 'success');
-          break;
-        case 'refresh-yoy':
-          this.updateYoYPerformance();
-          this.ui.showToast('YoY Performance aktualisiert', 'success');
-          break;
-        case 'refresh-operations':
-          this.updateTodaysOperations();
-          this.ui.showToast('Operationen aktualisiert', 'success');
-          break;
-        case 'export-csv':
-          await this.exportToCSV();
-          break;
-        case 'export-pdf':
-          await this.exportToPDF();
-          break;
-        case 'open-availability':
-          this.openAvailabilityModal();
-          break;
-        case 'open-reports':
-          this.openReportsModal();
-          break;
-        case 'open-settings':
-          this.openSettingsModal();
-          break;
-        case 'open-sketch':
-          this.openSketchModal();
-          break;
-        case 'first-page':
-          this.changePage('first');
-          break;
-        case 'prev-page':
-          this.changePage('prev');
-          break;
-        case 'next-page':
-          this.changePage('next');
-          break;
-        case 'last-page':
-          this.changePage('last');
-          break;
-        case 'view-checkins':
-          this.viewTodaysCheckins();
-          break;
-        case 'view-checkouts':
-          this.viewTodaysCheckouts();
-          break;
-        case 'view-inhouse':
-          this.viewInhouseGuests();
-          break;
-        case 'cancel-reservation':
-          await this.handleCancelReservation();
-          break;
-        case 'add-trace':
-          this.openAddTraceModal();
-          break;
-        case 'logout':
-          this.logout();
-          break;
-        case 'load-availability':
-          await this.loadAvailabilityData();
-          break;
-        default:
-          console.warn('Unknown action:', action);
-      }
-    } catch (error) {
-      console.error('Action failed:', error);
-      this.ui.showToast('Action failed: ' + error.message, 'error');
-    }
-  }
-  
-  openGroupReservationModal() {
-    this.ui.showToast('GruppenResa Feature coming soon...', 'info');
-    // TODO: Implement Group Reservation Modal
-  }
-
-  // =============== WIZARD MANAGEMENT ===============
-  initWizard() {
-    this.wizard = {
-      currentStep: 1,
-      maxSteps: 4,
-      data: {}
-    };
-
-    // Wizard navigation
-    const nextBtn = document.querySelector('[data-wizard-action="next"]');
-    const prevBtn = document.querySelector('[data-wizard-action="prev"]');
-    const submitBtn = document.querySelector('[data-wizard-action="submit"]');
-
-    // Remove old listeners and add new ones
-    if (nextBtn) {
-      const newNextBtn = nextBtn.cloneNode(true);
-      nextBtn.parentNode.replaceChild(newNextBtn, nextBtn);
-      newNextBtn.addEventListener('click', () => this.wizardNext());
-    }
-    if (prevBtn) {
-      const newPrevBtn = prevBtn.cloneNode(true);
-      prevBtn.parentNode.replaceChild(newPrevBtn, prevBtn);
-      newPrevBtn.addEventListener('click', () => this.wizardPrev());
-    }
-
-    // Initialize first step
-    this.updateWizardUI();
-  }
-
-  wizardNext() {
-    // Validate current step
-    const currentStepValid = this.validateWizardStep(this.wizard.currentStep);
-    
-    if (!currentStepValid) {
-      this.ui.showToast('Bitte alle Pflichtfelder ausfÃ¼llen', 'error');
-      return;
-    }
-
-    // Save current step data
-    this.saveWizardStep();
-
-    // Load next step
-    if (this.wizard.currentStep < this.wizard.maxSteps) {
-      this.wizard.currentStep++;
-      this.updateWizardUI();
-      this.loadWizardStepData();
-    }
-  }
-
-  wizardPrev() {
-    if (this.wizard.currentStep > 1) {
-      this.wizard.currentStep--;
-      this.updateWizardUI();
-    }
-  }
-
-  validateWizardStep(step) {
-    const content = document.querySelector(`[data-step-content="${step}"]`);
-    if (!content) return true;
-
-    const requiredInputs = content.querySelectorAll('[required]');
-    let isValid = true;
-
-    requiredInputs.forEach(input => {
-      if (!input.value.trim()) {
-        input.classList.add('error');
-        isValid = false;
-      } else {
-        input.classList.remove('error');
-      }
-    });
-
-    // Step-specific validation
-    switch(step) {
-      case 1:
-        // Validate dates
-        const arrival = content.querySelector('[name="arrival"]').value;
-        const departure = content.querySelector('[name="departure"]').value;
-        
-        if (arrival && departure && new Date(arrival) >= new Date(departure)) {
-          this.ui.showToast('Abreise muss nach Anreise liegen', 'error');
-          return false;
-        }
-        break;
-      case 2:
-        // Validate category selection
-        const form = document.getElementById('formNewReservation');
-        const categoryInput = form.querySelector('[name="category"]');
-        if (!categoryInput || !categoryInput.value) {
-          this.ui.showToast('Bitte eine Kategorie auswÃ¤hlen', 'error');
-          return false;
-        }
-        break;
-      case 3:
-        // Validate rate selection
-        const rateInput = document.getElementById('formNewReservation').querySelector('[name="rate_code"]');
-        if (!rateInput || !rateInput.value) {
-          this.ui.showToast('Bitte eine Rate auswÃ¤hlen', 'error');
-          return false;
-        }
-        break;
-    }
-
-    return isValid;
-  }
-
-  saveWizardStep() {
-    const stepContent = document.querySelector(`[data-step-content="${this.wizard.currentStep}"]`);
-    if (!stepContent) return;
-
-    const inputs = stepContent.querySelectorAll('input, select, textarea');
-    inputs.forEach(input => {
-      if (input.name) {
-        this.wizard.data[input.name] = input.value;
-      }
-    });
-    
-    // Also save hidden inputs from the form
-    const form = document.getElementById('formNewReservation');
-    const hiddenInputs = form.querySelectorAll('input[type="hidden"]');
-    hiddenInputs.forEach(input => {
-      if (input.name) {
-        this.wizard.data[input.name] = input.value;
-      }
-    });
-  }
-
-  updateWizardUI() {
-    // Update step indicators
-    document.querySelectorAll('.wizard-step').forEach((step, index) => {
-      const stepNum = index + 1;
-      step.classList.remove('active', 'completed');
-      
-      if (stepNum === this.wizard.currentStep) {
-        step.classList.add('active');
-      } else if (stepNum < this.wizard.currentStep) {
-        step.classList.add('completed');
-      }
-    });
-
-    // Show/hide step contents
-    document.querySelectorAll('[data-step-content]').forEach(content => {
-      const stepNum = parseInt(content.dataset.stepContent);
-      content.classList.toggle('hidden', stepNum !== this.wizard.currentStep);
-    });
-
-    // Update buttons
-    const prevBtn = document.querySelector('[data-wizard-action="prev"]');
-    const nextBtn = document.querySelector('[data-wizard-action="next"]');
-    const submitBtn = document.querySelector('[data-wizard-action="submit"]');
-
-    if (prevBtn) {
-      prevBtn.disabled = this.wizard.currentStep === 1;
-    }
-
-    if (nextBtn && submitBtn) {
-      if (this.wizard.currentStep === this.wizard.maxSteps) {
-        nextBtn.classList.add('hidden');
-        submitBtn.classList.remove('hidden');
-      } else {
-        nextBtn.classList.remove('hidden');
-        submitBtn.classList.add('hidden');
-      }
-    }
-  }
-
-  loadWizardStepData() {
-    const { currentStep } = this.wizard;
-
-    switch(currentStep) {
-      case 2:
-        this.renderCategoryGrid();
-        break;
-      case 3:
-        this.renderRateGrid();
-        break;
-      case 4:
-        this.renderReservationSummary(this.wizard.data);
-        break;
-    }
-  }
-
-  // =============== CATEGORIES & RATES ===============
-  async loadCategories() {
-    try {
-      // Try to load from storage first
-      let categories = Storage.get('CATEGORIES');
-      
-      // If nothing in storage, use demo data
-      if (!categories || categories.length === 0) {
-        categories = DEMO_CATEGORIES;
-        Storage.set('CATEGORIES', categories);
-      }
-      
-      state.set('categories', categories);
-      console.log('Categories loaded:', categories.length);
-    } catch (error) {
-      console.error('Failed to load categories:', error);
-      // Fallback to demo data
-      state.set('categories', DEMO_CATEGORIES);
-      this.ui.showToast('Kategorien konnten nicht geladen werden, verwende Demo-Daten', 'warning');
-    }
-  }
-
-  async loadRates() {
-    try {
-      // Try to load from storage first
-      let rates = Storage.get('RATES');
-      
-      // If nothing in storage, use demo data
-      if (!rates || rates.length === 0) {
-        rates = DEMO_RATES;
-        Storage.set('RATES', rates);
-      }
-      
-      state.set('rates', rates);
-      console.log('Rates loaded:', rates.length);
-    } catch (error) {
-      console.error('Failed to load rates:', error);
-      // Fallback to demo data
-      state.set('rates', DEMO_RATES);
-      this.ui.showToast('Raten konnten nicht geladen werden, verwende Demo-Daten', 'warning');
-    }
-  }
-
-  renderCategoryGrid() {
-    const grid = document.getElementById('categoryGrid');
-    if (!grid) return;
-
-    const categories = state.get('categories') || [];
-
-    if (categories.length === 0) {
-      grid.innerHTML = `
-        <div class="text-center text-muted" style="grid-column: 1/-1; padding: 2rem;">
-          <i class="fas fa-bed" style="font-size: 3rem; opacity: 0.3;"></i>
-          <p style="margin-top: 1rem;">Keine Kategorien verfÃ¼gbar</p>
-          <p style="margin-top: 0.5rem; font-size: 0.875rem;">Bitte fÃ¼gen Sie Kategorien in den Einstellungen hinzu.</p>
-        </div>
-      `;
-      return;
-    }
-
-    grid.innerHTML = categories.map(cat => `
-      <div class="category-card glass-morphism" data-category="${cat.code}">
-        <div class="category-header">
-          <h4>${cat.name}</h4>
-          <div class="category-price">
-            â‚¬${cat.price}
-            <small>/Nacht</small>
-          </div>
-        </div>
-        <div class="category-details">
-          <div class="detail-item">
-            <i class="fas fa-ruler-combined"></i>
-            <span>${cat.size}</span>
-          </div>
-          <div class="detail-item">
-            <i class="fas fa-bed"></i>
-            <span>${cat.beds}</span>
-          </div>
-          <div class="detail-item">
-            <i class="fas fa-users"></i>
-            <span>Max. ${cat.persons} Personen</span>
-          </div>
-        </div>
-        ${cat.amenities ? `
-          <div class="category-amenities" style="margin-bottom: 1rem;">
-            ${cat.amenities.map(a => `<span class="badge" style="margin-right: 0.25rem;">${a}</span>`).join('')}
-          </div>
-        ` : ''}
-        <button type="button" class="btn primary btn-select-category" data-category-code="${cat.code}">
-          <i class="fas fa-check"></i>
-          AuswÃ¤hlen
-        </button>
-      </div>
-    `).join('');
-
-    // Add click handlers
-    grid.querySelectorAll('.btn-select-category').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const code = e.currentTarget.dataset.categoryCode;
-        this.selectCategory(code);
-        
-        // Auto-advance to next step
-        setTimeout(() => {
-          this.wizardNext();
-        }, 300);
-      });
-    });
-  }
-
-  selectCategory(code) {
-    // Visual feedback
-    document.querySelectorAll('.category-card').forEach(card => {
-      card.classList.remove('selected');
-    });
-    const selectedCard = document.querySelector(`[data-category="${code}"]`);
-    if (selectedCard) {
-      selectedCard.classList.add('selected');
-    }
-
-    // Store selection
-    const form = document.getElementById('formNewReservation');
-    let input = form.querySelector('[name="category"]');
-    if (!input) {
-      input = document.createElement('input');
-      input.type = 'hidden';
-      input.name = 'category';
-      form.appendChild(input);
-    }
-    input.value = code;
-    
-    // Update wizard data
-    this.wizard.data.category = code;
-    
-    this.ui.showToast(`Kategorie "${code}" ausgewÃ¤hlt`, 'success');
-  }
-
-  renderRateGrid() {
-    const grid = document.getElementById('rateGrid');
-    if (!grid) return;
-
-    const rates = state.get('rates') || [];
-    
-    if (rates.length === 0) {
-      grid.innerHTML = `
-        <div class="text-center text-muted" style="grid-column: 1/-1; padding: 2rem;">
-          <i class="fas fa-tag" style="font-size: 3rem; opacity: 0.3;"></i>
-          <p style="margin-top: 1rem;">Keine Raten verfÃ¼gbar</p>
-          <p style="margin-top: 0.5rem; font-size: 0.875rem;">Bitte fÃ¼gen Sie Raten in den Einstellungen hinzu.</p>
-        </div>
-      `;
-      return;
-    }
-
-    grid.innerHTML = rates.map(rate => `
-      <div class="rate-card glass-morphism" data-rate="${rate.code}">
-        <div class="rate-header">
-          <h4>${rate.name}</h4>
-          <div class="rate-price">
-            â‚¬${rate.price}
-            <small>/Nacht</small>
-          </div>
-        </div>
-        <div class="rate-policy">
-          <i class="fas fa-info-circle"></i>
-          <span>${rate.cancellation}</span>
-        </div>
-        ${rate.includes && rate.includes.length > 0 ? `
-          <div class="rate-includes" style="margin-bottom: 1rem;">
-            <strong style="display: block; margin-bottom: 0.5rem;">Inklusive:</strong>
-            ${rate.includes.map(item => `
-              <span class="badge" style="margin-right: 0.25rem;">
-                <i class="fas fa-check" style="font-size: 0.75rem;"></i> ${item}
-              </span>
-            `).join('')}
-          </div>
-        ` : ''}
-        <button type="button" class="btn primary btn-select-rate" data-rate-code="${rate.code}" data-rate-price="${rate.price}">
-          <i class="fas fa-check"></i>
-          AuswÃ¤hlen
-        </button>
-      </div>
-    `).join('');
-
-    // Add click handlers
-    grid.querySelectorAll('.btn-select-rate').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const code = e.currentTarget.dataset.rateCode;
-        const price = e.currentTarget.dataset.ratePrice;
-        this.selectRate(code, price);
-        
-        // Auto-advance to next step
-        setTimeout(() => {
-          this.wizardNext();
-        }, 300);
-      });
-    });
-  }
-
-  selectRate(code, price) {
-    // Visual feedback
-    document.querySelectorAll('.rate-card').forEach(card => {
-      card.classList.remove('selected');
-    });
-    const selectedCard = document.querySelector(`[data-rate="${code}"]`);
-    if (selectedCard) {
-      selectedCard.classList.add('selected');
-    }
-
-    // Store selection
-    const form = document.getElementById('formNewReservation');
-    
-    let codeInput = form.querySelector('[name="rate_code"]');
-    if (!codeInput) {
-      codeInput = document.createElement('input');
-      codeInput.type = 'hidden';
-      codeInput.name = 'rate_code';
-      form.appendChild(codeInput);
-    }
-    codeInput.value = code;
-
-    let priceInput = form.querySelector('[name="rate_price"]');
-    if (!priceInput) {
-      priceInput = document.createElement('input');
-      priceInput.type = 'hidden';
-      priceInput.name = 'rate_price';
-      form.appendChild(priceInput);
-    }
-    priceInput.value = price;
-    
-    // Update wizard data
-    this.wizard.data.rate_code = code;
-    this.wizard.data.rate_price = price;
-    
-    this.ui.showToast(`Rate "${code}" ausgewÃ¤hlt`, 'success');
-  }
-
-  renderReservationSummary(data) {
-    const content = document.querySelector('[data-step-content="4"]');
-    if (!content) return;
-
-    // Add summary section if not exists
-    let summarySection = content.querySelector('.reservation-summary');
-    if (!summarySection) {
-      summarySection = document.createElement('div');
-      summarySection.className = 'reservation-summary card';
-      summarySection.style.marginBottom = '2rem';
-      content.insertBefore(summarySection, content.firstChild);
-    }
-
-    const hotel = state.get('hotels')?.find(h => h.code === data.hotel_code);
-    const category = state.get('categories')?.find(c => c.code === data.category);
-    const rate = state.get('rates')?.find(r => r.code === data.rate_code);
-    const nights = this.calculateNights(data.arrival, data.departure);
-    const totalPrice = (data.rate_price || 0) * nights;
-
-    summarySection.innerHTML = `
-      <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem;">
-        <div style="width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, var(--primary-500), var(--accent-500)); border-radius: var(--radius-lg); color: white;">
-          <i class="fas fa-check"></i>
-        </div>
-        <h4 style="margin: 0;">Zusammenfassung</h4>
-      </div>
-      <div class="summary-grid">
-        <div class="summary-item">
-          <span class="label"><i class="fas fa-hotel" style="margin-right: 0.5rem; color: var(--primary-400);"></i>Hotel:</span>
-          <span class="value">${hotel ? hotel.name : data.hotel_code || 'Nicht ausgewÃ¤hlt'}</span>
-        </div>
-        <div class="summary-item">
-          <span class="label"><i class="fas fa-calendar-plus" style="margin-right: 0.5rem; color: var(--primary-400);"></i>Anreise:</span>
-          <span class="value">${data.arrival ? this.formatDate(data.arrival) : 'Nicht ausgewÃ¤hlt'}</span>
-        </div>
-        <div class="summary-item">
-          <span class="label"><i class="fas fa-calendar-minus" style="margin-right: 0.5rem; color: var(--primary-400);"></i>Abreise:</span>
-          <span class="value">${data.departure ? this.formatDate(data.departure) : 'Nicht ausgewÃ¤hlt'}</span>
-        </div>
-        <div class="summary-item">
-          <span class="label"><i class="fas fa-moon" style="margin-right: 0.5rem; color: var(--primary-400);"></i>NÃ¤chte:</span>
-          <span class="value">${nights}</span>
-        </div>
-        <div class="summary-item">
-          <span class="label"><i class="fas fa-bed" style="margin-right: 0.5rem; color: var(--primary-400);"></i>Kategorie:</span>
-          <span class="value">${category ? category.name : data.category || 'Nicht ausgewÃ¤hlt'}</span>
-        </div>
-        <div class="summary-item">
-          <span class="label"><i class="fas fa-tag" style="margin-right: 0.5rem; color: var(--primary-400);"></i>Rate:</span>
-          <span class="value">${rate ? rate.name : data.rate_code || 'Nicht ausgewÃ¤hlt'}</span>
-        </div>
-        <div class="summary-item">
-          <span class="label"><i class="fas fa-euro-sign" style="margin-right: 0.5rem; color: var(--primary-400);"></i>Preis/Nacht:</span>
-          <span class="value">${data.rate_price ? this.formatCurrency(data.rate_price) : '0 â‚¬'}</span>
-        </div>
-        <div class="summary-item highlight">
-          <span class="label"><i class="fas fa-wallet" style="margin-right: 0.5rem;"></i>Gesamtpreis:</span>
-          <span class="value">${this.formatCurrency(totalPrice)}</span>
-        </div>
-      </div>
-    `;
-  }
-
-  calculateNights(arrival, departure) {
-    if (!arrival || !departure) return 0;
-    const arrDate = new Date(arrival);
-    const depDate = new Date(departure);
-    const diffTime = Math.abs(depDate - arrDate);
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays;
-  }
-
-  // =============== DATA OPERATIONS ===============
-  async handleFilterChange(filterType, value) {
-    state.set(`filters.${filterType}`, value);
-    await this.loadReservations();
-  }
-
-  async handleSettingChange(setting, value) {
-    const preferences = Storage.get('PREFERENCES') || {};
-    preferences[setting] = value;
-    Storage.set('PREFERENCES', preferences);
-    
-    // Apply setting immediately
-    if (setting === 'theme') {
-      document.body.classList.toggle('light-theme', value === 'light');
-    }
-    
-    this.ui.showToast('Setting updated', 'success');
-  }
-
-  async handleFormSubmit(formType, form) {
-    try {
-      const validation = this.ui.validateForm(form);
-      
-      if (!validation.valid) {
-        validation.errors.forEach(error => {
-          this.ui.showToast(error.message, 'error');
-        });
-        return;
-      }
-      
-      const formData = new FormData(form);
-      const data = Object.fromEntries(formData);
-      
-      // Merge with wizard data
-      const finalData = { ...this.wizard?.data, ...data };
-      
-      switch (formType) {
-        case 'new-reservation':
-          await this.createReservation(finalData);
-          break;
-        case 'edit-reservation':
-          await this.updateReservation(finalData);
-          break;
-        case 'channel-settings':
-          await this.saveChannelSettings(finalData);
-          break;
-        default:
-          console.warn('Unknown form type:', formType);
-      }
-    } catch (error) {
-      console.error('Form submission failed:', error);
-      this.ui.showToast('Failed to submit form: ' + error.message, 'error');
-    }
-  }
-
-  // Data loading methods
-  async loadHotels() {
-    try {
-      // In a real app, this would fetch from API
-      const hotels = HOTELS;
-      state.set('hotels', hotels);
-      this.updateHotelSelects();
-    } catch (error) {
-      console.error('Failed to load hotels:', error);
-      throw error;
-    }
-  }
-
-  async loadReservations() {
-    try {
-      const loadingElement = document.querySelector('[data-action="refresh"]');
-      if (loadingElement) {
-        this.ui.setLoading(loadingElement, true);
-      }
-      
-      const filters = state.get('filters') || {};
-      const reservations = await this.api.getReservations(filters);
-        
-      state.set('reservations', reservations);
-      this.renderReservationTable();
-      this.updateKPIs();
-      this.updateTodaysOperations();
-      
-      this.ui.setLoading(loadingElement, false);
-      this.ui.showToast('Reservations loaded', 'success');
-    } catch (error) {
-      console.error('Failed to load reservations:', error);
-      this.ui.showToast('Failed to load reservations: ' + error.message, 'error');
-    }
-  }
-
-  // Reservation CRUD operations
-  async createReservation(data) {
-    try {
-      console.log('Creating reservation with data:', data);
-      
-      // Generate reservation number
-      data.reservation_number = this.generateReservationNumber();
-      data.status = 'active';
-      data.created_at = new Date().toISOString();
-      
-      // Create in Supabase
-      const reservation = await this.api.createReservation(data);
-      
-      // Push to HNS if configured
-      try {
-        await this.api.pushToHNS(reservation);
-      } catch (hnsError) {
-        console.error('HNS push failed:', hnsError);
-        // Don't fail the whole operation if HNS fails
-      }
-      
-      // Update local state
-      const reservations = state.get('reservations') || [];
-      reservations.unshift(reservation);
-      state.set('reservations', reservations);
-      
-      // Close modal and refresh
-      this.ui.closeModal('modalNewReservation');
-      this.renderReservationTable();
-      this.updateKPIs();
-      this.updateTodaysOperations();
-      
-      this.ui.showToast('Reservierung erfolgreich erstellt!', 'success');
-      
-      // Store current reservation for email modal
-      this.currentReservation = reservation;
-      
-      // Open email confirmation modal
-      this.openConfirmationEmailModal(reservation);
-      
-      return reservation;
-    } catch (error) {
-      console.error('Failed to create reservation:', error);
-      this.ui.showToast('Fehler beim Erstellen der Reservierung: ' + error.message, 'error');
-      throw error;
-    }
-  }
-
-  async updateReservation(data) {
-    try {
-      console.log('Updating reservation with data:', data);
-      
-      // Get ID from currentEditReservation if not in data
-      const id = data.id || this.currentEditReservation?.id;
-      
-      if (!id) {
-        throw new Error('Keine Reservierungs-ID gefunden');
-      }
-      
-      // Clean up the data - remove display fields and use actual values
-      const cleanData = { ...data };
-      
-      // Map display fields to actual fields
-      if (cleanData.arrival_display) {
-        cleanData.arrival = cleanData.arrival_display;
-        delete cleanData.arrival_display;
-      }
-      if (cleanData.departure_display) {
-        cleanData.departure = cleanData.departure_display;
-        delete cleanData.departure_display;
-      }
-      if (cleanData.category_display) {
-        cleanData.category = cleanData.category_display;
-        delete cleanData.category_display;
-      }
-      if (cleanData.rate_code_display) {
-        cleanData.rate_code = cleanData.rate_code_display;
-        delete cleanData.rate_code_display;
-      }
-      
-      // Remove ID from updates to avoid sending it as a field
-      const { id: _, ...updates } = cleanData;
-      updates.updated_at = new Date().toISOString();
-      
-      // Auto-calculate status based on dates (unless status is canceled)
-      if (updates.arrival && updates.departure && updates.status !== 'canceled') {
-        updates.status = this.calculateReservationStatus(updates.arrival, updates.departure);
-      }
-      
-      // Ensure all numeric fields are properly formatted
-      const numericFields = [
-        'guests_adults', 'guests_children', 'total_price',
-        'extra_breakfast_price', 'extra_parking_price', 'extra_minibar_price',
-        'discount_amount'
-      ];
-      
-      numericFields.forEach(field => {
-        if (updates[field] !== undefined && updates[field] !== null && updates[field] !== '') {
-          updates[field] = parseFloat(updates[field]) || 0;
-        }
-      });
-      
-      console.log('Cleaned update data:', updates);
-      
-      const reservation = await this.api.updateReservation(id, updates);
-      
-      // Update local state
-      const reservations = state.get('reservations') || [];
-      const index = reservations.findIndex(r => r.id === id);
-      if (index !== -1) {
-        reservations[index] = { ...reservations[index], ...reservation };
-        state.set('reservations', reservations);
-      }
-      
-      // Clear current edit reservation
-      this.currentEditReservation = null;
-      
-      this.ui.closeModal('modalEditReservation');
-      this.renderReservationTable();
-      this.updateKPIs();
-      this.updateTodaysOperations();
-      
-      this.ui.showToast('Reservierung erfolgreich aktualisiert!', 'success');
-      return reservation;
-    } catch (error) {
-      console.error('Failed to update reservation:', error);
-      this.ui.showToast('Fehler beim Aktualisieren der Reservierung: ' + error.message, 'error');
-      throw error;
-    }
-  }
-  
-  calculateReservationStatus(arrival, departure) {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    const arrivalDate = new Date(arrival);
-    arrivalDate.setHours(0, 0, 0, 0);
-    
-    const departureDate = new Date(departure);
-    departureDate.setHours(0, 0, 0, 0);
-    
-    // If departure is in the past, reservation is done
-    if (departureDate < today) {
-      return 'done';
-    }
-    
-    // If arrival is today or in the past, and departure is in the future, guest is in house
-    if (arrivalDate <= today && departureDate >= today) {
-      return 'inhouse';
-    }
-    
-    // If arrival is in the future, reservation is active (pending arrival)
-    if (arrivalDate > today) {
-      return 'active';
-    }
-    
-    return 'active';
-  }
-
-  async cancelReservation(id) {
-    try {
-      if (!confirm('MÃ¶chten Sie diese Reservierung wirklich stornieren?')) {
-        return;
-      }
-      
-      const currentUser = state.get('user');
-      
-      await this.api.updateReservation(id, { 
-        status: 'canceled',
-        canceled_at: new Date().toISOString(),
-        canceled_by: currentUser?.name || currentUser?.email || 'System'
-      });
-      
-      // Update local state
-      const reservations = state.get('reservations') || [];
-      const index = reservations.findIndex(r => r.id === id);
-      if (index !== -1) {
-        reservations[index].status = 'canceled';
-        reservations[index].canceled_at = new Date().toISOString();
-        reservations[index].canceled_by = currentUser?.name || currentUser?.email || 'System';
-        state.set('reservations', reservations);
-      }
-      
-      this.ui.closeModal('modalEditReservation');
-      this.renderReservationTable();
-      this.updateKPIs();
-      this.updateTodaysOperations();
-      
-      this.ui.showToast('Reservierung erfolgreich storniert', 'success');
-    } catch (error) {
-      console.error('Failed to cancel reservation:', error);
-      this.ui.showToast('Fehler beim Stornieren der Reservierung: ' + error.message, 'error');
-    }
-  }
-
-  async handleCancelReservation() {
-    if (!this.currentEditReservation) {
-      this.ui.showToast('Keine Reservierung zum Stornieren gefunden', 'error');
-      return;
-    }
-    
-    await this.cancelReservation(this.currentEditReservation.id);
-    this.currentEditReservation = null;
-  }
-
-  generateReservationNumber() {
-    const date = new Date();
-    const year = date.getFullYear();
-    const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
-    return `RES-${year}-${random}`;
-  }
-
-  // =============== UI UPDATE METHODS ===============
-  renderReservationTable() {
-    const tbody = document.querySelector('#reservationTable tbody');
-    if (!tbody) return;
-
-    const allReservations = state.get('reservations') || [];
-    const pagination = state.get('pagination') || { currentPage: 1, pageSize: 25 };
-    
-    // Update badge count
-    const count = document.getElementById('reservationCount');
-    if (count) {
-      count.textContent = allReservations.length;
-    }
-
-    // Calculate pagination
-    const totalItems = allReservations.length;
-    const totalPages = Math.ceil(totalItems / pagination.pageSize) || 1;
-    const startIndex = (pagination.currentPage - 1) * pagination.pageSize;
-    const endIndex = Math.min(startIndex + pagination.pageSize, totalItems);
-    
-    // Update pagination state
-    state.set('pagination', {
-      ...pagination,
-      totalPages,
-      totalItems
-    });
-
-    // Get current page reservations
-    const pageReservations = allReservations.slice(startIndex, endIndex);
-
-    // Update pagination UI
-    this.updatePaginationUI(startIndex, endIndex, totalItems, pagination.currentPage, totalPages);
-
-    // Render empty state
-    if (allReservations.length === 0) {
-      tbody.innerHTML = `
-        <tr>
-          <td colspan="8" class="text-center text-muted">
-            <div style="padding: 2rem;">
-              <i class="fas fa-inbox" style="font-size: 3rem; opacity: 0.3;"></i>
-              <p style="margin-top: 1rem;">Keine Reservierungen gefunden</p>
-              <p style="margin-top: 0.5rem; font-size: 0.875rem;">
-                Erstellen Sie eine neue Reservierung um zu starten
-              </p>
-            </div>
-          </td>
-        </tr>
-      `;
-      return;
-    }
-
-    // Render table rows
-    tbody.innerHTML = pageReservations.map(r => {
-      const hotel = state.get('hotels')?.find(h => h.code === r.hotel_code);
-      const nights = this.calculateNights(r.arrival, r.departure);
-      const totalPrice = (r.rate_price || 0) * nights;
-      
-      return `
-        <tr data-id="${r.id}" style="cursor: pointer;">
-          <td class="res-nr-cell">${r.reservation_number}</td>
-          <td>${hotel ? hotel.name : r.hotel_code}</td>
-          <td>${r.guest_first_name || ''} ${r.guest_last_name}</td>
-          <td>${this.formatDate(r.arrival)}</td>
-          <td>${this.formatDate(r.departure)}</td>
-          <td><span class="category-badge">${r.category}</span></td>
-          <td class="price-cell">${this.formatCurrency(totalPrice)}</td>
-          <td><span class="pill ${r.status}">${this.getStatusLabel(r.status)}</span></td>
-        </tr>
-      `;
-    }).join('');
-  }
-
-  updatePaginationUI(startIndex, endIndex, totalItems, currentPage, totalPages) {
-    // Update pagination info
-    const paginationInfo = document.getElementById('paginationInfo');
-    if (paginationInfo) {
-      if (totalItems === 0) {
-        paginationInfo.textContent = 'Zeige 0-0 von 0 Reservierungen';
-      } else {
-        paginationInfo.textContent = `Zeige ${startIndex + 1}-${endIndex} von ${totalItems} Reservierungen`;
-      }
-    }
-
-    // Update page display
-    const paginationPages = document.getElementById('paginationPages');
-    if (paginationPages) {
-      paginationPages.textContent = `Seite ${currentPage} von ${totalPages}`;
-    }
-
-    // Update button states
-    const firstBtn = document.querySelector('[data-action="first-page"]');
-    const prevBtn = document.querySelector('[data-action="prev-page"]');
-    const nextBtn = document.querySelector('[data-action="next-page"]');
-    const lastBtn = document.querySelector('[data-action="last-page"]');
-
-    if (firstBtn) firstBtn.disabled = currentPage === 1;
-    if (prevBtn) prevBtn.disabled = currentPage === 1;
-    if (nextBtn) nextBtn.disabled = currentPage === totalPages;
-    if (lastBtn) lastBtn.disabled = currentPage === totalPages;
-  }
-
-  changePage(direction) {
-    const pagination = state.get('pagination');
-    let newPage = pagination.currentPage;
-
-    switch(direction) {
-      case 'first':
-        newPage = 1;
-        break;
-      case 'prev':
-        newPage = Math.max(1, pagination.currentPage - 1);
-        break;
-      case 'next':
-        newPage = Math.min(pagination.totalPages, pagination.currentPage + 1);
-        break;
-      case 'last':
-        newPage = pagination.totalPages;
-        break;
-    }
-
-    state.set('pagination', { ...pagination, currentPage: newPage });
-    this.renderReservationTable();
-  }
-
-  changePageSize(newSize) {
-    const pagination = state.get('pagination');
-    state.set('pagination', {
-      ...pagination,
-      pageSize: parseInt(newSize),
-      currentPage: 1 // Reset to first page when changing page size
-    });
-    this.renderReservationTable();
-  }
-
-  updateKPIs() {
-    const reservations = state.get('reservations') || [];
-    
-    // Today's performance
-    const today = new Date().toISOString().split('T')[0];
-    const todayReservations = reservations.filter(r => 
-      r.created_at && r.created_at.split('T')[0] === today && r.status === 'active'
-    );
-    
-    const todayRevenue = todayReservations.reduce((sum, r) => {
-      const nights = this.calculateNights(r.arrival, r.departure);
-      return sum + (r.rate_price || 0) * nights;
-    }, 0);
-    
-    const todayNights = todayReservations.reduce((sum, r) => 
-      sum + this.calculateNights(r.arrival, r.departure), 0
-    );
-    
-    const todayADR = todayNights > 0 ? todayRevenue / todayNights : 0;
-    
-    // Update today's KPIs
-    this.updateElement('tBookings', todayReservations.length);
-    this.updateElement('tRevenue', this.formatCurrency(todayRevenue));
-    this.updateElement('tADR', this.formatCurrency(todayADR));
-    this.updateElement('tOcc', '0%'); // Placeholder
-    
-    // Next 7 days performance
-    const nextWeek = new Date();
-    nextWeek.setDate(nextWeek.getDate() + 7);
-    const nextWeekStr = nextWeek.toISOString().split('T')[0];
-    
-    const nextWeekReservations = reservations.filter(r => 
-      r.arrival >= today && r.arrival <= nextWeekStr && r.status === 'active'
-    );
-    
-    const nextWeekRevenue = nextWeekReservations.reduce((sum, r) => {
-      const nights = this.calculateNights(r.arrival, r.departure);
-      return sum + (r.rate_price || 0) * nights;
-    }, 0);
-    
-    const nextWeekNights = nextWeekReservations.reduce((sum, r) => 
-      sum + this.calculateNights(r.arrival, r.departure), 0
-    );
-    
-    const nextWeekADR = nextWeekNights > 0 ? nextWeekRevenue / nextWeekNights : 0;
-    
-    // Update next 7 days KPIs
-    this.updateElement('nBookings', nextWeekReservations.length);
-    this.updateElement('nRevenue', this.formatCurrency(nextWeekRevenue));
-    this.updateElement('nADR', this.formatCurrency(nextWeekADR));
-    this.updateElement('nOcc', '0%'); // Placeholder
-  }
-
-  updateHotelSelects() {
-    const hotels = state.get('hotels') || [];
-    document.querySelectorAll('.hotel-select').forEach(select => {
-      const currentValue = select.value;
-      const hasAllOption = select.querySelector('option[value=""]');
-      
-      select.innerHTML = hasAllOption ? '<option value="">Alle Hotels</option>' : '<option value="">Bitte wÃ¤hlen...</option>';
-      
-      hotels.forEach(hotel => {
-        const option = document.createElement('option');
-        option.value = hotel.code;
-        option.textContent = hotel.name;
-        select.appendChild(option);
-      });
-      
-      if (currentValue) {
-        select.value = currentValue;
-      }
-    });
-  }
-
-  loadHotelsForSelect() {
-    // Just update the selects with current hotels
-    this.updateHotelSelects();
-  }
-
-  updateElement(id, value) {
-    const element = document.getElementById(id);
-    if (element) {
-      element.textContent = value;
-    }
-  }
-
-  // =============== MODAL HANDLERS ===============
-  openNewReservationModal() {
-    this.resetForm('formNewReservation');
-    this.ui.openModal('modalNewReservation');
-    
-    // Initialize wizard
-    this.initWizard();
-    
-    // Load hotels for the first step
-    this.loadHotelsForSelect();
-    
-    // Pre-load categories and rates for better performance
-    this.loadCategories();
-    this.loadRates();
-  }
-
-  openAvailabilityModal() {
-    this.ui.openModal('modalAvailability');
-    this.loadAvailability();
-  }
-
-  loadAvailability() {
-    // Call the new async version
-    this.loadAvailabilityData();
-  }
-
-  async loadAvailabilityData() {
-    try {
-      // Show loading state
-      const grid = document.getElementById('availabilityGrid');
-      if (!grid) return;
-      
-      grid.innerHTML = '<div class="availability-loading"><div class="spinner large"></div><p>Lade Verfügbarkeitsdaten...</p></div>';
-      
-      // Get date range
-      const fromDate = document.getElementById('availFrom').value || new Date().toISOString().split('T')[0];
-      const days = parseInt(document.getElementById('availDays').value) || 14;
-      const selectedHotel = document.getElementById('availHotel').value;
-      
-      // Generate mock availability data
-      const availabilityData = await this.generateAvailabilityData(fromDate, days, selectedHotel);
-      
-      // Render the availability calendar
-      this.renderAvailabilityCalendar(availabilityData, fromDate, days);
-      
-    } catch (error) {
-      console.error('Error loading availability:', error);
-      this.ui.showToast('Fehler beim Laden der Verfügbarkeit', 'error');
-    }
-  }
-
-  async generateAvailabilityData(startDate, days, hotelFilter = null) {
-    const hotels = [
-      { code: 'HTL001', name: 'Mannheim Downtown', categories: ['STD', 'DLX', 'SUI'] },
-      { code: 'HTL002', name: 'Mannheim Hauptbahnhof', categories: ['ECO', 'STD', 'SUP'] },
-      { code: 'HTL003', name: 'Heidelberg Altstadt', categories: ['DLX', 'SUI', 'PEN'] },
-      { code: 'HTL004', name: 'Heidelberg Bahnstadt', categories: ['STD', 'SUP', 'DLX'] },
-      { code: 'HTL005', name: 'Karlsruhe Südstadt', categories: ['ECO', 'STD', 'DLX'] },
-      { code: 'HTL006', name: 'Stuttgart Mitte', categories: ['STD', 'DLX', 'SUI'] },
-      { code: 'HTL007', name: 'Frankfurt City', categories: ['DLX', 'SUI', 'PEN'] },
-      { code: 'HTL008', name: 'Frankfurt Flughafen', categories: ['ECO', 'STD', 'SUP'] }
-    ];
-    
-    const filteredHotels = hotelFilter ? hotels.filter(h => h.code === hotelFilter) : hotels;
-    const data = {};
-    
-    filteredHotels.forEach(hotel => {
-      data[hotel.code] = {
-        name: hotel.name,
-        days: []
-      };
-      
-      const start = new Date(startDate);
-      for (let i = 0; i < days; i++) {
-        const date = new Date(start);
-        date.setDate(start.getDate() + i);
-        const dateStr = date.toISOString().split('T')[0];
-        
-        const totalRooms = 50;
-        const occupied = Math.floor(Math.random() * totalRooms);
-        const available = totalRooms - occupied;
-        const occupancyRate = (occupied / totalRooms) * 100;
-        
-        const roomDetails = {};
-        (hotel.categories || ['STD', 'DLX', 'SUI']).forEach(cat => {
-          const catTotal = Math.floor(totalRooms / 3);
-          const catOccupied = Math.floor(Math.random() * catTotal);
-          roomDetails[cat] = {
-            total: catTotal,
-            available: catTotal - catOccupied,
-            occupied: catOccupied
-          };
-        });
-        
-        data[hotel.code].days.push({
-          date: dateStr,
-          dayName: date.toLocaleDateString('de-DE', { weekday: 'short' }),
-          dayNumber: date.getDate(),
-          month: date.toLocaleDateString('de-DE', { month: 'short' }),
-          totalRooms,
-          available,
-          occupied,
-          occupancyRate,
-          roomDetails,
-          status: occupancyRate < 50 ? 'low' : occupancyRate < 80 ? 'medium' : 'high'
-        });
-      }
-    });
-    
-    return data;
-  }
-
-  renderAvailabilityCalendar(data, startDate, days) {
-    const grid = document.getElementById('availabilityGrid');
-    if (!grid) return;
-    
-    const dates = data[Object.keys(data)[0]]?.days || [];
-    
-    let html = `
-      <div class="availability-grid-premium">
-        <div class="grid-header-row">
-          <div class="grid-hotel-header">Hotels</div>
-          <div class="grid-dates-container">
-            ${dates.map(day => `
-              <div class="grid-date-cell ${new Date(day.date).getDay() === 0 || new Date(day.date).getDay() === 6 ? 'weekend' : ''}">
-                <div class="date-compact">
-                  <span class="date-num">${day.dayNumber}</span>
-                  <span class="date-day">${day.dayName.substring(0, 2)}</span>
-                </div>
-              </div>
-            `).join('')}
-          </div>
-        </div>
-        
-        <div class="grid-data-container">
-          ${Object.entries(data).map(([hotelCode, hotelData]) => `
-            <div class="grid-data-row" data-hotel="${hotelCode}">
-              <div class="grid-hotel-cell">
-                <div class="hotel-name-compact">
-                  <i class="fas fa-building"></i>
-                  <span class="hotel-text">${hotelData.name}</span>
-                  <span class="hotel-avg">${Math.round(hotelData.days.reduce((sum, day) => sum + day.occupancyRate, 0) / hotelData.days.length)}%</span>
-                </div>
-              </div>
-              <div class="grid-cells-container">
-                ${hotelData.days.map(day => this.renderGridCell(day, hotelCode)).join('')}
-              </div>
-            </div>
-          `).join('')}
-        </div>
-      </div>
-    `;
-    
-    grid.innerHTML = html;
-    this.initAvailabilityTooltips();
-  }
-
-  renderGridCell(day, hotelCode) {
-    const occupancyClass = day.status === 'low' ? 'cell-low' : 
-                           day.status === 'medium' ? 'cell-medium' : 
-                           'cell-high';
-    
-    return `
-      <div class="grid-value-cell ${occupancyClass}" 
-           data-date="${day.date}"
-           data-hotel="${hotelCode}"
-           data-tooltip="hover">
-        <div class="cell-percent">${Math.round(day.occupancyRate)}%</div>
-        <div class="cell-free">${day.available}</div>
-        
-        <div class="availability-tooltip-premium">
-          <div class="tooltip-inner">
-            <div class="tooltip-title">
-              ${day.dayName}, ${day.dayNumber}. ${day.month}
-            </div>
-            <div class="tooltip-metrics">
-              <div class="metric">
-                <span class="metric-label">Auslastung</span>
-                <span class="metric-value">${Math.round(day.occupancyRate)}%</span>
-              </div>
-              <div class="metric">
-                <span class="metric-label">Verfügbar</span>
-                <span class="metric-value">${day.available}/${day.totalRooms}</span>
-              </div>
-            </div>
-            <div class="tooltip-rooms">
-              ${Object.entries(day.roomDetails).map(([cat, details]) => `
-                <div class="room-cat">
-                  <span class="room-cat-name">${cat}</span>
-                  <span class="room-cat-avail">${details.available}/${details.total}</span>
-                  <div class="room-cat-bar">
-                    <div class="room-cat-fill" style="width: ${((details.total - details.available) / details.total) * 100}%"></div>
-                  </div>
-                </div>
-              `).join('')}
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
-  }
-
-  initAvailabilityTooltips() {
-    const cells = document.querySelectorAll('.grid-value-cell[data-tooltip="hover"]');
-    
-    cells.forEach(cell => {
-      const tooltip = cell.querySelector('.availability-tooltip-premium');
-      if (!tooltip) return;
-      
-      let hideTimeout;
-      
-      cell.addEventListener('mouseenter', (e) => {
-        clearTimeout(hideTimeout);
-        
-        document.querySelectorAll('.availability-tooltip-premium.active').forEach(t => {
-          if (t !== tooltip) t.classList.remove('active');
-        });
-        
-        tooltip.classList.add('active');
-        
-        const rect = cell.getBoundingClientRect();
-        const tooltipRect = tooltip.getBoundingClientRect();
-        const viewportWidth = window.innerWidth;
-        
-        tooltip.style.left = '';
-        tooltip.style.right = '';
-        tooltip.style.top = '';
-        tooltip.style.bottom = '';
-        
-        if (rect.left + tooltipRect.width > viewportWidth - 20) {
-          tooltip.style.right = '0';
-          tooltip.style.left = 'auto';
-        } else {
-          tooltip.style.left = '50%';
-          tooltip.style.transform = 'translateX(-50%)';
-        }
-        
-        if (rect.top - tooltipRect.height < 60) {
-          tooltip.style.top = 'calc(100% + 8px)';
-          tooltip.style.bottom = 'auto';
-          tooltip.classList.add('tooltip-below');
-        } else {
-          tooltip.style.bottom = 'calc(100% + 8px)';
-          tooltip.style.top = 'auto';
-          tooltip.classList.remove('tooltip-below');
-        }
-      });
-      
-      cell.addEventListener('mouseleave', () => {
-        hideTimeout = setTimeout(() => {
-          tooltip.classList.remove('active');
-        }, 100);
-      });
-      
-      tooltip.addEventListener('mouseenter', () => {
-        clearTimeout(hideTimeout);
-      });
-      
-      tooltip.addEventListener('mouseleave', () => {
-        tooltip.classList.remove('active');
-      });
-    });
-  }
-
-  openReportsModal() {
-    this.ui.openModal('modalReports');
-    this.loadReports();
-  }
-
-  openSettingsModal() {
-    this.ui.openModal('modalSettings');
-    this.loadSettings();
-  }
-  
-  openSketchModal() {
-    this.ui.openModal('modalSketch');
-  }
-  
-  openConfirmationEmailModal(reservation) {
-    // Pre-fill the email modal with reservation data
-    const emailTo = document.getElementById('confirmEmailTo');
-    const emailSubject = document.getElementById('confirmEmailSubject');
-    const emailBody = document.getElementById('confirmEmailBody');
-    
-    if (emailTo && reservation.guest_email) {
-      emailTo.value = reservation.guest_email;
-    }
-    
-    if (emailSubject) {
-      const hotel = state.get('hotels')?.find(h => h.code === reservation.hotel_code);
-      emailSubject.value = `ReservierungsbestÃ¤tigung - ${hotel?.name || 'Hotel'} - ${reservation.reservation_number}`;
-    }
-    
-    if (emailBody) {
-      const hotel = state.get('hotels')?.find(h => h.code === reservation.hotel_code);
-      const nights = this.calculateNights(reservation.arrival, reservation.departure);
-      
-      emailBody.value = `Sehr geehrte/r ${reservation.guest_first_name || ''} ${reservation.guest_last_name || 'Gast'},
-
-vielen Dank fÃ¼r Ihre Reservierung!
-
-Reservierungsdetails:
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-
-Reservierungsnummer: ${reservation.reservation_number}
-Hotel: ${hotel?.name || reservation.hotel_code}
-Kategorie: ${reservation.category || 'N/A'}
-Rate: ${reservation.rate_code || 'N/A'}
-
-Anreise: ${this.formatDate(reservation.arrival)}
-Abreise: ${this.formatDate(reservation.departure)}
-NÃ¤chte: ${nights}
-
-${reservation.guest_company ? `Firma: ${reservation.guest_company}\n` : ''}${reservation.notes ? `\nNotizen: ${reservation.notes}\n` : ''}
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-
-Wir freuen uns auf Ihren Besuch!
-
-Mit freundlichen GrÃ¼ÃŸen
-Ihr Reservierungsteam`;
-    }
-    
-    // Open the modal
-    this.ui.openModal('modalConfirmationEmail');
-    
-    // Add event listener for send button
-    const sendBtn = document.querySelector('[data-action="send-confirmation"]');
-    if (sendBtn) {
-      // Remove old listener
-      const newSendBtn = sendBtn.cloneNode(true);
-      sendBtn.parentNode.replaceChild(newSendBtn, sendBtn);
-      
-      // Add new listener
-      newSendBtn.addEventListener('click', () => {
-        this.handleSendConfirmationEmail(reservation);
-      });
-    }
-  }
-
-  openQuickSearch() {
-    // Implement quick search functionality
-    this.ui.showToast('Quick search coming soon', 'info');
-  }
-
-  openEditReservationModal(reservation) {
-    // Store current reservation being edited
-    this.currentEditReservation = reservation;
-    
-    // Load hotels for select
-    this.loadHotelsForEditSelect();
-    
-    // Fill form with reservation data
-    const form = document.getElementById('formEditReservation');
-    if (!form) {
-      console.error('Edit form not found');
-      return;
-    }
-    
-    // Update header
-    const resId = document.getElementById('editReservationId');
-    const resStatus = document.getElementById('editReservationStatus');
-    if (resId) resId.textContent = `#${reservation.reservation_number || reservation.id}`;
-    if (resStatus) {
-      const statusMap = {
-        'pending': 'Ausstehend',
-        'active': 'Aktiv',
-        'inhouse': 'In House',
-        'done': 'Abgeschlossen',
-        'canceled': 'Storniert'
-      };
-      resStatus.textContent = statusMap[reservation.status] || reservation.status;
-    }
-    
-    // Fill all form fields - basic fields with hidden mapping
-    const basicFieldsMapping = {
-      'id': 'id',
-      'reservation_number': 'reservation_number',
-      'hotel_code': 'hotel_code',
-      'arrival': 'arrival',
-      'arrival_display': 'arrival',
-      'departure': 'departure', 
-      'departure_display': 'departure',
-      'guests_adults': 'guests_adults',
-      'guests_children': 'guests_children',
-      'status': 'status',
-      'category': 'category',
-      'category_display': 'category',
-      'rate_code': 'rate_code',
-      'rate_code_display': 'rate_code',
-      'total_price': 'total_price',
-      'payment_status': 'payment_status',
-      'notes': 'notes'
-    };
-    
-    Object.entries(basicFieldsMapping).forEach(([fieldName, dataKey]) => {
-      const input = form.querySelector(`[name="${fieldName}"]`);
-      if (input && reservation[dataKey] !== undefined && reservation[dataKey] !== null) {
-        input.value = reservation[dataKey];
-      }
-    });
-    
-    // Fill guest fields - extended
-    const guestFields = [
-      'guest_title', 'guest_first_name', 'guest_last_name', 'guest_birthdate',
-      'guest_nationality', 'guest_language', 'guest_document_number', 'guest_vip',
-      'guest_email', 'guest_phone', 'guest_mobile', 'guest_address',
-      'guest_company', 'guest_company_address', 'guest_vat_id', 'guest_department',
-      'guest_room_preference', 'guest_bed_preference', 'guest_allergies', 'guest_notes'
-    ];
-    
-    guestFields.forEach(field => {
-      const input = form.querySelector(`[name="${field}"]`);
-      if (input && reservation[field] !== undefined && reservation[field] !== null) {
-        input.value = reservation[field];
-      }
-    });
-    
-    // Fill pricing extras
-    const pricingFields = [
-      'extra_breakfast_price', 'extra_parking_price', 'extra_minibar_price',
-      'discount_amount', 'discount_reason', 'discount_type'
-    ];
-    
-    pricingFields.forEach(field => {
-      const input = form.querySelector(`[name="${field}"]`);
-      if (input && reservation[field] !== undefined && reservation[field] !== null) {
-        input.value = reservation[field];
-      }
-    });
-    
-    // Load categories and rates for the dropdowns
-    this.loadCategoriesForEdit(reservation.category);
-    this.loadRatesForEdit(reservation.rate_code);
-    
-    // Disable hotel and status selects
-    const hotelSelect = form.querySelector('[name="hotel_code"]');
-    const statusSelect = form.querySelector('[name="status"]');
-    if (hotelSelect) hotelSelect.disabled = true;
-    if (statusSelect) statusSelect.disabled = true;
-    
-    // Calculate and display nights
-    this.updateNightsDisplayCompact(reservation.arrival, reservation.departure);
-    
-    // Generate night price cards with editable prices
-    this.generateEditableNightPrices(reservation);
-    
-    // Calculate and display breakdown
-    this.calculatePricingBreakdown(reservation);
-    
-    // Load traces (alerts/reminders, not system logs)
-    this.loadReservationTracesModern(reservation);
-    
-    // Initialize tab switching
-    this.initEditModalTabsModern();
-    
-    // Add listeners for date changes - with sync to hidden fields
-    const arrivalInput = form.querySelector('[name="arrival_display"]');
-    const departureInput = form.querySelector('[name="departure_display"]');
-    const arrivalHidden = form.querySelector('[name="arrival"]');
-    const departureHidden = form.querySelector('[name="departure"]');
-    
-    if (arrivalInput && departureInput) {
-      const updateDisplay = () => {
-        // Sync to hidden fields
-        if (arrivalHidden) arrivalHidden.value = arrivalInput.value;
-        if (departureHidden) departureHidden.value = departureInput.value;
-        
-        this.updateNightsDisplayCompact(arrivalInput.value, departureInput.value);
-        this.generateEditableNightPrices({
-          ...reservation,
-          arrival: arrivalInput.value,
-          departure: departureInput.value
-        });
-        this.calculatePricingBreakdown(reservation);
-      };
-      arrivalInput.addEventListener('change', updateDisplay);
-      departureInput.addEventListener('change', updateDisplay);
-    }
-    
-    // Add listeners for category and rate changes - with sync to hidden fields
-    const categorySelect = form.querySelector('[name="category_display"]');
-    const rateSelect = form.querySelector('[name="rate_code_display"]');
-    const categoryHidden = form.querySelector('[name="category"]');
-    const rateHidden = form.querySelector('[name="rate_code"]');
-    
-    if (categorySelect) {
-      categorySelect.addEventListener('change', (e) => {
-        const newCategory = e.target.value;
-        if (categoryHidden) categoryHidden.value = newCategory;
-        if (newCategory) {
-          reservation.category = newCategory;
-          this.recalculatePriceOnCategoryChange(reservation, newCategory);
-        }
-      });
-    }
-    
-    if (rateSelect) {
-      rateSelect.addEventListener('change', (e) => {
-        const newRate = e.target.value;
-        if (rateHidden) rateHidden.value = newRate;
-        if (newRate) {
-          reservation.rate_code = newRate;
-          this.recalculatePriceOnRateChange(reservation, newRate);
-        }
-      });
-    }
-    
-    // Add listeners for pricing changes
-    this.initPricingChangeListeners(form, reservation);
-    
-    // Open the modal
-    this.ui.openModal('modalEditReservation');
-  }
-  
-  loadCategoriesForEdit(selectedCategory) {
-    const categories = state.get('categories') || [];
-    const select = document.querySelector('[name="category_display"]');
-    
-    if (select) {
-      select.innerHTML = '<option value="">WÃ¤hlen...</option>';
-      categories.forEach(cat => {
-        const option = document.createElement('option');
-        option.value = cat.code;
-        option.textContent = `${cat.code} - ${cat.name}`;
-        option.selected = cat.code === selectedCategory;
-        select.appendChild(option);
-      });
-    }
-  }
-  
-  loadRatesForEdit(selectedRate) {
-    const rates = state.get('rates') || [];
-    const select = document.querySelector('[name="rate_code_display"]');
-    
-    if (select) {
-      select.innerHTML = '<option value="">WÃ¤hlen...</option>';
-      rates.forEach(rate => {
-        const option = document.createElement('option');
-        option.value = rate.code;
-        option.textContent = `${rate.code} - ${rate.name}`;
-        option.selected = rate.code === selectedRate;
-        select.appendChild(option);
-      });
-    }
-  }
-  
-  updateNightsDisplayCompact(arrival, departure) {
-    if (!arrival || !departure) return;
-    
-    const arrivalDate = new Date(arrival);
-    const departureDate = new Date(departure);
-    const nights = Math.ceil((departureDate - arrivalDate) / (1000 * 60 * 60 * 24));
-    
-    const nightsDisplay = document.getElementById('nightsCountCompact');
-    if (nightsDisplay) {
-      nightsDisplay.textContent = nights > 0 ? nights : 0;
-    }
-  }
-  
-  generateEditableNightPrices(reservation) {
-    const container = document.getElementById('nightPriceGrid');
-    if (!container) return;
-    
-    container.innerHTML = '';
-    
-    if (!reservation.arrival || !reservation.departure) {
-      container.innerHTML = '<p class="text-center text-muted">Keine Daten verfÃ¼gbar</p>';
-      return;
-    }
-    
-    const arrivalDate = new Date(reservation.arrival);
-    const departureDate = new Date(reservation.departure);
-    const nights = Math.ceil((departureDate - arrivalDate) / (1000 * 60 * 60 * 24));
-    const pricePerNight = reservation.rate_price || 0;
-    
-    if (nights <= 0) {
-      container.innerHTML = '<p class="text-center text-muted">UngÃ¼ltige Daten</p>';
-      return;
-    }
-    
-    // Generate editable card for each night
-    for (let i = 0; i < nights; i++) {
-      const currentDate = new Date(arrivalDate);
-      currentDate.setDate(currentDate.getDate() + i);
-      
-      const card = document.createElement('div');
-      card.className = 'night-price-card';
-      card.innerHTML = `
-        <div class="night-card-header-compact">
-          <span class="night-num"><i class="fas fa-moon"></i> Nacht ${i + 1}</span>
-          <span class="night-date-compact">${this.formatDate(currentDate.toISOString().split('T')[0])}</span>
-        </div>
-        <input 
-          type="number" 
-          class="night-price-input" 
-          data-night-index="${i}"
-          value="${pricePerNight.toFixed(2)}" 
-          step="0.01" 
-          min="0"
-          placeholder="0.00"
-        />
-      `;
-      
-      const input = card.querySelector('.night-price-input');
-      input.addEventListener('change', () => {
-        this.updateTotalFromNightPrices();
-      });
-      
-      container.appendChild(card);
-    }
-  }
-  
-  updateTotalFromNightPrices() {
-    const inputs = document.querySelectorAll('.night-price-input');
-    let total = 0;
-    
-    inputs.forEach(input => {
-      const value = parseFloat(input.value) || 0;
-      total += value;
-    });
-    
-    // Update total price field
-    const totalInput = document.querySelector('[name="total_price"]');
-    if (totalInput) {
-      totalInput.value = total.toFixed(2);
-    }
-    
-    // Recalculate breakdown
-    this.calculatePricingBreakdown(this.currentEditReservation);
-  }
-  
-  updatePricingSummaryCompact(reservation) {
-    const catSelect = document.getElementById('priceCatSelect');
-    const rateSelect = document.getElementById('priceRateSelect');
-    const totalEl = document.getElementById('priceTotal');
-    
-    // FÃ¼lle Kategorie-Dropdown
-    if (catSelect) {
-      const categories = state.get('categories') || [];
-      catSelect.innerHTML = '<option value="">Kategorie wÃ¤hlen...</option>';
-      categories.forEach(cat => {
-        const option = document.createElement('option');
-        option.value = cat.code;
-        option.textContent = `${cat.code} - ${cat.name}`;
-        option.selected = cat.code === reservation.category;
-        catSelect.appendChild(option);
-      });
-    }
-    
-    // FÃ¼lle Rate-Dropdown
-    if (rateSelect) {
-      const rates = state.get('rates') || [];
-      rateSelect.innerHTML = '<option value="">Rate wÃ¤hlen...</option>';
-      rates.forEach(rate => {
-        const option = document.createElement('option');
-        option.value = rate.code;
-        option.textContent = `${rate.code} - ${rate.name}`;
-        option.selected = rate.code === reservation.rate_code;
-        rateSelect.appendChild(option);
-      });
-    }
-    
-    // Update Total
-    if (totalEl) {
-      const total = reservation.total_price || 0;
-      totalEl.textContent = `${parseFloat(total).toFixed(2)} â‚¬`;
-    }
-  }
-  
-  initPricingChangeListeners(form, reservation) {
-    const extrasInputs = [
-      'extra_breakfast_price',
-      'extra_parking_price',
-      'extra_minibar_price',
-      'discount_amount',
-      'discount_type'
-    ];
-    
-    extrasInputs.forEach(fieldName => {
-      const input = form.querySelector(`[name="${fieldName}"]`);
-      if (input) {
-        input.addEventListener('input', () => {
-          this.calculatePricingBreakdown(reservation);
-        });
-      }
-    });
-    
-    // Note: Category and rate change listeners are set up in openEditReservationModal
-    // for category_display and rate_code_display fields
-  }
-  
-  calculatePricingBreakdown(reservation) {
-    // Get accommodation price from night inputs or total
-    let accommodation = 0;
-    const nightInputs = document.querySelectorAll('.night-price-input');
-    if (nightInputs.length > 0) {
-      nightInputs.forEach(input => {
-        accommodation += parseFloat(input.value) || 0;
-      });
-    } else {
-      accommodation = parseFloat(document.querySelector('[name="total_price"]')?.value) || 0;
-    }
-    
-    // Get extras
-    const breakfast = parseFloat(document.querySelector('[name="extra_breakfast_price"]')?.value) || 0;
-    const parking = parseFloat(document.querySelector('[name="extra_parking_price"]')?.value) || 0;
-    const minibar = parseFloat(document.querySelector('[name="extra_minibar_price"]')?.value) || 0;
-    const extras = breakfast + parking + minibar;
-    
-    // Get discount
-    const discount = parseFloat(document.querySelector('[name="discount_amount"]')?.value) || 0;
-    
-    // Calculate subtotal
-    const subtotal = accommodation + extras - discount;
-    
-    // Calculate tax (7% for hotels in Germany)
-    const taxRate = 0.07;
-    const tax = subtotal * taxRate;
-    
-    // Calculate total
-    const total = subtotal + tax;
-    
-    // Update breakdown display
-    document.getElementById('breakdownAccommodation').textContent = `${accommodation.toFixed(2)} â‚¬`;
-    document.getElementById('breakdownExtras').textContent = `${extras.toFixed(2)} â‚¬`;
-    document.getElementById('breakdownDiscount').textContent = discount > 0 ? `-${discount.toFixed(2)} â‚¬` : `0,00 â‚¬`;
-    document.getElementById('breakdownSubtotal').textContent = `${subtotal.toFixed(2)} â‚¬`;
-    document.getElementById('breakdownTax').textContent = `${tax.toFixed(2)} â‚¬`;
-    document.getElementById('breakdownTotal').textContent = `${total.toFixed(2)} â‚¬`;
-    
-    // Also update the main total field
-    const totalInput = document.querySelector('[name="total_price"]');
-    if (totalInput) {
-      totalInput.value = total.toFixed(2);
-    }
-    
-    // Update summary header
-    document.getElementById('priceTotal').textContent = `${total.toFixed(2)} â‚¬`;
-  }
-  
-  recalculatePriceOnCategoryChange(reservation, newCategory) {
-    // Get the new category details
-    const categories = state.get('categories') || [];
-    const category = categories.find(c => c.code === newCategory);
-    
-    if (!category) return;
-    
-    // Get the current rate
-    const rates = state.get('rates') || [];
-    const rate = rates.find(r => r.code === reservation.rate_code);
-    
-    if (!rate) return;
-    
-    // Calculate new base price
-    const basePrice = parseFloat(category.base_price) || 0;
-    const rateMultiplier = parseFloat(rate.price_multiplier) || 1.0;
-    const nightCount = this.calculateNights(reservation.arrival, reservation.departure);
-    
-    const newTotalPrice = basePrice * rateMultiplier * nightCount;
-    
-    // Update the reservation
-    reservation.total_price = newTotalPrice;
-    
-    // Update night price inputs if they exist
-    const nightInputs = document.querySelectorAll('.night-price-input');
-    if (nightInputs.length > 0) {
-      const pricePerNight = newTotalPrice / nightCount;
-      nightInputs.forEach(input => {
-        input.value = pricePerNight.toFixed(2);
-      });
-    }
-    
-    // Recalculate breakdown
-    this.calculatePricingBreakdown(reservation);
-    
-    console.log(`Category changed to ${newCategory}, new price: ${newTotalPrice.toFixed(2)} â‚¬`);
-  }
-  
-  recalculatePriceOnRateChange(reservation, newRate) {
-    // Get the new rate details
-    const rates = state.get('rates') || [];
-    const rate = rates.find(r => r.code === newRate);
-    
-    if (!rate) return;
-    
-    // Get the current category
-    const categories = state.get('categories') || [];
-    const category = categories.find(c => c.code === reservation.category);
-    
-    if (!category) return;
-    
-    // Calculate new base price
-    const basePrice = parseFloat(category.base_price) || 0;
-    const rateMultiplier = parseFloat(rate.price_multiplier) || 1.0;
-    const nightCount = this.calculateNights(reservation.arrival, reservation.departure);
-    
-    const newTotalPrice = basePrice * rateMultiplier * nightCount;
-    
-    // Update the reservation
-    reservation.total_price = newTotalPrice;
-    
-    // Update night price inputs if they exist
-    const nightInputs = document.querySelectorAll('.night-price-input');
-    if (nightInputs.length > 0) {
-      const pricePerNight = newTotalPrice / nightCount;
-      nightInputs.forEach(input => {
-        input.value = pricePerNight.toFixed(2);
-      });
-    }
-    
-    // Recalculate breakdown
-    this.calculatePricingBreakdown(reservation);
-    
-    console.log(`Rate changed to ${newRate}, new price: ${newTotalPrice.toFixed(2)} â‚¬`);
-  }
-  
-  calculateNights(arrival, departure) {
-    if (!arrival || !departure) return 0;
-    const arrivalDate = new Date(arrival);
-    const departureDate = new Date(departure);
-    const diffTime = Math.abs(departureDate - arrivalDate);
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays;
-  }
-  
-  loadReservationTracesModern(reservation) {
-    const container = document.getElementById('tracesListModern');
-    const emptyState = document.getElementById('tracesEmpty');
-    
-    if (!container || !emptyState) return;
-    
-    // In real app, fetch traces from database
-    // For now, create example traces (alerts/reminders, not system logs)
-    const traces = reservation.traces || [];
-    
-    if (traces.length === 0) {
-      container.style.display = 'none';
-      emptyState.classList.remove('hidden');
-      return;
-    }
-    
-    container.style.display = 'flex';
-    emptyState.classList.add('hidden');
-    
-    container.innerHTML = traces.map(trace => {
-      const typeIcons = {
-        'reminder': 'fa-bell',
-        'alert': 'fa-exclamation-triangle',
-        'note': 'fa-sticky-note',
-        'request': 'fa-star'
-      };
-      
-      const typeColors = {
-        'reminder': 'primary',
-        'alert': 'error',
-        'note': 'success',
-        'request': 'warning'
-      };
-      
-      return `
-        <div class="trace-card trace-${trace.type || 'note'}">
-          <div class="trace-header-row">
-            <span class="trace-type-badge">
-              <i class="fas ${typeIcons[trace.type] || 'fa-sticky-note'}"></i>
-              ${trace.type || 'note'}
-            </span>
-            <span class="trace-datetime">${trace.datetime || 'Kein Datum'}</span>
-          </div>
-          <div class="trace-message">${trace.message || 'Keine Nachricht'}</div>
-          <div class="trace-actions">
-            <button class="trace-btn" data-action="edit-trace" data-trace-id="${trace.id}">
-              <i class="fas fa-edit"></i> Bearbeiten
-            </button>
-            <button class="trace-btn" data-action="delete-trace" data-trace-id="${trace.id}">
-              <i class="fas fa-trash"></i> LÃ¶schen
-            </button>
-            ${trace.type === 'reminder' ? `
-              <button class="trace-btn" data-action="complete-trace" data-trace-id="${trace.id}">
-                <i class="fas fa-check"></i> Erledigt
-              </button>
-            ` : ''}
-          </div>
-        </div>
-      `;
-    }).join('');
-  }
-  
-  initEditModalTabsModern() {
-    const modal = document.getElementById('modalEditReservation');
-    if (!modal) return;
-    
-    const tabButtons = modal.querySelectorAll('.tab-btn');
-    const tabPanels = modal.querySelectorAll('.tab-panel');
-    
-    tabButtons.forEach(button => {
-      button.addEventListener('click', () => {
-        const targetTab = button.dataset.tab;
-        
-        // Remove active class from all
-        tabButtons.forEach(btn => btn.classList.remove('active'));
-        tabPanels.forEach(panel => panel.classList.remove('active'));
-        
-        // Add active class to clicked
-        button.classList.add('active');
-        const targetPanel = modal.querySelector(`[data-tab-panel="${targetTab}"]`);
-        if (targetPanel) {
-          targetPanel.classList.add('active');
-        }
-      });
-    });
-  }
-  
-  openAddTraceModal() {
-    if (!this.currentEditReservation) {
-      this.ui.showToast('Keine Reservierung ausgewÃ¤hlt', 'error');
-      return;
-    }
-    
-    // Set default datetime to now
-    const datetimeInput = document.querySelector('#formAddTrace [name="trace_datetime"]');
-    if (datetimeInput) {
-      const now = new Date();
-      now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-      datetimeInput.value = now.toISOString().slice(0, 16);
-    }
-    
-    // Setup form submit handler
-    const form = document.getElementById('formAddTrace');
-    if (form) {
-      form.onsubmit = (e) => {
-        e.preventDefault();
-        this.handleAddTrace(form);
-      };
-    }
-    
-    this.ui.openModal('modalAddTrace');
-  }
-  
-  async handleAddTrace(form) {
-    const formData = new FormData(form);
-    const traceData = {
-      type: formData.get('trace_type'),
-      datetime: formData.get('trace_datetime'),
-      message: formData.get('trace_message'),
-      reservation_id: this.currentEditReservation.id,
-      created_at: new Date().toISOString(),
-      created_by: state.get('user')?.email || 'System'
-    };
-    
-    try {
-      // In real app, save to database
-      // For now, add to current reservation
-      if (!this.currentEditReservation.traces) {
-        this.currentEditReservation.traces = [];
-      }
-      
-      traceData.id = Date.now(); // Simple ID for demo
-      this.currentEditReservation.traces.push(traceData);
-      
-      // Update local state
-      const reservations = state.get('reservations') || [];
-      const index = reservations.findIndex(r => r.id === this.currentEditReservation.id);
-      if (index !== -1) {
-        reservations[index].traces = this.currentEditReservation.traces;
-        state.set('reservations', reservations);
-      }
-      
-      // Reload traces in edit modal
-      this.loadReservationTracesModern(this.currentEditReservation);
-      
-      // Close add trace modal
-      this.ui.closeModal('modalAddTrace');
-      form.reset();
-      
-      this.ui.showToast('Trace erfolgreich hinzugefÃ¼gt', 'success');
-    } catch (error) {
-      console.error('Failed to add trace:', error);
-      this.ui.showToast('Fehler beim HinzufÃ¼gen des Trace', 'error');
-    }
-  }
-
-  loadHotelsForEditSelect() {
-    const select = document.querySelector('#modalEditReservation .hotel-select');
-    if (!select) return;
-    
-    const hotels = state.get('hotels') || [];
-    
-    // Clear existing options except first
-    while (select.options.length > 1) {
-      select.remove(1);
-    }
-    
-    // Add hotel options
-    hotels.forEach(hotel => {
-      const option = document.createElement('option');
-      option.value = hotel.code;
-      option.textContent = `${hotel.name} (${hotel.code})`;
-      select.appendChild(option);
-    });
-  }
-
-  initEditModalTabs() {
-    const modal = document.getElementById('modalEditReservation');
-    if (!modal) return;
-    
-    const tabButtons = modal.querySelectorAll('.tab-button');
-    const tabPanes = modal.querySelectorAll('.tab-pane');
-    
-    tabButtons.forEach(button => {
-      button.addEventListener('click', () => {
-        const targetTab = button.dataset.tab;
-        
-        // Remove active class from all buttons and panes
-        tabButtons.forEach(btn => btn.classList.remove('active'));
-        tabPanes.forEach(pane => pane.classList.add('hidden'));
-        
-        // Add active class to clicked button and corresponding pane
-        button.classList.add('active');
-        const targetPane = modal.querySelector(`[data-tab-content="${targetTab}"]`);
-        if (targetPane) {
-          targetPane.classList.remove('hidden');
-        }
-      });
-    });
-  }
-
-  resetForm(formId) {
-    const form = document.getElementById(formId);
-    if (form) {
-      form.reset();
-      // Remove hidden inputs for category and rate
-      form.querySelectorAll('input[type="hidden"]').forEach(input => {
-        if (input.name === 'category' || input.name === 'rate_code' || input.name === 'rate_price') {
-          input.remove();
-        }
-      });
-      
-      // Reset wizard if it exists
-      if (this.wizard) {
-        this.wizard = null;
-      }
-    }
-  }
-
-  handleTableRowClick(id) {
-    // Open edit modal for this reservation
-    console.log('Edit reservation:', id);
-    
-    // Convert id to number if it's a string number
-    const numId = isNaN(id) ? id : Number(id);
-    
-    const reservations = state.get('reservations') || [];
-    // Try to find by both string and number comparison
-    const reservation = reservations.find(r => r.id === id || r.id === numId);
-    
-    if (reservation) {
-      this.openEditReservationModal(reservation);
-    } else {
-      console.error('Reservation not found. ID:', id, 'Available IDs:', reservations.map(r => r.id));
-      this.ui.showToast('Reservierung nicht gefunden', 'error');
-    }
-  }
-
-  // =============== UTILITY METHODS ===============
-  formatDate(dateString) {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('de-DE', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    });
-  }
-
-  formatCurrency(amount) {
-    if (!amount && amount !== 0) return '0 â‚¬';
-    return new Intl.NumberFormat('de-DE', {
-      style: 'currency',
-      currency: 'EUR'
-    }).format(amount);
-  }
-
-  getStatusLabel(status) {
-    const labels = {
-      active: 'Aktiv',
-      done: 'Abgeschlossen',
-      canceled: 'Storniert',
-      pending: 'Ausstehend'
-    };
-    return labels[status] || status;
-  }
-
-  // =============== LIFECYCLE METHODS ===============
-  showLoadingOverlay() {
-    const overlay = document.getElementById('loadingOverlay');
-    if (overlay) {
-      overlay.classList.remove('hidden');
-    }
-  }
-
-  hideLoadingOverlay() {
-    const overlay = document.getElementById('loadingOverlay');
-    if (overlay) {
-      overlay.classList.add('hidden');
-    }
-  }
-
-  updateClock() {
-    const updateTime = () => {
-      const now = new Date();
-      
-      const dateElement = document.getElementById('dateLocal');
-      if (dateElement) {
-        dateElement.textContent = now.toLocaleDateString('de-DE', {
-          day: '2-digit',
-          month: '2-digit',
-          year: 'numeric'
-        });
-      }
-      
-      const clockElement = document.getElementById('clockLocal');
-      if (clockElement) {
-        clockElement.textContent = now.toLocaleTimeString('de-DE');
-      }
-    };
-    
-    updateTime();
-    setInterval(updateTime, 1000);
-  }
-  
-  updateUserDisplay() {
-    const user = state.get('user');
-    const userElement = document.getElementById('currentUser');
-    if (userElement && user) {
-      userElement.textContent = user.name || user.email || 'User';
-    }
-  }
-
-  updateDashboard() {
-    this.renderReservationTable();
-    this.updateKPIs();
-    this.updateActivityFeed();
-    this.updateYoYPerformance();
-  }
-
-  updateActivityFeed() {
-    const feed = document.getElementById('activityFeed');
-    if (!feed) return;
-    
-    const reservations = state.get('reservations') || [];
-    const recentReservations = reservations.slice(0, 5);
-    
-    if (recentReservations.length === 0) {
-      feed.innerHTML = `
-        <div class="text-center text-muted" style="padding: 2rem;">
-          <i class="fas fa-history" style="font-size: 2rem; opacity: 0.3;"></i>
-          <p style="margin-top: 1rem;">Keine AktivitÃ¤ten</p>
-        </div>
-      `;
-      return;
-    }
-    
-    feed.innerHTML = recentReservations.map(r => `
-      <div class="activity-item">
-        <div class="activity-icon">
-          <i class="fas fa-plus-circle"></i>
-        </div>
-        <div class="activity-content">
-          <div class="activity-title">Neue Reservierung: ${r.guest_last_name}</div>
-          <div class="activity-meta">${r.reservation_number} Â· ${this.formatDate(r.created_at)}</div>
-        </div>
-      </div>
-    `).join('');
-  }
-
-  updateYoYPerformance() {
-    const yoyContainer = document.getElementById('yoyPerformance');
-    if (!yoyContainer) return;
-    
-    const hotels = state.get('hotels') || [];
-    const reservations = state.get('reservations') || [];
-    
-    // Calculate YoY for each hotel
-    const today = new Date();
-    const todayStr = today.toISOString().split('T')[0];
-    const lastYear = new Date(today);
-    lastYear.setFullYear(lastYear.getFullYear() - 1);
-    const lastYearStr = lastYear.toISOString().split('T')[0];
-    
-    const hotelPerformance = hotels.map(hotel => {
-      // Count bookings today
-      const todayBookings = reservations.filter(r => 
-        r.hotel_code === hotel.code && 
-        r.created_at && 
-        r.created_at.split('T')[0] === todayStr &&
-        r.status === 'active'
-      ).length;
-      
-      // Count bookings same day last year (simulated - in real app would fetch from DB)
-      const lastYearBookings = Math.floor(Math.random() * 5); // Demo data
-      
-      const diff = todayBookings - lastYearBookings;
-      const trend = diff > 0 ? 'up' : diff < 0 ? 'down' : 'neutral';
-      const icon = diff > 0 ? 'fa-arrow-up' : diff < 0 ? 'fa-arrow-down' : 'fa-minus';
-      const diffText = diff > 0 ? `+${diff}` : diff < 0 ? `${diff}` : '0';
-      
-      return {
-        hotel,
-        todayBookings,
-        lastYearBookings,
-        diff,
-        trend,
-        icon,
-        diffText
-      };
-    });
-    
-    if (hotelPerformance.length === 0) {
-      yoyContainer.innerHTML = `
-        <div class="text-center text-muted" style="padding: 2rem;">
-          <i class="fas fa-chart-line" style="font-size: 2rem; opacity: 0.3;"></i>
-          <p style="margin-top: 1rem;">Keine Hotels</p>
-        </div>
-      `;
-      return;
-    }
-    
-    yoyContainer.innerHTML = hotelPerformance.map(perf => `
-      <div class="yoy-item">
-        <div class="yoy-item-info">
-          <div class="yoy-item-name">${perf.hotel.name}</div>
-          <div class="yoy-item-meta">${perf.todayBookings} heute Â· ${perf.lastYearBookings} letztes Jahr</div>
-        </div>
-        <div class="yoy-item-trend ${perf.trend}">
-          <i class="fas ${perf.icon}"></i>
-          <span>${perf.diffText}</span>
-        </div>
-      </div>
-    `).join('');
-  }
-
-  startPeriodicUpdates() {
-    // Refresh data every 5 minutes
-    setInterval(() => {
-      this.loadReservations();
-    }, 5 * 60 * 1000);
-  }
-
-  saveState() {
-    // Save current state to storage
-    const preferences = Storage.get('PREFERENCES') || {};
-    Storage.set('PREFERENCES', preferences);
-  }
-
-  hasUnsavedChanges() {
-    // Check if there are unsaved changes
-    return false; // Implement as needed
-  }
-
-  isSessionValid(session) {
-    if (!session || !session.expiresAt) return false;
-    return new Date(session.expiresAt) > new Date();
-  }
-  
-  createDemoSession() {
-    const now = new Date();
-    const expiresAt = new Date(now.getTime() + 8 * 60 * 60 * 1000); // 8 hours
-    
-    return {
-      user: {
-        id: 'demo-user',
-        email: 'demo@hotel-system.de',
-        name: 'Demo User',
-        role: 'admin'
-      },
-      token: 'demo-token-' + Date.now(),
-      createdAt: now.toISOString(),
-      expiresAt: expiresAt.toISOString()
-    };
-  }
-
-  redirectToAuth() {
-    // Add logout parameter to prevent immediate redirect back to dashboard
-    window.location.replace('/auth.html?logout=true');
-  }
-
-  async logout() {
-    if (confirm('MÃ¶chten Sie sich wirklich abmelden?')) {
-      console.log('ðŸ”“ App logout initiated...');
-      
-      // Use the proper auth logout function if available
-      if (window.HRS_AUTH && typeof window.HRS_AUTH.logout === 'function') {
-        console.log('âœ… Using HRS_AUTH.logout()');
-        await window.HRS_AUTH.logout();
-      } else {
-        // Fallback: Manual logout
-        console.log('âš ï¸ Fallback logout (HRS_AUTH not available)');
-        Storage.remove('USER_SESSION');
-        localStorage.removeItem('hrs_v2_session');
-        localStorage.removeItem('hrs_v2_login_attempts');
-        sessionStorage.clear();
-        
-        // CRITICAL: Add logout parameter to prevent immediate redirect back
-        window.location.replace('/auth.html?logout=true');
-      }
-    }
-  }
-
-  showDashboard() {
-    // Implementation
-  }
-
-  showReservationsView() {
-    // Implementation
-  }
-
-  showReservationDetail(id) {
-    // Implementation
-  }
-
-  showSettingsView() {
-    // Implementation
-  }
-
-  showReportsView() {
-    // Implementation
-  }
-
- let html = `
-      <div class="availability-grid-premium">
-        <div class="grid-header-row">
-          <div class="grid-hotel-header">Hotels</div>
-          <div class="grid-dates-container">
-            ${dates.map(day => `
-              <div class="grid-date-cell ${new Date(day.date).getDay() === 0 || new Date(day.date).getDay() === 6 ? 'weekend' : ''}">
-                <div class="date-compact">
-                  <span class="date-num">${day.dayNumber}</span>
-                  <span class="date-day">${day.dayName.substring(0, 2)}</span>
-                </div>
-              </div>
-            `).join('')}
-          </div>
-        </div>
-        
-        <div class="grid-data-container">
-          ${Object.entries(data).map(([hotelCode, hotelData]) => `
-            <div class="grid-data-row" data-hotel="${hotelCode}">
-              <div class="grid-hotel-cell">
-                <div class="hotel-name-compact">
-                  <i class="fas fa-building"></i>
-                  <span class="hotel-text">${hotelData.name}</span>
-                  <span class="hotel-avg">${Math.round(hotelData.days.reduce((sum, day) => sum + day.occupancyRate, 0) / hotelData.days.length)}%</span>
-                </div>
-              </div>
-              <div class="grid-cells-container">
-                ${hotelData.days.map(day => this.renderGridCell(day, hotelCode)).join('')}
-              </div>
-            </div>
-          `).join('')}
-        </div>
-      </div>
-    `;
-    
-    grid.innerHTML = html;
-    this.initAvailabilityTooltips();
-  }
-
-  // Premium Grid Cell
-  renderGridCell(day, hotelCode) {
-    const occupancyClass = day.status === 'low' ? 'cell-low' : 
-                           day.status === 'medium' ? 'cell-medium' : 
-                           'cell-high';
-    
-    return `
-      <div class="grid-value-cell ${occupancyClass}" 
-           data-date="${day.date}"
-           data-hotel="${hotelCode}"
-           data-tooltip="hover">
-        <div class="cell-percent">${Math.round(day.occupancyRate)}%</div>
-        <div class="cell-free">${day.available}</div>
-        
-        <!-- Premium Tooltip -->
-        <div class="availability-tooltip-premium">
-          <div class="tooltip-inner">
-            <div class="tooltip-title">
-              ${day.dayName}, ${day.dayNumber}. ${day.month}
-            </div>
-            <div class="tooltip-metrics">
-              <div class="metric">
-                <span class="metric-label">Auslastung</span>
-                <span class="metric-value">${Math.round(day.occupancyRate)}%</span>
-              </div>
-              <div class="metric">
-                <span class="metric-label">Verfügbar</span>
-                <span class="metric-value">${day.available}/${day.totalRooms}</span>
-              </div>
-            </div>
-            <div class="tooltip-rooms">
-              ${Object.entries(day.roomDetails).map(([cat, details]) => `
-                <div class="room-cat">
-                  <span class="room-cat-name">${cat}</span>
-                  <span class="room-cat-avail">${details.available}/${details.total}</span>
-                  <div class="room-cat-bar">
-                    <div class="room-cat-fill" style="width: ${((details.total - details.available) / details.total) * 100}%"></div>
-                  </div>
-                </div>
-              `).join('')}
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
-  }
-
-  // Premium Tooltips mit korrektem z-index
-  initAvailabilityTooltips() {
-    const cells = document.querySelectorAll('.grid-value-cell[data-tooltip="hover"]');
-    
-    cells.forEach(cell => {
-      const tooltip = cell.querySelector('.availability-tooltip-premium');
-      let hideTimeout;
-      
-      cell.addEventListener('mouseenter', (e) => {
-        clearTimeout(hideTimeout);
-        
-        // Close all other tooltips
-        document.querySelectorAll('.availability-tooltip-premium.active').forEach(t => {
-          if (t !== tooltip) t.classList.remove('active');
-        });
-        
-        tooltip.classList.add('active');
-        
-
-   yId('availabilityGrid');
-    if (!grid) return;
-    
-    // Get all dates for header
-    const dates = data[Object.keys(data)[0]]?.days || [];
-    
-    let html = `
-      <div class="availability-grid-premium">
-        <div class="grid-header-row">
-          <div class="grid-hotel-header">Hotels</div>
-          <div class="grid-dates-container">
-            ${dates.map(day => `
-              <div class="grid-date-cell ${new Date(day.date).getDay() === 0 || new Date(day.date).getDay() === 6 ? 'weekend' : ''}">
-                <div class="date-compact">
-                  <span class="date-num">${day.dayNumber}</span>
-                  <span class="date-day">${day.dayName.substring(0, 2)}</span>
-                </div>
-              </div>
-            `).join('')}
-          </div>
-        </div>
-        
-        <div class="grid-data-container">
-          ${Object.entries(data).map(([hotelCode, hotelData]) => `
-            <div class="grid-data-row" data-hotel="${hotelCode}">
-              <div class="grid-hotel-cell">
-                <div class="hotel-name-compact">
-                  <i class="fas fa-building"></i>
-                  <span class="hotel-text">${hotelData.name}</span>
-                  <span class="hotel-avg">${Math.round(hotelData.days.reduce((sum, day) => sum + day.occupancyRate, 0) / hotelData.days.length)}%</span>
-                </div>
-              </div>
-              <div class="grid-cells-container">
-                ${hotelData.days.map(day => this.renderGridCell(day, hotelCode)).join('')}
-              </div>
-            </div>
-          `).join('')}
-        </div>
-      </div>
-    `;
-    
-    grid.innerHTML = html;
-    this.initAvailabilityTooltips();
-  }
-
-  // Premium Grid Cell
-  renderGridCell(day, hotelCode) {
-    const occupancyClass = day.status === 'low' ? 'cell-low' : 
-                           day.status === 'medium' ? 'cell-medium' : 
-                           'cell-high';
-    
-    return `
-      <div class="grid-value-cell ${occupancyClass}" 
-           data-date="${day.date}"
-           data-hotel="${hotelCode}"
-           data-tooltip="hover">
-        <div class="cell-percent">${Math.round(day.occupancyRate)}%</div>
-        <div class="cell-free">${day.available}</div>
-        
-        <!-- Premium Tooltip -->
-        <div class="availability-tooltip-premium">
-          <div class="tooltip-inner">
-            <div class="tooltip-title">
-              ${day.dayName}, ${day.dayNumber}. ${day.month}
-            </div>
-            <div class="tooltip-metrics">
-              <div class="metric">
-                <span class="metric-label">Auslastung</span>
-                <span class="metric-value">${Math.round(day.occupancyRate)}%</span>
-              </div>
-              <div class="metric">
-                <span class="metric-label">Verfügbar</span>
-                <span class="metric-value">${day.available}/${day.totalRooms}</span>
-              </div>
-            </div>
-            <div class="tooltip-rooms">
-              ${Object.entries(day.roomDetails).map(([cat, details]) => `
-                <div class="room-cat">
-                  <span class="room-cat-name">${cat}</span>
-                  <span class="room-cat-avail">${details.available}/${details.total}</span>
-                  <div class="room-cat-bar">
-                    <div class="room-cat-fill" style="width: ${((details.total - details.available) / details.total) * 100}%"></div>
-                  </div>
-                </div>
-              `).join('')}
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
-  }
-
-  // Premium Tooltips mit korrektem z-index
-  initAvailabilityTooltips() {
-    const cells = document.querySelectorAll('.grid-value-cell[data-tooltip="hover"]');
-    
-    cells.forEach(cell => {
-      const tooltip = cell.querySelector('.availability-tooltip-premium');
-      if (!tooltip) return;
-      
-      let hideTimeout;
-      
-      cell.addEventListener('mouseenter', (e) => {
-        clearTimeout(hideTimeout);
-        
-        // Close all other tooltips
-        document.querySelectorAll('.availability-tooltip-premium.active').forEach(t => {
-          if (t !== tooltip) t.classList.remove('active');
-        });
-        
-        tooltip.classList.add('active');
-        
-        // Smart positioning
-        const rect = cell.getBoundingClientRect();
-        const tooltipRect = tooltip.getBoundingClientRect();
-        const viewportWidth = window.innerWidth;
-        const viewportHeight = window.innerHeight;
-        
-        // Reset positioning
-        tooltip.style.left = '';
-        tooltip.style.right = '';
-        tooltip.style.top = '';
-        tooltip.style.bottom = '';
-        
-        // Horizontal positioning
-        if (rect.left + tooltipRect.width > viewportWidth - 20) {
-          tooltip.style.right = '0';
-          tooltip.style.left = 'auto';
-        } else {
-          tooltip.style.left = '50%';
-          tooltip.style.transform = 'translateX(-50%)';
-        }
-        
-        // Vertical positioning - prefer above, but show below if no space
-        if (rect.top - tooltipRect.height < 60) { // 60px for header
-          tooltip.style.top = 'calc(100% + 8px)';
-          tooltip.style.bottom = 'auto';
-          tooltip.classList.add('tooltip-below');
-        } else {
-          tooltip.style.bottom = 'calc(100% + 8px)';
-          tooltip.style.top = 'auto';
-          tooltip.classList.remove('tooltip-below');
-        }
-      });
-      
-      cell.addEventListener('mouseleave', () => {
-        hideTimeout = setTimeout(() => {
-          tooltip.classList.remove('active');
-        }, 100);
-      });
-      
-      // Keep tooltip open when hovering over it
-      tooltip.addEventListener('mouseenter', () => {
-        clearTimeout(hideTimeout);
-      });
-      
-      tooltip.addEventListener('mouseleave', () => {
-        tooltip.classList.remove('active');
-      });
-    });
-  }
-
-
-
-  loadReports() {
-    this.ui.showToast('Reports coming soon', 'info');
-  }
-
-  loadSettings() {
-    this.ui.showToast('Settings coming soon', 'info');
-  }
-
-  async exportToCSV() {
-    this.ui.showToast('CSV export coming soon', 'info');
-  }
-
-  async exportToPDF() {
-    this.ui.showToast('PDF export coming soon', 'info');
-  }
-
-  async saveChannelSettings(data) {
-    this.ui.showToast('Channel settings save coming soon', 'info');
-  }
-
-  async handleSendConfirmationEmail(reservation) {
-    try {
-      const emailTo = document.getElementById('confirmEmailTo').value;
-      const emailSubject = document.getElementById('confirmEmailSubject').value;
-      const emailBody = document.getElementById('confirmEmailBody').value;
-      
-      if (!emailTo || !emailSubject || !emailBody) {
-        this.ui.showToast('Bitte füllen Sie alle Felder aus', 'error');
-        return;
-      }
-      
-      // TODO: Implement actual email sending
-      console.log('Sending email:', { to: emailTo, subject: emailSubject, body: emailBody });
-      
-      this.ui.showToast('E-Mail wurde versendet', 'success');
-      this.ui.closeModal('modalConfirmationEmail');
-      
-    } catch (error) {
-      console.error('Error sending email:', error);
-      this.ui.showToast('Fehler beim Versenden der E-Mail', 'error');
-    }
-  }
-
-  async loadSystemStatus() {
-    // Check Supabase connection
-    const sbStatus = this.database ? 'success' : 'error';
-    const sbIndicator = document.querySelector('[data-status-type="SB"]');
-    if (sbIndicator) {
-      sbIndicator.className = `pill ${sbStatus}`;
-      sbIndicator.dataset.tooltip = `Supabase - ${sbStatus === 'success' ? 'Verbunden' : 'Nicht verbunden'}`;
-    }
-    
-    // Check HotelNetSolutions connection
-    const hnsStatus = 'error'; // TODO: Implement actual check
-    const hnsIndicator = document.querySelector('[data-status-type="HNS"]');
-    if (hnsIndicator) {
-      hnsIndicator.className = `pill ${hnsStatus}`;
-      hnsIndicator.dataset.tooltip = `HotelNetSolutions - ${hnsStatus === 'success' ? 'Verbunden' : 'Nicht verbunden'}`;
-    }
-  }
-
-  updateElement(id, value) {
-    const element = document.getElementById(id);
-    if (element) {
-      element.textContent = value;
-    }
-  }
-
-  formatCurrency(amount) {
-    return new Intl.NumberFormat('de-DE', { 
-      style: 'currency', 
-      currency: CONFIG.UI.CURRENCY_FORMAT 
-    }).format(amount);
-  }
-
-  formatDate(date) {
-    if (!date) return 'N/A';
-    return new Date(date).toLocaleDateString('de-DE');
-  }
-
-  calculateNights(arrival, departure) {
-    const arrivalDate = new Date(arrival);
-    const departureDate = new Date(departure);
-    const diffTime = Math.abs(departureDate - arrivalDate);
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  }
-
-  // =============== ACTIVITY FEED ===============
-  updateActivityFeed() {
-    const feed = document.getElementById('activityFeed');
-    if (!feed) return;
-
-    const activities = [
-      { type: 'booking', text: 'Neue Reservierung #R2024001', time: '2 Min', icon: 'fa-calendar-plus' },
-      { type: 'checkin', text: 'Check-in: Müller, HTL001', time: '5 Min', icon: 'fa-sign-in-alt' },
-      { type: 'checkout', text: 'Check-out: Schmidt, HTL002', time: '10 Min', icon: 'fa-sign-out-alt' },
-      { type: 'cancellation', text: 'Stornierung #R2024002', time: '15 Min', icon: 'fa-times-circle' },
-      { type: 'modification', text: 'Änderung #R2024003', time: '20 Min', icon: 'fa-edit' },
-      { type: 'payment', text: 'Zahlung erhalten #R2024004', time: '25 Min', icon: 'fa-credit-card' }
-    ];
-
-    feed.innerHTML = activities.map(activity => `
-      <div class="activity-item ${activity.type}">
-        <div class="activity-icon">
-          <i class="fas ${activity.icon}"></i>
-        </div>
-        <div class="activity-content">
-          <div class="activity-text">${activity.text}</div>
-          <div class="activity-time">${activity.time}</div>
-        </div>
-      </div>
-    `).join('');
-  }
-
-  // =============== YOY PERFORMANCE ===============
-  updateYoYPerformance() {
-    const container = document.getElementById('yoyPerformance');
-    if (!container) return;
-
-    const data = {
-      bookings: { current: 1234, previous: 1180, change: 4.6 },
-      revenue: { current: 89450, previous: 85200, change: 5.0 },
-      adr: { current: 125, previous: 118, change: 5.9 },
-      occupancy: { current: 78.5, previous: 75.2, change: 4.4 }
-    };
-
-    container.innerHTML = Object.entries(data).map(([key, values]) => {
-      const isPositive = values.change > 0;
-      const icon = isPositive ? 'fa-arrow-up' : 'fa-arrow-down';
-      const colorClass = isPositive ? 'success' : 'danger';
-      
-      return `
-        <div class="yoy-metric">
-          <div class="yoy-label">${key.charAt(0).toUpperCase() + key.slice(1)}</div>
-          <div class="yoy-value">
-            ${key === 'revenue' ? this.formatCurrency(values.current) :
-              key === 'adr' ? this.formatCurrency(values.current) :
-              key === 'occupancy' ? values.current + '%' :
-              values.current}
-          </div>
-          <div class="yoy-change ${colorClass}">
-            <i class="fas ${icon}"></i>
-            ${Math.abs(values.change)}%
-          </div>
-        </div>
-      `;
-    }).join('');
-  }
-
-  // =============== TODAY'S OPERATIONS ===============
-  updateTodaysOperations() {
-    const reservations = state.get('reservations') || [];
-    const today = new Date().toISOString().split('T')[0];
-
-    // Calculate check-ins today
-    const todayCheckins = reservations.filter(r => 
-      r.arrival === today && r.status === 'active'
-    );
-
-    // Calculate check-outs today
-    const todayCheckouts = reservations.filter(r => 
-      r.departure === today && r.status === 'active'
-    );
-
-    // Calculate in-house guests (arrival <= today, departure > today)
-    const inhouseGuests = reservations.filter(r => 
-      r.arrival <= today && r.departure > today && r.status === 'active'
-    );
-
-    // Update UI
-    this.updateElement('todayCheckins', todayCheckins.length);
-    this.updateElement('todayCheckouts', todayCheckouts.length);
-    this.updateElement('inhouseGuests', inhouseGuests.length);
-  }
-
-  viewTodaysCheckins() {
-    const today = new Date().toISOString().split('T')[0];
-    
-    // Update filters to show today's check-ins
-    state.set('filters', {
-      ...state.get('filters'),
-      dateFrom: today,
-      dateTo: today,
-      status: 'active'
-    });
-    
-    // Update filter UI
-    const dateFromInput = document.getElementById('filterDateFrom');
-    const dateToInput = document.getElementById('filterDateTo');
-    if (dateFromInput) dateFromInput.value = today;
-    if (dateToInput) dateToInput.value = today;
-    
-    // Reload reservations with new filters
-    this.loadReservations();
-    this.ui.showToast('Zeige heutige Check-ins', 'info');
-  }
-
-  viewTodaysCheckouts() {
-    const today = new Date().toISOString().split('T')[0];
-    
-    // Similar to check-ins but filter by departure date
-    state.set('filters', {
-      ...state.get('filters'),
-      dateFrom: today,
-      dateTo: today,
-      status: 'active'
-    });
-    
-    this.loadReservations();
-    this.ui.showToast('Zeige heutige Check-outs', 'info');
-  }
-
-  viewInhouseGuests() {
-    const today = new Date().toISOString().split('T')[0];
-    
-    // Show all current in-house guests
-    state.set('filters', {
-      ...state.get('filters'),
-      dateFrom: null,
-      dateTo: null,
-      status: 'active'
-    });
-    
-    this.loadReservations();
-    this.ui.showToast('Zeige In-House Gäste', 'info');
+.modal-content {
+  position: relative;
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  background: linear-gradient(135deg, 
+    rgba(40, 52, 75, 0.95) 0%, 
+    rgba(51, 65, 85, 0.95) 100%
+  );
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: var(--radius-2xl);
+  box-shadow: 
+    0 24px 48px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(99, 102, 241, 0.2),
+    0 0 80px rgba(99, 102, 241, 0.2);
+  animation: slideUpScale 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-content.large {
+  max-width: 1000px;
+}
+
+@keyframes slideUpScale {
+  from {
+    transform: translateY(30px) scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
   }
 }
 
-// =============== INITIALIZATION ===============
-document.addEventListener('DOMContentLoaded', () => {
-  const app = new ReservationApp();
-  window.app = app; // For debugging
-});
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-6) var(--space-6) var(--space-5);
+  border-bottom: 1px solid var(--border-primary);
+  background: linear-gradient(135deg, 
+    rgba(99, 102, 241, 0.05) 0%, 
+    rgba(139, 92, 246, 0.05) 50%,
+    rgba(6, 182, 212, 0.05) 100%
+  );
+  position: relative;
+  overflow: hidden;
+}
+
+.modal-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, 
+    var(--primary-500) 0%, 
+    var(--accent-500) 50%, 
+    var(--primary-500) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 3s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.modal-header h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+  background: linear-gradient(135deg, var(--primary-400), var(--accent-400));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: -0.02em;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.modal-header h2::before {
+  content: '';
+  width: 6px;
+  height: 32px;
+  background: linear-gradient(180deg, var(--primary-500), var(--accent-500));
+  border-radius: var(--radius-full);
+  box-shadow: 0 0 12px rgba(99, 102, 241, 0.5);
+}
+
+.modal-close {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: rgba(99, 102, 241, 0.08);
+  color: var(--text-secondary);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.modal-close::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, var(--primary-500), var(--accent-500));
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.modal-close:hover {
+  background: rgba(99, 102, 241, 0.15);
+  color: var(--primary-400);
+  transform: scale(1.05);
+}
+
+.modal-close:hover::before {
+  opacity: 0.1;
+}
+
+.modal-close i {
+  position: relative;
+  z-index: 1;
+}
+
+.modal-body {
+  flex: 1;
+  padding: var(--space-6);
+  overflow-y: auto;
+  max-height: 70vh;
+}
+
+.modal-body::-webkit-scrollbar {
+  width: 0;
+  background: transparent;
+}
+
+.modal-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: var(--radius-full);
+}
+
+.modal-body::-webkit-scrollbar-thumb:hover {
+  background: transparent;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  padding: var(--space-6);
+  border-top: 1px solid var(--border-primary);
+  background: linear-gradient(135deg, 
+    rgba(99, 102, 241, 0.02) 0%, 
+    rgba(139, 92, 246, 0.02) 50%,
+    rgba(6, 182, 212, 0.02) 100%
+  );
+  position: relative;
+}
+
+.modal-footer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(99, 102, 241, 0.3) 50%, 
+    transparent 100%
+  );
+}
+
+/* ================================================
+   WIZARD
+   ================================================ */
+
+.wizard-steps {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: var(--space-8);
+  position: relative;
+  padding: 0 var(--space-4);
+}
+
+.wizard-steps::before {
+  content: '';
+  position: absolute;
+  top: 20px;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, 
+    var(--border-primary) 0%, 
+    var(--border-primary) 50%, 
+    var(--border-primary) 100%
+  );
+  border-radius: var(--radius-full);
+  z-index: 0;
+}
+
+.wizard-steps::after {
+  content: '';
+  position: absolute;
+  top: 20px;
+  left: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--primary-500), var(--accent-500));
+  border-radius: var(--radius-full);
+  z-index: 1;
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 0 12px rgba(99, 102, 241, 0.6);
+}
+
+.wizard-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  flex: 1;
+  position: relative;
+  z-index: 2;
+}
+
+.wizard-step-number {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-surface);
+  border: 3px solid var(--border-primary);
+  border-radius: var(--radius-full);
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--text-tertiary);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+.wizard-step-number::before {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: var(--radius-full);
+  background: linear-gradient(135deg, var(--primary-500), var(--accent-500));
+  opacity: 0;
+  filter: blur(8px);
+  transition: opacity 0.3s ease;
+}
+
+.wizard-step.active .wizard-step-number {
+  background: linear-gradient(135deg, var(--primary-600), var(--primary-500));
+  border-color: var(--primary-500);
+  color: white;
+  box-shadow: 0 0 24px rgba(99, 102, 241, 0.5), 0 4px 12px rgba(99, 102, 241, 0.3);
+  transform: scale(1.1);
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.wizard-step.active .wizard-step-number::before {
+  opacity: 0.6;
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 24px rgba(99, 102, 241, 0.5), 0 4px 12px rgba(99, 102, 241, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 32px rgba(99, 102, 241, 0.7), 0 6px 16px rgba(99, 102, 241, 0.4);
+  }
+}
+
+.wizard-step.completed .wizard-step-number {
+  background: linear-gradient(135deg, var(--success-600), var(--success-500));
+  border-color: var(--success-500);
+  color: white;
+  box-shadow: 0 0 16px rgba(16, 185, 129, 0.4);
+}
+
+.wizard-step.completed .wizard-step-number::after {
+  content: 'ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  animation: checkmark-pop 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+@keyframes checkmark-pop {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.wizard-step-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  text-align: center;
+  transition: all 0.3s ease;
+  letter-spacing: 0.02em;
+}
+
+.wizard-step.active .wizard-step-label {
+  color: var(--primary-400);
+  font-weight: 700;
+  transform: scale(1.05);
+}
+
+.wizard-step.completed .wizard-step-label {
+  color: var(--success-400);
+}
+
+.wizard-content {
+  animation: fadeInSlide 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes fadeInSlide {
+  from {
+    opacity: 0;
+    transform: translateX(20px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+/* ================================================
+   CATEGORY & RATE GRIDS
+   ================================================ */
+
+#categoryGrid,
+#rateGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+  max-height: 65vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: var(--space-2);
+}
+
+/* Scrollbar verstecken, aber Scrollfunktion behalten */
+#categoryGrid::-webkit-scrollbar,
+#rateGrid::-webkit-scrollbar {
+  width: 0;
+  background: transparent;
+}
+
+#categoryGrid,
+#rateGrid {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.category-card,
+.rate-card {
+  padding: var(--space-4) var(--space-5);
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.03) 0%, rgba(139, 92, 246, 0.03) 100%);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.category-card::before,
+.rate-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--primary-500), var(--accent-500));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s ease;
+}
+
+.category-card:hover,
+.rate-card:hover {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(139, 92, 246, 0.08) 100%);
+  border-color: var(--primary-400);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.15);
+}
+
+.category-card:hover::before,
+.rate-card:hover::before {
+  transform: scaleX(1);
+}
+
+.category-card.selected,
+.rate-card.selected {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.12) 0%, rgba(139, 92, 246, 0.12) 100%);
+  border-color: var(--primary-500);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15), 0 8px 24px rgba(99, 102, 241, 0.2);
+}
+
+.category-card.selected::before,
+.rate-card.selected::before {
+  transform: scaleX(1);
+}
+
+.category-header,
+.rate-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: var(--space-3);
+  gap: var(--space-3);
+}
+
+.category-header h4,
+.rate-header h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+}
+
+.category-price,
+.rate-price {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.category-price,
+.rate-price {
+  font-size: 1.25rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--primary-400), var(--accent-400));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  line-height: 1;
+}
+
+.category-price small,
+.rate-price small {
+  display: block;
+  font-size: 0.6875rem;
+  color: var(--text-tertiary);
+  -webkit-text-fill-color: var(--text-tertiary);
+  margin-top: 2px;
+  font-weight: 400;
+}
+
+.category-details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.detail-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+}
+
+.detail-item i {
+  width: 16px;
+  color: var(--primary-400);
+  flex-shrink: 0;
+  font-size: 0.875rem;
+}
+
+.category-amenities,
+.rate-includes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  margin-bottom: var(--space-3);
+}
+
+.category-amenities .badge,
+.rate-includes .badge {
+  font-size: 0.6875rem;
+  padding: 0.25rem 0.5rem;
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+}
+
+.rate-policy {
+  display: flex;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: rgba(6, 182, 212, 0.08);
+  border: 1px solid rgba(6, 182, 212, 0.15);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-3);
+}
+
+.rate-policy i {
+  color: var(--accent-400);
+  margin-top: 1px;
+  flex-shrink: 0;
+  font-size: 0.875rem;
+}
+
+.rate-policy span {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.btn-select-category,
+.btn-select-rate {
+  width: 100%;
+  justify-content: center;
+  padding: var(--space-2) var(--space-4);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+/* ================================================
+   RESERVATION SUMMARY
+   ================================================ */
+
+.reservation-summary {
+  background: var(--glass-bg);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  margin-bottom: var(--space-6);
+}
+
+.reservation-summary h4 {
+  margin-bottom: var(--space-4);
+}
+
+.summary-grid {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-4);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+}
+
+.summary-item.highlight {
+  background: var(--primary-600);
+  border-color: var(--primary-600);
+  box-shadow: var(--shadow-glow);
+}
+
+.summary-item.highlight .label,
+.summary-item.highlight .value {
+  color: white;
+  font-weight: 600;
+}
+
+.summary-item .label {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.summary-item .value {
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+/* ================================================
+   LOADING & SKELETONS
+   ================================================ */
+
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-app);
+}
+
+.loading-overlay.hidden {
+  display: none;
+}
+
+.loading-content {
+  text-align: center;
+}
+
+.spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid var(--border-primary);
+  border-top-color: var(--primary-500);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto var(--space-4);
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--bg-surface) 0%,
+    var(--bg-elevated) 50%,
+    var(--bg-surface) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--radius-md);
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* ================================================
+   TOAST NOTIFICATIONS
+   ================================================ */
+
+.toast-container {
+  position: fixed;
+  bottom: var(--space-6);
+  right: var(--space-6);
+  z-index: var(--z-toast);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  pointer-events: none;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+  background: var(--bg-overlay);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+  backdrop-filter: blur(12px);
+  pointer-events: auto;
+  transform: translateX(400px);
+  opacity: 0;
+  transition: all var(--transition-smooth);
+}
+
+.toast.show {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+.toast i {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.toast-success i {
+  color: var(--success-400);
+}
+
+.toast-error i {
+  color: var(--danger-400);
+}
+
+.toast-warning i {
+  color: var(--warning-400);
+}
+
+.toast-info i {
+  color: var(--accent-400);
+}
+
+.toast span {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+/* ================================================
+   UTILITY CLASSES
+   ================================================ */
+
+.hidden {
+  display: none !important;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.mt-0 { margin-top: 0; }
+.mt-2 { margin-top: var(--space-2); }
+.mt-4 { margin-top: var(--space-4); }
+.mt-6 { margin-top: var(--space-6); }
+.mt-8 { margin-top: var(--space-8); }
+
+.mb-0 { margin-bottom: 0; }
+.mb-2 { margin-bottom: var(--space-2); }
+.mb-4 { margin-bottom: var(--space-4); }
+.mb-6 { margin-bottom: var(--space-6); }
+.mb-8 { margin-bottom: var(--space-8); }
+
+.p-0 { padding: 0; }
+.p-2 { padding: var(--space-2); }
+.p-4 { padding: var(--space-4); }
+.p-6 { padding: var(--space-6); }
+.p-8 { padding: var(--space-8); }
+
+/* ================================================
+   RESPONSIVE
+   ================================================ */
+
+@media (max-width: 1400px) {
+  .main-layout {
+    grid-template-columns: 280px 1fr 280px;
+    gap: var(--space-4);
+  }
+}
+
+@media (max-width: 1200px) {
+  .navbar {
+    padding: var(--space-4) var(--space-6);
+  }
+  
+  .container {
+    padding: var(--space-6);
+  }
+  
+  .main-layout {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "main"
+      "left"
+      "right";
+  }
+  
+  .sidebar-left {
+    grid-area: left;
+    position: static;
+  }
+  
+  .main-content {
+    grid-area: main;
+  }
+  
+  .sidebar-right {
+    grid-area: right;
+    position: static;
+  }
+  
+  .sidebar-card {
+    max-height: 400px;
+    min-height: auto;
+  }
+  
+  .kpi-section {
+    grid-template-columns: 1fr;
+  }
+  
+  .performance-title h3 {
+    font-size: 1.125rem;
+  }
+  
+  .kpis {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .filters-grid {
+    grid-template-columns: repeat(2, 1fr) auto;
+  }
+  
+  .filter-group:nth-child(1) {
+    grid-column: 1 / -1;
+  }
+  
+  .filter-actions {
+    grid-column: 3;
+    grid-row: 2;
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 768px) {
+  .navbar {
+    flex-wrap: wrap;
+    gap: var(--space-4);
+  }
+  
+  .toolbar {
+    width: 100%;
+    justify-content: flex-start;
+    overflow-x: auto;
+  }
+  
+  .toolbar-right {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .container {
+    padding: var(--space-4);
+  }
+  
+  .main-layout {
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+  }
+  
+  .sidebar-left,
+  .sidebar-right {
+    position: static;
+  }
+  
+  .sidebar-card {
+    max-height: 300px;
+    min-height: auto;
+  }
+  
+  .kpi-section {
+    grid-template-columns: 1fr;
+  }
+  
+  .performance-title {
+    gap: var(--space-2);
+  }
+  
+  .performance-title > i {
+    font-size: 1.25rem;
+  }
+  
+  .performance-title h3 {
+    font-size: 1rem;
+  }
+  
+  .performance-title .subtitle {
+    font-size: 0.6875rem;
+  }
+  
+  .kpis {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-2);
+  }
+  
+  .kpi {
+    padding: var(--space-4) var(--space-2);
+  }
+  
+  .kpi .value {
+    font-size: 1.5rem;
+  }
+  
+  .kpi .label {
+    font-size: 0.625rem;
+  }
+  
+  .filters-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .filter-actions {
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+  
+  .filter-actions .btn {
+    width: 100%;
+  }
+  
+  #categoryGrid,
+  #rateGrid {
+    grid-template-columns: 1fr;
+  }
+  
+  .modal-content {
+    max-width: 100%;
+    max-height: 100vh;
+    border-radius: 0;
+  }
+  
+  .toast-container {
+    left: var(--space-4);
+    right: var(--space-4);
+    bottom: var(--space-4);
+  }
+  
+  /* Table Responsive */
+  .table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  tbody td {
+    font-size: 0.8125rem;
+    padding: var(--space-3);
+  }
+}
+
+/* ================================================
+   PROFESSIONAL EDIT MODAL V3
+   ================================================ */
+
+/* Modal Sizes */
+.modal-xl {
+  max-width: 1200px;
+  width: 95vw;
+  max-height: 90vh;
+}
+
+.modal-sm {
+  max-width: 500px;
+  width: 90vw;
+}
+
+/* Gradient Header */
+.gradient-header {
+  background: linear-gradient(135deg, var(--primary-500) 0%, var(--accent-500) 100%);
+  padding: var(--space-4) var(--space-5);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: none;
+  color: white;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.header-left h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.reservation-id {
+  font-size: 0.875rem;
+  opacity: 0.9;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.status-badge {
+  padding: var(--space-2) var(--space-3);
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-md);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  backdrop-filter: blur(10px);
+}
+
+.gradient-header .modal-close {
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+  backdrop-filter: blur(10px);
+}
+
+.gradient-header .modal-close:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* Compact Body */
+.compact-body {
+  padding: 0;
+  max-height: calc(90vh - 180px);
+  overflow-y: auto;
+  background: linear-gradient(135deg, 
+    rgba(30, 41, 59, 0.7) 0%, 
+    rgba(40, 52, 75, 0.7) 100%
+  );
+}
+
+/* Modern Tabs */
+.tabs-modern {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.tab-nav {
+  display: flex;
+  gap: var(--space-1);
+  background: rgba(30, 41, 59, 0.8);
+  border-bottom: 1px solid rgba(99, 102, 241, 0.3);
+  padding: var(--space-3) var(--space-5);
+  flex-shrink: 0;
+  backdrop-filter: blur(10px);
+}
+
+.tab-btn {
+  padding: var(--space-3) var(--space-5);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  color: var(--text-secondary);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-base);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 0.9375rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.tab-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, var(--primary-500), var(--accent-500));
+  opacity: 0;
+  transition: opacity var(--transition-base);
+}
+
+.tab-btn:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.25);
+  transform: translateY(-2px);
+}
+
+.tab-btn.active {
+  color: white;
+  background: linear-gradient(135deg, var(--primary-500), var(--accent-500));
+  border-color: var(--primary-400);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+  position: relative;
+  z-index: 1;
+}
+
+.tab-btn.active::before {
+  opacity: 0;
+  /* Deaktiviert, damit Text immer sichtbar bleibt */
+}
+
+.tab-btn i {
+  font-size: 1rem;
+  position: relative;
+  z-index: 2;
+}
+
+/* Text in Tabs immer sichtbar */
+.tab-btn {
+  position: relative;
+}
+
+.tab-btn * {
+  position: relative;
+  z-index: 2;
+}
+
+/* Tab Panels */
+.tab-panel {
+  display: none;
+  padding: var(--space-5);
+  flex: 1;
+  overflow-y: auto;
+}
+
+.tab-panel.active {
+  display: block;
+}
+
+/* Compact Grid */
+.compact-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-5);
+  margin-bottom: var(--space-5);
+}
+
+.compact-section {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.compact-section:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.compact-section.full-width {
+  grid-column: 1 / -1;
+}
+
+.section-title {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: var(--space-3);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.section-title i {
+  color: var(--text-tertiary);
+  font-size: 0.875rem;
+  opacity: 0.6;
+}
+
+/* Compact Forms */
+.form-row-compact {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.form-row-compact:last-child {
+  margin-bottom: 0;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-field label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: var(--space-2);
+  letter-spacing: 0.01em;
+}
+
+.input-compact {
+  padding: var(--space-3) var(--space-4);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-lg);
+  color: var(--text-primary);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  transition: all var(--transition-base);
+  outline: none;
+}
+
+.input-compact:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.input-compact:focus {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: var(--primary-400);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
+}
+
+.input-compact:disabled,
+.disabled-field {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: rgba(255, 255, 255, 0.02);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.textarea-compact {
+  resize: vertical;
+  min-height: 80px;
+  font-family: 'Inter', sans-serif;
+  line-height: 1.6;
+}
+
+/* Nights Badge */
+.nights-badge-field {
+  display: flex;
+  align-items: flex-end;
+}
+
+.nights-badge {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: linear-gradient(135deg, var(--primary-500), var(--accent-500));
+  border-radius: var(--radius-md);
+  color: white;
+  font-weight: 600;
+  font-size: 0.875rem;
+  white-space: nowrap;
+}
+
+.nights-badge i {
+  font-size: 1rem;
+}
+
+/* Price Input */
+.price-input-wrapper {
+  position: relative;
+}
+
+.price-field {
+  padding-right: 2.5rem;
+  font-weight: 700;
+  font-size: 1rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.price-input-wrapper .currency {
+  position: absolute;
+  right: var(--space-3);
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--primary-400);
+  font-weight: 700;
+  font-size: 1rem;
+  pointer-events: none;
+}
+
+/* Guest Grid */
+.guest-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-4);
+}
+
+.guest-section {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.guest-section:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.guest-section.full-width-section {
+  grid-column: 1 / -1;
+}
+
+/* Pricing Overview */
+.pricing-overview {
+  background: linear-gradient(135deg, var(--primary-500), var(--accent-500));
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.pricing-summary-row {
+  display: flex;
+  justify-content: space-around;
+  gap: var(--space-4);
+}
+
+.summary-box {
+  text-align: center;
+}
+
+.summary-label {
+  display: block;
+  font-size: 0.75rem;
+  opacity: 0.9;
+  margin-bottom: var(--space-1);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.summary-val {
+  display: block;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: white;
+}
+
+.highlight-box .summary-val {
+  font-size: 1.5rem;
+}
+
+/* Editable Summary Boxes */
+.editable-box {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.editable-box .input-compact {
+  width: 100%;
+  text-align: center;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  padding: var(--space-2) var(--space-3);
+  font-size: 0.9375rem;
+}
+
+.editable-box .input-compact:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: var(--primary-400);
+}
+
+.editable-box .input-compact:focus {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: var(--primary-400);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+}
+
+.editable-box .input-compact option {
+  background: var(--surface-dark);
+  color: var(--text-primary);
+}
+
+/* Night Price Grid */
+.night-price-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.night-price-card {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-xl);
+  padding: var(--space-4);
+  transition: all var(--transition-base);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.night-price-card:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: var(--primary-400);
+  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.25);
+  transform: translateY(-2px);
+}
+
+.night-card-header-compact {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-3);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.night-num {
+  font-weight: 700;
+  color: var(--primary-400);
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.night-date-compact {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.night-price-input {
+  width: 100%;
+  font-size: 1.25rem;
+  font-weight: 700;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: var(--space-3);
+  border-radius: var(--radius-lg);
+  color: var(--primary-400);
+  transition: all var(--transition-base);
+}
+
+.night-price-input:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.night-price-input:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.15);
+  border-color: var(--primary-400);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
+}
+
+.night-price-input:focus {
+  border-color: var(--primary-400);
+  background: var(--neutral-700);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+/* Pricing Extras */
+.pricing-extras {
+  background: var(--neutral-800);
+  border: 2px solid var(--neutral-700);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  margin-bottom: var(--space-4);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.extras-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.input-with-toggle {
+  position: relative;
+}
+
+.input-with-toggle .currency {
+  position: absolute;
+  right: var(--space-3);
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--primary-400);
+  font-size: 0.875rem;
+  font-weight: 700;
+  pointer-events: none;
+}
+
+/* Pricing Breakdown */
+.pricing-breakdown {
+  background: var(--neutral-800);
+  border: 2px solid var(--neutral-700);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.breakdown-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-3) 0;
+  font-size: 0.9375rem;
+  font-weight: 500;
+}
+
+.breakdown-row:not(:last-child) {
+  border-bottom: 1px solid var(--neutral-700);
+}
+
+.breakdown-row.subtotal {
+  font-weight: 700;
+  font-size: 1rem;
+  padding-top: var(--space-4);
+  border-top: 2px solid var(--neutral-600);
+}
+
+.breakdown-row.total {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--primary-400);
+  padding-top: var(--space-4);
+  border-top: 3px solid var(--primary-400);
+}
+
+/* Traces */
+.traces-header {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: var(--space-4);
+}
+
+.traces-list-modern {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.trace-card {
+  background: var(--neutral-800);
+  border: 2px solid var(--neutral-700);
+  border-left: 4px solid var(--primary-500);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  transition: all var(--transition-base);
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.trace-card:hover {
+  border-left-color: var(--accent-500);
+  background: var(--neutral-750);
+  transform: translateX(4px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+}
+
+.trace-card.trace-reminder {
+  border-left-color: var(--primary-500);
+}
+
+.trace-card.trace-alert {
+  border-left-color: var(--error-500);
+}
+
+.trace-card.trace-note {
+  border-left-color: var(--success-500);
+}
+
+.trace-card.trace-request {
+  border-left-color: var(--warning-500);
+}
+
+.trace-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: var(--space-2);
+}
+
+.trace-type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--neutral-700);
+  border-radius: var(--radius-md);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border: 1px solid var(--neutral-600);
+}
+
+.trace-datetime {
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 600;
+}
+
+.trace-message {
+  color: var(--text-primary);
+  line-height: 1.6;
+  margin-bottom: var(--space-2);
+  font-size: 0.9375rem;
+}
+
+.trace-actions {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--neutral-700);
+}
+
+.trace-btn {
+  padding: var(--space-2) var(--space-3);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  border-radius: var(--radius-md);
+  border: 2px solid var(--neutral-600);
+  background: var(--neutral-750);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.trace-btn:hover {
+  border-color: var(--primary-400);
+  color: var(--primary-400);
+  background: rgba(99, 102, 241, 0.1);
+  transform: translateY(-1px);
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-8) var(--space-4);
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.empty-state.hidden {
+  display: none;
+}
+
+.empty-state i {
+  font-size: 3rem;
+  margin-bottom: var(--space-3);
+  opacity: 0.4;
+}
+
+.empty-state p {
+  margin: var(--space-2) 0;
+  font-size: 0.9375rem;
+}
+
+.text-small {
+  font-size: 0.875rem;
+  opacity: 0.8;
+}
+
+/* Modern Footer */
+.modal-footer-modern {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-4) var(--space-5);
+  background: var(--neutral-850);
+  border-top: 1px solid var(--neutral-700);
+}
+
+.footer-left,
+.footer-right {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.btn-sm {
+  padding: var(--space-2) var(--space-3);
+  font-size: 0.8125rem;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .compact-grid,
+  .guest-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .night-price-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .modal-xl {
+    max-width: 100%;
+    width: 100vw;
+    height: 100vh;
+    max-height: 100vh;
+    border-radius: 0;
+  }
+  
+  .tab-nav {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .tab-btn {
+    white-space: nowrap;
+  }
+  
+  .night-price-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .extras-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .modal-footer-modern {
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+  
+  .footer-left,
+  .footer-right {
+    width: 100%;
+  }
+  
+  .footer-left .btn,
+  .footer-right .btn {
+    flex: 1;
+  }
+}
+
+/* ================================================
+   PRINT STYLES
+   ================================================ */
+
+@media print {
+  body::before,
+  body::after {
+    display: none;
+  }
+  
+  header {
+    position: static;
+  }
+  
+  .btn,
+  .modal {
+    display: none;
+  }
+}
+
+/* ================================================
+   EXTRAS & RABATTE TAB - PREMIUM DESIGN
+   ================================================ */
+
+.extras-header {
+  margin-bottom: var(--space-6);
+}
+
+.extras-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.extras-section {
+  background: linear-gradient(135deg, 
+    rgba(99, 102, 241, 0.05) 0%,
+    rgba(139, 92, 246, 0.05) 100%
+  );
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  border-radius: var(--radius-2xl);
+  padding: var(--space-6);
+  position: relative;
+  overflow: hidden;
+  transition: all var(--transition-base);
+}
+
+.extras-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, 
+    var(--primary-500), 
+    var(--accent-500)
+  );
+  opacity: 0.5;
+}
+
+.extras-section:hover {
+  border-color: rgba(99, 102, 241, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(99, 102, 241, 0.2);
+}
+
+.extras-section-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 var(--space-5) 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  letter-spacing: -0.01em;
+}
+
+.extras-section-title i {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--primary-500), var(--accent-500));
+  border-radius: var(--radius-lg);
+  color: white;
+  font-size: 1rem;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.extras-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-4);
+}
+
+.extra-card {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-xl);
+  padding: var(--space-5);
+  transition: all var(--transition-smooth);
+  position: relative;
+  overflow: hidden;
+}
+
+.extra-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, 
+    rgba(99, 102, 241, 0.1),
+    rgba(139, 92, 246, 0.1)
+  );
+  opacity: 0;
+  transition: opacity var(--transition-base);
+}
+
+.extra-card:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: var(--primary-400);
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 12px 32px rgba(99, 102, 241, 0.25);
+}
+
+.extra-card:hover::before {
+  opacity: 1;
+}
+
+.extra-card-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+  position: relative;
+  z-index: 1;
+}
+
+.extra-card-header i {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(99, 102, 241, 0.15);
+  border-radius: var(--radius-md);
+  color: var(--primary-400);
+  font-size: 1rem;
+  transition: all var(--transition-base);
+}
+
+.extra-card:hover .extra-card-header i {
+  background: linear-gradient(135deg, var(--primary-500), var(--accent-500));
+  color: white;
+  transform: rotate(10deg) scale(1.1);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+}
+
+.extra-card-header span {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 0.9375rem;
+}
+
+.extra-card .input-with-toggle {
+  position: relative;
+  z-index: 1;
+}
+
+.discount-card {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  position: relative;
+  overflow: hidden;
+}
+
+.discount-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, 
+    transparent,
+    var(--warning-400),
+    transparent
+  );
+  opacity: 0.6;
+}
+
+.discount-card:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(251, 191, 36, 0.4);
+  box-shadow: 0 8px 24px rgba(251, 191, 36, 0.2);
+}
+
+/* Input with Toggle - Enhanced */
+.input-with-toggle {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-with-toggle input {
+  flex: 1;
+  padding-right: 3rem;
+}
+
+.input-with-toggle .currency {
+  position: absolute;
+  right: var(--space-4);
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--primary-400);
+  font-weight: 700;
+  font-size: 1rem;
+  pointer-events: none;
+  transition: all var(--transition-base);
+}
+
+.input-with-toggle input:focus + .currency {
+  color: var(--accent-400);
+  transform: translateY(-50%) scale(1.1);
+}
+
+/* Pricing Breakdown - Enhanced */
+.pricing-breakdown {
+  background: linear-gradient(135deg,
+    rgba(99, 102, 241, 0.08) 0%,
+    rgba(139, 92, 246, 0.08) 100%
+  );
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  border-radius: var(--radius-2xl);
+  padding: var(--space-6);
+  margin-top: var(--space-6);
+  position: relative;
+  overflow: hidden;
+}
+
+.pricing-breakdown::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg,
+    var(--primary-500),
+    var(--accent-500)
+  );
+}
+
+.breakdown-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  font-size: 0.9375rem;
+  color: var(--text-secondary);
+  transition: all var(--transition-base);
+}
+
+.breakdown-row:hover {
+  color: var(--text-primary);
+  padding-left: var(--space-2);
+}
+
+.breakdown-row:last-child {
+  border-bottom: none;
+}
+
+.breakdown-row.subtotal {
+  margin-top: var(--space-2);
+  padding-top: var(--space-4);
+  border-top: 2px solid rgba(99, 102, 241, 0.3);
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--text-primary);
+}
+
+.breakdown-row.total {
+  margin-top: var(--space-3);
+  padding: var(--space-4);
+  background: linear-gradient(135deg,
+    rgba(99, 102, 241, 0.15),
+    rgba(139, 92, 246, 0.15)
+  );
+  border-radius: var(--radius-lg);
+  font-weight: 700;
+  font-size: 1.25rem;
+  color: var(--text-primary);
+  border-bottom: none;
+}
+
+.breakdown-row.total span:last-child {
+  background: linear-gradient(135deg, var(--primary-400), var(--accent-400));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-size: 1.5rem;
+}
+
+/* Pricing Overview - Enhanced */
+.pricing-overview {
+  background: linear-gradient(135deg, 
+    var(--primary-500) 0%, 
+    var(--accent-500) 100%
+  );
+  border-radius: var(--radius-2xl);
+  padding: var(--space-6);
+  margin-bottom: var(--space-6);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(99, 102, 241, 0.3);
+}
+
+.pricing-overview::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url('data:image/svg+xml,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><defs><pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+.pricing-summary-row {
+  display: flex;
+  justify-content: space-around;
+  gap: var(--space-6);
+  position: relative;
+  z-index: 1;
+}
+
+.summary-box {
+  text-align: center;
+  flex: 1;
+  padding: var(--space-3);
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(10px);
+  transition: all var(--transition-base);
+}
+
+.summary-box:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.summary-label {
+  display: block;
+  font-size: 0.75rem;
+  opacity: 0.9;
+  margin-bottom: var(--space-2);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.summary-val {
+  display: block;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: white;
+  letter-spacing: -0.01em;
+}
+
+.highlight-box {
+  background: rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.highlight-box .summary-val {
+  font-size: 1.75rem;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Modal Footer Modern - Enhanced */
+.modal-footer-modern {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-6);
+  border-top: 1px solid rgba(99, 102, 241, 0.2);
+  background: linear-gradient(135deg,
+    rgba(15, 23, 42, 0.8) 0%,
+    rgba(30, 41, 59, 0.8) 100%
+  );
+  backdrop-filter: blur(20px);
+  position: relative;
+}
+
+.modal-footer-modern::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(99, 102, 241, 0.5) 50%,
+    transparent 100%
+  );
+}
+
+.footer-left,
+.footer-right {
+  display: flex;
+  gap: var(--space-3);
+}
+
+
+/* ================================================
+   PREMIUM ANIMATIONS & MICRO-INTERACTIONS
+   ================================================ */
+
+/* Shimmer Effect for Active Elements */
+@keyframes shimmerGlow {
+  0% {
+    box-shadow: 0 0 20px rgba(99, 102, 241, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(99, 102, 241, 0.4);
+  }
+  100% {
+    box-shadow: 0 0 20px rgba(99, 102, 241, 0.2);
+  }
+}
+
+/* Pulse Animation for Icons */
+@keyframes pulseIcon {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+/* Enhanced Section Titles */
+.section-title {
+  /* animation: float 3s ease-in-out infinite; */
+}
+
+.section-title:hover {
+  animation: none;
+  transform: translateX(8px);
+}
+
+/* Enhanced Input Focus States */
+.input-compact:focus {
+  animation: shimmerGlow 2s ease-in-out infinite;
+}
+
+/* Nights Badge Enhanced */
+.nights-badge {
+  position: relative;
+  overflow: hidden;
+}
+
+.nights-badge::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  animation: shimmerSlide 3s ease-in-out infinite;
+}
+
+@keyframes shimmerSlide {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+/* Enhanced Card Hover States */
+.compact-section,
+.guest-section {
+  position: relative;
+}
+
+.compact-section::after,
+.guest-section::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg,
+    var(--primary-500),
+    var(--accent-500)
+  );
+  -webkit-mask: 
+    linear-gradient(#fff 0 0) content-box, 
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity var(--transition-base);
+}
+
+.compact-section:hover::after,
+.guest-section:hover::after {
+  opacity: 0.6;
+}
+
+/* Tab Button Enhanced Interaction */
+.tab-btn {
+  transform-style: preserve-3d;
+  perspective: 1000px;
+}
+
+.tab-btn:active {
+  transform: translateY(1px) scale(0.98);
+}
+
+.tab-btn.active {
+  animation: tabGlow 3s ease-in-out infinite;
+}
+
+@keyframes tabGlow {
+  0%, 100% {
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+  }
+  50% {
+    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
+  }
+}
+
+/* Enhanced Modal Background Pattern */
+.modal-content::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle,
+    rgba(99, 102, 241, 0.1) 0%,
+    transparent 70%
+  );
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+/* Status Badge Enhanced */
+.status-badge {
+  position: relative;
+  overflow: hidden;
+}
+
+.status-badge::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: -50%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+  transform: translateY(-50%);
+  animation: statusShimmer 2s ease-in-out infinite;
+}
+
+@keyframes statusShimmer {
+  0% {
+    left: -50%;
+  }
+  100% {
+    left: 150%;
+  }
+}
+
+/* Price Field Enhanced */
+.price-field {
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.02em;
+  text-align: right;
+}
+
+.price-field:focus {
+  background: rgba(99, 102, 241, 0.08);
+  box-shadow: 
+    0 0 0 3px rgba(99, 102, 241, 0.2),
+    inset 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* Night Price Card Enhanced */
+.night-price-card {
+  position: relative;
+  transform-style: preserve-3d;
+}
+
+.night-price-card::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  background: linear-gradient(135deg,
+    var(--primary-500),
+    var(--accent-500)
+  );
+  border-radius: inherit;
+  opacity: 0;
+  transition: opacity var(--transition-base);
+  z-index: -1;
+}
+
+.night-price-card:hover::before {
+  opacity: 0.3;
+}
+
+/* Smooth Scroll for Tab Panels */
+.tab-panel {
+  animation: fadeInUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Button Enhanced States */
+.btn {
+  position: relative;
+  overflow: hidden;
+  transition: all var(--transition-base);
+}
+
+.btn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.btn:active::before {
+  width: 300px;
+  height: 300px;
+}
+
+.btn.primary {
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.btn.primary:hover {
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
+  transform: translateY(-2px);
+}
+
+.btn.danger:hover {
+  box-shadow: 0 4px 16px rgba(239, 68, 68, 0.4);
+  transform: translateY(-2px);
+}
+
+/* Gradient Header Enhanced */
+.gradient-header {
+  position: relative;
+  overflow: hidden;
+}
+
+.gradient-header::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg,
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    transparent
+  );
+  animation: headerShimmer 3s ease-in-out infinite;
+}
+
+@keyframes headerShimmer {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+/* Enhanced Select Dropdowns */
+select.input-compact {
+  cursor: pointer;
+  appearance: none;
+  background-image: url('data:image/svg+xml,<svg width="12" height="8" viewBox="0 0 12 8" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 1.5L6 6.5L11 1.5" stroke="%236366f1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>');
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  padding-right: 3rem;
+}
+
+select.input-compact:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+select.input-compact:focus {
+  background-image: url('data:image/svg+xml,<svg width="12" height="8" viewBox="0 0 12 8" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 1.5L6 6.5L11 1.5" stroke="%2306b6d4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>');
+}
+
+/* ========== ULTRA-AGGRESSIVE SELECT DROPDOWN FIX ========== */
+/* Remove ALL browser default styling completely */
+
+select.input-compact,
+select.input-compact::-ms-expand,
+select.input-compact:focus,
+select.input-compact:active,
+select.input-compact:hover {
+  /* Kill all browser defaults */
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  appearance: none !important;
+  
+  /* Remove any highlights/outlines */
+  outline: none !important;
+  outline-offset: 0 !important;
+  -webkit-tap-highlight-color: transparent !important;
+  
+  /* Force our background */
+  background-color: var(--bg-elevated) !important;
+  
+  /* Remove weird browser effects */
+  box-shadow: none !important;
+  text-shadow: none !important;
+  
+  /* Remove autofill colors */
+  -webkit-box-shadow: 0 0 0 30px var(--bg-elevated) inset !important;
+  -webkit-text-fill-color: var(--text-primary) !important;
+}
+
+/* Hover state */
+select.input-compact:hover {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  border-color: var(--border-hover) !important;
+}
+
+/* Focus state */
+select.input-compact:focus {
+  background-color: var(--bg-overlay) !important;
+  border-color: var(--primary-500) !important;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1) !important;
+}
+
+/* CRITICAL FIX: Option elements - remove ALL blue highlighting */
+select.input-compact option {
+  background-color: var(--bg-elevated) !important;
+  background: var(--bg-elevated) !important;
+  color: var(--text-primary) !important;
+  padding: 0.75rem 1rem !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+}
+
+/* Checked/selected option styling */
+select.input-compact option:checked,
+select.input-compact option[selected] {
+  background-color: var(--primary-600) !important;
+  background: var(--primary-600) !important;
+  color: white !important;
+  font-weight: 600 !important;
+}
+
+/* Hover state for options */
+select.input-compact option:hover {
+  background-color: var(--bg-overlay) !important;
+  background: var(--bg-overlay) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Firefox specific fixes */
+@-moz-document url-prefix() {
+  select.input-compact option:checked {
+    background-color: var(--primary-600) !important;
+    background: var(--primary-600) !important;
+    color: white !important;
+  }
+}
+
+/* Webkit/Chrome/Safari specific fixes */
+@supports (-webkit-appearance: none) {
+  select.input-compact option:checked {
+    background: linear-gradient(0deg, var(--primary-600) 0%, var(--primary-600) 100%) !important;
+    color: white !important;
+  }
+  
+  /* Remove blue highlight from option on hover/select in dropdown */
+  select.input-compact option::selection {
+    background-color: var(--primary-600) !important;
+    color: white !important;
+  }
+}
+
+/* Additional fix for any remaining blue highlights */
+select.input-compact:focus option:checked {
+  background-color: var(--primary-600) !important;
+  background: var(--primary-600) !important;
+  color: white !important;
+}
+
+/* Remove blue tint when dropdown is open */
+select.input-compact[size],
+select.input-compact[multiple] {
+  background-color: var(--bg-elevated) !important;
+}
+
+/* Fix for Edge/IE */
+select.input-compact::-ms-value {
+  background-color: transparent !important;
+  color: var(--text-primary) !important;
+}
+
+select.input-compact::-ms-expand {
+  display: none !important;
+}
+
+/* Form Labels Enhanced */
+.form-field label {
+  position: relative;
+  display: inline-block;
+}
+
+.form-field label::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg,
+    var(--primary-500),
+    var(--accent-500)
+  );
+  transition: width var(--transition-base);
+}
+
+.form-field:focus-within label::after {
+  width: 100%;
+}
+
+/* Scrollbar Enhanced */
+.modal-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.modal-body::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: var(--radius-full);
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg,
+    var(--primary-500),
+    var(--accent-500)
+  );
+  border-radius: var(--radius-full);
+  border: 2px solid rgba(0, 0, 0, 0.2);
+}
+
+.modal-body::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg,
+    var(--primary-400),
+    var(--accent-400)
+  );
+}
+
+/* ================================================
+   AVAILABILITY MODULE - Premium Compact Grid V2
+   ================================================ */
+
+.availability-controls {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  padding: 14px;
+  background: linear-gradient(135deg, var(--surface) 0%, rgba(99, 102, 241, 0.03) 100%);
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  backdrop-filter: blur(10px);
+}
+
+.availability-controls .select,
+.availability-controls .input {
+  flex: 1;
+  min-width: 100px;
+  height: 36px;
+  font-size: 13px;
+}
+
+.availability-controls .btn {
+  min-width: 90px;
+  height: 36px;
+  font-size: 13px;
+}
+
+/* Loading State */
+.availability-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  color: var(--text-muted);
+}
+
+/* Premium Grid Container */
+.availability-grid-premium {
+  background: var(--surface);
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  overflow: hidden;
+  box-shadow: 
+    0 2px 8px rgba(0, 0, 0, 0.04),
+    0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+/* Grid Header */
+.grid-header-row {
+  display: flex;
+  background: linear-gradient(180deg, var(--bg) 0%, var(--surface) 100%);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  height: 44px;
+}
+
+.grid-hotel-header {
+  width: 180px;
+  min-width: 180px;
+  padding: 0 14px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  background: var(--surface);
+  border-right: 2px solid var(--border);
+  position: sticky;
+  left: 0;
+  z-index: 101;
+}
+
+.grid-dates-container {
+  display: flex;
+  flex: 1;
+  overflow-x: auto;
+}
+
+.grid-date-cell {
+  min-width: 48px;
+  width: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+  background: var(--surface);
+}
+
+.grid-date-cell.weekend {
+  background: linear-gradient(180deg, rgba(99, 102, 241, 0.08) 0%, rgba(99, 102, 241, 0.04) 100%);
+}
+
+.date-compact {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1;
+}
+
+.date-num {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.date-day {
+  font-size: 9px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-top: 2px;
+  font-weight: 500;
+}
+
+/* Data Container */
+.grid-data-container {
+  max-height: 500px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.grid-data-row {
+  display: flex;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  transition: background 0.15s ease;
+  height: 36px;
+}
+
+.grid-data-row:hover {
+  background: rgba(99, 102, 241, 0.02);
+}
+
+.grid-data-row:last-child {
+  border-bottom: none;
+}
+
+/* Hotel Cell */
+.grid-hotel-cell {
+  width: 180px;
+  min-width: 180px;
+  background: var(--surface);
+  border-right: 2px solid var(--border);
+  position: sticky;
+  left: 0;
+  z-index: 50;
+}
+
+.hotel-name-compact {
+  padding: 0 14px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.hotel-name-compact i {
+  color: var(--primary);
+  font-size: 11px;
+  opacity: 0.8;
+}
+
+.hotel-text {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hotel-avg {
+  font-size: 10px;
+  padding: 2px 5px;
+  background: var(--bg);
+  border-radius: 3px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+/* Cells Container */
+.grid-cells-container {
+  display: flex;
+  flex: 1;
+  overflow-x: auto;
+}
+
+/* Value Cells */
+.grid-value-cell {
+  position: relative;
+  min-width: 48px;
+  width: 48px;
+  height: 36px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-right: 1px solid rgba(255, 255, 255, 0.03);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-size: 11px;
+}
+
+.grid-value-cell:hover {
+  transform: scale(1.1);
+  z-index: 200 !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  border-radius: 4px;
+}
+
+/* Cell Colors */
+.cell-low {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(16, 185, 129, 0.1) 100%);
+}
+
+.cell-medium {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(245, 158, 11, 0.1) 100%);
+}
+
+.cell-high {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(239, 68, 68, 0.1) 100%);
+}
+
+.cell-percent {
+  font-weight: 700;
+  line-height: 1;
+}
+
+.cell-low .cell-percent {
+  color: #10b981;
+}
+
+.cell-medium .cell-percent {
+  color: #f59e0b;
+}
+
+.cell-high .cell-percent {
+  color: #ef4444;
+}
+
+.cell-free {
+  font-size: 9px;
+  color: var(--text-muted);
+  opacity: 0.8;
+  line-height: 1;
+  margin-top: 2px;
+}
+
+/* Premium Tooltip */
+.availability-tooltip-premium {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 
+    0 20px 40px rgba(0, 0, 0, 0.25),
+    0 10px 20px rgba(0, 0, 0, 0.15),
+    0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+  z-index: 10000 !important;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+  min-width: 180px;
+  backdrop-filter: blur(10px);
+}
+
+.availability-tooltip-premium.active {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.availability-tooltip-premium.tooltip-below {
+  bottom: auto;
+  top: calc(100% + 8px);
+}
+
+/* Tooltip Arrow */
+.availability-tooltip-premium::before {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid var(--border);
+}
+
+.availability-tooltip-premium::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-1px);
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid var(--surface);
+}
+
+.availability-tooltip-premium.tooltip-below::before {
+  top: auto;
+  bottom: 100%;
+  border-top: none;
+  border-bottom: 5px solid var(--border);
+}
+
+.availability-tooltip-premium.tooltip-below::after {
+  top: auto;
+  bottom: 100%;
+  transform: translateX(-50%) translateY(1px);
+  border-top: none;
+  border-bottom: 5px solid var(--surface);
+}
+
+.tooltip-inner {
+  padding: 10px 12px;
+}
+
+.tooltip-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text);
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.tooltip-metrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.metric {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.metric-label {
+  font-size: 9px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  letter-spacing: 0.3px;
+}
+
+.metric-value {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.tooltip-rooms {
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+.room-cat {
+  display: grid;
+  grid-template-columns: 35px 45px 1fr;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.room-cat-name {
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--text);
+  text-transform: uppercase;
+}
+
+.room-cat-avail {
+  font-size: 9px;
+  color: var(--text-muted);
+  text-align: right;
+}
+
+.room-cat-bar {
+  height: 2px;
+  background: var(--bg);
+  border-radius: 1px;
+  overflow: hidden;
+}
+
+.room-cat-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary) 0%, var(--cyan) 100%);
+}
+
+/* Scrollbar Styling */
+.grid-data-container::-webkit-scrollbar,
+.grid-cells-container::-webkit-scrollbar,
+.grid-dates-container::-webkit-scrollbar {
+  height: 6px;
+  width: 6px;
+}
+
+.grid-data-container::-webkit-scrollbar-track,
+.grid-cells-container::-webkit-scrollbar-track,
+.grid-dates-container::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+
+.grid-data-container::-webkit-scrollbar-thumb,
+.grid-cells-container::-webkit-scrollbar-thumb,
+.grid-dates-container::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+.grid-data-container::-webkit-scrollbar-thumb:hover,
+.grid-cells-container::-webkit-scrollbar-thumb:hover,
+.grid-dates-container::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .grid-hotel-header,
+  .grid-hotel-cell {
+    width: 140px;
+    min-width: 140px;
+  }
+  
+  .grid-value-cell,
+  .grid-date-cell {
+    min-width: 42px;
+    width: 42px;
+  }
+  
+  .hotel-name-compact {
+    font-size: 11px;
+  }
+  
+  .cell-percent {
+    font-size: 10px;
+  }
+}
+
+/* Dark Mode Optimizations */
+@media (prefers-color-scheme: dark) {
+  .availability-grid-premium {
+    box-shadow: 
+      0 2px 10px rgba(0, 0, 0, 0.2),
+      0 4px 20px rgba(0, 0, 0, 0.3);
+  }
+  
+  .availability-tooltip-premium {
+    background: rgba(26, 27, 38, 0.95);
+    box-shadow: 
+      0 20px 50px rgba(0, 0, 0, 0.5),
+      0 10px 25px rgba(0, 0, 0, 0.3),
+      0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+  }
+  
+  .grid-value-cell:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+}
