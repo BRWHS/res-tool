@@ -1136,8 +1136,11 @@ class ReservationApp {
         case 'add-trace':
           this.openAddTraceModal();
           break;
-        case 'logout':
+         case 'logout':
           this.logout();
+          break;
+        case 'load-availability':
+          await this.loadAvailability();
           break;
         default:
           console.warn('Unknown action:', action);
