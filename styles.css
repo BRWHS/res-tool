@@ -5070,3 +5070,139 @@ select.input-compact::-ms-expand {
   font-size: 4rem;
   opacity: 0.3;
 }
+/* ========================================
+   REPORTING STYLES
+   ======================================== */
+
+.report-controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto auto auto;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-xl);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.report-content {
+  min-height: 400px;
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: var(--radius-xl);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+#reportChart { max-height: 450px; }
+
+.report-table-wrapper {
+  margin-top: 2rem;
+  overflow-x: auto;
+  border-radius: var(--radius-lg);
+}
+
+.report-table-modern {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.report-table-modern thead tr {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(168, 85, 247, 0.1));
+}
+
+.report-table-modern thead th {
+  padding: 1rem 1.5rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+  border-bottom: 2px solid rgba(99, 102, 241, 0.3);
+}
+
+.report-table-modern tbody tr {
+  transition: all 0.2s ease;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.report-table-modern tbody tr:hover {
+  background: rgba(255, 255, 255, 0.03);
+  transform: translateX(4px);
+}
+
+.report-table-modern tbody tr.highlight-row {
+  background: rgba(99, 102, 241, 0.08);
+}
+
+.report-table-modern tbody tr.highlight-row:hover {
+  background: rgba(99, 102, 241, 0.12);
+}
+
+.report-table-modern tbody td {
+  padding: 1rem 1.5rem;
+  font-size: 0.9375rem;
+}
+
+.report-table-modern .text-right { text-align: right; }
+
+.hotel-name-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.rank-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  color: #111827;
+  border-radius: 50%;
+  font-size: 0.75rem;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(251, 191, 36, 0.3);
+}
+
+.currency-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 600;
+  color: #10b981;
+}
+
+.occupancy-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: flex-end;
+}
+
+.occupancy-bar {
+  width: 100px;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.occupancy-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #10b981, #34d399);
+  border-radius: 4px;
+  transition: width 0.6s ease;
+}
+
+.totals-row {
+  background: rgba(99, 102, 241, 0.15) !important;
+  border-top: 2px solid rgba(99, 102, 241, 0.4) !important;
+  font-weight: 700;
+}
+
+.totals-row td {
+  padding: 1.25rem 1.5rem !important;
+  font-size: 1rem;
+  color: var(--text-primary);
+}
