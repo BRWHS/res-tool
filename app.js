@@ -3880,8 +3880,9 @@ class CustomCursor {
         }
       }, 100);
     }
-  });
-} // ✅ JETZT erst hier schließen!
+ });
+} // Schließt addHoverEffects()
+} // ✅ Schließt die CustomCursor Klasse!
 
 // Initialize custom cursor
 if (typeof window !== 'undefined') {
