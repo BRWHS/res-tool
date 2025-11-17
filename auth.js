@@ -931,3 +931,92 @@ window.HRS_AUTH = {
   hasRole: authManager.hasRole.bind(authManager)
 };
 
+// ========================================
+// CUSTOM CURSOR FOR AUTH PAGE
+// ========================================
+
+class CustomCursor {
+  constructor() {
+    this.cursor = null;
+    this.cursorDot = null;
+    this.init();
+  }
+
+  init() {
+    // Create cursor elements
+    this.cursor = document.createElement('div');
+    this.cursor.className = 'custom-cursor';
+    
+    this.cursorDot = document.createElement('div');
+    this.cursorDot.className = 'custom-cursor-dot';
+    
+    document.body.appendChild(this.cursor);
+    document.body.appendChild(this.cursorDot);
+
+    // Track mouse movement
+    document.addEventListener('mousemove', (e) => {
+      this.cursorDot.style.left = e.clientX + 'px';
+      this.cursorDot.style.top = e.clientY + 'px';
+      
+      // Smooth follow for outer cursor
+      setTimeout(() => {
+        this.cursor.style.left = e.clientX + 'px';
+        this.cursor.style.top = e.clientY + 'px';
+      }, 50);
+    });
+
+    // Add hover effects
+    this.addHoverEffects();
+  }
+
+  addHoverEffects() {
+    const interactiveElements = 'a, button, input, select, textarea, .btn-auth, .form-input, .btn-social, .toggle-password, .auth-links a, .modal-close';
+    
+    document.addEventListener('mouseover', (e) => {
+      if (e.target.matches(interactiveElements)) {
+        this.cursor.classList.add('cursor-hover');
+        this.cursorDot.classList.add('cursor-hover');
+      }
+    });
+
+    document.addEventListener('mouseout', (e) => {
+      if (e.target.matches(interactiveElements)) {
+        this.cursor.classList.remove('cursor-hover');
+        this.cursorDot.classList.remove('cursor-hover');
+      }
+    });
+
+    document.addEventListener('mousedown', () => {
+      this.cursor.classList.add('cursor-click');
+      this.cursorDot.classList.add('cursor-click');
+    });
+
+    document.addEventListener('mouseup', () => {
+      this.cursor.classList.remove('cursor-click');
+      this.cursorDot.classList.remove('cursor-click');
+    });
+
+    // Special handling for inputs
+    document.addEventListener('focus', (e) => {
+      if (e.target.matches('input, textarea')) {
+        this.cursor.classList.add('cursor-hover');
+        this.cursorDot.classList.add('cursor-hover');
+      }
+    }, true);
+
+    document.addEventListener('blur', (e) => {
+      if (e.target.matches('input, textarea')) {
+        this.cursor.classList.remove('cursor-hover');
+        this.cursorDot.classList.remove('cursor-hover');
+      }
+    }, true);
+  }
+}
+
+// Initialize custom cursor for auth page
+if (typeof window !== 'undefined') {
+  document.addEventListener('DOMContentLoaded', () => {
+    new CustomCursor();
+  });
+}
+
