@@ -3826,7 +3826,7 @@ class CustomCursor {
   }
 
   addHoverEffects() {
-    const interactiveElements = 'a, button, input, select, textarea, [data-action], .btn, .tab-btn, .modal-close';
+    const interactiveElements = 'a, button, input, select, textarea, [data-action], .btn, .tab-btn, .modal-close, option, .select, .input, [role="button"]';
     
     document.addEventListener('mouseover', (e) => {
       if (e.target.matches(interactiveElements)) {
@@ -3841,6 +3841,12 @@ class CustomCursor {
         this.cursorDot.classList.remove('cursor-hover');
       }
     });
+     
+     document.addEventListener('mouseup', () => {
+      this.cursor.classList.remove('cursor-click');
+      this.cursorDot.classList.remove('cursor-click');
+    });
+  }
 
     document.addEventListener('mousedown', () => {
       this.cursor.classList.add('cursor-click');
@@ -3851,6 +3857,36 @@ class CustomCursor {
       this.cursor.classList.remove('cursor-click');
       this.cursorDot.classList.remove('cursor-click');
     });
+// Special handling for select dropdowns
+    document.addEventListener('focus', (e) => {
+      if (e.target.matches('select, input, textarea')) {
+        this.cursor.classList.add('cursor-hover');
+        this.cursorDot.classList.add('cursor-hover');
+      }
+    }, true);
+
+    document.addEventListener('blur', (e) => {
+      if (e.target.matches('select, input, textarea')) {
+        this.cursor.classList.remove('cursor-hover');
+        this.cursorDot.classList.remove('cursor-hover');
+      }
+    }, true);
+
+    // Force cursor tracking even when select is open
+    document.addEventListener('change', (e) => {
+      if (e.target.matches('select')) {
+        // Re-apply hover state briefly after selection
+        this.cursor.classList.add('cursor-hover');
+        this.cursorDot.classList.add('cursor-hover');
+        setTimeout(() => {
+          if (!e.target.matches(':hover')) {
+            this.cursor.classList.remove('cursor-hover');
+            this.cursorDot.classList.remove('cursor-hover');
+          }
+        }, 100);
+      }
+    });
+  }
   }
 }
 
