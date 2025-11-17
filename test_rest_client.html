@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Supabase REST Client Test</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .container {
+      background: white;
+      border-radius: 16px;
+      padding: 40px;
+      max-width: 700px;
+      width: 100%;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    h1 { color: #333; margin-bottom: 30px; text-align: center; }
+    .test-box {
+      background: #f8f9fa;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 15px 0;
+      border-left: 4px solid #6c757d;
+    }
+    .test-box.success { border-left-color: #28a745; background: #d4edda; }
+    .test-box.error { border-left-color: #dc3545; background: #f8d7da; }
+    .test-box.info { border-left-color: #17a2b8; background: #d1ecf1; }
+    .test-title { font-weight: 600; margin-bottom: 10px; font-size: 1.1em; }
+    .test-detail { font-size: 0.9em; color: #666; line-height: 1.6; }
+    code {
+      background: #e9ecef;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.85em;
+    }
+    button {
+      background: #667eea;
+      color: white;
+      border: none;
+      padding: 12px 30px;
+      border-radius: 8px;
+      font-size: 1em;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 20px;
+      transition: all 0.3s;
+    }
+    button:hover { background: #5568d3; }
+    .spinner { 
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #667eea;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 20px auto;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    pre {
+      background: #2d2d2d;
+      color: #f8f8f2;
+      padding: 15px;
+      border-radius: 6px;
+      overflow-x: auto;
+      font-size: 0.85em;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🚀 Supabase REST Client Test</h1>
+    <p style="text-align: center; color: #666; margin-bottom: 30px;">
+      CDN-freie Version - Direkte REST API Kommunikation
+    </p>
+    
+    <div id="results"></div>
+    
+    <button onclick="runTests()">Tests starten</button>
+  </div>
+
+  <!-- Supabase Alternative laden -->
+  <script src="supabase-alternative.js"></script>
+  
+  <script>
+    const SUPABASE_URL = 'https://kcqmcwfbapcuiatwixwm.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtjcW1jd2ZiYXBjdWlhdHdpeHdtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE2Mzg5MTksImV4cCI6MjA3NzIxNDkxOX0.xy8Iwz1nl8kBbSQio00ogy5sU_cFI2R4CPe5HdqIFDQ';
+
+    function addResult(title, detail, type = 'info', code = null) {
+      const results = document.getElementById('results');
+      let codeBlock = '';
+      if (code) {
+        codeBlock = `<pre>${JSON.stringify(code, null, 2)}</pre>`;
+      }
+      results.innerHTML += `
+        <div class="test-box ${type}">
+          <div class="test-title">${title}</div>
+          <div class="test-detail">${detail}</div>
+          ${codeBlock}
+        </div>
+      `;
+    }
+
+    async function runTests() {
+      const results = document.getElementById('results');
+      results.innerHTML = '<div class="spinner"></div>';
+      
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Test 1: Library geladen?
+      if (typeof window.supabase === 'undefined') {
+        addResult(
+          '❌ Test 1 fehlgeschlagen: REST Client nicht geladen',
+          'Die supabase-alternative.js wurde nicht gefunden.<br>Stelle sicher dass sie im gleichen Ordner wie diese HTML-Datei liegt.',
+          'error'
+        );
+        return;
+      } else {
+        addResult(
+          '✅ Test 1 erfolgreich: REST Client geladen',
+          'Die CDN-freie Supabase-Alternative wurde erfolgreich geladen.',
+          'success'
+        );
+      }
+
+      // Test 2: Client erstellen
+      let supabase;
+      try {
+        const { createClient } = window.supabase;
+        supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+        addResult(
+          '✅ Test 2 erfolgreich: Client erstellt',
+          `Client verbunden mit: <code>${SUPABASE_URL}</code>`,
+          'success'
+        );
+      } catch (error) {
+        addResult(
+          '❌ Test 2 fehlgeschlagen: Client-Erstellung fehlgeschlagen',
+          `Fehler: ${error.message}`,
+          'error'
+        );
+        return;
+      }
+
+      // Test 3: SELECT query
+      try {
+        console.log('Running SELECT query...');
+        const { data, error, count } = await supabase
+          .from('reservations')
+          .select('*', { count: 'exact', head: true });
+        
+        if (error) throw error;
+        
+        addResult(
+          '✅ Test 3 erfolgreich: SELECT Query funktioniert',
+          `Tabelle "reservations" gefunden mit ${count || 0} Einträgen.`,
+          'success'
+        );
+      } catch (error) {
+        addResult(
+          '❌ Test 3 fehlgeschlagen: SELECT Query fehlgeschlagen',
+          `Fehler: ${error.message}`,
+          'error'
+        );
+        return;
+      }
+
+      // Test 4: SELECT mit Daten
+      try {
+        console.log('Fetching actual data...');
+        const { data, error } = await supabase
+          .from('reservations')
+          .select('id, reservation_number, guest_last_name, arrival, status')
+          .order('created_at', { ascending: false })
+          .limit(3);
+        
+        if (error) throw error;
+        
+        addResult(
+          '✅ Test 4 erfolgreich: Daten abrufen funktioniert',
+          `${data.length} Reservierungen abgerufen:`,
+          'success',
+          data
+        );
+      } catch (error) {
+        addResult(
+          '❌ Test 4 fehlgeschlagen: Daten abrufen fehlgeschlagen',
+          `Fehler: ${error.message}`,
+          'error'
+        );
+        return;
+      }
+
+      // Test 5: INSERT test (optional)
+      try {
+        console.log('Testing INSERT...');
+        const testData = {
+          reservation_number: 'TEST-' + Date.now(),
+          hotel_code: 'MA7-M-DOR',
+          arrival: new Date().toISOString().split('T')[0],
+          departure: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+          guest_first_name: 'Test',
+          guest_last_name: 'REST-Client',
+          guest_email: 'test@rest-client.com',
+          category: 'STD',
+          rate_code: 'STD',
+          rate_price: 99,
+          total_price: 99,
+          guests_adults: 1,
+          status: 'active',
+          payment_status: 'pending'
+        };
+
+        const { data, error } = await supabase
+          .from('reservations')
+          .insert([testData])
+          .select()
+          .single();
+        
+        if (error) throw error;
+        
+        addResult(
+          '✅ Test 5 erfolgreich: INSERT funktioniert',
+          `Test-Reservierung erstellt mit ID: ${data.id}`,
+          'success',
+          { id: data.id, reservation_number: data.reservation_number }
+        );
+      } catch (error) {
+        addResult(
+          '❌ Test 5 fehlgeschlagen: INSERT fehlgeschlagen',
+          `Fehler: ${error.message}<br><small>Das ist OK wenn RLS aktiviert ist oder die Tabelle read-only ist.</small>`,
+          'error'
+        );
+      }
+
+      // Final Success
+      addResult(
+        '🎉 Alle wichtigen Tests bestanden!',
+        'Die CDN-freie Supabase-Lösung funktioniert einwandfrei!<br><br>Du kannst jetzt:<br>1. supabase-alternative.js zu deinem Projekt hinzufügen<br>2. In index.html das CDN durch diese Datei ersetzen<br>3. Deine App wird funktionieren!',
+        'info'
+      );
+    }
+
+    // Auto-run nach 1 Sekunde
+    window.addEventListener('load', function() {
+      setTimeout(runTests, 1000);
+    });
+  </script>
+</body>
+</html>
