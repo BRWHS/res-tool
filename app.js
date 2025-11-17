@@ -3573,7 +3573,31 @@ Ihr Reservierungsteam`;
   }
 
   loadReports() {
-    this.ui.showToast('Reports coming soon', 'info');
+    // Reports Modal wird durch openReportsModal() geöffnet
+    // Die eigentliche Reporting-Logik ist im ReportingModule
+    if (!this.reporting) {
+      this.reporting = new ReportingModule(this);
+      this.reporting.init();
+    }
+  }
+
+  openReportsModal() {
+    if (!this.reporting) {
+      this.reporting = new ReportingModule(this);
+      this.reporting.init();
+    }
+    
+    // Populate hotel filter
+    const reportHotel = document.getElementById('reportHotel');
+    if (reportHotel) {
+      const hotels = this.state.get('hotels') || [];
+      reportHotel.innerHTML = '<option value="">Alle Hotels</option>';
+      hotels.forEach(hotel => {
+        reportHotel.innerHTML += `<option value="${hotel.code}">${hotel.name}</option>`;
+      });
+    }
+    
+    this.ui.openModal('modalReports');
   }
 
   loadSettings() {
