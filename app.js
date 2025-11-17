@@ -592,7 +592,6 @@ async initSupabase() {
     console.error('API: Failed to create reservation:', error);
     throw error;
   }
-}
 
       const { data: reservation, error } = await this.supabase
         .from('reservations')
