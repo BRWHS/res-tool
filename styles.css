@@ -5270,8 +5270,30 @@ select.input-compact::-ms-expand {
    CUSTOM CURSOR (JavaScript Version)
    ======================================== */
 
-/* Hide default cursor */
-* {
+/* Hide default cursor - FORCIERT für alle Elemente */
+*,
+*::before,
+*::after,
+select,
+select:focus,
+select:active,
+option,
+option:hover,
+option:checked,
+input:focus,
+textarea:focus,
+button:focus,
+.select:focus,
+.input:focus {
+  cursor: none !important;
+}
+
+/* Extra Fix für Safari/Chrome Select Dropdowns */
+select::-webkit-scrollbar-thumb {
+  cursor: none !important;
+}
+
+select option {
   cursor: none !important;
 }
 
