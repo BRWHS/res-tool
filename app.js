@@ -205,73 +205,115 @@ class API {
     this.cache = new Map();
   }
 
-  async initSupabase() {
-    try {
-      // Check if Supabase library is loaded
-      if (typeof window.supabase === 'undefined') {
-        console.warn('Supabase library not loaded - running in Demo Mode');
-        this.updateConnectionStatus('SB', false);
-        return null;
-      }
-      
-      const { createClient } = window.supabase;
-      this.supabase = createClient(
-        this.config.API.SUPABASE_URL,
-        this.config.API.SUPABASE_KEY
-      );
-      
-      // Test connection
-      const { data, error } = await this.supabase
-        .from('reservations')
-        .select('count');
-      
-      if (error) throw error;
-      
-      console.log('✅ Supabase connected successfully');
-      this.updateConnectionStatus('SB', true);
-      
-      return this.supabase;
-    } catch (error) {
-      console.warn('⚠️ Supabase connection failed - running in Demo Mode:', error.message);
+async initSupabase() {
+  try {
+    console.log('🔄 Initializing Supabase connection...');
+    
+    // Check if Supabase library is loaded
+    if (typeof window.supabase === 'undefined') {
+      console.error('❌ Supabase library not loaded - window.supabase is undefined');
+      console.error('💡 Mögliche Ursachen:');
+      console.error('   1. Supabase CDN nicht erreichbar');
+      console.error('   2. Internetverbindung unterbrochen');
+      console.error('   3. Firewall/AdBlocker blockiert CDN');
       this.updateConnectionStatus('SB', false);
       return null;
     }
+    
+    console.log('✅ Supabase library found');
+    console.log('📋 Config:', {
+      url: this.config.API.SUPABASE_URL,
+      key: this.config.API.SUPABASE_KEY?.substring(0, 20) + '...'
+    });
+    
+    const { createClient } = window.supabase;
+    this.supabase = createClient(
+      this.config.API.SUPABASE_URL,
+      this.config.API.SUPABASE_KEY
+    );
+    
+    console.log('🔄 Testing Supabase connection...');
+    
+    // Test connection with detailed error handling
+    const { data, error, count } = await this.supabase
+      .from('reservations')
+      .select('*', { count: 'exact', head: true });
+    
+    if (error) {
+      console.error('❌ Supabase connection test failed:', error);
+      console.error('Error details:', {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code
+      });
+      throw error;
+    }
+    
+    console.log('✅✅✅ Supabase connected successfully! ✅✅✅');
+    console.log(`📊 Found ${count || 0} reservations in database`);
+    this.updateConnectionStatus('SB', true);
+    
+    return this.supabase;
+  } catch (error) {
+    console.error('❌❌❌ Supabase connection failed ❌❌❌');
+    console.error('Error:', error.message);
+    console.error('💡 App läuft im Demo-Mode - Daten werden nur lokal gespeichert!');
+    this.updateConnectionStatus('SB', false);
+    return null;
   }
+}
 
-  updateConnectionStatus(type, connected) {
-    // Warte kurz, damit DOM sicher geladen ist
-    setTimeout(() => {
-      const indicator = document.querySelector(`[data-status-type="${type}"]`);
+ updateConnectionStatus(type, connected) {
+  // Warte kurz, damit DOM sicher geladen ist
+  setTimeout(() => {
+    const indicator = document.querySelector(`[data-status-type="${type}"]`);
+    
+    if (indicator) {
+      // Entferne beide Klassen erst
+      indicator.classList.remove('active', 'error');
       
-      if (indicator) {
-        // Entferne beide Klassen erst
-        indicator.classList.remove('active', 'error');
-        
-        // Füge die richtige Klasse hinzu
-        if (connected) {
-          indicator.classList.add('active');
-          // Update tooltip
-          if (type === 'SB') {
-            indicator.setAttribute('data-tooltip', '✅ Supabase Connected');
-          } else {
-            indicator.setAttribute('data-tooltip', '✅ HotelNetSolutions Connected');
+      // Füge die richtige Klasse hinzu
+      if (connected) {
+        indicator.classList.add('active');
+        // Update tooltip
+        if (type === 'SB') {
+          indicator.setAttribute('data-tooltip', '✅ Supabase Connected');
+          // ✅ Zeige deutliche Bestätigung
+          console.log('✅✅✅ SUPABASE VERBUNDEN ✅✅✅');
+          console.log('📊 Reservierungen werden in die Datenbank gespeichert');
+        } else {
+          indicator.setAttribute('data-tooltip', '✅ HotelNetSolutions Connected');
+        }
+      } else {
+        indicator.classList.add('error');
+        // Update tooltip
+        if (type === 'SB') {
+          indicator.setAttribute('data-tooltip', '❌ Supabase - Nicht verbunden');
+          // ✅ Warnung anzeigen
+          console.error('❌❌❌ SUPABASE NICHT VERBUNDEN - DEMO MODE AKTIV ❌❌❌');
+          console.warn('⚠️ Reservierungen werden nur lokal gespeichert und gehen beim Neuladen verloren!');
+          
+          // Zeige Toast-Warnung (nur beim ersten Mal)
+          if (!window._supabaseWarningShown) {
+            setTimeout(() => {
+              if (this.ui && this.ui.showToast) {
+                this.ui.showToast('⚠️ WARNUNG: Keine Datenbankverbindung! App läuft im Demo-Modus.', 'warning');
+              }
+            }, 2000);
+            window._supabaseWarningShown = true;
           }
         } else {
-          indicator.classList.add('error');
-          // Update tooltip
-          if (type === 'SB') {
-            indicator.setAttribute('data-tooltip', '❌ Supabase - Nicht verbunden');
-          } else {
-            indicator.setAttribute('data-tooltip', '❌ HotelNetSolutions - Nicht verbunden');
-          }
+          indicator.setAttribute('data-tooltip', '❌ HotelNetSolutions - Nicht verbunden');
         }
-        
-        console.log(`🔄 Connection status updated: ${type} = ${connected ? '✅ Connected' : '❌ Disconnected'}`);
-      } else {
-        console.warn(`⚠️ Status indicator not found for: ${type}`);
       }
-    }, 100);
-  }
+      
+      console.log(`🔄 Connection status updated: ${type} = ${connected ? '✅ Connected' : '❌ Disconnected'}`);
+    } else {
+      console.warn(`⚠️ Status indicator not found for: ${type}`);
+    }
+  }, 100);
+}
 
   // Cache methods
   getCached(key) {
@@ -520,23 +562,67 @@ class API {
     ];
   }
 
-  async createReservation(data) {
-    try {
-      if (!this.supabase) {
-        // Demo mode - simulate creation and save to localStorage
-        const newReservation = {
-          ...data,
-          id: Date.now(),
-          created_at: new Date().toISOString()
-        };
-        
-        // Get existing reservations and add new one
-        const reservations = this.getStoredReservations() || [];
-        reservations.unshift(newReservation);
-        this.saveReservationsToStorage(reservations);
-        
-        return newReservation;
+ async createReservation(data) {
+  try {
+    if (!this.supabase) {
+      console.warn('⚠️ API: No Supabase connection - using localStorage (DEMO MODE)');
+      // Demo mode - simulate creation and save to localStorage
+      const newReservation = {
+        ...data,
+        id: Date.now(),
+        created_at: new Date().toISOString()
+      };
+      
+      // Get existing reservations and add new one
+      const reservations = this.getStoredReservations() || [];
+      reservations.unshift(newReservation);
+      this.saveReservationsToStorage(reservations);
+      
+      console.log('💾 Reservation saved to localStorage:', newReservation.id);
+      return newReservation;
+    }
+
+    console.log('📤 API: Inserting reservation into Supabase...');
+    console.log('📋 Data being sent:', data);
+    
+    const { data: reservation, error } = await this.supabase
+      .from('reservations')
+      .insert([data])
+      .select()
+      .single();
+
+    if (error) {
+      console.error('❌ Supabase insert error:', error);
+      console.error('Error details:', {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code
+      });
+      
+      // Erstelle eine aussagekräftigere Fehlermeldung
+      let errorMsg = error.message;
+      if (error.details) {
+        errorMsg += ' - ' + error.details;
       }
+      if (error.hint) {
+        errorMsg += ' (Tipp: ' + error.hint + ')';
+      }
+      
+      throw new Error(errorMsg);
+    }
+    
+    if (!reservation) {
+      throw new Error('Supabase gab keine Reservierung zurück');
+    }
+
+    console.log('✅ API: Reservation created successfully in Supabase:', reservation.id);
+    return reservation;
+  } catch (error) {
+    console.error('❌ API: Failed to create reservation:', error);
+    throw error;
+  }
+}
 
       const { data: reservation, error } = await this.supabase
         .from('reservations')
@@ -1738,52 +1824,123 @@ class ReservationApp {
   }
 
   // Reservation CRUD operations
-  async createReservation(data) {
-    try {
-      console.log('Creating reservation with data:', data);
+ async createReservation(data) {
+  try {
+    console.log('📝 Creating reservation with data:', data);
+    
+    // ✅ KRITISCH: Prüfe ob Supabase verbunden ist
+    if (!this.api.supabase) {
+      console.warn('⚠️⚠️⚠️ Supabase not connected - saving to localStorage only (DEMO MODE) ⚠️⚠️⚠️');
+      this.ui.showToast('⚠️ WARNUNG: Keine Datenbankverbindung! Reservierung wird nur lokal gespeichert.', 'warning');
       
-      // Generate reservation number
+      // Demo-Mode Fallback
       data.reservation_number = this.generateReservationNumber();
       data.status = 'active';
       data.created_at = new Date().toISOString();
       
-      // Create in Supabase
-      const reservation = await this.api.createReservation(data);
+      const newReservation = {
+        ...data,
+        id: Date.now()
+      };
       
-      // Push to HNS if configured
-      try {
-        await this.api.pushToHNS(reservation);
-      } catch (hnsError) {
-        console.error('HNS push failed:', hnsError);
-        // Don't fail the whole operation if HNS fails
-      }
+      const reservations = this.api.getStoredReservations() || [];
+      reservations.unshift(newReservation);
+      this.api.saveReservationsToStorage(reservations);
       
       // Update local state
-      const reservations = state.get('reservations') || [];
-      reservations.unshift(reservation);
-      state.set('reservations', reservations);
+      const currentReservations = state.get('reservations') || [];
+      currentReservations.unshift(newReservation);
+      state.set('reservations', currentReservations);
       
-      // Close modal and refresh
       this.ui.closeModal('modalNewReservation');
       this.renderReservationTable();
       this.updateKPIs();
       this.updateTodaysOperations();
       
-      this.ui.showToast('Reservierung erfolgreich erstellt!', 'success');
+      this.ui.showToast('💾 Reservierung lokal gespeichert (DEMO MODE)', 'info');
       
-      // Store current reservation for email modal
-      this.currentReservation = reservation;
-      
-      // Open email confirmation modal
-      this.openConfirmationEmailModal(reservation);
-      
-      return reservation;
-    } catch (error) {
-      console.error('Failed to create reservation:', error);
-      this.ui.showToast('Fehler beim Erstellen der Reservierung: ' + error.message, 'error');
-      throw error;
+      return newReservation;
     }
+    
+    // Generate reservation number
+    data.reservation_number = this.generateReservationNumber();
+    data.status = 'active';
+    data.created_at = new Date().toISOString();
+    
+    // ✅ Bereinige Daten vor dem Senden an Supabase
+    const cleanData = { ...data };
+    
+    // Entferne undefined/null/leere Werte
+    Object.keys(cleanData).forEach(key => {
+      if (cleanData[key] === undefined || cleanData[key] === null || cleanData[key] === '') {
+        delete cleanData[key];
+      }
+    });
+    
+    // ✅ Stelle sicher dass numerische Felder korrekt sind
+    const numericFields = ['guests_adults', 'guests_children', 'rate_price', 'total_price'];
+    numericFields.forEach(field => {
+      if (cleanData[field] !== undefined) {
+        cleanData[field] = parseFloat(cleanData[field]) || 0;
+      }
+    });
+    
+    console.log('📤 Sending to Supabase:', cleanData);
+    
+    // Create in Supabase
+    const reservation = await this.api.createReservation(cleanData);
+    
+    // ✅ Validiere Response
+    if (!reservation || !reservation.id) {
+      throw new Error('Supabase returned invalid response - keine ID erhalten');
+    }
+    
+    console.log('✅ Reservation created in Supabase with ID:', reservation.id);
+    
+    // Push to HNS if configured
+    try {
+      await this.api.pushToHNS(reservation);
+    } catch (hnsError) {
+      console.error('HNS push failed:', hnsError);
+      // Don't fail the whole operation if HNS fails
+    }
+    
+    // Update local state
+    const reservations = state.get('reservations') || [];
+    reservations.unshift(reservation);
+    state.set('reservations', reservations);
+    
+    // Close modal and refresh
+    this.ui.closeModal('modalNewReservation');
+    this.renderReservationTable();
+    this.updateKPIs();
+    this.updateTodaysOperations();
+    
+    this.ui.showToast('✅ Reservierung erfolgreich in Datenbank erstellt!', 'success');
+    
+    // Store current reservation for email modal
+    this.currentReservation = reservation;
+    
+    // Open email confirmation modal
+    this.openConfirmationEmailModal(reservation);
+    
+    return reservation;
+  } catch (error) {
+    console.error('❌ Failed to create reservation:', error);
+    
+    // ✅ Detailliertere Fehlermeldung
+    let errorMessage = 'Fehler beim Erstellen der Reservierung';
+    if (error.message) {
+      errorMessage += ': ' + error.message;
+    }
+    if (error.details) {
+      errorMessage += ' (Details: ' + error.details + ')';
+    }
+    
+    this.ui.showToast('❌ ' + errorMessage, 'error');
+    throw error;
   }
+}
 
   async updateReservation(data) {
     try {
