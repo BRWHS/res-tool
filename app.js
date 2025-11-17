@@ -1155,8 +1155,24 @@ class ReservationApp {
           this.openAvailabilityModal();
           break;
         case 'open-reports':
-          this.openReportsModal();
-          break;
+  // Initialize reporting module if not exists
+  if (!this.reporting) {
+    this.reporting = new ReportingModule(this);
+    this.reporting.init();
+  }
+  
+  // Populate hotel filter
+  const reportHotel = document.getElementById('reportHotel');
+  if (reportHotel) {
+    const hotels = state.get('hotels') || [];
+    reportHotel.innerHTML = '<option value="">Alle Hotels</option>';
+    hotels.forEach(hotel => {
+      reportHotel.innerHTML += `<option value="${hotel.code}">${hotel.name}</option>`;
+    });
+  }
+  
+  this.ui.openModal('modalReports');
+  break;
         case 'open-settings':
           this.openSettingsModal();
           break;
