@@ -64,7 +64,7 @@ class ReportingModule {
   async generateReport() {
     try {
       this.app.ui.showToast('Generiere Report...', 'info');
-      const allReservations = this.app.state.get('reservations') || [];
+      const allReservations = state.get('reservations') || [];
       const filteredReservations = this.filterReservations(allReservations);
       this.reportData = this.processReportData(filteredReservations);
       this.renderChart();
@@ -93,7 +93,7 @@ class ReportingModule {
   }
 
   processReportData(reservations) {
-    const hotels = this.app.state.get('hotels') || [];
+    const hotels = state.get('hotels') || [];
     const data = {};
 
     hotels.forEach(hotel => {
