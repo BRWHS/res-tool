@@ -3853,10 +3853,6 @@ class CustomCursor {
       this.cursorDot.classList.add('cursor-click');
     });
 
-    document.addEventListener('mouseup', () => {
-      this.cursor.classList.remove('cursor-click');
-      this.cursorDot.classList.remove('cursor-click');
-    });
 // Special handling for select dropdowns
     document.addEventListener('focus', (e) => {
       if (e.target.matches('select, input, textarea')) {
