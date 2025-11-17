@@ -274,15 +274,15 @@ class ReportingModule {
     if (!tableContainer) return;
 
     const sortedData = Object.values(this.reportData).sort((a, b) => b.revenue - a.revenue);
-    let tableHTML = '<div class="report-table-wrapper"><table class="data-table report-table-modern"><thead><tr><th>Hotel</th><th class="text-right">Buchungen</th><th class="text-right">Umsatz</th><th class="text-right">Nächte</th><th class="text-right">ADR</th><th class="text-right">Auslastung</th></tr></thead><tbody>';
-
+    let tableHTML = '<div class="report-table-wrapper"><table class="data-table report-table-modern"><thead><tr><th>Hotel</th><th class="text-right">Buchungen</th><th class="text-right">Roomnights</th><th class="text-right">Umsatz</th><th class="text-right">ADR</th><th class="text-right">Auslastung</th></tr></thead><tbody>';
+    
     sortedData.forEach((hotel, index) => {
       const isTop = index < 3;
-      tableHTML += `<tr class="${isTop ? 'highlight-row' : ''}"><td><div class="hotel-name-cell">${isTop ? `<span class="rank-badge">#${index + 1}</span>` : ''}<strong>${hotel.name}</strong></div></td><td class="text-right">${hotel.bookings}</td><td class="text-right"><span class="currency-value">${this.formatCurrency(hotel.revenue)}</span></td><td class="text-right">${hotel.totalNights}</td><td class="text-right"><span class="currency-value">${this.formatCurrency(hotel.adr)}</span></td><td class="text-right"><div class="occupancy-cell"><span>${hotel.occupancy.toFixed(1)}%</span><div class="occupancy-bar"><div class="occupancy-fill" style="width: ${Math.min(hotel.occupancy, 100)}%"></div></div></div></td></tr>`;
+      tableHTML += `<tr class="${isTop ? 'highlight-row' : ''}"><td><div class="hotel-name-cell">${isTop ? `<span class="rank-badge">#${index + 1}</span>` : ''}<strong>${hotel.name}</strong></div></td><td class="text-right">${hotel.bookings}</td><td class="text-right"><span class="roomnights-value">${hotel.totalNights}</span></td><td class="text-right"><span class="currency-value">${this.formatCurrency(hotel.revenue)}</span></td><td class="text-right"><span class="currency-value">${this.formatCurrency(hotel.adr)}</span></td><td class="text-right"><div class="occupancy-cell"><span>${hotel.occupancy.toFixed(1)}%</span><div class="occupancy-bar"><div class="occupancy-fill" style="width: ${Math.min(hotel.occupancy, 100)}%"></div></div></div></td></tr>`;
     });
 
     const totals = this.calculateTotals(sortedData);
-    tableHTML += `<tr class="totals-row"><td><strong>GESAMT</strong></td><td class="text-right"><strong>${totals.bookings}</strong></td><td class="text-right"><strong>${this.formatCurrency(totals.revenue)}</strong></td><td class="text-right"><strong>${totals.nights}</strong></td><td class="text-right"><strong>${this.formatCurrency(totals.adr)}</strong></td><td class="text-right"><strong>${totals.occupancy.toFixed(1)}%</strong></td></tr></tbody></table></div>`;
+    tableHTML += `<tr class="totals-row"><td><strong>GESAMT</strong></td><td class="text-right"><strong>${totals.bookings}</strong></td><td class="text-right"><strong>${totals.nights}</strong></td><td class="text-right"><strong>${this.formatCurrency(totals.revenue)}</strong></td><td class="text-right"><strong>${this.formatCurrency(totals.adr)}</strong></td><td class="text-right"><strong>${totals.occupancy.toFixed(1)}%</strong></td></tr></tbody></table></div>`;
     tableContainer.innerHTML = tableHTML;
   }
 
