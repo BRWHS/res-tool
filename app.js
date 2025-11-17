@@ -607,8 +607,7 @@ async initSupabase() {
       console.error('Failed to create reservation:', error);
       throw error;
     }
-  }
-
+  
   async updateReservation(id, updates) {
     try {
       if (!this.supabase) {
