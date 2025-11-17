@@ -224,9 +224,14 @@ class SupabaseInsertBuilder {
     try {
       const url = `${this.url}/rest/v1/${this.table}`;
       
+      // Copy headers and ensure Prefer header is set for returning data
+      const requestHeaders = { ...this.headers };
+      // Supabase needs "return=representation" to return inserted data
+      requestHeaders['Prefer'] = 'return=representation';
+      
       const response = await fetch(url, {
         method: 'POST',
-        headers: this.headers,
+        headers: requestHeaders,
         body: JSON.stringify(this.records)
       });
       
