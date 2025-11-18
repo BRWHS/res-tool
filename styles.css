@@ -1886,6 +1886,11 @@ tbody td .pill {
   max-width: 1000px;
 }
 
+.modal-content.xlarge {
+  max-width: 1400px;
+  width: 95vw;
+}
+
 @keyframes slideUpScale {
   from {
     transform: translateY(30px) scale(0.95);
@@ -5369,7 +5374,8 @@ select option {
 .settings-tabs {
   display: flex;
   gap: 2rem;
-  height: 600px;
+  height: 650px;
+  max-height: 75vh;
   overflow: hidden;
 }
 
@@ -5801,6 +5807,36 @@ select option {
   font-family: 'JetBrains Mono', monospace;
 }
 
+/* Settings Table Wrapper - Optimiert für Modal */
+.settings-panel .table-wrapper {
+  overflow-x: auto;
+  margin: 0;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(148, 163, 184, 0.1);
+}
+
+.settings-panel .data-table {
+  min-width: 100%;
+  font-size: 0.9rem;
+}
+
+.settings-panel .data-table th,
+.settings-panel .data-table td {
+  padding: 0.875rem 1rem;
+  white-space: nowrap;
+}
+
+.settings-panel .data-table th:last-child,
+.settings-panel .data-table td:last-child {
+  text-align: center;
+  min-width: 120px;
+}
+
+.settings-panel .data-table code {
+  font-size: 0.85rem;
+  padding: 0.25rem 0.5rem;
+}
+
 /* System Info Grid */
 .system-info-grid {
   display: grid;
@@ -5911,6 +5947,11 @@ select option {
   .hotels-grid {
     grid-template-columns: 1fr;
   }
+  
+  .modal-content.xlarge {
+    width: 98vw;
+    max-width: 100%;
+  }
 }
 
 @media (max-width: 640px) {
@@ -5936,5 +5977,20 @@ select option {
 
   .danger-actions .btn {
     width: 100%;
+  }
+  
+  .modal-content.xlarge {
+    width: 100vw;
+    max-width: 100%;
+    border-radius: 0;
+  }
+  
+  .settings-panel .data-table {
+    font-size: 0.8rem;
+  }
+  
+  .settings-panel .data-table th,
+  .settings-panel .data-table td {
+    padding: 0.625rem 0.75rem;
   }
 }
