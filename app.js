@@ -3682,6 +3682,8 @@ Ihr Reservierungsteam`;
 
   renderGeneralSettings() {
     const config = window.HRS_CONFIG || {};
+    // Load saved settings from localStorage
+    const saved = Storage.get('settings_general') || {};
     
     return `
       <div class="settings-panel">
@@ -3723,25 +3725,25 @@ Ihr Reservierungsteam`;
               <div class="setting-item">
                 <label for="settingLanguage">Systemsprache</label>
                 <select id="settingLanguage" class="select">
-                  <option value="de" ${config.SYSTEM?.LANGUAGE === 'de' ? 'selected' : ''}>Deutsch</option>
-                  <option value="en" ${config.SYSTEM?.LANGUAGE === 'en' ? 'selected' : ''}>English</option>
+                  <option value="de" ${(saved.language || config.SYSTEM?.LANGUAGE || 'de') === 'de' ? 'selected' : ''}>Deutsch</option>
+                  <option value="en" ${(saved.language || config.SYSTEM?.LANGUAGE || 'de') === 'en' ? 'selected' : ''}>English</option>
                 </select>
               </div>
               <div class="setting-item">
                 <label for="settingDateFormat">Datumsformat</label>
                 <select id="settingDateFormat" class="select">
-                  <option value="DD.MM.YYYY" ${config.UI?.FORMATS?.DATE === 'DD.MM.YYYY' ? 'selected' : ''}>DD.MM.YYYY</option>
-                  <option value="MM/DD/YYYY">MM/DD/YYYY</option>
-                  <option value="YYYY-MM-DD">YYYY-MM-DD</option>
+                  <option value="DD.MM.YYYY" ${(saved.dateFormat || config.UI?.FORMATS?.DATE || 'DD.MM.YYYY') === 'DD.MM.YYYY' ? 'selected' : ''}>DD.MM.YYYY</option>
+                  <option value="MM/DD/YYYY" ${(saved.dateFormat || config.UI?.FORMATS?.DATE || 'DD.MM.YYYY') === 'MM/DD/YYYY' ? 'selected' : ''}>MM/DD/YYYY</option>
+                  <option value="YYYY-MM-DD" ${(saved.dateFormat || config.UI?.FORMATS?.DATE || 'DD.MM.YYYY') === 'YYYY-MM-DD' ? 'selected' : ''}>YYYY-MM-DD</option>
                 </select>
               </div>
               <div class="setting-item">
                 <label for="settingCurrency">Währung</label>
                 <select id="settingCurrency" class="select">
-                  <option value="EUR" selected>EUR (€)</option>
-                  <option value="USD">USD ($)</option>
-                  <option value="GBP">GBP (£)</option>
-                  <option value="CHF">CHF (Fr)</option>
+                  <option value="EUR" ${(saved.currency || config.UI?.FORMATS?.CURRENCY || 'EUR') === 'EUR' ? 'selected' : ''}>EUR (€)</option>
+                  <option value="USD" ${(saved.currency || config.UI?.FORMATS?.CURRENCY || 'EUR') === 'USD' ? 'selected' : ''}>USD ($)</option>
+                  <option value="GBP" ${(saved.currency || config.UI?.FORMATS?.CURRENCY || 'EUR') === 'GBP' ? 'selected' : ''}>GBP (£)</option>
+                  <option value="CHF" ${(saved.currency || config.UI?.FORMATS?.CURRENCY || 'EUR') === 'CHF' ? 'selected' : ''}>CHF (Fr)</option>
                 </select>
               </div>
             </div>
@@ -3755,25 +3757,25 @@ Ihr Reservierungsteam`;
               <div class="setting-item">
                 <label for="settingTheme">Design-Theme</label>
                 <select id="settingTheme" class="select">
-                  <option value="dark" ${config.UI?.THEME === 'dark' ? 'selected' : ''}>Dark Mode</option>
-                  <option value="light" ${config.UI?.THEME === 'light' ? 'selected' : ''}>Light Mode</option>
-                  <option value="auto" ${config.UI?.THEME === 'auto' ? 'selected' : ''}>Automatisch</option>
+                  <option value="dark" ${(saved.theme || config.UI?.THEME || 'dark') === 'dark' ? 'selected' : ''}>Dark Mode</option>
+                  <option value="light" ${(saved.theme || config.UI?.THEME || 'dark') === 'light' ? 'selected' : ''}>Light Mode</option>
+                  <option value="auto" ${(saved.theme || config.UI?.THEME || 'dark') === 'auto' ? 'selected' : ''}>Automatisch</option>
                 </select>
               </div>
               <div class="setting-item">
                 <label>Animationen</label>
                 <div class="toggle-switch">
-                  <input type="checkbox" id="settingAnimations" ${config.UI?.ANIMATIONS?.ENABLED ? 'checked' : ''}>
+                  <input type="checkbox" id="settingAnimations" ${(saved.animations !== undefined ? saved.animations : (config.UI?.ANIMATIONS?.ENABLED !== false)) ? 'checked' : ''}>
                   <label for="settingAnimations"></label>
                 </div>
               </div>
               <div class="setting-item">
                 <label for="settingPageSize">Einträge pro Seite</label>
                 <select id="settingPageSize" class="select">
-                  <option value="10">10</option>
-                  <option value="25" ${config.UI?.TABLE?.ITEMS_PER_PAGE === 25 ? 'selected' : ''}>25</option>
-                  <option value="50">50</option>
-                  <option value="100">100</option>
+                  <option value="10" ${(saved.pageSize || config.UI?.TABLE?.ITEMS_PER_PAGE || 25) == 10 ? 'selected' : ''}>10</option>
+                  <option value="25" ${(saved.pageSize || config.UI?.TABLE?.ITEMS_PER_PAGE || 25) == 25 ? 'selected' : ''}>25</option>
+                  <option value="50" ${(saved.pageSize || config.UI?.TABLE?.ITEMS_PER_PAGE || 25) == 50 ? 'selected' : ''}>50</option>
+                  <option value="100" ${(saved.pageSize || config.UI?.TABLE?.ITEMS_PER_PAGE || 25) == 100 ? 'selected' : ''}>100</option>
                 </select>
               </div>
             </div>
@@ -3787,16 +3789,16 @@ Ihr Reservierungsteam`;
               <div class="setting-item">
                 <label for="settingToastPosition">Toast-Position</label>
                 <select id="settingToastPosition" class="select">
-                  <option value="top-left">Oben Links</option>
-                  <option value="top-right" ${config.UI?.TOAST?.POSITION === 'top-right' ? 'selected' : ''}>Oben Rechts</option>
-                  <option value="bottom-left">Unten Links</option>
-                  <option value="bottom-right">Unten Rechts</option>
+                  <option value="top-left" ${(saved.toastPosition || config.UI?.TOAST?.POSITION || 'top-right') === 'top-left' ? 'selected' : ''}>Oben Links</option>
+                  <option value="top-right" ${(saved.toastPosition || config.UI?.TOAST?.POSITION || 'top-right') === 'top-right' ? 'selected' : ''}>Oben Rechts</option>
+                  <option value="bottom-left" ${(saved.toastPosition || config.UI?.TOAST?.POSITION || 'top-right') === 'bottom-left' ? 'selected' : ''}>Unten Links</option>
+                  <option value="bottom-right" ${(saved.toastPosition || config.UI?.TOAST?.POSITION || 'top-right') === 'bottom-right' ? 'selected' : ''}>Unten Rechts</option>
                 </select>
               </div>
               <div class="setting-item">
                 <label for="settingToastDuration">Anzeigedauer (ms)</label>
                 <input type="number" id="settingToastDuration" class="input" 
-                  value="${config.UI?.TOAST?.DURATION || 3000}" min="1000" max="10000" step="500">
+                  value="${saved.toastDuration || config.UI?.TOAST?.DURATION || 3000}" min="1000" max="10000" step="500">
               </div>
             </div>
           </div>
@@ -4513,8 +4515,114 @@ Ihr Reservierungsteam`;
     // Save to storage
     Storage.set(`settings_${tabName}`, settings);
 
+    // Apply settings immediately
+    this.applySettings(tabName, settings);
+
     // Show success toast
-    this.ui.showToast(`${tabName.charAt(0).toUpperCase() + tabName.slice(1)}-Einstellungen erfolgreich gespeichert`, 'success');
+    this.ui.showToast(`${tabName.charAt(0).toUpperCase() + tabName.slice(1)}-Einstellungen erfolgreich gespeichert und angewendet`, 'success');
+  }
+
+  applySettings(tabName, settings) {
+    switch(tabName) {
+      case 'general':
+        // Apply theme
+        if (settings.theme) {
+          this.applyTheme(settings.theme);
+        }
+        
+        // Apply animations
+        if (settings.animations !== undefined) {
+          document.body.classList.toggle('no-animations', !settings.animations);
+        }
+        
+        // Apply page size
+        if (settings.pageSize) {
+          state.set('pagination.pageSize', settings.pageSize);
+          // Reload current page with new page size
+          this.loadReservations();
+        }
+        
+        // Store for future use
+        if (settings.dateFormat) {
+          CONFIG.UI.FORMATS.DATE = settings.dateFormat;
+        }
+        if (settings.currency) {
+          CONFIG.UI.FORMATS.CURRENCY = settings.currency;
+        }
+        if (settings.toastPosition) {
+          CONFIG.UI.TOAST.POSITION = settings.toastPosition;
+        }
+        if (settings.toastDuration) {
+          CONFIG.UI.TOAST.DURATION = settings.toastDuration;
+        }
+        break;
+      
+      case 'channel':
+        // Update HNS config
+        if (window.HRS_CONFIG && window.HRS_CONFIG.API && window.HRS_CONFIG.API.HNS) {
+          if (settings.mode) window.HRS_CONFIG.API.HNS.MODE = settings.mode;
+          if (settings.apiKey) window.HRS_CONFIG.API.HNS.API_KEY = settings.apiKey;
+          if (settings.apiSecret) window.HRS_CONFIG.API.HNS.API_SECRET = settings.apiSecret;
+          if (settings.timeout) window.HRS_CONFIG.API.HNS.TIMEOUT = settings.timeout;
+          if (settings.retries) window.HRS_CONFIG.API.HNS.RETRY_COUNT = settings.retries;
+          if (settings.autoSync !== undefined) {
+            window.HRS_CONFIG.API.HNS.AUTO_SYNC.ENABLED = settings.autoSync;
+          }
+          if (settings.syncInterval) {
+            window.HRS_CONFIG.API.HNS.AUTO_SYNC.INTERVAL = settings.syncInterval;
+          }
+        }
+        break;
+      
+      case 'system':
+        // Update performance config
+        if (window.HRS_CONFIG && window.HRS_CONFIG.PERFORMANCE) {
+          if (settings.cacheEnabled !== undefined) {
+            window.HRS_CONFIG.PERFORMANCE.CACHE.ENABLED = settings.cacheEnabled;
+          }
+          if (settings.cacheTTL) {
+            window.HRS_CONFIG.PERFORMANCE.CACHE.TTL = settings.cacheTTL;
+          }
+          if (settings.cacheSize) {
+            window.HRS_CONFIG.PERFORMANCE.CACHE.MAX_SIZE = settings.cacheSize;
+          }
+          if (settings.debounceDelay) {
+            window.HRS_CONFIG.PERFORMANCE.DEBOUNCE_DELAY = settings.debounceDelay;
+          }
+        }
+        
+        // Update logging config
+        if (window.HRS_CONFIG && window.HRS_CONFIG.LOGGING) {
+          if (settings.loggingEnabled !== undefined) {
+            window.HRS_CONFIG.LOGGING.ENABLED = settings.loggingEnabled;
+          }
+          if (settings.logLevel) {
+            window.HRS_CONFIG.LOGGING.LEVEL = settings.logLevel;
+          }
+          if (settings.trackActivity !== undefined) {
+            window.HRS_CONFIG.LOGGING.TRACK_USER_ACTIVITY = settings.trackActivity;
+          }
+        }
+        break;
+    }
+  }
+
+  applyTheme(theme) {
+    const body = document.body;
+    
+    // Remove existing theme classes
+    body.classList.remove('theme-dark', 'theme-light');
+    
+    if (theme === 'auto') {
+      // Use system preference
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      body.classList.add(prefersDark ? 'theme-dark' : 'theme-light');
+    } else {
+      body.classList.add(`theme-${theme}`);
+    }
+    
+    // Store theme preference
+    localStorage.setItem('theme', theme);
   }
 
   handleSettingsAction(action, button) {
@@ -4824,7 +4932,87 @@ document.addEventListener('DOMContentLoaded', () => {
   window.app.init().catch(error => {
     console.error('Failed to initialize app:', error);
   });
+  
+  // Load and apply saved settings
+  initializeSettings();
 });
+
+// Initialize saved settings on app start
+function initializeSettings() {
+  // Load general settings
+  const generalSettings = Storage.get('settings_general');
+  if (generalSettings) {
+    // Apply theme
+    if (generalSettings.theme) {
+      applyThemeOnStartup(generalSettings.theme);
+    }
+    
+    // Apply animations
+    if (generalSettings.animations !== undefined) {
+      document.body.classList.toggle('no-animations', !generalSettings.animations);
+    }
+    
+    // Apply page size
+    if (generalSettings.pageSize && window.app) {
+      state.set('pagination.pageSize', generalSettings.pageSize);
+    }
+    
+    // Update CONFIG
+    if (generalSettings.dateFormat && CONFIG.UI.FORMATS) {
+      CONFIG.UI.FORMATS.DATE = generalSettings.dateFormat;
+    }
+    if (generalSettings.currency && CONFIG.UI.FORMATS) {
+      CONFIG.UI.FORMATS.CURRENCY = generalSettings.currency;
+    }
+    if (generalSettings.toastPosition && CONFIG.UI.TOAST) {
+      CONFIG.UI.TOAST.POSITION = generalSettings.toastPosition;
+    }
+    if (generalSettings.toastDuration && CONFIG.UI.TOAST) {
+      CONFIG.UI.TOAST.DURATION = generalSettings.toastDuration;
+    }
+  }
+  
+  // Load channel settings
+  const channelSettings = Storage.get('settings_channel');
+  if (channelSettings && window.HRS_CONFIG?.API?.HNS) {
+    if (channelSettings.mode) window.HRS_CONFIG.API.HNS.MODE = channelSettings.mode;
+    if (channelSettings.apiKey) window.HRS_CONFIG.API.HNS.API_KEY = channelSettings.apiKey;
+    if (channelSettings.apiSecret) window.HRS_CONFIG.API.HNS.API_SECRET = channelSettings.apiSecret;
+    if (channelSettings.timeout) window.HRS_CONFIG.API.HNS.TIMEOUT = channelSettings.timeout;
+    if (channelSettings.retries) window.HRS_CONFIG.API.HNS.RETRY_COUNT = channelSettings.retries;
+  }
+  
+  // Load system settings
+  const systemSettings = Storage.get('settings_system');
+  if (systemSettings && window.HRS_CONFIG) {
+    if (systemSettings.cacheEnabled !== undefined && window.HRS_CONFIG.PERFORMANCE?.CACHE) {
+      window.HRS_CONFIG.PERFORMANCE.CACHE.ENABLED = systemSettings.cacheEnabled;
+    }
+    if (systemSettings.cacheTTL && window.HRS_CONFIG.PERFORMANCE?.CACHE) {
+      window.HRS_CONFIG.PERFORMANCE.CACHE.TTL = systemSettings.cacheTTL;
+    }
+    if (systemSettings.loggingEnabled !== undefined && window.HRS_CONFIG.LOGGING) {
+      window.HRS_CONFIG.LOGGING.ENABLED = systemSettings.loggingEnabled;
+    }
+    if (systemSettings.logLevel && window.HRS_CONFIG.LOGGING) {
+      window.HRS_CONFIG.LOGGING.LEVEL = systemSettings.logLevel;
+    }
+  }
+  
+  console.log('✅ Settings initialized from localStorage');
+}
+
+function applyThemeOnStartup(theme) {
+  const body = document.body;
+  body.classList.remove('theme-dark', 'theme-light');
+  
+  if (theme === 'auto') {
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    body.classList.add(prefersDark ? 'theme-dark' : 'theme-light');
+  } else {
+    body.classList.add(`theme-${theme}`);
+  }
+}
 // ========================================
 // CUSTOM CURSOR SYSTEM
 // ========================================
