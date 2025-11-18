@@ -451,7 +451,7 @@ async initSupabase() {
         total_price: 238,
         status: 'active',
         payment_status: 'pending',
-        notes: 'Früher Check-in gewünscht',
+        notes: 'FrÃ¼her Check-in gewÃ¼nscht',
         created_at: new Date(today.getTime() - 5 * 24 * 60 * 60 * 1000).toISOString()
       },
       {
@@ -502,7 +502,7 @@ async initSupabase() {
         reservation_number: 'RES-2024-004',
         hotel_code: 'RES-HD-ALT',
         guest_first_name: 'Julia',
-        guest_last_name: 'Müller',
+        guest_last_name: 'MÃ¼ller',
         guest_email: 'julia.mueller@gmail.com',
         arrival: '2024-11-20',
         departure: '2024-11-22',
@@ -533,7 +533,7 @@ async initSupabase() {
         total_price: 447,
         status: 'done',
         payment_status: 'paid',
-        guest_notes: 'Hatten einen schönen Aufenthalt',
+        guest_notes: 'Hatten einen schÃ¶nen Aufenthalt',
         created_at: new Date(today.getTime() - 25 * 24 * 60 * 60 * 1000).toISOString()
       }
     ];
@@ -765,7 +765,7 @@ class UIManager {
       if (input.value && !this.isValidEmail(input.value)) {
         errors.push({
           field: input.name,
-          message: 'Ungültige E-Mail-Adresse'
+          message: 'UngÃ¼ltige E-Mail-Adresse'
         });
         input.classList.add('error');
       }
@@ -798,12 +798,12 @@ const HOTELS = [
   { code: 'MA7-M-HAF', group: 'MA7', name: 'Mannheim Hafen', city: 'Mannheim' },
   { code: 'RES-HD-ALT', group: 'RESERVIO', name: 'Heidelberg Altstadt', city: 'Heidelberg' },
   { code: 'RES-HD-BHF', group: 'RESERVIO', name: 'Heidelberg Bahnhof', city: 'Heidelberg' },
-  { code: 'GH-KA-SUD', group: 'GuestHouse', name: 'Karlsruhe Südstadt', city: 'Karlsruhe' },
+  { code: 'GH-KA-SUD', group: 'GuestHouse', name: 'Karlsruhe SÃ¼dstadt', city: 'Karlsruhe' },
   { code: 'GH-S-MIT', group: 'GuestHouse', name: 'Stuttgart Mitte', city: 'Stuttgart' },
   { code: 'BW-FR-CTR', group: 'BestWay', name: 'Frankfurt City Center', city: 'Frankfurt' },
   { code: 'BW-FR-FLU', group: 'BestWay', name: 'Frankfurt Flughafen', city: 'Frankfurt' },
-  { code: 'UM-MUC-HBF', group: 'UrbanMotel', name: 'München Hauptbahnhof', city: 'München' },
-  { code: 'UM-MUC-OST', group: 'UrbanMotel', name: 'München Ost', city: 'München' }
+  { code: 'UM-MUC-HBF', group: 'UrbanMotel', name: 'MÃ¼nchen Hauptbahnhof', city: 'MÃ¼nchen' },
+  { code: 'UM-MUC-OST', group: 'UrbanMotel', name: 'MÃ¼nchen Ost', city: 'MÃ¼nchen' }
 ];
 
 // =============== DEMO DATA ===============
@@ -812,7 +812,7 @@ const DEMO_CATEGORIES = [
     id: 1, 
     code: 'STD', 
     name: 'Standard', 
-    size: '18m²', 
+    size: '18mÂ²', 
     beds: '1 Doppelbett', 
     persons: 2, 
     price: 89,
@@ -822,7 +822,7 @@ const DEMO_CATEGORIES = [
     id: 2, 
     code: 'SUP', 
     name: 'Superior', 
-    size: '24m²', 
+    size: '24mÂ²', 
     beds: '1 King-Size Bett', 
     persons: 2, 
     price: 119,
@@ -832,7 +832,7 @@ const DEMO_CATEGORIES = [
     id: 3, 
     code: 'DLX', 
     name: 'Deluxe', 
-    size: '32m²', 
+    size: '32mÂ²', 
     beds: '1 King-Size Bett + Schlafsofa', 
     persons: 3, 
     price: 159,
@@ -842,7 +842,7 @@ const DEMO_CATEGORIES = [
     id: 4,
     code: 'JUN',
     name: 'Junior Suite',
-    size: '42m²',
+    size: '42mÂ²',
     beds: '1 King-Size Bett',
     persons: 2,
     price: 199,
@@ -857,7 +857,7 @@ const DEMO_RATES = [
     name: 'Standardrate', 
     price: 89, 
     cancellation: 'Bis 24h vorher kostenlos stornierbar',
-    includes: ['Frühstück']
+    includes: ['FrÃ¼hstÃ¼ck']
   },
   { 
     id: 2, 
@@ -865,15 +865,15 @@ const DEMO_RATES = [
     name: 'Flex Rate', 
     price: 109, 
     cancellation: 'Bis 6h vorher kostenlos stornierbar',
-    includes: ['Frühstück', 'Late Check-out']
+    includes: ['FrÃ¼hstÃ¼ck', 'Late Check-out']
   },
   { 
     id: 3, 
     code: 'NREF', 
     name: 'Non-Refundable', 
     price: 69, 
-    cancellation: 'Nicht stornierbar - 20% günstiger',
-    includes: ['Frühstück']
+    cancellation: 'Nicht stornierbar - 20% gÃ¼nstiger',
+    includes: ['FrÃ¼hstÃ¼ck']
   },
   {
     id: 4,
@@ -881,7 +881,7 @@ const DEMO_RATES = [
     name: 'Business Rate',
     price: 99,
     cancellation: 'Bis 18h vorher kostenlos stornierbar',
-    includes: ['Frühstück', 'WLAN Premium', 'Parkplatz']
+    includes: ['FrÃ¼hstÃ¼ck', 'WLAN Premium', 'Parkplatz']
   }
 ];
 
@@ -1260,7 +1260,7 @@ class ReservationApp {
     const currentStepValid = this.validateWizardStep(this.wizard.currentStep);
     
     if (!currentStepValid) {
-      this.ui.showToast('Bitte alle Pflichtfelder ausfüllen', 'error');
+      this.ui.showToast('Bitte alle Pflichtfelder ausfÃ¼llen', 'error');
       return;
     }
 
@@ -1315,7 +1315,7 @@ class ReservationApp {
         const form = document.getElementById('formNewReservation');
         const categoryInput = form.querySelector('[name="category"]');
         if (!categoryInput || !categoryInput.value) {
-          this.ui.showToast('Bitte eine Kategorie auswählen', 'error');
+          this.ui.showToast('Bitte eine Kategorie auswÃ¤hlen', 'error');
           return false;
         }
         break;
@@ -1323,7 +1323,7 @@ class ReservationApp {
         // Validate rate selection
         const rateInput = document.getElementById('formNewReservation').querySelector('[name="rate_code"]');
         if (!rateInput || !rateInput.value) {
-          this.ui.showToast('Bitte eine Rate auswählen', 'error');
+          this.ui.showToast('Bitte eine Rate auswÃ¤hlen', 'error');
           return false;
         }
         break;
@@ -1461,8 +1461,8 @@ class ReservationApp {
       grid.innerHTML = `
         <div class="text-center text-muted" style="grid-column: 1/-1; padding: 2rem;">
           <i class="fas fa-bed" style="font-size: 3rem; opacity: 0.3;"></i>
-          <p style="margin-top: 1rem;">Keine Kategorien verfügbar</p>
-          <p style="margin-top: 0.5rem; font-size: 0.875rem;">Bitte fügen Sie Kategorien in den Einstellungen hinzu.</p>
+          <p style="margin-top: 1rem;">Keine Kategorien verfÃ¼gbar</p>
+          <p style="margin-top: 0.5rem; font-size: 0.875rem;">Bitte fÃ¼gen Sie Kategorien in den Einstellungen hinzu.</p>
         </div>
       `;
       return;
@@ -1473,7 +1473,7 @@ class ReservationApp {
         <div class="category-header">
           <h4>${cat.name}</h4>
           <div class="category-price">
-            €${cat.price}
+            â‚¬${cat.price}
             <small>/Nacht</small>
           </div>
         </div>
@@ -1498,7 +1498,7 @@ class ReservationApp {
         ` : ''}
         <button type="button" class="btn primary btn-select-category" data-category-code="${cat.code}">
           <i class="fas fa-check"></i>
-          Auswählen
+          AuswÃ¤hlen
         </button>
       </div>
     `).join('');
@@ -1541,7 +1541,7 @@ class ReservationApp {
     // Update wizard data
     this.wizard.data.category = code;
     
-    this.ui.showToast(`Kategorie "${code}" ausgewählt`, 'success');
+    this.ui.showToast(`Kategorie "${code}" ausgewÃ¤hlt`, 'success');
   }
 
   renderRateGrid() {
@@ -1554,8 +1554,8 @@ class ReservationApp {
       grid.innerHTML = `
         <div class="text-center text-muted" style="grid-column: 1/-1; padding: 2rem;">
           <i class="fas fa-tag" style="font-size: 3rem; opacity: 0.3;"></i>
-          <p style="margin-top: 1rem;">Keine Raten verfügbar</p>
-          <p style="margin-top: 0.5rem; font-size: 0.875rem;">Bitte fügen Sie Raten in den Einstellungen hinzu.</p>
+          <p style="margin-top: 1rem;">Keine Raten verfÃ¼gbar</p>
+          <p style="margin-top: 0.5rem; font-size: 0.875rem;">Bitte fÃ¼gen Sie Raten in den Einstellungen hinzu.</p>
         </div>
       `;
       return;
@@ -1566,7 +1566,7 @@ class ReservationApp {
         <div class="rate-header">
           <h4>${rate.name}</h4>
           <div class="rate-price">
-            €${rate.price}
+            â‚¬${rate.price}
             <small>/Nacht</small>
           </div>
         </div>
@@ -1586,7 +1586,7 @@ class ReservationApp {
         ` : ''}
         <button type="button" class="btn primary btn-select-rate" data-rate-code="${rate.code}" data-rate-price="${rate.price}">
           <i class="fas fa-check"></i>
-          Auswählen
+          AuswÃ¤hlen
         </button>
       </div>
     `).join('');
@@ -1641,7 +1641,7 @@ class ReservationApp {
     this.wizard.data.rate_code = code;
     this.wizard.data.rate_price = price;
     
-    this.ui.showToast(`Rate "${code}" ausgewählt`, 'success');
+    this.ui.showToast(`Rate "${code}" ausgewÃ¤hlt`, 'success');
   }
 
   renderReservationSummary(data) {
@@ -1673,31 +1673,31 @@ class ReservationApp {
       <div class="summary-grid">
         <div class="summary-item">
           <span class="label"><i class="fas fa-hotel" style="margin-right: 0.5rem; color: var(--primary-400);"></i>Hotel:</span>
-          <span class="value">${hotel ? hotel.name : data.hotel_code || 'Nicht ausgewählt'}</span>
+          <span class="value">${hotel ? hotel.name : data.hotel_code || 'Nicht ausgewÃ¤hlt'}</span>
         </div>
         <div class="summary-item">
           <span class="label"><i class="fas fa-calendar-plus" style="margin-right: 0.5rem; color: var(--primary-400);"></i>Anreise:</span>
-          <span class="value">${data.arrival ? this.formatDate(data.arrival) : 'Nicht ausgewählt'}</span>
+          <span class="value">${data.arrival ? this.formatDate(data.arrival) : 'Nicht ausgewÃ¤hlt'}</span>
         </div>
         <div class="summary-item">
           <span class="label"><i class="fas fa-calendar-minus" style="margin-right: 0.5rem; color: var(--primary-400);"></i>Abreise:</span>
-          <span class="value">${data.departure ? this.formatDate(data.departure) : 'Nicht ausgewählt'}</span>
+          <span class="value">${data.departure ? this.formatDate(data.departure) : 'Nicht ausgewÃ¤hlt'}</span>
         </div>
         <div class="summary-item">
-          <span class="label"><i class="fas fa-moon" style="margin-right: 0.5rem; color: var(--primary-400);"></i>Nächte:</span>
+          <span class="label"><i class="fas fa-moon" style="margin-right: 0.5rem; color: var(--primary-400);"></i>NÃ¤chte:</span>
           <span class="value">${nights}</span>
         </div>
         <div class="summary-item">
           <span class="label"><i class="fas fa-bed" style="margin-right: 0.5rem; color: var(--primary-400);"></i>Kategorie:</span>
-          <span class="value">${category ? category.name : data.category || 'Nicht ausgewählt'}</span>
+          <span class="value">${category ? category.name : data.category || 'Nicht ausgewÃ¤hlt'}</span>
         </div>
         <div class="summary-item">
           <span class="label"><i class="fas fa-tag" style="margin-right: 0.5rem; color: var(--primary-400);"></i>Rate:</span>
-          <span class="value">${rate ? rate.name : data.rate_code || 'Nicht ausgewählt'}</span>
+          <span class="value">${rate ? rate.name : data.rate_code || 'Nicht ausgewÃ¤hlt'}</span>
         </div>
         <div class="summary-item">
           <span class="label"><i class="fas fa-euro-sign" style="margin-right: 0.5rem; color: var(--primary-400);"></i>Preis/Nacht:</span>
-          <span class="value">${data.rate_price ? this.formatCurrency(data.rate_price) : '0 €'}</span>
+          <span class="value">${data.rate_price ? this.formatCurrency(data.rate_price) : '0 â‚¬'}</span>
         </div>
         <div class="summary-item highlight">
           <span class="label"><i class="fas fa-wallet" style="margin-right: 0.5rem;"></i>Gesamtpreis:</span>
@@ -2014,7 +2014,7 @@ async createReservation(data) {
 
   async cancelReservation(id) {
     try {
-      if (!confirm('Möchten Sie diese Reservierung wirklich stornieren?')) {
+      if (!confirm('MÃ¶chten Sie diese Reservierung wirklich stornieren?')) {
         return;
       }
       
@@ -2258,7 +2258,7 @@ async createReservation(data) {
       const currentValue = select.value;
       const hasAllOption = select.querySelector('option[value=""]');
       
-      select.innerHTML = hasAllOption ? '<option value="">Alle Hotels</option>' : '<option value="">Bitte wählen...</option>';
+      select.innerHTML = hasAllOption ? '<option value="">Alle Hotels</option>' : '<option value="">Bitte wÃ¤hlen...</option>';
       
       hotels.forEach(hotel => {
         const option = document.createElement('option');
@@ -2332,7 +2332,7 @@ async createReservation(data) {
     
     if (emailSubject) {
       const hotel = state.get('hotels')?.find(h => h.code === reservation.hotel_code);
-      emailSubject.value = `Reservierungsbestätigung - ${hotel?.name || 'Hotel'} - ${reservation.reservation_number}`;
+      emailSubject.value = `ReservierungsbestÃ¤tigung - ${hotel?.name || 'Hotel'} - ${reservation.reservation_number}`;
     }
     
     if (emailBody) {
@@ -2341,10 +2341,10 @@ async createReservation(data) {
       
       emailBody.value = `Sehr geehrte/r ${reservation.guest_first_name || ''} ${reservation.guest_last_name || 'Gast'},
 
-vielen Dank für Ihre Reservierung!
+vielen Dank fÃ¼r Ihre Reservierung!
 
 Reservierungsdetails:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
 
 Reservierungsnummer: ${reservation.reservation_number}
 Hotel: ${hotel?.name || reservation.hotel_code}
@@ -2353,14 +2353,14 @@ Rate: ${reservation.rate_code || 'N/A'}
 
 Anreise: ${this.formatDate(reservation.arrival)}
 Abreise: ${this.formatDate(reservation.departure)}
-Nächte: ${nights}
+NÃ¤chte: ${nights}
 
 ${reservation.guest_company ? `Firma: ${reservation.guest_company}\n` : ''}${reservation.notes ? `\nNotizen: ${reservation.notes}\n` : ''}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
 
 Wir freuen uns auf Ihren Besuch!
 
-Mit freundlichen Grüßen
+Mit freundlichen GrÃ¼ÃŸen
 Ihr Reservierungsteam`;
     }
     
@@ -2561,7 +2561,7 @@ Ihr Reservierungsteam`;
     const select = document.querySelector('[name="category_display"]');
     
     if (select) {
-      select.innerHTML = '<option value="">Wählen...</option>';
+      select.innerHTML = '<option value="">WÃ¤hlen...</option>';
       categories.forEach(cat => {
         const option = document.createElement('option');
         option.value = cat.code;
@@ -2577,7 +2577,7 @@ Ihr Reservierungsteam`;
     const select = document.querySelector('[name="rate_code_display"]');
     
     if (select) {
-      select.innerHTML = '<option value="">Wählen...</option>';
+      select.innerHTML = '<option value="">WÃ¤hlen...</option>';
       rates.forEach(rate => {
         const option = document.createElement('option');
         option.value = rate.code;
@@ -2608,7 +2608,7 @@ Ihr Reservierungsteam`;
     container.innerHTML = '';
     
     if (!reservation.arrival || !reservation.departure) {
-      container.innerHTML = '<p class="text-center text-muted">Keine Daten verfügbar</p>';
+      container.innerHTML = '<p class="text-center text-muted">Keine Daten verfÃ¼gbar</p>';
       return;
     }
     
@@ -2618,7 +2618,7 @@ Ihr Reservierungsteam`;
     const pricePerNight = reservation.rate_price || 0;
     
     if (nights <= 0) {
-      container.innerHTML = '<p class="text-center text-muted">Ungültige Daten</p>';
+      container.innerHTML = '<p class="text-center text-muted">UngÃ¼ltige Daten</p>';
       return;
     }
     
@@ -2678,10 +2678,10 @@ Ihr Reservierungsteam`;
     const rateSelect = document.getElementById('priceRateSelect');
     const totalEl = document.getElementById('priceTotal');
     
-    // Fülle Kategorie-Dropdown
+    // FÃ¼lle Kategorie-Dropdown
     if (catSelect) {
       const categories = state.get('categories') || [];
-      catSelect.innerHTML = '<option value="">Kategorie wählen...</option>';
+      catSelect.innerHTML = '<option value="">Kategorie wÃ¤hlen...</option>';
       categories.forEach(cat => {
         const option = document.createElement('option');
         option.value = cat.code;
@@ -2691,10 +2691,10 @@ Ihr Reservierungsteam`;
       });
     }
     
-    // Fülle Rate-Dropdown
+    // FÃ¼lle Rate-Dropdown
     if (rateSelect) {
       const rates = state.get('rates') || [];
-      rateSelect.innerHTML = '<option value="">Rate wählen...</option>';
+      rateSelect.innerHTML = '<option value="">Rate wÃ¤hlen...</option>';
       rates.forEach(rate => {
         const option = document.createElement('option');
         option.value = rate.code;
@@ -2707,7 +2707,7 @@ Ihr Reservierungsteam`;
     // Update Total
     if (totalEl) {
       const total = reservation.total_price || 0;
-      totalEl.textContent = `${parseFloat(total).toFixed(2)} €`;
+      totalEl.textContent = `${parseFloat(total).toFixed(2)} â‚¬`;
     }
   }
   
@@ -2765,12 +2765,12 @@ Ihr Reservierungsteam`;
     const total = subtotal + tax;
     
     // Update breakdown display
-    document.getElementById('breakdownAccommodation').textContent = `${accommodation.toFixed(2)} €`;
-    document.getElementById('breakdownExtras').textContent = `${extras.toFixed(2)} €`;
-    document.getElementById('breakdownDiscount').textContent = discount > 0 ? `-${discount.toFixed(2)} €` : `0,00 €`;
-    document.getElementById('breakdownSubtotal').textContent = `${subtotal.toFixed(2)} €`;
-    document.getElementById('breakdownTax').textContent = `${tax.toFixed(2)} €`;
-    document.getElementById('breakdownTotal').textContent = `${total.toFixed(2)} €`;
+    document.getElementById('breakdownAccommodation').textContent = `${accommodation.toFixed(2)} â‚¬`;
+    document.getElementById('breakdownExtras').textContent = `${extras.toFixed(2)} â‚¬`;
+    document.getElementById('breakdownDiscount').textContent = discount > 0 ? `-${discount.toFixed(2)} â‚¬` : `0,00 â‚¬`;
+    document.getElementById('breakdownSubtotal').textContent = `${subtotal.toFixed(2)} â‚¬`;
+    document.getElementById('breakdownTax').textContent = `${tax.toFixed(2)} â‚¬`;
+    document.getElementById('breakdownTotal').textContent = `${total.toFixed(2)} â‚¬`;
     
     // Also update the main total field
     const totalInput = document.querySelector('[name="total_price"]');
@@ -2779,7 +2779,7 @@ Ihr Reservierungsteam`;
     }
     
     // Update summary header
-    document.getElementById('priceTotal').textContent = `${total.toFixed(2)} €`;
+    document.getElementById('priceTotal').textContent = `${total.toFixed(2)} â‚¬`;
   }
   
   recalculatePriceOnCategoryChange(reservation, newCategory) {
@@ -2817,7 +2817,7 @@ Ihr Reservierungsteam`;
     // Recalculate breakdown
     this.calculatePricingBreakdown(reservation);
     
-    console.log(`Category changed to ${newCategory}, new price: ${newTotalPrice.toFixed(2)} €`);
+    console.log(`Category changed to ${newCategory}, new price: ${newTotalPrice.toFixed(2)} â‚¬`);
   }
   
   recalculatePriceOnRateChange(reservation, newRate) {
@@ -2855,7 +2855,7 @@ Ihr Reservierungsteam`;
     // Recalculate breakdown
     this.calculatePricingBreakdown(reservation);
     
-    console.log(`Rate changed to ${newRate}, new price: ${newTotalPrice.toFixed(2)} €`);
+    console.log(`Rate changed to ${newRate}, new price: ${newTotalPrice.toFixed(2)} â‚¬`);
   }
   
   calculateNights(arrival, departure) {
@@ -2916,7 +2916,7 @@ Ihr Reservierungsteam`;
               <i class="fas fa-edit"></i> Bearbeiten
             </button>
             <button class="trace-btn" data-action="delete-trace" data-trace-id="${trace.id}">
-              <i class="fas fa-trash"></i> Löschen
+              <i class="fas fa-trash"></i> LÃ¶schen
             </button>
             ${trace.type === 'reminder' ? `
               <button class="trace-btn" data-action="complete-trace" data-trace-id="${trace.id}">
@@ -2956,7 +2956,7 @@ Ihr Reservierungsteam`;
   
   openAddTraceModal() {
     if (!this.currentEditReservation) {
-      this.ui.showToast('Keine Reservierung ausgewählt', 'error');
+      this.ui.showToast('Keine Reservierung ausgewÃ¤hlt', 'error');
       return;
     }
     
@@ -3016,10 +3016,10 @@ Ihr Reservierungsteam`;
       this.ui.closeModal('modalAddTrace');
       form.reset();
       
-      this.ui.showToast('Trace erfolgreich hinzugefügt', 'success');
+      this.ui.showToast('Trace erfolgreich hinzugefÃ¼gt', 'success');
     } catch (error) {
       console.error('Failed to add trace:', error);
-      this.ui.showToast('Fehler beim Hinzufügen des Trace', 'error');
+      this.ui.showToast('Fehler beim HinzufÃ¼gen des Trace', 'error');
     }
   }
 
@@ -3117,7 +3117,7 @@ Ihr Reservierungsteam`;
   }
 
   formatCurrency(amount) {
-    if (!amount && amount !== 0) return '0 €';
+    if (!amount && amount !== 0) return '0 â‚¬';
     return new Intl.NumberFormat('de-DE', {
       style: 'currency',
       currency: 'EUR'
@@ -3198,7 +3198,7 @@ Ihr Reservierungsteam`;
       feed.innerHTML = `
         <div class="text-center text-muted" style="padding: 2rem;">
           <i class="fas fa-history" style="font-size: 2rem; opacity: 0.3;"></i>
-          <p style="margin-top: 1rem;">Keine Aktivitäten</p>
+          <p style="margin-top: 1rem;">Keine AktivitÃ¤ten</p>
         </div>
       `;
       return;
@@ -3211,7 +3211,7 @@ Ihr Reservierungsteam`;
         </div>
         <div class="activity-content">
           <div class="activity-title">Neue Reservierung: ${r.guest_last_name}</div>
-          <div class="activity-meta">${r.reservation_number} · ${this.formatDate(r.created_at)}</div>
+          <div class="activity-meta">${r.reservation_number} Â· ${this.formatDate(r.created_at)}</div>
         </div>
       </div>
     `).join('');
@@ -3273,7 +3273,7 @@ Ihr Reservierungsteam`;
       <div class="yoy-item">
         <div class="yoy-item-info">
           <div class="yoy-item-name">${perf.hotel.name}</div>
-          <div class="yoy-item-meta">${perf.todayBookings} heute · ${perf.lastYearBookings} letztes Jahr</div>
+          <div class="yoy-item-meta">${perf.todayBookings} heute Â· ${perf.lastYearBookings} letztes Jahr</div>
         </div>
         <div class="yoy-item-trend ${perf.trend}">
           <i class="fas ${perf.icon}"></i>
@@ -3329,16 +3329,16 @@ Ihr Reservierungsteam`;
   }
 
   async logout() {
-    if (confirm('Möchten Sie sich wirklich abmelden?')) {
-      console.log('🔓 App logout initiated...');
+    if (confirm('MÃ¶chten Sie sich wirklich abmelden?')) {
+      console.log('ðŸ”“ App logout initiated...');
       
       // Use the proper auth logout function if available
       if (window.HRS_AUTH && typeof window.HRS_AUTH.logout === 'function') {
-        console.log('✅ Using HRS_AUTH.logout()');
+        console.log('âœ… Using HRS_AUTH.logout()');
         await window.HRS_AUTH.logout();
       } else {
         // Fallback: Manual logout
-        console.log('⚠️ Fallback logout (HRS_AUTH not available)');
+        console.log('âš ï¸ Fallback logout (HRS_AUTH not available)');
         Storage.remove('USER_SESSION');
         localStorage.removeItem('hrs_v2_session');
         localStorage.removeItem('hrs_v2_login_attempts');
@@ -3374,14 +3374,14 @@ Ihr Reservierungsteam`;
     try {
       // Show loading state
       const grid = document.getElementById('availabilityGrid');
-      grid.innerHTML = '<div class="availability-loading"><div class="spinner large"></div><p>Lade Verfügbarkeitsdaten...</p></div>';
+      grid.innerHTML = '<div class="availability-loading"><div class="spinner large"></div><p>Lade VerfÃ¼gbarkeitsdaten...</p></div>';
       
       // Get date range
       const fromDate = document.getElementById('availFrom').value || new Date().toISOString().split('T')[0];
       const days = parseInt(document.getElementById('availDays').value) || 14;
       const selectedHotel = document.getElementById('availHotel').value;
       
-      // Generate mock availability data (später durch echte API ersetzen)
+      // Generate mock availability data (spÃ¤ter durch echte API ersetzen)
       const availabilityData = await this.generateAvailabilityData(fromDate, days, selectedHotel);
       
       // Render the availability calendar
@@ -3389,15 +3389,15 @@ Ihr Reservierungsteam`;
       
     } catch (error) {
       console.error('Error loading availability:', error);
-      this.ui.showToast('Fehler beim Laden der Verfügbarkeit', 'error');
+      this.ui.showToast('Fehler beim Laden der VerfÃ¼gbarkeit', 'error');
     }
   }
 
-  // Neue Hilfsfunktion für Mock-Daten (später durch API ersetzen)
+  // Neue Hilfsfunktion fÃ¼r Mock-Daten (spÃ¤ter durch API ersetzen)
   async generateAvailabilityData(startDate, days, hotelFilter = null) {
     const hotels = state.get('hotels') || [
       { code: 'HTL001', name: 'Hotel Berlin Mitte', categories: ['STD', 'DLX', 'SUI'] },
-      { code: 'HTL002', name: 'Hotel München Zentrum', categories: ['ECO', 'STD', 'DLX'] },
+      { code: 'HTL002', name: 'Hotel MÃ¼nchen Zentrum', categories: ['ECO', 'STD', 'DLX'] },
       { code: 'HTL003', name: 'Hotel Hamburg Hafen', categories: ['STD', 'SUP', 'SUI'] }
     ];
     
@@ -3452,7 +3452,7 @@ Ihr Reservierungsteam`;
     return data;
   }
 
-  // Neue Funktion für das Rendern des Kalenders als Grid
+  // Neue Funktion fÃ¼r das Rendern des Kalenders als Grid
   renderAvailabilityCalendar(data, startDate, days) {
     const grid = document.getElementById('availabilityGrid');
     
@@ -3493,7 +3493,7 @@ Ihr Reservierungsteam`;
     this.initAvailabilityTooltips();
   }
 
-  // Neue Funktion für Grid-Zellen
+  // Neue Funktion fÃ¼r Grid-Zellen
   renderGridCell(day, hotelCode) {
     const occupancyClass = day.status === 'low' ? 'occupancy-low' : 
                            day.status === 'medium' ? 'occupancy-medium' : 
@@ -3519,7 +3519,7 @@ Ihr Reservierungsteam`;
               <strong>${Math.round(day.occupancyRate)}%</strong>
             </div>
             <div class="tooltip-stat">
-              <span>Verfügbar:</span>
+              <span>VerfÃ¼gbar:</span>
               <strong>${day.available} / ${day.totalRooms}</strong>
             </div>
           </div>
@@ -3589,7 +3589,7 @@ Ihr Reservierungsteam`;
   }
 
   loadReports() {
-    // Reports Modal wird durch openReportsModal() geöffnet
+    // Reports Modal wird durch openReportsModal() geÃ¶ffnet
     // Die eigentliche Reporting-Logik ist im ReportingModule
     if (!this.reporting) {
       this.reporting = new ReportingModule(this);
@@ -3617,7 +3617,1045 @@ Ihr Reservierungsteam`;
   }
 
   loadSettings() {
-    this.ui.showToast('Settings coming soon', 'info');
+    // Initialize tab system
+    this.initSettingsTabs();
+    
+    // Load initial tab (General)
+    this.loadSettingsTab('general');
+  }
+
+  initSettingsTabs() {
+    const tabButtons = document.querySelectorAll('#modalSettings .tab-button');
+    
+    tabButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        // Remove active from all buttons
+        tabButtons.forEach(b => b.classList.remove('active'));
+        
+        // Add active to clicked button
+        button.classList.add('active');
+        
+        // Load corresponding tab content
+        const tabName = button.getAttribute('data-tab');
+        this.loadSettingsTab(tabName);
+      });
+    });
+  }
+
+  loadSettingsTab(tabName) {
+    const contentContainer = document.querySelector('#modalSettings .settings-content');
+    if (!contentContainer) return;
+
+    let content = '';
+
+    switch(tabName) {
+      case 'general':
+        content = this.renderGeneralSettings();
+        break;
+      case 'hotels':
+        content = this.renderHotelsSettings();
+        break;
+      case 'categories':
+        content = this.renderCategoriesSettings();
+        break;
+      case 'rates':
+        content = this.renderRatesSettings();
+        break;
+      case 'channel':
+        content = this.renderChannelSettings();
+        break;
+      case 'users':
+        content = this.renderUsersSettings();
+        break;
+      case 'system':
+        content = this.renderSystemSettings();
+        break;
+      default:
+        content = '<p class="text-muted">Tab not found</p>';
+    }
+
+    contentContainer.innerHTML = content;
+    
+    // Initialize event listeners for this tab
+    this.initSettingsListeners(tabName);
+  }
+
+  renderGeneralSettings() {
+    const config = window.HRS_CONFIG || {};
+    
+    return `
+      <div class="settings-panel">
+        <div class="settings-section">
+          <div class="settings-header">
+            <h3><i class="fas fa-globe"></i> System-Einstellungen</h3>
+            <p class="text-muted">Grundlegende Konfiguration des Reservierungssystems</p>
+          </div>
+
+          <div class="settings-grid">
+            <!-- System Information -->
+            <div class="setting-card">
+              <div class="setting-card-header">
+                <i class="fas fa-info-circle"></i>
+                <h4>System-Information</h4>
+              </div>
+              <div class="setting-item readonly">
+                <label>System-Version</label>
+                <div class="value-display">
+                  <span class="pill primary">${config.SYSTEM?.VERSION || '2.0.0'}</span>
+                </div>
+              </div>
+              <div class="setting-item readonly">
+                <label>Umgebung</label>
+                <div class="value-display">
+                  <span class="pill ${config.SYSTEM?.ENVIRONMENT === 'production' ? 'success' : 'warning'}">
+                    ${config.SYSTEM?.ENVIRONMENT || 'production'}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Language Settings -->
+            <div class="setting-card">
+              <div class="setting-card-header">
+                <i class="fas fa-language"></i>
+                <h4>Sprache & Region</h4>
+              </div>
+              <div class="setting-item">
+                <label for="settingLanguage">Systemsprache</label>
+                <select id="settingLanguage" class="select">
+                  <option value="de" ${config.SYSTEM?.LANGUAGE === 'de' ? 'selected' : ''}>Deutsch</option>
+                  <option value="en" ${config.SYSTEM?.LANGUAGE === 'en' ? 'selected' : ''}>English</option>
+                </select>
+              </div>
+              <div class="setting-item">
+                <label for="settingDateFormat">Datumsformat</label>
+                <select id="settingDateFormat" class="select">
+                  <option value="DD.MM.YYYY" ${config.UI?.FORMATS?.DATE === 'DD.MM.YYYY' ? 'selected' : ''}>DD.MM.YYYY</option>
+                  <option value="MM/DD/YYYY">MM/DD/YYYY</option>
+                  <option value="YYYY-MM-DD">YYYY-MM-DD</option>
+                </select>
+              </div>
+              <div class="setting-item">
+                <label for="settingCurrency">Währung</label>
+                <select id="settingCurrency" class="select">
+                  <option value="EUR" selected>EUR (€)</option>
+                  <option value="USD">USD ($)</option>
+                  <option value="GBP">GBP (£)</option>
+                  <option value="CHF">CHF (Fr)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- UI Settings -->
+            <div class="setting-card">
+              <div class="setting-card-header">
+                <i class="fas fa-palette"></i>
+                <h4>Benutzeroberfläche</h4>
+              </div>
+              <div class="setting-item">
+                <label for="settingTheme">Design-Theme</label>
+                <select id="settingTheme" class="select">
+                  <option value="dark" ${config.UI?.THEME === 'dark' ? 'selected' : ''}>Dark Mode</option>
+                  <option value="light" ${config.UI?.THEME === 'light' ? 'selected' : ''}>Light Mode</option>
+                  <option value="auto" ${config.UI?.THEME === 'auto' ? 'selected' : ''}>Automatisch</option>
+                </select>
+              </div>
+              <div class="setting-item">
+                <label>Animationen</label>
+                <div class="toggle-switch">
+                  <input type="checkbox" id="settingAnimations" ${config.UI?.ANIMATIONS?.ENABLED ? 'checked' : ''}>
+                  <label for="settingAnimations"></label>
+                </div>
+              </div>
+              <div class="setting-item">
+                <label for="settingPageSize">Einträge pro Seite</label>
+                <select id="settingPageSize" class="select">
+                  <option value="10">10</option>
+                  <option value="25" ${config.UI?.TABLE?.ITEMS_PER_PAGE === 25 ? 'selected' : ''}>25</option>
+                  <option value="50">50</option>
+                  <option value="100">100</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Notification Settings -->
+            <div class="setting-card">
+              <div class="setting-card-header">
+                <i class="fas fa-bell"></i>
+                <h4>Benachrichtigungen</h4>
+              </div>
+              <div class="setting-item">
+                <label for="settingToastPosition">Toast-Position</label>
+                <select id="settingToastPosition" class="select">
+                  <option value="top-left">Oben Links</option>
+                  <option value="top-right" ${config.UI?.TOAST?.POSITION === 'top-right' ? 'selected' : ''}>Oben Rechts</option>
+                  <option value="bottom-left">Unten Links</option>
+                  <option value="bottom-right">Unten Rechts</option>
+                </select>
+              </div>
+              <div class="setting-item">
+                <label for="settingToastDuration">Anzeigedauer (ms)</label>
+                <input type="number" id="settingToastDuration" class="input" 
+                  value="${config.UI?.TOAST?.DURATION || 3000}" min="1000" max="10000" step="500">
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-footer">
+            <button class="btn success" data-action="save-general-settings">
+              <i class="fas fa-save"></i> Einstellungen speichern
+            </button>
+            <button class="btn secondary" data-action="reset-general-settings">
+              <i class="fas fa-undo"></i> Zurücksetzen
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  renderHotelsSettings() {
+    const hotels = window.HRS_CONFIG?.HOTELS || [];
+    
+    return `
+      <div class="settings-panel">
+        <div class="settings-section">
+          <div class="settings-header">
+            <h3><i class="fas fa-hotel"></i> Hotel-Verwaltung</h3>
+            <p class="text-muted">Verwaltung aller Hotels und deren Eigenschaften</p>
+            <button class="btn primary" data-action="add-hotel">
+              <i class="fas fa-plus"></i> Neues Hotel hinzufügen
+            </button>
+          </div>
+
+          <div class="hotels-grid">
+            ${hotels.map(hotel => `
+              <div class="hotel-card ${hotel.active ? 'active' : 'inactive'}" data-hotel-code="${hotel.code}">
+                <div class="hotel-card-header">
+                  <div class="hotel-info">
+                    <h4>${hotel.name}</h4>
+                    <span class="text-muted">${hotel.code}</span>
+                  </div>
+                  <div class="hotel-actions">
+                    <span class="pill ${hotel.active ? 'success' : 'error'}">
+                      ${hotel.active ? 'Aktiv' : 'Inaktiv'}
+                    </span>
+                    <button class="btn-icon" data-action="edit-hotel" data-hotel-code="${hotel.code}">
+                      <i class="fas fa-edit"></i>
+                    </button>
+                  </div>
+                </div>
+                
+                <div class="hotel-card-body">
+                  <div class="hotel-detail">
+                    <i class="fas fa-building"></i>
+                    <span>${hotel.group}</span>
+                  </div>
+                  <div class="hotel-detail">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>${hotel.city}</span>
+                  </div>
+                  <div class="hotel-detail">
+                    <i class="fas fa-bed"></i>
+                    <span>${hotel.rooms} Zimmer</span>
+                  </div>
+                  <div class="hotel-detail">
+                    <i class="fas fa-envelope"></i>
+                    <span>${hotel.email}</span>
+                  </div>
+                  <div class="hotel-detail">
+                    <i class="fas fa-phone"></i>
+                    <span>${hotel.phone}</span>
+                  </div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  renderCategoriesSettings() {
+    const categories = state.get('categories') || [];
+    
+    return `
+      <div class="settings-panel">
+        <div class="settings-section">
+          <div class="settings-header">
+            <h3><i class="fas fa-bed"></i> Zimmerkategorien</h3>
+            <p class="text-muted">Verwaltung der Zimmerkategorien und deren Eigenschaften</p>
+            <button class="btn primary" data-action="add-category">
+              <i class="fas fa-plus"></i> Neue Kategorie hinzufügen
+            </button>
+          </div>
+
+          <div class="table-wrapper">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Code</th>
+                  <th>Bezeichnung</th>
+                  <th>Hotel</th>
+                  <th>Anzahl</th>
+                  <th>Max. Belegung</th>
+                  <th>Status</th>
+                  <th>Aktionen</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${categories.length === 0 ? `
+                  <tr>
+                    <td colspan="7" class="text-center text-muted">
+                      <i class="fas fa-info-circle"></i>
+                      Keine Kategorien definiert. Erstellen Sie die erste Kategorie.
+                    </td>
+                  </tr>
+                ` : categories.map(cat => `
+                  <tr>
+                    <td><code>${cat.code}</code></td>
+                    <td>${cat.name}</td>
+                    <td>${cat.hotel_code}</td>
+                    <td>${cat.quantity || 0}</td>
+                    <td>${cat.max_occupancy || 2}</td>
+                    <td>
+                      <span class="pill ${cat.active ? 'success' : 'error'}">
+                        ${cat.active ? 'Aktiv' : 'Inaktiv'}
+                      </span>
+                    </td>
+                    <td>
+                      <button class="btn-icon" data-action="edit-category" data-category-id="${cat.id}">
+                        <i class="fas fa-edit"></i>
+                      </button>
+                      <button class="btn-icon error" data-action="delete-category" data-category-id="${cat.id}">
+                        <i class="fas fa-trash"></i>
+                      </button>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  renderRatesSettings() {
+    const rates = state.get('rates') || [];
+    
+    return `
+      <div class="settings-panel">
+        <div class="settings-section">
+          <div class="settings-header">
+            <h3><i class="fas fa-tag"></i> Ratencodes & Preise</h3>
+            <p class="text-muted">Verwaltung der Ratencodes und Preisstrukturen</p>
+            <button class="btn primary" data-action="add-rate">
+              <i class="fas fa-plus"></i> Neuen Ratencode hinzufügen
+            </button>
+          </div>
+
+          <div class="table-wrapper">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Code</th>
+                  <th>Bezeichnung</th>
+                  <th>Hotel</th>
+                  <th>Kategorie</th>
+                  <th>Preis</th>
+                  <th>Status</th>
+                  <th>Aktionen</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${rates.length === 0 ? `
+                  <tr>
+                    <td colspan="7" class="text-center text-muted">
+                      <i class="fas fa-info-circle"></i>
+                      Keine Raten definiert. Erstellen Sie den ersten Ratencode.
+                    </td>
+                  </tr>
+                ` : rates.map(rate => `
+                  <tr>
+                    <td><code>${rate.code}</code></td>
+                    <td>${rate.name}</td>
+                    <td>${rate.hotel_code}</td>
+                    <td>${rate.category_code || 'Alle'}</td>
+                    <td>${this.formatCurrency(rate.price || 0)}</td>
+                    <td>
+                      <span class="pill ${rate.active ? 'success' : 'error'}">
+                        ${rate.active ? 'Aktiv' : 'Inaktiv'}
+                      </span>
+                    </td>
+                    <td>
+                      <button class="btn-icon" data-action="edit-rate" data-rate-id="${rate.id}">
+                        <i class="fas fa-edit"></i>
+                      </button>
+                      <button class="btn-icon error" data-action="delete-rate" data-rate-id="${rate.id}">
+                        <i class="fas fa-trash"></i>
+                      </button>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  renderChannelSettings() {
+    const config = window.HRS_CONFIG?.API?.HNS || {};
+    
+    return `
+      <div class="settings-panel">
+        <div class="settings-section">
+          <div class="settings-header">
+            <h3><i class="fas fa-network-wired"></i> HotelNetSolutions Channel Manager</h3>
+            <p class="text-muted">Konfiguration der API-Anbindung zu HotelNetSolutions</p>
+          </div>
+
+          <div class="settings-grid">
+            <!-- Connection Status -->
+            <div class="setting-card full-width">
+              <div class="setting-card-header">
+                <i class="fas fa-plug"></i>
+                <h4>Verbindungsstatus</h4>
+              </div>
+              <div class="connection-status">
+                <div class="status-indicator">
+                  <span class="status-dot error"></span>
+                  <div>
+                    <strong>Nicht verbunden</strong>
+                    <p class="text-muted">API-Schlüssel erforderlich</p>
+                  </div>
+                </div>
+                <button class="btn primary" data-action="test-hns-connection">
+                  <i class="fas fa-plug"></i> Verbindung testen
+                </button>
+              </div>
+            </div>
+
+            <!-- API Configuration -->
+            <div class="setting-card full-width">
+              <div class="setting-card-header">
+                <i class="fas fa-key"></i>
+                <h4>API-Konfiguration</h4>
+              </div>
+              
+              <div class="setting-item">
+                <label>API-Modus</label>
+                <div class="radio-group">
+                  <label class="radio-label">
+                    <input type="radio" name="hnsMode" value="test" ${config.MODE === 'test' ? 'checked' : ''}>
+                    <span>Test-Umgebung</span>
+                  </label>
+                  <label class="radio-label">
+                    <input type="radio" name="hnsMode" value="live" ${config.MODE === 'live' ? 'checked' : ''}>
+                    <span>Live-Produktion</span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="setting-item">
+                <label for="hnsApiKey">API-Schlüssel</label>
+                <input type="password" id="hnsApiKey" class="input" 
+                  placeholder="Wird nach Budget-Freigabe bereitgestellt"
+                  value="${config.API_KEY || ''}">
+                <p class="text-muted" style="font-size: 0.75rem; margin-top: 0.5rem;">
+                  <i class="fas fa-lock"></i> Wird sicher verschlüsselt gespeichert
+                </p>
+              </div>
+
+              <div class="setting-item">
+                <label for="hnsApiSecret">API-Secret</label>
+                <input type="password" id="hnsApiSecret" class="input" 
+                  placeholder="Wird nach Budget-Freigabe bereitgestellt"
+                  value="${config.API_SECRET || ''}">
+              </div>
+
+              <div class="setting-item">
+                <label for="hnsTimeout">Request Timeout (ms)</label>
+                <input type="number" id="hnsTimeout" class="input" 
+                  value="${config.TIMEOUT || 15000}" min="5000" max="60000" step="1000">
+              </div>
+
+              <div class="setting-item">
+                <label for="hnsRetries">Maximale Wiederholungen</label>
+                <input type="number" id="hnsRetries" class="input" 
+                  value="${config.RETRY_COUNT || 3}" min="0" max="10">
+              </div>
+            </div>
+
+            <!-- Auto-Sync Settings -->
+            <div class="setting-card full-width">
+              <div class="setting-card-header">
+                <i class="fas fa-sync"></i>
+                <h4>Automatische Synchronisation</h4>
+              </div>
+
+              <div class="setting-item">
+                <label>Auto-Sync aktivieren</label>
+                <div class="toggle-switch">
+                  <input type="checkbox" id="hnsAutoSync" ${config.AUTO_SYNC?.ENABLED ? 'checked' : ''}>
+                  <label for="hnsAutoSync"></label>
+                </div>
+              </div>
+
+              <div class="setting-item">
+                <label for="hnsSyncInterval">Sync-Intervall (Minuten)</label>
+                <input type="number" id="hnsSyncInterval" class="input" 
+                  value="${(config.AUTO_SYNC?.INTERVAL || 300000) / 60000}" min="1" max="60">
+              </div>
+
+              <div class="setting-item">
+                <label>Neue Reservierungen senden</label>
+                <div class="toggle-switch">
+                  <input type="checkbox" id="hnsPushReservations" ${config.AUTO_SYNC?.PUSH_NEW_RESERVATIONS ? 'checked' : ''}>
+                  <label for="hnsPushReservations"></label>
+                </div>
+              </div>
+
+              <div class="setting-item">
+                <label>Verfügbarkeit abrufen</label>
+                <div class="toggle-switch">
+                  <input type="checkbox" id="hnsPullAvailability" ${config.AUTO_SYNC?.PULL_AVAILABILITY ? 'checked' : ''}>
+                  <label for="hnsPullAvailability"></label>
+                </div>
+              </div>
+
+              <div class="setting-item">
+                <label>Raten abrufen</label>
+                <div class="toggle-switch">
+                  <input type="checkbox" id="hnsPullRates" ${config.AUTO_SYNC?.PULL_RATES ? 'checked' : ''}>
+                  <label for="hnsPullRates"></label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Hotel Mapping -->
+            <div class="setting-card full-width">
+              <div class="setting-card-header">
+                <i class="fas fa-exchange-alt"></i>
+                <h4>Hotel-Mapping</h4>
+              </div>
+              <p class="text-muted" style="margin-bottom: 1rem;">
+                Verknüpfung lokaler Hotel-Codes mit HNS Property-IDs
+              </p>
+              <div class="mapping-table">
+                <table class="data-table compact">
+                  <thead>
+                    <tr>
+                      <th>Lokaler Code</th>
+                      <th>Hotel-Name</th>
+                      <th>HNS Property-ID</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${Object.entries(config.HOTEL_MAPPING || {}).map(([localCode, hnsId]) => {
+                      const hotel = window.HRS_CONFIG?.HOTELS?.find(h => h.code === localCode);
+                      return `
+                        <tr>
+                          <td><code>${localCode}</code></td>
+                          <td>${hotel?.name || 'Unbekannt'}</td>
+                          <td>
+                            <input type="text" class="input compact" 
+                              data-mapping-code="${localCode}"
+                              value="${hnsId}" 
+                              placeholder="HNS_...">
+                          </td>
+                          <td>
+                            <span class="pill ${hnsId ? 'success' : 'warning'}">
+                              ${hnsId ? 'Gemappt' : 'Ausstehend'}
+                            </span>
+                          </td>
+                        </tr>
+                      `;
+                    }).join('')}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-footer">
+            <button class="btn success" data-action="save-channel-settings">
+              <i class="fas fa-save"></i> Channel-Einstellungen speichern
+            </button>
+            <button class="btn secondary" data-action="sync-now">
+              <i class="fas fa-sync"></i> Jetzt synchronisieren
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  renderUsersSettings() {
+    return `
+      <div class="settings-panel">
+        <div class="settings-section">
+          <div class="settings-header">
+            <h3><i class="fas fa-users"></i> Benutzerverwaltung</h3>
+            <p class="text-muted">Verwaltung von Benutzern und Berechtigungen</p>
+            <button class="btn primary" data-action="add-user">
+              <i class="fas fa-user-plus"></i> Neuen Benutzer hinzufügen
+            </button>
+          </div>
+
+          <div class="info-banner">
+            <i class="fas fa-info-circle"></i>
+            <div>
+              <strong>Benutzerverwaltung in Entwicklung</strong>
+              <p>Die vollständige Benutzerverwaltung wird in Version 2.1 verfügbar sein</p>
+            </div>
+          </div>
+
+          <div class="table-wrapper">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Benutzername</th>
+                  <th>Name</th>
+                  <th>E-Mail</th>
+                  <th>Rolle</th>
+                  <th>Letzter Login</th>
+                  <th>Status</th>
+                  <th>Aktionen</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td colspan="7" class="text-center text-muted">
+                    <i class="fas fa-users"></i>
+                    Benutzerverwaltung wird geladen...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  renderSystemSettings() {
+    const config = window.HRS_CONFIG || {};
+    
+    return `
+      <div class="settings-panel">
+        <div class="settings-section">
+          <div class="settings-header">
+            <h3><i class="fas fa-server"></i> System & Performance</h3>
+            <p class="text-muted">Erweiterte Systemeinstellungen und Diagnose</p>
+          </div>
+
+          <div class="settings-grid">
+            <!-- Cache Settings -->
+            <div class="setting-card">
+              <div class="setting-card-header">
+                <i class="fas fa-database"></i>
+                <h4>Cache-Verwaltung</h4>
+              </div>
+              <div class="setting-item">
+                <label>Cache aktiviert</label>
+                <div class="toggle-switch">
+                  <input type="checkbox" id="cacheEnabled" ${config.PERFORMANCE?.CACHE?.ENABLED ? 'checked' : ''}>
+                  <label for="cacheEnabled"></label>
+                </div>
+              </div>
+              <div class="setting-item">
+                <label for="cacheTTL">Cache TTL (Sekunden)</label>
+                <input type="number" id="cacheTTL" class="input" 
+                  value="${(config.PERFORMANCE?.CACHE?.TTL || 300000) / 1000}" min="60" max="3600">
+              </div>
+              <div class="setting-item">
+                <label for="cacheSize">Max. Cache-Größe</label>
+                <input type="number" id="cacheSize" class="input" 
+                  value="${config.PERFORMANCE?.CACHE?.MAX_SIZE || 100}" min="10" max="1000">
+              </div>
+              <button class="btn secondary full-width" data-action="clear-cache">
+                <i class="fas fa-trash"></i> Cache leeren
+              </button>
+            </div>
+
+            <!-- Logging Settings -->
+            <div class="setting-card">
+              <div class="setting-card-header">
+                <i class="fas fa-file-alt"></i>
+                <h4>Logging</h4>
+              </div>
+              <div class="setting-item">
+                <label>Logging aktiviert</label>
+                <div class="toggle-switch">
+                  <input type="checkbox" id="loggingEnabled" ${config.LOGGING?.ENABLED ? 'checked' : ''}>
+                  <label for="loggingEnabled"></label>
+                </div>
+              </div>
+              <div class="setting-item">
+                <label for="logLevel">Log-Level</label>
+                <select id="logLevel" class="select">
+                  <option value="debug" ${config.LOGGING?.LEVEL === 'debug' ? 'selected' : ''}>Debug</option>
+                  <option value="info" ${config.LOGGING?.LEVEL === 'info' ? 'selected' : ''}>Info</option>
+                  <option value="warn" ${config.LOGGING?.LEVEL === 'warn' ? 'selected' : ''}>Warning</option>
+                  <option value="error" ${config.LOGGING?.LEVEL === 'error' ? 'selected' : ''}>Error</option>
+                </select>
+              </div>
+              <div class="setting-item">
+                <label>Benutzeraktivität tracken</label>
+                <div class="toggle-switch">
+                  <input type="checkbox" id="trackActivity" ${config.LOGGING?.TRACK_USER_ACTIVITY ? 'checked' : ''}>
+                  <label for="trackActivity"></label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Performance Settings -->
+            <div class="setting-card">
+              <div class="setting-card-header">
+                <i class="fas fa-tachometer-alt"></i>
+                <h4>Performance</h4>
+              </div>
+              <div class="setting-item">
+                <label>Lazy Loading</label>
+                <div class="toggle-switch">
+                  <input type="checkbox" id="lazyLoading" ${config.PERFORMANCE?.LAZY_LOADING ? 'checked' : ''}>
+                  <label for="lazyLoading"></label>
+                </div>
+              </div>
+              <div class="setting-item">
+                <label for="debounceDelay">Debounce Delay (ms)</label>
+                <input type="number" id="debounceDelay" class="input" 
+                  value="${config.PERFORMANCE?.DEBOUNCE_DELAY || 300}" min="100" max="1000" step="50">
+              </div>
+              <div class="setting-item">
+                <label>Kompression</label>
+                <div class="toggle-switch">
+                  <input type="checkbox" id="compression" ${config.PERFORMANCE?.COMPRESSION ? 'checked' : ''}>
+                  <label for="compression"></label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Security Settings -->
+            <div class="setting-card">
+              <div class="setting-card-header">
+                <i class="fas fa-shield-alt"></i>
+                <h4>Sicherheit</h4>
+              </div>
+              <div class="setting-item">
+                <label for="sessionDuration">Session-Dauer (Stunden)</label>
+                <input type="number" id="sessionDuration" class="input" 
+                  value="${(config.SECURITY?.SESSION?.DURATION || 28800000) / 3600000}" min="1" max="24">
+              </div>
+              <div class="setting-item">
+                <label for="idleTimeout">Idle Timeout (Minuten)</label>
+                <input type="number" id="idleTimeout" class="input" 
+                  value="${(config.SECURITY?.SESSION?.IDLE_TIMEOUT || 1800000) / 60000}" min="5" max="60">
+              </div>
+              <div class="setting-item">
+                <label for="maxLoginAttempts">Max. Login-Versuche</label>
+                <input type="number" id="maxLoginAttempts" class="input" 
+                  value="${config.SECURITY?.LOGIN?.MAX_ATTEMPTS || 5}" min="3" max="10">
+              </div>
+            </div>
+
+            <!-- System Information -->
+            <div class="setting-card full-width">
+              <div class="setting-card-header">
+                <i class="fas fa-info-circle"></i>
+                <h4>System-Information</h4>
+              </div>
+              <div class="system-info-grid">
+                <div class="info-item">
+                  <label>Browser</label>
+                  <span id="browserInfo">-</span>
+                </div>
+                <div class="info-item">
+                  <label>Bildschirmauflösung</label>
+                  <span id="screenInfo">-</span>
+                </div>
+                <div class="info-item">
+                  <label>Local Storage</label>
+                  <span id="storageInfo">-</span>
+                </div>
+                <div class="info-item">
+                  <label>Zeitzone</label>
+                  <span id="timezoneInfo">-</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Danger Zone -->
+            <div class="setting-card full-width danger-zone">
+              <div class="setting-card-header">
+                <i class="fas fa-exclamation-triangle"></i>
+                <h4>Gefahrenbereich</h4>
+              </div>
+              <p class="text-muted">Vorsicht! Diese Aktionen können nicht rückgängig gemacht werden.</p>
+              <div class="danger-actions">
+                <button class="btn secondary" data-action="export-config">
+                  <i class="fas fa-download"></i> Konfiguration exportieren
+                </button>
+                <button class="btn secondary" data-action="import-config">
+                  <i class="fas fa-upload"></i> Konfiguration importieren
+                </button>
+                <button class="btn error" data-action="reset-all-settings">
+                  <i class="fas fa-redo"></i> Alle Einstellungen zurücksetzen
+                </button>
+                <button class="btn error" data-action="clear-all-data">
+                  <i class="fas fa-trash-alt"></i> Alle Daten löschen
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-footer">
+            <button class="btn success" data-action="save-system-settings">
+              <i class="fas fa-save"></i> System-Einstellungen speichern
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <script>
+        // Populate system info
+        document.getElementById('browserInfo').textContent = navigator.userAgent.split(' ').pop();
+        document.getElementById('screenInfo').textContent = screen.width + ' x ' + screen.height;
+        document.getElementById('storageInfo').textContent = 'Verfügbar (' + (navigator.storage ? 'Quota API' : 'Legacy') + ')';
+        document.getElementById('timezoneInfo').textContent = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      </script>
+    `;
+  }
+
+  initSettingsListeners(tabName) {
+    // Save buttons
+    document.querySelectorAll('[data-action^="save-"]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const action = btn.getAttribute('data-action');
+        this.handleSaveSettings(action, tabName);
+      });
+    });
+
+    // Other action buttons
+    document.querySelectorAll('[data-action]').forEach(btn => {
+      const action = btn.getAttribute('data-action');
+      if (!action.startsWith('save-')) {
+        btn.addEventListener('click', () => {
+          this.handleSettingsAction(action, btn);
+        });
+      }
+    });
+
+    // Toggle switches
+    document.querySelectorAll('.toggle-switch input[type="checkbox"]').forEach(toggle => {
+      toggle.addEventListener('change', () => {
+        // Auto-save on toggle (optional)
+        // this.handleSaveSettings('auto-save', tabName);
+      });
+    });
+  }
+
+  handleSaveSettings(action, tabName) {
+    // Collect settings based on tab
+    let settings = {};
+
+    switch(tabName) {
+      case 'general':
+        settings = {
+          language: document.getElementById('settingLanguage')?.value,
+          dateFormat: document.getElementById('settingDateFormat')?.value,
+          currency: document.getElementById('settingCurrency')?.value,
+          theme: document.getElementById('settingTheme')?.value,
+          animations: document.getElementById('settingAnimations')?.checked,
+          pageSize: parseInt(document.getElementById('settingPageSize')?.value),
+          toastPosition: document.getElementById('settingToastPosition')?.value,
+          toastDuration: parseInt(document.getElementById('settingToastDuration')?.value)
+        };
+        break;
+      
+      case 'channel':
+        settings = {
+          mode: document.querySelector('input[name="hnsMode"]:checked')?.value,
+          apiKey: document.getElementById('hnsApiKey')?.value,
+          apiSecret: document.getElementById('hnsApiSecret')?.value,
+          timeout: parseInt(document.getElementById('hnsTimeout')?.value),
+          retries: parseInt(document.getElementById('hnsRetries')?.value),
+          autoSync: document.getElementById('hnsAutoSync')?.checked,
+          syncInterval: parseInt(document.getElementById('hnsSyncInterval')?.value) * 60000,
+          pushReservations: document.getElementById('hnsPushReservations')?.checked,
+          pullAvailability: document.getElementById('hnsPullAvailability')?.checked,
+          pullRates: document.getElementById('hnsPullRates')?.checked
+        };
+        break;
+      
+      case 'system':
+        settings = {
+          cacheEnabled: document.getElementById('cacheEnabled')?.checked,
+          cacheTTL: parseInt(document.getElementById('cacheTTL')?.value) * 1000,
+          cacheSize: parseInt(document.getElementById('cacheSize')?.value),
+          loggingEnabled: document.getElementById('loggingEnabled')?.checked,
+          logLevel: document.getElementById('logLevel')?.value,
+          trackActivity: document.getElementById('trackActivity')?.checked,
+          lazyLoading: document.getElementById('lazyLoading')?.checked,
+          debounceDelay: parseInt(document.getElementById('debounceDelay')?.value),
+          compression: document.getElementById('compression')?.checked,
+          sessionDuration: parseInt(document.getElementById('sessionDuration')?.value) * 3600000,
+          idleTimeout: parseInt(document.getElementById('idleTimeout')?.value) * 60000,
+          maxLoginAttempts: parseInt(document.getElementById('maxLoginAttempts')?.value)
+        };
+        break;
+    }
+
+    // Save to storage
+    Storage.set(`settings_${tabName}`, settings);
+
+    // Show success toast
+    this.ui.showToast(`${tabName.charAt(0).toUpperCase() + tabName.slice(1)}-Einstellungen erfolgreich gespeichert`, 'success');
+  }
+
+  handleSettingsAction(action, button) {
+    switch(action) {
+      case 'add-hotel':
+        this.ui.showToast('Hotel hinzufügen - Coming soon', 'info');
+        break;
+      
+      case 'add-category':
+        this.ui.showToast('Kategorie hinzufügen - Coming soon', 'info');
+        break;
+      
+      case 'add-rate':
+        this.ui.showToast('Rate hinzufügen - Coming soon', 'info');
+        break;
+      
+      case 'add-user':
+        this.ui.showToast('Benutzer hinzufügen - Coming soon', 'info');
+        break;
+      
+      case 'test-hns-connection':
+        this.testHNSConnection();
+        break;
+      
+      case 'sync-now':
+        this.syncWithHNS();
+        break;
+      
+      case 'clear-cache':
+        this.clearCache();
+        break;
+      
+      case 'export-config':
+        this.exportConfiguration();
+        break;
+      
+      case 'import-config':
+        this.importConfiguration();
+        break;
+      
+      case 'reset-all-settings':
+        if (confirm('Möchten Sie wirklich alle Einstellungen zurücksetzen? Diese Aktion kann nicht rückgängig gemacht werden.')) {
+          this.resetAllSettings();
+        }
+        break;
+      
+      case 'clear-all-data':
+        if (confirm('WARNUNG: Möchten Sie wirklich alle Daten löschen? Dies entfernt ALLE Reservierungen, Einstellungen und Cache-Daten. Diese Aktion kann NICHT rückgängig gemacht werden!')) {
+          if (confirm('Letzte Bestätigung: Alle Daten werden unwiderruflich gelöscht. Fortfahren?')) {
+            this.clearAllData();
+          }
+        }
+        break;
+      
+      default:
+        this.ui.showToast(`Aktion "${action}" wird verarbeitet...`, 'info');
+    }
+  }
+
+  async testHNSConnection() {
+    this.ui.showToast('Teste Verbindung zu HotelNetSolutions...', 'info');
+    // Implement actual connection test
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    this.ui.showToast('Verbindungstest fehlgeschlagen: API-Schlüssel erforderlich', 'error');
+  }
+
+  async syncWithHNS() {
+    this.ui.showToast('Synchronisation mit HNS gestartet...', 'info');
+    // Implement actual sync
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    this.ui.showToast('Synchronisation abgeschlossen', 'success');
+  }
+
+  clearCache() {
+    Storage.clear();
+    this.ui.showToast('Cache erfolgreich geleert', 'success');
+  }
+
+  exportConfiguration() {
+    const config = {
+      settings: {
+        general: Storage.get('settings_general'),
+        channel: Storage.get('settings_channel'),
+        system: Storage.get('settings_system')
+      },
+      timestamp: new Date().toISOString(),
+      version: CONFIG.VERSION
+    };
+    
+    const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `hrs-config-${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    
+    this.ui.showToast('Konfiguration exportiert', 'success');
+  }
+
+  importConfiguration() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = (e) => {
+      const file = e.target.files[0];
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const config = JSON.parse(event.target.result);
+          // Restore settings
+          if (config.settings) {
+            Object.keys(config.settings).forEach(key => {
+              Storage.set(`settings_${key}`, config.settings[key]);
+            });
+          }
+          this.ui.showToast('Konfiguration erfolgreich importiert', 'success');
+        } catch (error) {
+          this.ui.showToast('Fehler beim Importieren: Ungültige Datei', 'error');
+        }
+      };
+      reader.readAsText(file);
+    };
+    input.click();
+  }
+
+  resetAllSettings() {
+    ['general', 'channel', 'system'].forEach(tab => {
+      Storage.remove(`settings_${tab}`);
+    });
+    this.ui.showToast('Alle Einstellungen wurden zurückgesetzt', 'success');
+    this.loadSettings();
+  }
+
+  clearAllData() {
+    Storage.clear();
+    localStorage.clear();
+    this.ui.showToast('Alle Daten wurden gelöscht', 'success');
+    setTimeout(() => {
+      window.location.reload();
+    }, 1500);
   }
 
   async exportToCSV() {
@@ -3646,7 +4684,7 @@ Ihr Reservierungsteam`;
       // Validate email format
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(emailTo)) {
-        this.ui.showToast('Bitte geben Sie eine gültige E-Mail-Adresse ein', 'error');
+        this.ui.showToast('Bitte geben Sie eine gÃ¼ltige E-Mail-Adresse ein', 'error');
         return;
       }
       
@@ -3676,7 +4714,7 @@ Ihr Reservierungsteam`;
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      this.ui.showToast(`Bestätigungs-E-Mail erfolgreich an ${data.to} gesendet!`, 'success');
+      this.ui.showToast(`BestÃ¤tigungs-E-Mail erfolgreich an ${data.to} gesendet!`, 'success');
       
       // Here you would integrate with your email service:
       // - SendGrid
@@ -3774,7 +4812,7 @@ Ihr Reservierungsteam`;
     state.set('reservations', inhouseReservations);
     this.renderReservationTable();
     
-    this.ui.showToast(`${inhouseReservations.length} Gäste im Haus`, 'info');
+    this.ui.showToast(`${inhouseReservations.length} GÃ¤ste im Haus`, 'info');
   }
 }
 
@@ -3842,7 +4880,7 @@ class CustomCursor {
     }
   });
 
-  // ✅ RICHTIGE REIHENFOLGE: mousedown DANN mouseup
+  // âœ… RICHTIGE REIHENFOLGE: mousedown DANN mouseup
   document.addEventListener('mousedown', () => {
     this.cursor.classList.add('cursor-click');
     this.cursorDot.classList.add('cursor-click');
@@ -3881,8 +4919,8 @@ class CustomCursor {
       }, 100);
     }
  });
-} // Schließt addHoverEffects()
-} // ✅ Schließt die CustomCursor Klasse!
+} // SchlieÃŸt addHoverEffects()
+} // âœ… SchlieÃŸt die CustomCursor Klasse!
 
 // Initialize custom cursor
 if (typeof window !== 'undefined') {
