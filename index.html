@@ -22,10 +22,10 @@
   <script src="reporting.js"></script>
 
   <script>
-  // ✅ KRITISCH: Prüfe ob Supabase erfolgreich geladen wurde
+  // âœ… KRITISCH: PrÃ¼fe ob Supabase erfolgreich geladen wurde
   window.addEventListener('DOMContentLoaded', function() {
     if (typeof window.supabase === 'undefined') {
-      console.error('❌❌❌ CRITICAL: Supabase library not loaded! ❌❌❌');
+      console.error('âŒâŒâŒ CRITICAL: Supabase library not loaded! âŒâŒâŒ');
       const overlay = document.getElementById('loadingOverlay');
       if (overlay) {
         overlay.innerHTML = `
@@ -33,7 +33,7 @@
             <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: #dc2626;"></i>
             <h2 style="color: #dc2626; margin-top: 1rem;">Datenbankverbindung fehlgeschlagen</h2>
             <p style="margin-top: 0.5rem;">Supabase-Library konnte nicht geladen werden.</p>
-            <p style="margin-top: 0.5rem;">Bitte Internetverbindung prüfen und Seite neu laden.</p>
+            <p style="margin-top: 0.5rem;">Bitte Internetverbindung prÃ¼fen und Seite neu laden.</p>
             <button onclick="location.reload()" style="margin-top: 1.5rem; padding: 0.75rem 1.5rem; background: #dc2626; color: white; border: none; border-radius: 8px; cursor: pointer;">
               <i class="fas fa-sync"></i> Seite neu laden
             </button>
@@ -42,7 +42,7 @@
         overlay.classList.remove('hidden');
       }
     } else {
-      console.log('✅ Supabase library loaded successfully (Version: 2.45.7)');
+      console.log('âœ… Supabase library loaded successfully (Version: 2.45.7)');
     }
   });
 </script>
@@ -97,7 +97,7 @@
         </button>
         <button class="btn secondary" data-action="open-availability">
           <i class="fas fa-calendar-check"></i>
-          Verfügbarkeit
+          VerfÃ¼gbarkeit
         </button>
         <button class="btn secondary" data-action="open-reports">
           <i class="fas fa-chart-line"></i>
@@ -132,7 +132,7 @@
 
         <div class="clock mono">
           <span id="dateLocal">--.--.----</span>
-          <span class="sep">·</span>
+          <span class="sep">Â·</span>
           <span id="clockLocal">--:--:--</span>
         </div>
       </div>
@@ -183,11 +183,11 @@
                 <div class="label">Buchungen</div>
               </div>
               <div class="kpi">
-                <div class="value" id="tRevenue">0,00 €</div>
+                <div class="value" id="tRevenue">0,00 â‚¬</div>
                 <div class="label">Umsatz</div>
               </div>
               <div class="kpi">
-                <div class="value" id="tADR">0,00 €</div>
+                <div class="value" id="tADR">0,00 â‚¬</div>
                 <div class="label">ADR</div>
               </div>
               <div class="kpi">
@@ -202,7 +202,7 @@
             <div class="card-head compact">
               <div class="performance-title-inline">
                 <i class="fas fa-calendar-week"></i>
-                <h3>Nächste 7 Tage</h3>
+                <h3>NÃ¤chste 7 Tage</h3>
               </div>
               <select class="select sm hotel-select" data-filter="hotel-next">
                 <option value="">Alle Hotels</option>
@@ -211,14 +211,14 @@
             <div class="kpis">
               <div class="kpi">
                 <div class="value" id="nBookings">0</div>
-                <div class="label">Ankünfte</div>
+                <div class="label">AnkÃ¼nfte</div>
               </div>
               <div class="kpi">
-                <div class="value" id="nRevenue">0,00 €</div>
+                <div class="value" id="nRevenue">0,00 â‚¬</div>
                 <div class="label">Umsatz</div>
               </div>
               <div class="kpi">
-                <div class="value" id="nADR">0,00 €</div>
+                <div class="value" id="nADR">0,00 â‚¬</div>
                 <div class="label">ADR</div>
               </div>
               <div class="kpi">
@@ -285,7 +285,7 @@
                 </button>
                 <button class="btn secondary" data-action="reset-filters">
                   <i class="fas fa-times"></i>
-                  Zurücksetzen
+                  ZurÃ¼cksetzen
                 </button>
               </div>
             </div>
@@ -393,7 +393,7 @@
                 </div>
                 <div class="operation-content">
                   <div class="operation-value" id="inhouseGuests">0</div>
-                  <div class="operation-label">Gäste im Haus</div>
+                  <div class="operation-label">GÃ¤ste im Haus</div>
                   <button class="btn-link" data-action="view-inhouse">
                     Details anzeigen <i class="fas fa-arrow-right"></i>
                   </button>
@@ -464,7 +464,7 @@
             <div class="form-group">
               <label class="form-label">Hotel *</label>
               <select class="select hotel-select" name="hotel_code" required>
-                <option value="">Bitte wählen...</option>
+                <option value="">Bitte wÃ¤hlen...</option>
               </select>
             </div>
             
@@ -543,7 +543,7 @@
         <div class="modal-footer">
           <button type="button" class="btn secondary" data-wizard-action="prev" disabled>
             <i class="fas fa-arrow-left"></i>
-            Zurück
+            ZurÃ¼ck
           </button>
           <button type="button" class="btn primary" data-wizard-action="next">
             Weiter
@@ -611,7 +611,7 @@
                     <div class="form-field">
                       <label>Hotel</label>
                       <select class="input-compact disabled-field" name="hotel_code" disabled>
-                        <option value="">Wählen...</option>
+                        <option value="">WÃ¤hlen...</option>
                       </select>
                     </div>
                     <div class="form-field">
@@ -638,7 +638,7 @@
                     <div class="form-field nights-badge-field">
                       <div class="nights-badge" id="nightsBadge">
                         <i class="fas fa-moon"></i>
-                        <span id="nightsCountCompact">0</span> Nächte
+                        <span id="nightsCountCompact">0</span> NÃ¤chte
                       </div>
                     </div>
                   </div>
@@ -663,13 +663,13 @@
                     <div class="form-field">
                       <label>Kategorie</label>
                       <select class="input-compact" name="category_display">
-                        <option value="">Wählen...</option>
+                        <option value="">WÃ¤hlen...</option>
                       </select>
                     </div>
                     <div class="form-field">
                       <label>Rate Code</label>
                       <select class="input-compact" name="rate_code_display">
-                        <option value="">Wählen...</option>
+                        <option value="">WÃ¤hlen...</option>
                       </select>
                     </div>
                   </div>
@@ -678,7 +678,7 @@
                     <label>Gesamtpreis</label>
                     <div class="price-input-wrapper">
                       <input type="number" class="input-compact price-field" name="total_price" step="0.01" min="0" readonly>
-                      <span class="currency">€</span>
+                      <span class="currency">â‚¬</span>
                     </div>
                   </div>
                   
@@ -706,27 +706,27 @@
                   <div class="pricing-breakdown mini">
                     <div class="breakdown-row">
                       <span>Unterkunft</span>
-                      <span id="breakdownAccommodation">0,00 €</span>
+                      <span id="breakdownAccommodation">0,00 â‚¬</span>
                     </div>
                     <div class="breakdown-row">
                       <span>Extras</span>
-                      <span id="breakdownExtras">0,00 €</span>
+                      <span id="breakdownExtras">0,00 â‚¬</span>
                     </div>
                     <div class="breakdown-row">
                       <span>Rabatt</span>
-                      <span id="breakdownDiscount">-0,00 €</span>
+                      <span id="breakdownDiscount">-0,00 â‚¬</span>
                     </div>
                     <div class="breakdown-row subtotal">
                       <span>Netto</span>
-                      <span id="breakdownSubtotal">0,00 €</span>
+                      <span id="breakdownSubtotal">0,00 â‚¬</span>
                     </div>
                     <div class="breakdown-row">
                       <span>MwSt. (7%)</span>
-                      <span id="breakdownTax">0,00 €</span>
+                      <span id="breakdownTax">0,00 â‚¬</span>
                     </div>
                     <div class="breakdown-row total">
                       <span>GESAMT</span>
-                      <span id="breakdownTotal">0,00 €</span>
+                      <span id="breakdownTotal">0,00 â‚¬</span>
                     </div>
                   </div>
                 </div>
@@ -738,7 +738,7 @@
               <div class="guest-grid">
                 <!-- Personal Information -->
                 <div class="guest-section">
-                  <div class="section-title"><i class="fas fa-user"></i> Persönliche Daten</div>
+                  <div class="section-title"><i class="fas fa-user"></i> PersÃ¶nliche Daten</div>
                   
                   <div class="form-row-compact">
                     <div class="form-field">
@@ -766,7 +766,7 @@
                       <input type="date" class="input-compact" name="guest_birthdate">
                     </div>
                     <div class="form-field">
-                      <label>Nationalität</label>
+                      <label>NationalitÃ¤t</label>
                       <input type="text" class="input-compact" name="guest_nationality" placeholder="Deutschland">
                     </div>
                     <div class="form-field">
@@ -774,8 +774,8 @@
                       <select class="input-compact" name="guest_language">
                         <option value="de">Deutsch</option>
                         <option value="en">English</option>
-                        <option value="fr">Français</option>
-                        <option value="es">Español</option>
+                        <option value="fr">FranÃ§ais</option>
+                        <option value="es">EspaÃ±ol</option>
                         <option value="it">Italiano</option>
                       </select>
                     </div>
@@ -820,7 +820,7 @@
                   
                   <div class="form-field">
                     <label>Private Adresse</label>
-                    <textarea class="input-compact textarea-compact" name="guest_address" rows="2" placeholder="Straße, PLZ Stadt, Land"></textarea>
+                    <textarea class="input-compact textarea-compact" name="guest_address" rows="2" placeholder="StraÃŸe, PLZ Stadt, Land"></textarea>
                   </div>
                 </div>
                 
@@ -835,7 +835,7 @@
                   
                   <div class="form-field">
                     <label>Firmenadresse</label>
-                    <textarea class="input-compact textarea-compact" name="guest_company_address" rows="2" placeholder="Firmenstraße, PLZ Stadt"></textarea>
+                    <textarea class="input-compact textarea-compact" name="guest_company_address" rows="2" placeholder="FirmenstraÃŸe, PLZ Stadt"></textarea>
                   </div>
                   
                   <div class="form-row-compact">
@@ -852,11 +852,11 @@
                 
                 <!-- Special Requests -->
                 <div class="guest-section full-width-section">
-                  <div class="section-title"><i class="fas fa-star"></i> Besondere Wünsche & Präferenzen</div>
+                  <div class="section-title"><i class="fas fa-star"></i> Besondere WÃ¼nsche & PrÃ¤ferenzen</div>
                   
                   <div class="form-row-compact">
                     <div class="form-field">
-                      <label>Zimmer-Präferenz</label>
+                      <label>Zimmer-PrÃ¤ferenz</label>
                       <select class="input-compact" name="guest_room_preference">
                         <option value="">Keine</option>
                         <option value="high-floor">Hohe Etage</option>
@@ -866,7 +866,7 @@
                       </select>
                     </div>
                     <div class="form-field">
-                      <label>Bett-Präferenz</label>
+                      <label>Bett-PrÃ¤ferenz</label>
                       <select class="input-compact" name="guest_bed_preference">
                         <option value="">Keine</option>
                         <option value="double">Doppelbett</option>
@@ -876,13 +876,13 @@
                     </div>
                     <div class="form-field">
                       <label>Allergien</label>
-                      <input type="text" class="input-compact" name="guest_allergies" placeholder="z.B. Nüsse, Laktose">
+                      <input type="text" class="input-compact" name="guest_allergies" placeholder="z.B. NÃ¼sse, Laktose">
                     </div>
                   </div>
                   
                   <div class="form-field">
                     <label>Gastnotizen / Special Requests</label>
-                    <textarea class="input-compact textarea-compact" name="guest_notes" rows="3" placeholder="Besondere Wünsche des Gastes..."></textarea>
+                    <textarea class="input-compact textarea-compact" name="guest_notes" rows="3" placeholder="Besondere WÃ¼nsche des Gastes..."></textarea>
                   </div>
                 </div>
               </div>
@@ -902,7 +902,7 @@
                   </div>
                   <div class="summary-box highlight-box">
                     <span class="summary-label">Gesamt</span>
-                    <span class="summary-val" id="priceTotal">0,00 €</span>
+                    <span class="summary-val" id="priceTotal">0,00 â‚¬</span>
                   </div>
                 </div>
               </div>
@@ -920,7 +920,7 @@
                 <div class="form-field nights-badge-field">
                   <div class="nights-badge" id="nightsBadgePricing">
                     <i class="fas fa-moon"></i>
-                    <span id="nightsCountPricing">0</span> Nächte
+                    <span id="nightsCountPricing">0</span> NÃ¤chte
                   </div>
                 </div>
               </div>
@@ -929,14 +929,14 @@
                 <div class="form-field">
                   <label>Kategorie</label>
                   <select class="input-compact" name="category" required>
-                    <option value="">Wählen...</option>
+                    <option value="">WÃ¤hlen...</option>
                     <!-- Options will be loaded dynamically -->
                   </select>
                 </div>
                 <div class="form-field">
                   <label>Rate Code</label>
                   <select class="input-compact" name="rate_code" required>
-                    <option value="">Wählen...</option>
+                    <option value="">WÃ¤hlen...</option>
                     <!-- Options will be loaded dynamically -->
                   </select>
                 </div>
@@ -957,10 +957,10 @@
               
               <div class="extras-grid">
                 <div class="form-field">
-                  <label>Frühstück</label>
+                  <label>FrÃ¼hstÃ¼ck</label>
                   <div class="input-with-toggle">
                     <input type="number" class="input-compact" name="extra_breakfast_price" step="0.01" min="0" placeholder="0.00">
-                    <span class="currency">€</span>
+                    <span class="currency">â‚¬</span>
                   </div>
                 </div>
                 
@@ -968,7 +968,7 @@
                   <label>Parkplatz</label>
                   <div class="input-with-toggle">
                     <input type="number" class="input-compact" name="extra_parking_price" step="0.01" min="0" placeholder="0.00">
-                    <span class="currency">€</span>
+                    <span class="currency">â‚¬</span>
                   </div>
                 </div>
                 
@@ -976,7 +976,7 @@
                   <label>Minibar</label>
                   <div class="input-with-toggle">
                     <input type="number" class="input-compact" name="extra_minibar_price" step="0.01" min="0" placeholder="0.00">
-                    <span class="currency">€</span>
+                    <span class="currency">â‚¬</span>
                   </div>
                 </div>
                 
@@ -984,14 +984,14 @@
                   <label>Sonstige Extras</label>
                   <div class="input-with-toggle">
                     <input type="number" class="input-compact" name="extra_other_price" step="0.01" min="0" placeholder="0.00">
-                    <span class="currency">€</span>
+                    <span class="currency">â‚¬</span>
                   </div>
                 </div>
               </div>
               
               <div class="section-title" style="margin-top: var(--space-6);">
                 <i class="fas fa-percentage"></i>
-                Rabatte & Nachlässe
+                Rabatte & NachlÃ¤sse
               </div>
               
               <div class="form-row-compact">
@@ -999,14 +999,14 @@
                   <label>Rabatt-Betrag</label>
                   <div class="input-with-toggle">
                     <input type="number" class="input-compact" name="discount_amount" step="0.01" min="0" placeholder="0.00">
-                    <span class="currency">€</span>
+                    <span class="currency">â‚¬</span>
                   </div>
                 </div>
                 
                 <div class="form-field">
                   <label>Rabatt-Typ</label>
                   <select class="input-compact" name="discount_type">
-                    <option value="amount">Betrag (€)</option>
+                    <option value="amount">Betrag (â‚¬)</option>
                     <option value="percent">Prozent (%)</option>
                   </select>
                 </div>
@@ -1019,21 +1019,21 @@
               
               <div class="section-title" style="margin-top: var(--space-6);">
                 <i class="fas fa-info-circle"></i>
-                Übersicht Fixleistungen
+                Ãœbersicht Fixleistungen
               </div>
               
               <div class="pricing-breakdown">
                 <div class="breakdown-row">
                   <span>Extras Gesamt</span>
-                  <span id="fixleistungenExtrasTotal">0,00 €</span>
+                  <span id="fixleistungenExtrasTotal">0,00 â‚¬</span>
                 </div>
                 <div class="breakdown-row">
                   <span>Rabatt Gesamt</span>
-                  <span id="fixleistungenDiscountTotal">-0,00 €</span>
+                  <span id="fixleistungenDiscountTotal">-0,00 â‚¬</span>
                 </div>
                 <div class="breakdown-row total">
                   <span>NETTO FIXLEISTUNGEN</span>
-                  <span id="fixleistungenNetTotal">0,00 €</span>
+                  <span id="fixleistungenNetTotal">0,00 â‚¬</span>
                 </div>
               </div>
             </div>
@@ -1053,7 +1053,7 @@
               <div class="empty-state" id="tracesEmpty">
                 <i class="fas fa-bell-slash"></i>
                 <p>Keine Traces vorhanden</p>
-                <p class="text-small">Traces sind Erinnerungen, Alerts oder Notizen für diese Reservierung</p>
+                <p class="text-small">Traces sind Erinnerungen, Alerts oder Notizen fÃ¼r diese Reservierung</p>
               </div>
             </div>
           </div>
@@ -1111,7 +1111,7 @@
         
         <div class="modal-footer">
           <button type="button" class="btn secondary" data-close-modal>Abbrechen</button>
-          <button type="submit" class="btn primary"><i class="fas fa-check"></i> Hinzufügen</button>
+          <button type="submit" class="btn primary"><i class="fas fa-check"></i> HinzufÃ¼gen</button>
         </div>
       </form>
     </div>
@@ -1121,7 +1121,7 @@
   <div id="modalAvailability" class="modal hidden" aria-hidden="true">
     <div class="modal-content large">
       <div class="modal-header">
-        <h2>Verfügbarkeit</h2>
+        <h2>VerfÃ¼gbarkeit</h2>
         <button class="modal-close">
           <i class="fas fa-times"></i>
         </button>
@@ -1203,7 +1203,7 @@
 
   <!-- Settings Modal -->
   <div id="modalSettings" class="modal hidden" aria-hidden="true">
-    <div class="modal-content large">
+    <div class="modal-content xlarge">
       <div class="modal-header">
         <h2>Einstellungen</h2>
         <button class="modal-close">
@@ -1265,7 +1265,7 @@
       <div class="modal-body">
         <div class="sketch-controls">
           <select class="select hotel-select" id="sketchHotel">
-            <option value="">Hotel wählen...</option>
+            <option value="">Hotel wÃ¤hlen...</option>
           </select>
           <button class="btn primary" data-action="load-sketch">
             <i class="fas fa-map"></i>
@@ -1274,7 +1274,7 @@
         </div>
         
         <div id="sketchCanvas" class="sketch-canvas">
-          <p class="text-center text-muted">Bitte wählen Sie ein Hotel aus</p>
+          <p class="text-center text-muted">Bitte wÃ¤hlen Sie ein Hotel aus</p>
         </div>
       </div>
     </div>
@@ -1288,7 +1288,7 @@
           <div style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, var(--primary-500), var(--accent-500)); border-radius: var(--radius-lg); color: white;">
             <i class="fas fa-envelope"></i>
           </div>
-          <h2>Bestätigungs-E-Mail senden</h2>
+          <h2>BestÃ¤tigungs-E-Mail senden</h2>
         </div>
         <button class="modal-close">
           <i class="fas fa-times"></i>
@@ -1299,7 +1299,7 @@
         <div class="form-group">
           <label class="form-label">
             <i class="fas fa-at" style="margin-right: 0.5rem; color: var(--primary-400);"></i>
-            Empfänger E-Mail
+            EmpfÃ¤nger E-Mail
           </label>
           <input type="email" class="input" id="confirmEmailTo" placeholder="gast@beispiel.de" required>
         </div>
@@ -1320,7 +1320,7 @@
           <textarea class="input" id="confirmEmailBody" rows="12" style="font-family: 'JetBrains Mono', monospace; font-size: 0.875rem; line-height: 1.6;" required></textarea>
           <p class="text-muted" style="font-size: 0.75rem; margin-top: 0.5rem;">
             <i class="fas fa-info-circle"></i>
-            Sie können die Nachricht beliebig anpassen
+            Sie kÃ¶nnen die Nachricht beliebig anpassen
           </p>
         </div>
       </div>
