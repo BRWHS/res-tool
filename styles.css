@@ -783,7 +783,7 @@ textarea {
   position: sticky;
   top: calc(var(--space-8) + 80px);
   align-self: start;
-  height: calc(100vh - 200px); /* Gleiche HÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¶he! */
+  height: calc(100vh - 200px); /* Gleiche HÃƒÆ’Ã†"™Ãƒ" Ã¢â‚¬™ÃƒÆ’Ã¢â‚¬Å¡Ãƒ"šÃ‚Â¶he! */
 }
 
 .sidebar-card {
@@ -1162,7 +1162,7 @@ textarea {
   background: var(--bg-surface);
   border: 1px solid var(--border-primary);
   border-radius: var(--radius-xl);
-  padding: 0 !important; /* Entferne Padding fÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¼r bessere Kontrolle */
+  padding: 0 !important; /* Entferne Padding fÃƒÆ’Ã†"™Ãƒ" Ã¢â‚¬™ÃƒÆ’Ã¢â‚¬Å¡Ãƒ"šÃ‚Â¼r bessere Kontrolle */
   overflow: hidden;
 }
 
@@ -1302,7 +1302,7 @@ textarea {
   transition: all var(--transition-base);
   position: relative;
   z-index: 1;
-  white-space: nowrap; /* WICHTIG: Keine UmbrÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¼che! */
+  white-space: nowrap; /* WICHTIG: Keine UmbrÃƒÆ’Ã†"™Ãƒ" Ã¢â‚¬™ÃƒÆ’Ã¢â‚¬Å¡Ãƒ"šÃ‚Â¼che! */
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -2211,7 +2211,7 @@ tbody td .pill {
 }
 
 .wizard-step.completed .wizard-step-number::after {
-  content: 'ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“';
+  content: 'ÃƒÆ’Ã†"™Ãƒ"šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢"šÂ¬Ã…"ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒ"¦Ã¢â‚¬Å“';
   position: absolute;
   inset: 0;
   display: flex;
@@ -5324,7 +5324,7 @@ select.input-compact::-ms-expand {
    CUSTOM CURSOR (JavaScript Version)
    ======================================== */
 
-/* Hide default cursor - FORCIERT fÃ¼r alle Elemente */
+/* Hide default cursor - FORCIERT für alle Elemente */
 *,
 *::before,
 *::after,
@@ -5342,7 +5342,7 @@ button:focus,
   cursor: none !important;
 }
 
-/* Extra Fix fÃ¼r Safari/Chrome Select Dropdowns */
+/* Extra Fix für Safari/Chrome Select Dropdowns */
 select::-webkit-scrollbar-thumb {
   cursor: none !important;
 }
